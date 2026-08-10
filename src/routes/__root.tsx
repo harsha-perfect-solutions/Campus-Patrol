@@ -11,7 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { AppShell } from "@/components/app-shell";
+import { AuthProvider } from "@/lib/auth";
 import { CmadmsProvider } from "@/lib/cmadms-store";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -29,7 +29,7 @@ function NotFoundComponent() {
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
           >
-            Go to dashboard
+            Go home
           </Link>
         </div>
       </div>
@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "CMADMS faculty portal for student verification, class checks and unauthorized movement reporting.",
+          "CMADMS portal for student verification, timetable checks and unauthorized movement reporting.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -126,11 +126,11 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <CmadmsProvider>
-        <AppShell>
+        <AuthProvider>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
-        </AppShell>
-        <Toaster position="top-right" richColors />
+          <Toaster position="top-right" richColors />
+        </AuthProvider>
       </CmadmsProvider>
     </QueryClientProvider>
   );
