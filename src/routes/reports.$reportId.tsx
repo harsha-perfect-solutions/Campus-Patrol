@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
   CalendarClock,
@@ -233,4 +233,3 @@ function ReportDetail() {
   );
 }
 
-export const _unusedNotFound = notFound;
