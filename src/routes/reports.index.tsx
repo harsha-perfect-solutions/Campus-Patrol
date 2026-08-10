@@ -16,7 +16,7 @@ import {
 import { useCmadms } from "@/lib/cmadms-store";
 import type { Report, ReportStatus } from "@/lib/cmadms-data";
 
-export const Route = createFileRoute("/reports")({
+export const Route = createFileRoute("/reports/")({
   head: () => ({
     meta: [
       { title: "My Reports — CMADMS" },
