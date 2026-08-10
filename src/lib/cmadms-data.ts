@@ -29,7 +29,7 @@ export type Permission = {
 export type TimelineEvent = {
   time: string;
   title: string;
-  detail?: string;
+  detail?: string | undefined;
   tone: "info" | "violation" | "resolved" | "pending";
 };
 
@@ -46,11 +46,11 @@ export type Report = {
   createdAt: string;
   location: string;
   remarks: string;
-  evidence?: string;
+  evidence?: string | undefined;
   reportedBy: string;
   status: ReportStatus;
-  explanation?: string;
-  decision?: string;
+  explanation?: string | undefined;
+  decision?: string | undefined;
   timeline: TimelineEvent[];
 };
 
