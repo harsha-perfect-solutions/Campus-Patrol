@@ -275,7 +275,7 @@ export async function logAudit(
   action: string,
   entity: string,
   entityId?: string,
-  meta: Record<string, unknown> = {},
+  meta: Record<string, string | number | boolean | null> = {},
 ) {
   await supabase.from("audit_logs").insert({
     actor_id: actorId,
