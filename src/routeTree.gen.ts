@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckRouteImport } from './routes/check'
+import { Route as TimetableRouteImport } from './routes/timetable'
 import { Route as ViolationsRouteImport } from './routes/violations'
 import { Route as ReportsIndexRouteImport } from './routes/reports.index'
 import { Route as ReportsReportIdRouteImport } from './routes/reports.$reportId'
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
 const CheckRoute = CheckRouteImport.update({
   id: '/check',
   path: '/check',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TimetableRoute = TimetableRouteImport.update({
+  id: '/timetable',
+  path: '/timetable',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ViolationsRoute = ViolationsRouteImport.update({
@@ -44,6 +50,7 @@ const ReportsReportIdRoute = ReportsReportIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/check': typeof CheckRoute
+  '/timetable': typeof TimetableRoute
   '/violations': typeof ViolationsRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
   '/reports/': typeof ReportsIndexRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/check': typeof CheckRoute
+  '/timetable': typeof TimetableRoute
   '/violations': typeof ViolationsRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
   '/reports': typeof ReportsIndexRoute
@@ -59,19 +67,33 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/check': typeof CheckRoute
+  '/timetable': typeof TimetableRoute
   '/violations': typeof ViolationsRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
   '/reports/': typeof ReportsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/check' | '/violations' | '/reports/$reportId' | '/reports/'
+  fullPaths:
+    | '/'
+    | '/check'
+    | '/timetable'
+    | '/violations'
+    | '/reports/$reportId'
+    | '/reports/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/check' | '/violations' | '/reports/$reportId' | '/reports'
+  to:
+    | '/'
+    | '/check'
+    | '/timetable'
+    | '/violations'
+    | '/reports/$reportId'
+    | '/reports'
   id:
     | '__root__'
     | '/'
     | '/check'
+    | '/timetable'
     | '/violations'
     | '/reports/$reportId'
     | '/reports/'
@@ -80,6 +102,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CheckRoute: typeof CheckRoute
+  TimetableRoute: typeof TimetableRoute
   ViolationsRoute: typeof ViolationsRoute
   ReportsReportIdRoute: typeof ReportsReportIdRoute
   ReportsIndexRoute: typeof ReportsIndexRoute
@@ -99,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/check'
       fullPath: '/check'
       preLoaderRoute: typeof CheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/timetable': {
+      id: '/timetable'
+      path: '/timetable'
+      fullPath: '/timetable'
+      preLoaderRoute: typeof TimetableRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/violations': {
@@ -128,6 +158,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CheckRoute: CheckRoute,
+  TimetableRoute: TimetableRoute,
   ViolationsRoute: ViolationsRoute,
   ReportsReportIdRoute: ReportsReportIdRoute,
   ReportsIndexRoute: ReportsIndexRoute,
