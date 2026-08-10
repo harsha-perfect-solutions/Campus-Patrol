@@ -1,6 +1,5 @@
 import { AlertTriangle, CheckCircle2, Clock, Eye, ShieldAlert, Gavel } from "lucide-react";
 import type { ReactNode } from "react";
-import { STATUS_META, type ViolationStatus } from "@/lib/cmadms-api";
 import { cn } from "@/lib/utils";
 
 const tones = {
@@ -11,26 +10,25 @@ const tones = {
   neutral: "bg-secondary text-secondary-foreground border-border",
 } as const;
 
-const icons: Record<ViolationStatus, typeof Clock> = {
-  reported: AlertTriangle,
-  notified: Eye,
-  awaiting_explanation: Clock,
-  explanation_submitted: Eye,
-  under_review: Gavel,
-  exonerated: CheckCircle2,
-  warned: CheckCircle2,
-  escalated: ShieldAlert,
+type Meta = { label: string; tone: keyof typeof tones; Icon: typeof Clock };
+
+const map: Record<string, Meta> = {
+  pending: { label: "Pending", tone: "warning", Icon: Clock },
+  review: { label: "Under Review", tone: "info", Icon: Eye },
+  resolved: { label: "Resolved", tone: "success", Icon: CheckCircle2 },
+  escalated: { label: "Escalated", tone: "danger", Icon: ShieldAlert },
+  reported: { label: "Reported", tone: "warning", Icon: AlertTriangle },
+  notified: { label: "Student Notified", tone: "info", Icon: Eye },
+  awaiting_explanation: { label: "Awaiting Explanation", tone: "warning", Icon: Clock },
+  explanation_submitted: { label: "Explanation Submitted", tone: "info", Icon: Eye },
+  under_review: { label: "Under Review", tone: "info", Icon: Gavel },
+  exonerated: { label: "Exonerated", tone: "success", Icon: CheckCircle2 },
+  warned: { label: "Warning Issued", tone: "success", Icon: CheckCircle2 },
 };
 
-export function StatusBadge({
-  status,
-  className,
-}: {
-  status: ViolationStatus;
-  className?: string;
-}) {
-  const meta = STATUS_META[status] ?? STATUS_META.reported;
-  const Icon = icons[status] ?? Clock;
+export function StatusBadge({ status, className }: { status: string; className?: string }) {
+  const meta = map[status] ?? map["pending"]!;
+  const Icon = meta.Icon;
   return (
     <span
       className={cn(
