@@ -4,7 +4,6 @@ import { ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,20 +110,6 @@ function AuthPage() {
       return;
     }
     toast.success("Account created");
-    void goHome();
-  }
-
-  async function handleGoogle() {
-    setBusy(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      setBusy(false);
-      toast.error("Google sign-in failed. Please try again.");
-      return;
-    }
-    if (result.redirected) return;
     void goHome();
   }
 
@@ -307,15 +292,6 @@ function AuthPage() {
             </form>
           )}
 
-          <div className="my-6 flex items-center gap-3 text-xs text-subtle-foreground">
-            <span className="h-px flex-1 bg-border" />
-            OR
-            <span className="h-px flex-1 bg-border" />
-          </div>
-
-          <Button variant="outline" className="w-full" onClick={handleGoogle} disabled={busy}>
-            Continue with Google
-          </Button>
         </div>
       </main>
     </div>
