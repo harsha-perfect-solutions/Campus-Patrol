@@ -1,51 +1,44 @@
-import { AlertTriangle, CheckCircle2, Clock, Eye, ShieldAlert } from "lucide-react";
-import type { ReportStatus } from "@/lib/cmadms-data";
+import { AlertTriangle, CheckCircle2, Clock, Eye, ShieldAlert, Gavel } from "lucide-react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-const map: Record<
-  ReportStatus,
-  { label: string; className: string; Icon: typeof Clock }
-> = {
-  pending: {
-    label: "Pending",
-    className: "bg-warning-soft text-warning border-warning/30",
-    Icon: Clock,
-  },
-  review: {
-    label: "Under Review",
-    className: "bg-info-soft text-info border-info/30",
-    Icon: Eye,
-  },
-  resolved: {
-    label: "Resolved",
-    className: "bg-success-soft text-success border-success/30",
-    Icon: CheckCircle2,
-  },
-  escalated: {
-    label: "Escalated",
-    className: "bg-destructive-soft text-destructive border-destructive/30",
-    Icon: ShieldAlert,
-  },
+const tones = {
+  success: "bg-success-soft text-success border-success/30",
+  warning: "bg-warning-soft text-warning border-warning/30",
+  danger: "bg-destructive-soft text-destructive border-destructive/30",
+  info: "bg-info-soft text-info border-info/30",
+  neutral: "bg-secondary text-secondary-foreground border-border",
+} as const;
+
+type Meta = { label: string; tone: keyof typeof tones; Icon: typeof Clock };
+
+const map: Record<string, Meta> = {
+  pending: { label: "Pending", tone: "warning", Icon: Clock },
+  review: { label: "Under Review", tone: "info", Icon: Eye },
+  resolved: { label: "Resolved", tone: "success", Icon: CheckCircle2 },
+  escalated: { label: "Escalated", tone: "danger", Icon: ShieldAlert },
+  reported: { label: "Reported", tone: "warning", Icon: AlertTriangle },
+  notified: { label: "Student Notified", tone: "info", Icon: Eye },
+  awaiting_explanation: { label: "Awaiting Explanation", tone: "warning", Icon: Clock },
+  explanation_submitted: { label: "Explanation Submitted", tone: "info", Icon: Eye },
+  under_review: { label: "Under Review", tone: "info", Icon: Gavel },
+  exonerated: { label: "Exonerated", tone: "success", Icon: CheckCircle2 },
+  warned: { label: "Warning Issued", tone: "success", Icon: CheckCircle2 },
 };
 
-export function StatusBadge({
-  status,
-  className,
-}: {
-  status: ReportStatus;
-  className?: string;
-}) {
-  const { label, className: tone, Icon } = map[status] ?? map.pending;
+export function StatusBadge({ status, className }: { status: string; className?: string }) {
+  const meta = map[status] ?? map["pending"]!;
+  const Icon = meta.Icon;
   return (
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
-        tone,
+        tones[meta.tone],
         className,
       )}
     >
       <Icon className="size-3.5" aria-hidden />
-      {label}
+      {meta.label}
     </span>
   );
 }
@@ -55,17 +48,10 @@ export function ToneBadge({
   children,
   className,
 }: {
-  tone: "success" | "warning" | "danger" | "info" | "neutral";
-  children: React.ReactNode;
+  tone: keyof typeof tones;
+  children: ReactNode;
   className?: string;
 }) {
-  const tones = {
-    success: "bg-success-soft text-success border-success/30",
-    warning: "bg-warning-soft text-warning border-warning/30",
-    danger: "bg-destructive-soft text-destructive border-destructive/30",
-    info: "bg-info-soft text-info border-info/30",
-    neutral: "bg-secondary text-secondary-foreground border-border",
-  } as const;
   return (
     <span
       className={cn(
