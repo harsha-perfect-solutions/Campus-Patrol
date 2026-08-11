@@ -15,6 +15,16 @@ export type Profile = {
   avatar_url: string | null;
 };
 
+export type DemoUser = {
+  id: string;
+  email: string;
+  full_name: string;
+  role: AppRole;
+  department: string;
+  staff_code?: string | null;
+  student_code?: string | null;
+};
+
 type AuthCtx = {
   loading: boolean;
   session: Session | null;
@@ -22,17 +32,41 @@ type AuthCtx = {
   profile: Profile | null;
   role: AppRole | null;
   isStaff: boolean;
+  setDemoUser: (u: DemoUser | null) => void;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
 
+const DEMO_STORAGE_KEY = "cmadms-demo-user";
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const [demoUser, setDemoUserState] = useState<DemoUser | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(DEMO_STORAGE_KEY);
+      if (stored) {
+        setDemoUserState(JSON.parse(stored));
+      }
+    } catch {
+      // Ignore JSON parse errors
+    }
+  }, []);
+
+  const setDemoUser = useCallback((u: DemoUser | null) => {
+    setDemoUserState(u);
+    if (u) {
+      localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(u));
+    } else {
+      localStorage.removeItem(DEMO_STORAGE_KEY);
+    }
+  }, []);
 
   const load = useCallback(async (uid: string | undefined) => {
     if (!uid) {
@@ -78,20 +112,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [load]);
 
+  const effectiveUser: User | null = useMemo(() => {
+    if (session?.user) return session.user;
+    if (demoUser) {
+      return {
+        id: demoUser.id,
+        email: demoUser.email,
+        app_metadata: {},
+        user_metadata: {},
+        aud: "authenticated",
+        created_at: new Date().toISOString(),
+      } as unknown as User;
+    }
+    return null;
+  }, [session, demoUser]);
+
+  const effectiveSession: Session | null = useMemo(() => {
+    if (session) return session;
+    if (demoUser && effectiveUser) {
+      return {
+        access_token: "demo-access-token",
+        token_type: "bearer",
+        expires_in: 3600,
+        refresh_token: "demo-refresh-token",
+        user: effectiveUser,
+      } as unknown as Session;
+    }
+    return null;
+  }, [session, demoUser, effectiveUser]);
+
+  const effectiveProfile: Profile | null = useMemo(() => {
+    if (profile) return profile;
+    if (demoUser) {
+      return {
+        id: demoUser.id,
+        full_name: demoUser.full_name,
+        email: demoUser.email,
+        department: demoUser.department,
+        staff_code: demoUser.staff_code ?? null,
+        student_code: demoUser.student_code ?? null,
+        avatar_url: null,
+      };
+    }
+    return null;
+  }, [profile, demoUser]);
+
+  const effectiveRole: AppRole | null = useMemo(() => {
+    if (role) return role;
+    if (demoUser) return demoUser.role;
+    return null;
+  }, [role, demoUser]);
+
   const value = useMemo<AuthCtx>(
     () => ({
       loading,
-      session,
-      user: session?.user ?? null,
-      profile,
-      role,
-      isStaff: role === "faculty" || role === "hod" || role === "admin",
+      session: effectiveSession,
+      user: effectiveUser,
+      profile: effectiveProfile,
+      role: effectiveRole,
+      isStaff: effectiveRole === "faculty" || effectiveRole === "hod" || effectiveRole === "admin",
+      setDemoUser,
       refresh: () => load(session?.user.id),
       signOut: async () => {
+        setDemoUser(null);
         await supabase.auth.signOut();
       },
     }),
-    [loading, session, profile, role, load],
+    [loading, effectiveSession, effectiveUser, effectiveProfile, effectiveRole, setDemoUser, load, session],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

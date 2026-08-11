@@ -37,7 +37,7 @@ function ResetPassword() {
       return;
     }
     toast.success("Password updated");
-    void navigate({ to: "/dashboard" });
+    void navigate({ to: "/check" });
   }
 
   return (

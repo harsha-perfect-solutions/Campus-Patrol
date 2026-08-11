@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -11,8 +12,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { AuthProvider } from "@/lib/auth";
+import { AuthProvider, useAuth } from "@/lib/auth";
 import { CmadmsProvider } from "@/lib/cmadms-store";
+import { FacultyShell, HODShell, StudentShell, AdminShell } from "@/components/shells/role-shells";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -120,6 +122,47 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function RootContent() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { session, role } = useAuth();
+
+  const isPublicPage = pathname === "/" || pathname === "/auth" || pathname === "/reset-password";
+
+  if (!session || isPublicPage) {
+    return <Outlet />;
+  }
+
+  if (role === "admin" || pathname.startsWith("/admin")) {
+    return (
+      <AdminShell>
+        <Outlet />
+      </AdminShell>
+    );
+  }
+
+  if (role === "hod" || pathname.startsWith("/hod")) {
+    return (
+      <HODShell>
+        <Outlet />
+      </HODShell>
+    );
+  }
+
+  if (role === "student" || pathname.startsWith("/student")) {
+    return (
+      <StudentShell>
+        <Outlet />
+      </StudentShell>
+    );
+  }
+
+  return (
+    <FacultyShell>
+      <Outlet />
+    </FacultyShell>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -127,8 +170,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <CmadmsProvider>
         <AuthProvider>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
+          <RootContent />
           <Toaster position="top-right" richColors />
         </AuthProvider>
       </CmadmsProvider>

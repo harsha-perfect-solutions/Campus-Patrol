@@ -51,7 +51,7 @@ function Card({
   );
 }
 
-function SettingsPage() {
+export function SettingsPage() {
   const { theme, setTheme } = useCmadms();
 
   return (

@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           onToggleSidebar={() => setCollapsed((v) => !v)}
           onOpenMobileNav={() => setMobileOpen(true)}
         />
-        <main className="flex-1 px-4 py-6 lg:px-8 lg:py-8">
+        <main className="flex-1 px-4 pt-6 pb-16 lg:px-8 lg:pt-8 lg:pb-16">
           <div className="mx-auto w-full max-w-[1240px] space-y-6">{children}</div>
         </main>
       </div>

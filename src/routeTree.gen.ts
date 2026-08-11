@@ -17,8 +17,44 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TimetableRouteImport } from './routes/timetable'
 import { Route as ViolationsRouteImport } from './routes/violations'
+import { Route as AdminAuditLogsRouteImport } from './routes/admin/audit-logs'
+import { Route as AdminCoursesRouteImport } from './routes/admin/courses'
+import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminDepartmentsRouteImport } from './routes/admin/departments'
+import { Route as AdminFacultyRouteImport } from './routes/admin/faculty'
+import { Route as AdminPermissionsRouteImport } from './routes/admin/permissions'
+import { Route as AdminReportsRouteImport } from './routes/admin/reports'
+import { Route as AdminRoomsRouteImport } from './routes/admin/rooms'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminStudentsRouteImport } from './routes/admin/students'
+import { Route as AdminTimetableRouteImport } from './routes/admin/timetable'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as FacultyCheckRouteImport } from './routes/faculty/check'
+import { Route as FacultyDashboardRouteImport } from './routes/faculty/dashboard'
+import { Route as FacultyNotificationsRouteImport } from './routes/faculty/notifications'
+import { Route as FacultyPassesRouteImport } from './routes/faculty/passes'
+import { Route as FacultyReportsRouteImport } from './routes/faculty/reports'
+import { Route as FacultySettingsRouteImport } from './routes/faculty/settings'
+import { Route as FacultyTimetableRouteImport } from './routes/faculty/timetable'
+import { Route as HodCasesRouteImport } from './routes/hod/cases'
+import { Route as HodDashboardRouteImport } from './routes/hod/dashboard'
+import { Route as HodDepartmentRouteImport } from './routes/hod/department'
+import { Route as HodNotificationsRouteImport } from './routes/hod/notifications'
+import { Route as HodSettingsRouteImport } from './routes/hod/settings'
+import { Route as HodStudentsRouteImport } from './routes/hod/students'
+import { Route as HodTimetableRouteImport } from './routes/hod/timetable'
 import { Route as ReportsIndexRouteImport } from './routes/reports.index'
 import { Route as ReportsReportIdRouteImport } from './routes/reports.$reportId'
+import { Route as StudentDashboardRouteImport } from './routes/student/dashboard'
+import { Route as StudentExplanationsRouteImport } from './routes/student/explanations'
+import { Route as StudentNotificationsRouteImport } from './routes/student/notifications'
+import { Route as StudentPassesRouteImport } from './routes/student/passes'
+import { Route as StudentProfileRouteImport } from './routes/student/profile'
+import { Route as StudentSettingsRouteImport } from './routes/student/settings'
+import { Route as StudentTimetableRouteImport } from './routes/student/timetable'
+import { Route as StudentViolationsRouteImport } from './routes/student/violations'
+import { Route as AdminReportsReportIdRouteImport } from './routes/admin/reports.$reportId'
+import { Route as HodCasesReportIdRouteImport } from './routes/hod/cases.$reportId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -60,6 +96,136 @@ const ViolationsRoute = ViolationsRouteImport.update({
   path: '/violations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
+  id: '/admin/audit-logs',
+  path: '/admin/audit-logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCoursesRoute = AdminCoursesRouteImport.update({
+  id: '/admin/courses',
+  path: '/admin/courses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin/dashboard',
+  path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDepartmentsRoute = AdminDepartmentsRouteImport.update({
+  id: '/admin/departments',
+  path: '/admin/departments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminFacultyRoute = AdminFacultyRouteImport.update({
+  id: '/admin/faculty',
+  path: '/admin/faculty',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPermissionsRoute = AdminPermissionsRouteImport.update({
+  id: '/admin/permissions',
+  path: '/admin/permissions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/admin/reports',
+  path: '/admin/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoomsRoute = AdminRoomsRouteImport.update({
+  id: '/admin/rooms',
+  path: '/admin/rooms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/admin/settings',
+  path: '/admin/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminStudentsRoute = AdminStudentsRouteImport.update({
+  id: '/admin/students',
+  path: '/admin/students',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTimetableRoute = AdminTimetableRouteImport.update({
+  id: '/admin/timetable',
+  path: '/admin/timetable',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FacultyCheckRoute = FacultyCheckRouteImport.update({
+  id: '/faculty/check',
+  path: '/faculty/check',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FacultyDashboardRoute = FacultyDashboardRouteImport.update({
+  id: '/faculty/dashboard',
+  path: '/faculty/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FacultyNotificationsRoute = FacultyNotificationsRouteImport.update({
+  id: '/faculty/notifications',
+  path: '/faculty/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FacultyPassesRoute = FacultyPassesRouteImport.update({
+  id: '/faculty/passes',
+  path: '/faculty/passes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FacultyReportsRoute = FacultyReportsRouteImport.update({
+  id: '/faculty/reports',
+  path: '/faculty/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FacultySettingsRoute = FacultySettingsRouteImport.update({
+  id: '/faculty/settings',
+  path: '/faculty/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FacultyTimetableRoute = FacultyTimetableRouteImport.update({
+  id: '/faculty/timetable',
+  path: '/faculty/timetable',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HodCasesRoute = HodCasesRouteImport.update({
+  id: '/hod/cases',
+  path: '/hod/cases',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HodDashboardRoute = HodDashboardRouteImport.update({
+  id: '/hod/dashboard',
+  path: '/hod/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HodDepartmentRoute = HodDepartmentRouteImport.update({
+  id: '/hod/department',
+  path: '/hod/department',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HodNotificationsRoute = HodNotificationsRouteImport.update({
+  id: '/hod/notifications',
+  path: '/hod/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HodSettingsRoute = HodSettingsRouteImport.update({
+  id: '/hod/settings',
+  path: '/hod/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HodStudentsRoute = HodStudentsRouteImport.update({
+  id: '/hod/students',
+  path: '/hod/students',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HodTimetableRoute = HodTimetableRouteImport.update({
+  id: '/hod/timetable',
+  path: '/hod/timetable',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportsIndexRoute = ReportsIndexRouteImport.update({
   id: '/reports/',
   path: '/reports/',
@@ -69,6 +235,56 @@ const ReportsReportIdRoute = ReportsReportIdRouteImport.update({
   id: '/reports/$reportId',
   path: '/reports/$reportId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const StudentDashboardRoute = StudentDashboardRouteImport.update({
+  id: '/student/dashboard',
+  path: '/student/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentExplanationsRoute = StudentExplanationsRouteImport.update({
+  id: '/student/explanations',
+  path: '/student/explanations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentNotificationsRoute = StudentNotificationsRouteImport.update({
+  id: '/student/notifications',
+  path: '/student/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentPassesRoute = StudentPassesRouteImport.update({
+  id: '/student/passes',
+  path: '/student/passes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentProfileRoute = StudentProfileRouteImport.update({
+  id: '/student/profile',
+  path: '/student/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentSettingsRoute = StudentSettingsRouteImport.update({
+  id: '/student/settings',
+  path: '/student/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentTimetableRoute = StudentTimetableRouteImport.update({
+  id: '/student/timetable',
+  path: '/student/timetable',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentViolationsRoute = StudentViolationsRouteImport.update({
+  id: '/student/violations',
+  path: '/student/violations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminReportsReportIdRoute = AdminReportsReportIdRouteImport.update({
+  id: '/$reportId',
+  path: '/$reportId',
+  getParentRoute: () => AdminReportsRoute,
+} as any)
+const HodCasesReportIdRoute = HodCasesReportIdRouteImport.update({
+  id: '/$reportId',
+  path: '/$reportId',
+  getParentRoute: () => HodCasesRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -80,8 +296,44 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/timetable': typeof TimetableRoute
   '/violations': typeof ViolationsRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/courses': typeof AdminCoursesRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/departments': typeof AdminDepartmentsRoute
+  '/admin/faculty': typeof AdminFacultyRoute
+  '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/reports': typeof AdminReportsRouteWithChildren
+  '/admin/rooms': typeof AdminRoomsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/students': typeof AdminStudentsRoute
+  '/admin/timetable': typeof AdminTimetableRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/faculty/check': typeof FacultyCheckRoute
+  '/faculty/dashboard': typeof FacultyDashboardRoute
+  '/faculty/notifications': typeof FacultyNotificationsRoute
+  '/faculty/passes': typeof FacultyPassesRoute
+  '/faculty/reports': typeof FacultyReportsRoute
+  '/faculty/settings': typeof FacultySettingsRoute
+  '/faculty/timetable': typeof FacultyTimetableRoute
+  '/hod/cases': typeof HodCasesRouteWithChildren
+  '/hod/dashboard': typeof HodDashboardRoute
+  '/hod/department': typeof HodDepartmentRoute
+  '/hod/notifications': typeof HodNotificationsRoute
+  '/hod/settings': typeof HodSettingsRoute
+  '/hod/students': typeof HodStudentsRoute
+  '/hod/timetable': typeof HodTimetableRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
+  '/student/dashboard': typeof StudentDashboardRoute
+  '/student/explanations': typeof StudentExplanationsRoute
+  '/student/notifications': typeof StudentNotificationsRoute
+  '/student/passes': typeof StudentPassesRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/student/settings': typeof StudentSettingsRoute
+  '/student/timetable': typeof StudentTimetableRoute
+  '/student/violations': typeof StudentViolationsRoute
   '/reports/': typeof ReportsIndexRoute
+  '/admin/reports/$reportId': typeof AdminReportsReportIdRoute
+  '/hod/cases/$reportId': typeof HodCasesReportIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -92,8 +344,44 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/timetable': typeof TimetableRoute
   '/violations': typeof ViolationsRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/courses': typeof AdminCoursesRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/departments': typeof AdminDepartmentsRoute
+  '/admin/faculty': typeof AdminFacultyRoute
+  '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/reports': typeof AdminReportsRouteWithChildren
+  '/admin/rooms': typeof AdminRoomsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/students': typeof AdminStudentsRoute
+  '/admin/timetable': typeof AdminTimetableRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/faculty/check': typeof FacultyCheckRoute
+  '/faculty/dashboard': typeof FacultyDashboardRoute
+  '/faculty/notifications': typeof FacultyNotificationsRoute
+  '/faculty/passes': typeof FacultyPassesRoute
+  '/faculty/reports': typeof FacultyReportsRoute
+  '/faculty/settings': typeof FacultySettingsRoute
+  '/faculty/timetable': typeof FacultyTimetableRoute
+  '/hod/cases': typeof HodCasesRouteWithChildren
+  '/hod/dashboard': typeof HodDashboardRoute
+  '/hod/department': typeof HodDepartmentRoute
+  '/hod/notifications': typeof HodNotificationsRoute
+  '/hod/settings': typeof HodSettingsRoute
+  '/hod/students': typeof HodStudentsRoute
+  '/hod/timetable': typeof HodTimetableRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
+  '/student/dashboard': typeof StudentDashboardRoute
+  '/student/explanations': typeof StudentExplanationsRoute
+  '/student/notifications': typeof StudentNotificationsRoute
+  '/student/passes': typeof StudentPassesRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/student/settings': typeof StudentSettingsRoute
+  '/student/timetable': typeof StudentTimetableRoute
+  '/student/violations': typeof StudentViolationsRoute
   '/reports': typeof ReportsIndexRoute
+  '/admin/reports/$reportId': typeof AdminReportsReportIdRoute
+  '/hod/cases/$reportId': typeof HodCasesReportIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -105,8 +393,44 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/timetable': typeof TimetableRoute
   '/violations': typeof ViolationsRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/courses': typeof AdminCoursesRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/departments': typeof AdminDepartmentsRoute
+  '/admin/faculty': typeof AdminFacultyRoute
+  '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/reports': typeof AdminReportsRouteWithChildren
+  '/admin/rooms': typeof AdminRoomsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/students': typeof AdminStudentsRoute
+  '/admin/timetable': typeof AdminTimetableRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/faculty/check': typeof FacultyCheckRoute
+  '/faculty/dashboard': typeof FacultyDashboardRoute
+  '/faculty/notifications': typeof FacultyNotificationsRoute
+  '/faculty/passes': typeof FacultyPassesRoute
+  '/faculty/reports': typeof FacultyReportsRoute
+  '/faculty/settings': typeof FacultySettingsRoute
+  '/faculty/timetable': typeof FacultyTimetableRoute
+  '/hod/cases': typeof HodCasesRouteWithChildren
+  '/hod/dashboard': typeof HodDashboardRoute
+  '/hod/department': typeof HodDepartmentRoute
+  '/hod/notifications': typeof HodNotificationsRoute
+  '/hod/settings': typeof HodSettingsRoute
+  '/hod/students': typeof HodStudentsRoute
+  '/hod/timetable': typeof HodTimetableRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
+  '/student/dashboard': typeof StudentDashboardRoute
+  '/student/explanations': typeof StudentExplanationsRoute
+  '/student/notifications': typeof StudentNotificationsRoute
+  '/student/passes': typeof StudentPassesRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/student/settings': typeof StudentSettingsRoute
+  '/student/timetable': typeof StudentTimetableRoute
+  '/student/violations': typeof StudentViolationsRoute
   '/reports/': typeof ReportsIndexRoute
+  '/admin/reports/$reportId': typeof AdminReportsReportIdRoute
+  '/hod/cases/$reportId': typeof HodCasesReportIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -119,8 +443,44 @@ export interface FileRouteTypes {
     | '/settings'
     | '/timetable'
     | '/violations'
+    | '/admin/audit-logs'
+    | '/admin/courses'
+    | '/admin/dashboard'
+    | '/admin/departments'
+    | '/admin/faculty'
+    | '/admin/permissions'
+    | '/admin/reports'
+    | '/admin/rooms'
+    | '/admin/settings'
+    | '/admin/students'
+    | '/admin/timetable'
+    | '/admin/users'
+    | '/faculty/check'
+    | '/faculty/dashboard'
+    | '/faculty/notifications'
+    | '/faculty/passes'
+    | '/faculty/reports'
+    | '/faculty/settings'
+    | '/faculty/timetable'
+    | '/hod/cases'
+    | '/hod/dashboard'
+    | '/hod/department'
+    | '/hod/notifications'
+    | '/hod/settings'
+    | '/hod/students'
+    | '/hod/timetable'
     | '/reports/$reportId'
+    | '/student/dashboard'
+    | '/student/explanations'
+    | '/student/notifications'
+    | '/student/passes'
+    | '/student/profile'
+    | '/student/settings'
+    | '/student/timetable'
+    | '/student/violations'
     | '/reports/'
+    | '/admin/reports/$reportId'
+    | '/hod/cases/$reportId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -131,8 +491,44 @@ export interface FileRouteTypes {
     | '/settings'
     | '/timetable'
     | '/violations'
+    | '/admin/audit-logs'
+    | '/admin/courses'
+    | '/admin/dashboard'
+    | '/admin/departments'
+    | '/admin/faculty'
+    | '/admin/permissions'
+    | '/admin/reports'
+    | '/admin/rooms'
+    | '/admin/settings'
+    | '/admin/students'
+    | '/admin/timetable'
+    | '/admin/users'
+    | '/faculty/check'
+    | '/faculty/dashboard'
+    | '/faculty/notifications'
+    | '/faculty/passes'
+    | '/faculty/reports'
+    | '/faculty/settings'
+    | '/faculty/timetable'
+    | '/hod/cases'
+    | '/hod/dashboard'
+    | '/hod/department'
+    | '/hod/notifications'
+    | '/hod/settings'
+    | '/hod/students'
+    | '/hod/timetable'
     | '/reports/$reportId'
+    | '/student/dashboard'
+    | '/student/explanations'
+    | '/student/notifications'
+    | '/student/passes'
+    | '/student/profile'
+    | '/student/settings'
+    | '/student/timetable'
+    | '/student/violations'
     | '/reports'
+    | '/admin/reports/$reportId'
+    | '/hod/cases/$reportId'
   id:
     | '__root__'
     | '/'
@@ -143,8 +539,44 @@ export interface FileRouteTypes {
     | '/settings'
     | '/timetable'
     | '/violations'
+    | '/admin/audit-logs'
+    | '/admin/courses'
+    | '/admin/dashboard'
+    | '/admin/departments'
+    | '/admin/faculty'
+    | '/admin/permissions'
+    | '/admin/reports'
+    | '/admin/rooms'
+    | '/admin/settings'
+    | '/admin/students'
+    | '/admin/timetable'
+    | '/admin/users'
+    | '/faculty/check'
+    | '/faculty/dashboard'
+    | '/faculty/notifications'
+    | '/faculty/passes'
+    | '/faculty/reports'
+    | '/faculty/settings'
+    | '/faculty/timetable'
+    | '/hod/cases'
+    | '/hod/dashboard'
+    | '/hod/department'
+    | '/hod/notifications'
+    | '/hod/settings'
+    | '/hod/students'
+    | '/hod/timetable'
     | '/reports/$reportId'
+    | '/student/dashboard'
+    | '/student/explanations'
+    | '/student/notifications'
+    | '/student/passes'
+    | '/student/profile'
+    | '/student/settings'
+    | '/student/timetable'
+    | '/student/violations'
     | '/reports/'
+    | '/admin/reports/$reportId'
+    | '/hod/cases/$reportId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -156,7 +588,41 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   TimetableRoute: typeof TimetableRoute
   ViolationsRoute: typeof ViolationsRoute
+  AdminAuditLogsRoute: typeof AdminAuditLogsRoute
+  AdminCoursesRoute: typeof AdminCoursesRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminDepartmentsRoute: typeof AdminDepartmentsRoute
+  AdminFacultyRoute: typeof AdminFacultyRoute
+  AdminPermissionsRoute: typeof AdminPermissionsRoute
+  AdminReportsRoute: typeof AdminReportsRouteWithChildren
+  AdminRoomsRoute: typeof AdminRoomsRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminStudentsRoute: typeof AdminStudentsRoute
+  AdminTimetableRoute: typeof AdminTimetableRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  FacultyCheckRoute: typeof FacultyCheckRoute
+  FacultyDashboardRoute: typeof FacultyDashboardRoute
+  FacultyNotificationsRoute: typeof FacultyNotificationsRoute
+  FacultyPassesRoute: typeof FacultyPassesRoute
+  FacultyReportsRoute: typeof FacultyReportsRoute
+  FacultySettingsRoute: typeof FacultySettingsRoute
+  FacultyTimetableRoute: typeof FacultyTimetableRoute
+  HodCasesRoute: typeof HodCasesRouteWithChildren
+  HodDashboardRoute: typeof HodDashboardRoute
+  HodDepartmentRoute: typeof HodDepartmentRoute
+  HodNotificationsRoute: typeof HodNotificationsRoute
+  HodSettingsRoute: typeof HodSettingsRoute
+  HodStudentsRoute: typeof HodStudentsRoute
+  HodTimetableRoute: typeof HodTimetableRoute
   ReportsReportIdRoute: typeof ReportsReportIdRoute
+  StudentDashboardRoute: typeof StudentDashboardRoute
+  StudentExplanationsRoute: typeof StudentExplanationsRoute
+  StudentNotificationsRoute: typeof StudentNotificationsRoute
+  StudentPassesRoute: typeof StudentPassesRoute
+  StudentProfileRoute: typeof StudentProfileRoute
+  StudentSettingsRoute: typeof StudentSettingsRoute
+  StudentTimetableRoute: typeof StudentTimetableRoute
+  StudentViolationsRoute: typeof StudentViolationsRoute
   ReportsIndexRoute: typeof ReportsIndexRoute
 }
 
@@ -218,6 +684,188 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ViolationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/audit-logs': {
+      id: '/admin/audit-logs'
+      path: '/admin/audit-logs'
+      fullPath: '/admin/audit-logs'
+      preLoaderRoute: typeof AdminAuditLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/courses': {
+      id: '/admin/courses'
+      path: '/admin/courses'
+      fullPath: '/admin/courses'
+      preLoaderRoute: typeof AdminCoursesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/departments': {
+      id: '/admin/departments'
+      path: '/admin/departments'
+      fullPath: '/admin/departments'
+      preLoaderRoute: typeof AdminDepartmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/faculty': {
+      id: '/admin/faculty'
+      path: '/admin/faculty'
+      fullPath: '/admin/faculty'
+      preLoaderRoute: typeof AdminFacultyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/permissions': {
+      id: '/admin/permissions'
+      path: '/admin/permissions'
+      fullPath: '/admin/permissions'
+      preLoaderRoute: typeof AdminPermissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/admin/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/rooms': {
+      id: '/admin/rooms'
+      path: '/admin/rooms'
+      fullPath: '/admin/rooms'
+      preLoaderRoute: typeof AdminRoomsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/students': {
+      id: '/admin/students'
+      path: '/admin/students'
+      fullPath: '/admin/students'
+      preLoaderRoute: typeof AdminStudentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/timetable': {
+      id: '/admin/timetable'
+      path: '/admin/timetable'
+      fullPath: '/admin/timetable'
+      preLoaderRoute: typeof AdminTimetableRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faculty/check': {
+      id: '/faculty/check'
+      path: '/faculty/check'
+      fullPath: '/faculty/check'
+      preLoaderRoute: typeof FacultyCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faculty/dashboard': {
+      id: '/faculty/dashboard'
+      path: '/faculty/dashboard'
+      fullPath: '/faculty/dashboard'
+      preLoaderRoute: typeof FacultyDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faculty/notifications': {
+      id: '/faculty/notifications'
+      path: '/faculty/notifications'
+      fullPath: '/faculty/notifications'
+      preLoaderRoute: typeof FacultyNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faculty/passes': {
+      id: '/faculty/passes'
+      path: '/faculty/passes'
+      fullPath: '/faculty/passes'
+      preLoaderRoute: typeof FacultyPassesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faculty/reports': {
+      id: '/faculty/reports'
+      path: '/faculty/reports'
+      fullPath: '/faculty/reports'
+      preLoaderRoute: typeof FacultyReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faculty/settings': {
+      id: '/faculty/settings'
+      path: '/faculty/settings'
+      fullPath: '/faculty/settings'
+      preLoaderRoute: typeof FacultySettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faculty/timetable': {
+      id: '/faculty/timetable'
+      path: '/faculty/timetable'
+      fullPath: '/faculty/timetable'
+      preLoaderRoute: typeof FacultyTimetableRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hod/cases': {
+      id: '/hod/cases'
+      path: '/hod/cases'
+      fullPath: '/hod/cases'
+      preLoaderRoute: typeof HodCasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hod/dashboard': {
+      id: '/hod/dashboard'
+      path: '/hod/dashboard'
+      fullPath: '/hod/dashboard'
+      preLoaderRoute: typeof HodDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hod/department': {
+      id: '/hod/department'
+      path: '/hod/department'
+      fullPath: '/hod/department'
+      preLoaderRoute: typeof HodDepartmentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hod/notifications': {
+      id: '/hod/notifications'
+      path: '/hod/notifications'
+      fullPath: '/hod/notifications'
+      preLoaderRoute: typeof HodNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hod/settings': {
+      id: '/hod/settings'
+      path: '/hod/settings'
+      fullPath: '/hod/settings'
+      preLoaderRoute: typeof HodSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hod/students': {
+      id: '/hod/students'
+      path: '/hod/students'
+      fullPath: '/hod/students'
+      preLoaderRoute: typeof HodStudentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hod/timetable': {
+      id: '/hod/timetable'
+      path: '/hod/timetable'
+      fullPath: '/hod/timetable'
+      preLoaderRoute: typeof HodTimetableRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reports/': {
       id: '/reports/'
       path: '/reports'
@@ -232,8 +880,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportsReportIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/dashboard': {
+      id: '/student/dashboard'
+      path: '/student/dashboard'
+      fullPath: '/student/dashboard'
+      preLoaderRoute: typeof StudentDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/explanations': {
+      id: '/student/explanations'
+      path: '/student/explanations'
+      fullPath: '/student/explanations'
+      preLoaderRoute: typeof StudentExplanationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/notifications': {
+      id: '/student/notifications'
+      path: '/student/notifications'
+      fullPath: '/student/notifications'
+      preLoaderRoute: typeof StudentNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/passes': {
+      id: '/student/passes'
+      path: '/student/passes'
+      fullPath: '/student/passes'
+      preLoaderRoute: typeof StudentPassesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/profile': {
+      id: '/student/profile'
+      path: '/student/profile'
+      fullPath: '/student/profile'
+      preLoaderRoute: typeof StudentProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/settings': {
+      id: '/student/settings'
+      path: '/student/settings'
+      fullPath: '/student/settings'
+      preLoaderRoute: typeof StudentSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/timetable': {
+      id: '/student/timetable'
+      path: '/student/timetable'
+      fullPath: '/student/timetable'
+      preLoaderRoute: typeof StudentTimetableRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/violations': {
+      id: '/student/violations'
+      path: '/student/violations'
+      fullPath: '/student/violations'
+      preLoaderRoute: typeof StudentViolationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/reports/$reportId': {
+      id: '/admin/reports/$reportId'
+      path: '/$reportId'
+      fullPath: '/admin/reports/$reportId'
+      preLoaderRoute: typeof AdminReportsReportIdRouteImport
+      parentRoute: typeof AdminReportsRoute
+    }
+    '/hod/cases/$reportId': {
+      id: '/hod/cases/$reportId'
+      path: '/$reportId'
+      fullPath: '/hod/cases/$reportId'
+      preLoaderRoute: typeof HodCasesReportIdRouteImport
+      parentRoute: typeof HodCasesRoute
+    }
   }
 }
+
+interface AdminReportsRouteChildren {
+  AdminReportsReportIdRoute: typeof AdminReportsReportIdRoute
+}
+
+const AdminReportsRouteChildren: AdminReportsRouteChildren = {
+  AdminReportsReportIdRoute: AdminReportsReportIdRoute,
+}
+
+const AdminReportsRouteWithChildren = AdminReportsRoute._addFileChildren(
+  AdminReportsRouteChildren,
+)
+
+interface HodCasesRouteChildren {
+  HodCasesReportIdRoute: typeof HodCasesReportIdRoute
+}
+
+const HodCasesRouteChildren: HodCasesRouteChildren = {
+  HodCasesReportIdRoute: HodCasesReportIdRoute,
+}
+
+const HodCasesRouteWithChildren = HodCasesRoute._addFileChildren(
+  HodCasesRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -244,9 +986,53 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   TimetableRoute: TimetableRoute,
   ViolationsRoute: ViolationsRoute,
+  AdminAuditLogsRoute: AdminAuditLogsRoute,
+  AdminCoursesRoute: AdminCoursesRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminDepartmentsRoute: AdminDepartmentsRoute,
+  AdminFacultyRoute: AdminFacultyRoute,
+  AdminPermissionsRoute: AdminPermissionsRoute,
+  AdminReportsRoute: AdminReportsRouteWithChildren,
+  AdminRoomsRoute: AdminRoomsRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminStudentsRoute: AdminStudentsRoute,
+  AdminTimetableRoute: AdminTimetableRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  FacultyCheckRoute: FacultyCheckRoute,
+  FacultyDashboardRoute: FacultyDashboardRoute,
+  FacultyNotificationsRoute: FacultyNotificationsRoute,
+  FacultyPassesRoute: FacultyPassesRoute,
+  FacultyReportsRoute: FacultyReportsRoute,
+  FacultySettingsRoute: FacultySettingsRoute,
+  FacultyTimetableRoute: FacultyTimetableRoute,
+  HodCasesRoute: HodCasesRouteWithChildren,
+  HodDashboardRoute: HodDashboardRoute,
+  HodDepartmentRoute: HodDepartmentRoute,
+  HodNotificationsRoute: HodNotificationsRoute,
+  HodSettingsRoute: HodSettingsRoute,
+  HodStudentsRoute: HodStudentsRoute,
+  HodTimetableRoute: HodTimetableRoute,
   ReportsReportIdRoute: ReportsReportIdRoute,
+  StudentDashboardRoute: StudentDashboardRoute,
+  StudentExplanationsRoute: StudentExplanationsRoute,
+  StudentNotificationsRoute: StudentNotificationsRoute,
+  StudentPassesRoute: StudentPassesRoute,
+  StudentProfileRoute: StudentProfileRoute,
+  StudentSettingsRoute: StudentSettingsRoute,
+  StudentTimetableRoute: StudentTimetableRoute,
+  StudentViolationsRoute: StudentViolationsRoute,
   ReportsIndexRoute: ReportsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

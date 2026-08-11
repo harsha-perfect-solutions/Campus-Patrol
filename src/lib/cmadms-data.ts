@@ -1,4 +1,44 @@
-export type ReportStatus = "pending" | "review" | "resolved" | "escalated";
+import type { AppRole } from "@/lib/auth";
+
+export type MovementReason =
+  | "Library"
+  | "Laboratory"
+  | "Medical"
+  | "HOD Official Duty"
+  | "Placement"
+  | "NSS"
+  | "NCC"
+  | "Sports"
+  | "Other";
+
+export type PermissionStatus = "Pending" | "Approved" | "Rejected" | "Expired" | "Cancelled";
+
+export type MovementPermissionRecord = {
+  id: string;
+  studentName: string;
+  studentId: string;
+  reason: MovementReason;
+  date: string;
+  validFrom: string;
+  validUntil: string;
+  status: PermissionStatus;
+  approvedBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ReportStatus =
+  | "Reported"
+  | "Student Notified"
+  | "Awaiting Explanation"
+  | "Explanation Submitted"
+  | "Under Review"
+  | "Exonerated"
+  | "Warning"
+  | "Escalated"
+  | "pending"
+  | "review"
+  | "resolved";
 
 export type Student = {
   id: string;
@@ -38,29 +78,61 @@ export type Report = {
   studentName: string;
   studentId: string;
   department: string;
+  departmentHod: string;
   yearSection: string;
   className: string;
   scheduledTime: string;
   room: string;
   incidentTime: string;
-  createdAt: string;
+  createdAt: string; // ISO or date string
+  explanationDeadline: string; // ISO string = createdAt + 24 Hours
   location: string;
   remarks: string;
   evidence?: string | undefined;
   reportedBy: string;
   status: ReportStatus;
   explanation?: string | undefined;
+  explanationSubmittedAt?: string | undefined;
   decision?: string | undefined;
+  decisionBy?: string | undefined;
+  decisionAt?: string | undefined;
   timeline: TimelineEvent[];
+  semester: number;
 };
+
+export type NotificationTargetRole = "faculty" | "student" | "hod" | "admin" | "all";
 
 export type Notification = {
   id: string;
+  recipientRole: NotificationTargetRole;
+  recipientId?: string | undefined;
   title: string;
   detail: string;
   time: string;
   tone: "violation" | "pending" | "resolved" | "info";
   read: boolean;
+  relatedReportId?: string | undefined;
+};
+
+export type AuditLogRecord = {
+  id: string;
+  actor: string;
+  actorRole: AppRole;
+  action: string;
+  target: string;
+  targetId?: string | undefined;
+  timestamp: string;
+  metadata?: Record<string, any> | undefined;
+};
+
+export type SemesterRecord = {
+  id: string;
+  name: string;
+  academicYear: string;
+  semesterNumber: number;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
 };
 
 export const faculty = {
@@ -70,6 +142,36 @@ export const faculty = {
   department: "Computer Science & Engineering",
   initials: "RK",
 };
+
+export const hodByDepartment: Record<string, { name: string; email: string }> = {
+  CSE: { name: "Dr. Anjali Rao", email: "hod.cse@cmadms.edu" },
+  ECE: { name: "Dr. S. Venkat", email: "hod.ece@cmadms.edu" },
+  MECH: { name: "Dr. P. K. Sharma", email: "hod.mech@cmadms.edu" },
+  EEE: { name: "Dr. R. Ramakrishnan", email: "hod.eee@cmadms.edu" },
+  CIVIL: { name: "Dr. M. K. Varma", email: "hod.civil@cmadms.edu" },
+  IT: { name: "Dr. N. Swaminathan", email: "hod.it@cmadms.edu" },
+};
+
+export const seedSemesters: SemesterRecord[] = [
+  {
+    id: "sem-6",
+    name: "Spring 2026",
+    academicYear: "2025-2026",
+    semesterNumber: 6,
+    startDate: "2026-01-05",
+    endDate: "2026-05-30",
+    isActive: true,
+  },
+  {
+    id: "sem-5",
+    name: "Fall 2025",
+    academicYear: "2025-2026",
+    semesterNumber: 5,
+    startDate: "2025-08-01",
+    endDate: "2025-12-20",
+    isActive: false,
+  },
+];
 
 export const students: Student[] = [
   {
@@ -110,7 +212,35 @@ export const students: Student[] = [
   },
 ];
 
-/** Current class per student (null = no class scheduled right now). */
+export const seedPermissions: MovementPermissionRecord[] = [
+  {
+    id: "PERM-101",
+    studentName: "Meera Nair",
+    studentId: "23CSE1044",
+    reason: "Library",
+    date: "2026-08-11",
+    validFrom: "10:00 AM",
+    validUntil: "11:30 AM",
+    status: "Approved",
+    approvedBy: "Dr. Anjali Rao",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "PERM-102",
+    studentName: "Karthik Reddy",
+    studentId: "23ECE2031",
+    reason: "Medical",
+    date: "2026-08-11",
+    validFrom: "10:00 AM",
+    validUntil: "10:45 AM",
+    status: "Approved",
+    approvedBy: "Dr. S. Venkat",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
 export const currentClassByStudent: Record<string, ClassSlot | null> = {
   "23CSE1012": {
     subject: "Data Structures",
@@ -142,24 +272,23 @@ export const currentClassByStudent: Record<string, ClassSlot | null> = {
   "22MEC3007": null,
 };
 
-/** Active movement permission per student (absent = unauthorized). */
 export const permissionByStudent: Record<string, Permission | undefined> = {
   "23CSE1044": {
     reason: "Library — reference book issue",
     issuedBy: "Dr. Anjali Rao",
-    validUntil: "10:50 AM",
+    validUntil: "11:30 AM",
   },
   "23ECE2031": {
     reason: "Medical room visit",
     issuedBy: "Dr. S. Venkat",
-    validUntil: "10:40 AM",
+    validUntil: "10:45 AM",
   },
 };
 
 export const locations = [
   "Main Corridor — Block C",
-  "Library",
-  "Canteen",
+  "Library Corridor",
+  "Canteen & Cafeteria",
   "Sports Ground",
   "Parking Area",
   "Administrative Block",
@@ -200,249 +329,140 @@ export const timetable: Record<string, ClassSlot[]> = {
       code: "CS-308",
       start: "02:00 PM",
       end: "03:00 PM",
-      room: "Room C-301",
+      room: "Room C-206",
       faculty: faculty.name,
       batch: "CSE-A",
-    },
-  ],
-  Mon: [
-    {
-      subject: "Data Structures",
-      code: "CS-304",
-      start: "09:00 AM",
-      end: "10:00 AM",
-      room: "Room C-204",
-      faculty: faculty.name,
-      batch: "CSE-A",
-    },
-    {
-      subject: "Operating Systems",
-      code: "CS-308",
-      start: "02:00 PM",
-      end: "03:00 PM",
-      room: "Room C-301",
-      faculty: faculty.name,
-      batch: "CSE-A",
-    },
-  ],
-  Tue: [
-    {
-      subject: "Database Management",
-      code: "CS-306",
-      start: "10:00 AM",
-      end: "11:00 AM",
-      room: "Room B-102",
-      faculty: faculty.name,
-      batch: "CSE-B",
-    },
-    {
-      subject: "Technical Seminar",
-      code: "CS-390",
-      start: "03:00 PM",
-      end: "04:00 PM",
-      room: "Seminar Hall 2",
-      faculty: faculty.name,
-      batch: "CSE-A",
-    },
-  ],
-  Wed: [
-    {
-      subject: "Data Structures Lab",
-      code: "CS-304L",
-      start: "09:00 AM",
-      end: "11:00 AM",
-      room: "Lab C-1",
-      faculty: faculty.name,
-      batch: "CSE-A",
-    },
-  ],
-  Thu: [
-    {
-      subject: "Operating Systems",
-      code: "CS-308",
-      start: "11:00 AM",
-      end: "12:00 PM",
-      room: "Room C-301",
-      faculty: faculty.name,
-      batch: "CSE-B",
-    },
-    {
-      subject: "Mentoring Hour",
-      code: "—",
-      start: "04:00 PM",
-      end: "05:00 PM",
-      room: "Staff Room 4",
-      faculty: faculty.name,
-      batch: "CSE-A",
-    },
-  ],
-  Fri: [
-    {
-      subject: "Database Management",
-      code: "CS-306",
-      start: "09:00 AM",
-      end: "10:00 AM",
-      room: "Room B-102",
-      faculty: faculty.name,
-      batch: "CSE-B",
     },
   ],
 };
 
+const now = new Date();
+const deadlineDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
 export const seedReports: Report[] = [
   {
-    id: "V-20260810-001",
+    id: "V-20260810-101",
     studentName: "Ashok Dora",
     studentId: "23CSE1012",
     department: "CSE",
+    departmentHod: "Dr. Anjali Rao",
     yearSection: "3rd Year • Section A",
     className: "Data Structures",
     scheduledTime: "10:00 AM — 11:00 AM",
     room: "Room C-204",
     incidentTime: "10:42 AM",
-    createdAt: "10 Aug 2026, 10:42 AM",
+    createdAt: now.toISOString(),
+    explanationDeadline: deadlineDate.toISOString(),
     location: "Main Corridor — Block C",
-    remarks: "Student found in the corridor without a movement pass during scheduled class hours.",
-    reportedBy: faculty.name,
-    status: "review",
-    explanation: "I went to collect a lab record from the department office and lost track of time.",
+    remarks: "Student observed roaming near cafeteria during scheduled Data Structures session without gate pass.",
+    reportedBy: "Prof. Ravi Kumar",
+    status: "Awaiting Explanation",
     timeline: [
-      { time: "10:42 AM", title: "Violation reported", detail: faculty.name, tone: "violation" },
-      { time: "10:43 AM", title: "Student notified", tone: "info" },
-      { time: "11:15 AM", title: "Student explanation submitted", tone: "pending" },
-      { time: "12:30 PM", title: "HOD reviewing case", tone: "info" },
+      { time: "10:42 AM", title: "Violation reported", detail: "Prof. Ravi Kumar", tone: "violation" },
+      { time: "10:43 AM", title: "Student notified", detail: "24-hour explanation window opened", tone: "info" },
     ],
+    semester: 6,
   },
   {
-    id: "V-20260810-002",
+    id: "V-20260810-102",
+    studentName: "Meera Nair",
+    studentId: "23CSE1044",
+    department: "CSE",
+    departmentHod: "Dr. Anjali Rao",
+    yearSection: "3rd Year • Section A",
+    className: "Database Management",
+    scheduledTime: "10:00 AM — 11:00 AM",
+    room: "Room B-102",
+    incidentTime: "10:15 AM",
+    createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+    explanationDeadline: new Date(now.getTime() + 22 * 60 * 60 * 1000).toISOString(),
+    location: "Library Corridor",
+    remarks: "Observed near library corridor.",
+    explanation: "Sent by Lab Assistant to collect reference components for lab practical.",
+    explanationSubmittedAt: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
+    reportedBy: "Prof. Ravi Kumar",
+    status: "Explanation Submitted",
+    timeline: [
+      { time: "08:15 AM", title: "Violation reported", detail: "Prof. Ravi Kumar", tone: "violation" },
+      { time: "09:15 AM", title: "Explanation submitted", detail: "Library reference book collection", tone: "info" },
+    ],
+    semester: 6,
+  },
+  {
+    id: "V-20260810-103",
     studentName: "Karthik Reddy",
     studentId: "23ECE2031",
     department: "ECE",
+    departmentHod: "Dr. S. Venkat",
     yearSection: "2nd Year • Section B",
     className: "Signals & Systems",
     scheduledTime: "10:00 AM — 11:00 AM",
     room: "Room E-110",
-    incidentTime: "10:18 AM",
-    createdAt: "10 Aug 2026, 10:18 AM",
-    location: "Canteen",
-    remarks: "Observed in the canteen during an active lecture slot.",
-    reportedBy: faculty.name,
-    status: "pending",
+    incidentTime: "10:30 AM",
+    createdAt: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(),
+    explanationDeadline: new Date(now.getTime() + 21 * 60 * 60 * 1000).toISOString(),
+    location: "Administrative Block",
+    remarks: "Found near administrative block during lecture hour.",
+    reportedBy: "Prof. Suresh",
+    status: "Awaiting Explanation",
     timeline: [
-      { time: "10:18 AM", title: "Violation reported", detail: faculty.name, tone: "violation" },
-      { time: "10:19 AM", title: "Student notified", tone: "info" },
+      { time: "10:30 AM", title: "Violation reported", detail: "Prof. Suresh", tone: "violation" },
     ],
-  },
-  {
-    id: "V-20260809-014",
-    studentName: "Sneha Patil",
-    studentId: "22MEC3007",
-    department: "MECH",
-    yearSection: "4th Year • Section C",
-    className: "Thermodynamics",
-    scheduledTime: "11:00 AM — 12:00 PM",
-    room: "Room M-208",
-    incidentTime: "11:22 AM",
-    createdAt: "09 Aug 2026, 11:22 AM",
-    location: "Parking Area",
-    remarks: "Left the academic block without an approved pass.",
-    reportedBy: faculty.name,
-    status: "resolved",
-    explanation: "I had a family emergency and informed the class representative.",
-    decision: "Warning issued. Attendance for the session marked absent.",
-    timeline: [
-      { time: "11:22 AM", title: "Violation reported", detail: faculty.name, tone: "violation" },
-      { time: "11:24 AM", title: "Student notified", tone: "info" },
-      { time: "12:05 PM", title: "Student explanation submitted", tone: "pending" },
-      { time: "02:30 PM", title: "HOD reviewed case", tone: "info" },
-      { time: "02:35 PM", title: "Decision: Warning issued", tone: "resolved" },
-    ],
-  },
-  {
-    id: "V-20260808-009",
-    studentName: "Meera Nair",
-    studentId: "23CSE1044",
-    department: "CSE",
-    yearSection: "3rd Year • Section A",
-    className: "Database Management",
-    scheduledTime: "02:00 PM — 03:00 PM",
-    room: "Room B-102",
-    incidentTime: "02:11 PM",
-    createdAt: "08 Aug 2026, 02:11 PM",
-    location: "Hostel Gate",
-    remarks: "Repeated unauthorized movement during afternoon sessions.",
-    reportedBy: faculty.name,
-    status: "escalated",
-    explanation: "I was unwell and going back to the hostel.",
-    timeline: [
-      { time: "02:11 PM", title: "Violation reported", detail: faculty.name, tone: "violation" },
-      { time: "02:12 PM", title: "Student notified", tone: "info" },
-      { time: "03:40 PM", title: "Student explanation submitted", tone: "pending" },
-      { time: "04:10 PM", title: "Escalated to HOD — third instance", tone: "violation" },
-    ],
-  },
-  {
-    id: "V-20260807-021",
-    studentName: "Ashok Dora",
-    studentId: "23CSE1012",
-    department: "CSE",
-    yearSection: "3rd Year • Section A",
-    className: "Operating Systems",
-    scheduledTime: "02:00 PM — 03:00 PM",
-    room: "Room C-301",
-    incidentTime: "02:26 PM",
-    createdAt: "07 Aug 2026, 02:26 PM",
-    location: "Library",
-    remarks: "Found in the library reading room during class hours.",
-    reportedBy: faculty.name,
-    status: "resolved",
-    decision: "Explanation accepted — permission was issued but not recorded.",
-    timeline: [
-      { time: "02:26 PM", title: "Violation reported", detail: faculty.name, tone: "violation" },
-      { time: "03:00 PM", title: "Student explanation submitted", tone: "pending" },
-      { time: "04:15 PM", title: "Decision: Closed without penalty", tone: "resolved" },
-    ],
+    semester: 4,
   },
 ];
 
 export const seedNotifications: Notification[] = [
   {
-    id: "N-1",
-    title: "HOD reviewed violation V-20260810-001",
-    detail: "The case is now under review with the department head.",
-    time: "2 minutes ago",
+    id: "N-101",
+    recipientRole: "student",
+    recipientId: "23CSE1012",
+    title: "Violation Reported",
+    detail: "Case V-20260810-101 for Data Structures. Submit explanation within 24 hours.",
+    time: "10:43 AM",
     tone: "violation",
     read: false,
+    relatedReportId: "V-20260810-101",
   },
   {
-    id: "N-2",
-    title: "Student submitted explanation for V-20260808-009",
-    detail: "Meera Nair responded to the reported unauthorized movement.",
-    time: "15 minutes ago",
+    id: "N-102",
+    recipientRole: "hod",
+    title: "New Violation Case",
+    detail: "Ashok Dora (23CSE1012) reported by Prof. Ravi Kumar.",
+    time: "10:42 AM",
     tone: "pending",
     read: false,
+    relatedReportId: "V-20260810-101",
   },
   {
-    id: "N-3",
-    title: "Violation V-20260809-014 has been resolved",
-    detail: "A warning was issued and the case is closed.",
-    time: "1 hour ago",
-    tone: "resolved",
-    read: true,
-  },
-  {
-    id: "N-4",
-    title: "Timetable updated for CSE-A",
-    detail: "Operating Systems moved to Room C-301 from today.",
-    time: "Yesterday",
+    id: "N-103",
+    recipientRole: "faculty",
+    title: "Report Submitted",
+    detail: "Case V-20260810-101 recorded successfully.",
+    time: "10:42 AM",
     tone: "info",
     read: true,
+    relatedReportId: "V-20260810-101",
   },
 ];
 
-export const statusLabel: Record<ReportStatus, string> = {
-  pending: "Pending",
-  review: "Under Review",
-  resolved: "Resolved",
-  escalated: "Escalated",
-};
+export const seedAuditLogs: AuditLogRecord[] = [
+  {
+    id: "AUD-101",
+    actor: "Prof. Ravi Kumar",
+    actorRole: "faculty",
+    action: "VERIFY_STUDENT",
+    target: "Student 23CSE1012",
+    targetId: "23CSE1012",
+    timestamp: "2026-08-11T10:41:00Z",
+  },
+  {
+    id: "AUD-102",
+    actor: "Prof. Ravi Kumar",
+    actorRole: "faculty",
+    action: "CREATE_VIOLATION_REPORT",
+    target: "Report V-20260810-101",
+    targetId: "V-20260810-101",
+    timestamp: "2026-08-11T10:42:00Z",
+  },
+];

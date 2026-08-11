@@ -1,21 +1,29 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import {
   AlertTriangle,
   BookOpen,
-  CalendarClock,
+  Building2,
+  Calendar,
   CheckCircle2,
-  ClipboardCheck,
-  DoorOpen,
+  Clock,
+  HelpCircle,
+  Home,
+  Info,
   MapPin,
+  RotateCcw,
   Search,
+  ShieldAlert,
   ShieldCheck,
   Upload,
+  User,
   UserRound,
+  Users,
+  X,
+  XCircle,
 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/page-header";
 import { ToneBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
@@ -47,6 +55,7 @@ import {
   type Report,
 } from "@/lib/cmadms-data";
 import { useCmadms } from "@/lib/cmadms-store";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/check")({
@@ -75,12 +84,39 @@ type Result = {
   permission: ReturnType<() => (typeof permissionByStudent)[string]>;
 };
 
-function CheckStudentPage() {
-  const search = Route.useSearch();
-  const navigate = useNavigate();
-  const { addReport } = useCmadms();
+function ClassroomVectorIllustration() {
+  return (
+    <svg className="w-44 h-28 hidden md:block text-indigo-500/80 shrink-0" viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Board */}
+      <rect x="25" y="15" width="85" height="50" rx="6" fill="#EEF2FF" stroke="#C7D2FE" strokeWidth="2" />
+      <line x1="35" y1="28" x2="85" y2="28" stroke="#818CF8" strokeWidth="2" strokeLinecap="round" />
+      <line x1="35" y1="38" x2="70" y2="38" stroke="#A5B4FC" strokeWidth="2" strokeLinecap="round" />
+      <line x1="35" y1="48" x2="95" y2="48" stroke="#C7D2FE" strokeWidth="2" strokeLinecap="round" />
+      {/* Clock on wall */}
+      <circle cx="15" cy="22" r="7" fill="#E0E7FF" stroke="#818CF8" strokeWidth="1.5" />
+      <path d="M15 19V22L17.5 24.5" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round" />
+      {/* Teacher */}
+      <circle cx="145" cy="52" r="7" fill="#818CF8" />
+      <path d="M145 62V84M145 68L128 54M145 68L158 76" stroke="#6366F1" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M137 84L145 104M153 84L145 104" stroke="#4F46E5" strokeWidth="2.5" strokeLinecap="round" />
+      {/* Students */}
+      <circle cx="45" cy="80" r="5" fill="#A5B4FC" />
+      <path d="M35 102V92C35 89 37 87 40 87H50C53 87 55 89 55 92V102" fill="#C7D2FE" />
+      <circle cx="75" cy="80" r="5" fill="#818CF8" />
+      <path d="M65 102V92C65 89 67 87 70 87H80C83 87 85 89 85 92V102" fill="#A5B4FC" />
+      <circle cx="105" cy="80" r="5" fill="#6366F1" />
+      <path d="M95 102V92C95 89 97 87 100 87H110C113 87 115 89 115 92V102" fill="#818CF8" />
+    </svg>
+  );
+}
 
-  const [query, setQuery] = useState(search.student ?? "");
+export function CheckStudentPage() {
+  const search = useSearch({ strict: false }) as { student?: string };
+  const navigate = useNavigate();
+  const { addReport, checkActivePermission } = useCmadms();
+  const { profile } = useAuth();
+
+  const [query, setQuery] = useState(search?.student ?? "23CSE1012");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [notFound, setNotFound] = useState<string | null>(null);
@@ -90,6 +126,8 @@ function CheckStudentPage() {
   const [location, setLocation] = useState("");
   const [remarks, setRemarks] = useState("");
   const [evidence, setEvidence] = useState("");
+
+  const activeFacultyName = profile?.full_name || faculty.name;
 
   const runCheck = (raw: string) => {
     const id = raw.trim().toUpperCase();
@@ -111,16 +149,23 @@ function CheckStudentPage() {
         permission: permissionByStudent[id],
       });
       setLoading(false);
-    }, 700);
+    }, 350);
   };
 
   useEffect(() => {
-    if (search.student) {
-      setQuery(search.student);
-      runCheck(search.student);
-    }
+    const initialQuery = search?.student || "23CSE1012";
+    setQuery(initialQuery);
+    runCheck(initialQuery);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search.student]);
+  }, [search?.student]);
+
+  const handleClear = () => {
+    setQuery("");
+    setResult(null);
+    setNotFound(null);
+    setFormOpen(false);
+    navigate({ to: "." as any, search: { student: undefined } as any });
+  };
 
   const slot = result?.slot ?? null;
   const permission = result?.permission;
@@ -142,8 +187,8 @@ function CheckStudentPage() {
         minute: "2-digit",
         hour12: true,
       });
-      const report: Report = {
-        id: `V-20260810-${String(Math.floor(Math.random() * 900) + 100)}`,
+
+      const reportPayload: Omit<Report, "id" | "createdAt" | "explanationDeadline" | "status" | "timeline" | "departmentHod"> = {
         studentName: result.student!.name,
         studentId: result.student!.id,
         department: result.student!.department,
@@ -152,35 +197,75 @@ function CheckStudentPage() {
         scheduledTime: `${slot.start} — ${slot.end}`,
         room: slot.room,
         incidentTime: time,
-        createdAt: `10 Aug 2026, ${time}`,
         location: location || "Not specified",
         remarks: remarks || "No additional remarks provided.",
-        evidence: evidence || undefined,
-        reportedBy: faculty.name,
-        status: "pending",
-        timeline: [
-          { time, title: "Violation reported", detail: faculty.name, tone: "violation" },
-          { time, title: "Student notified", tone: "info" },
-        ],
+        reportedBy: activeFacultyName,
+        semester: result.student!.semester || 6,
       };
-      addReport(report);
+
+      if (evidence) {
+        reportPayload.evidence = evidence;
+      }
+
+      const res = addReport(reportPayload);
+
       setSubmitting(false);
+
+      if (!res.success) {
+        toast.error(res.error, {
+          action: {
+            label: "View Existing Report",
+            onClick: () => navigate({ to: `/hod/cases/${res.existingReport.id}` as any }),
+          },
+        });
+        return;
+      }
+
       setConfirmOpen(false);
       setFormOpen(false);
-      toast.success("Violation reported", { description: `Case ${report.id} has been created.` });
-      navigate({ to: "/reports/$reportId", params: { reportId: report.id } });
-    }, 900);
+      toast.success("Violation reported", { description: `Case ${res.report.id} created.` });
+      navigate({ to: "/faculty/reports" as any });
+    }, 600);
   };
 
   return (
-    <>
-      <PageHeader
-        title="Student Verification"
-        description="Verify the student's current academic status before reporting unauthorized movement."
-        breadcrumb={[{ label: "Home", to: "/" }, { label: "Verification" }, { label: "Check Student" }]}
-      />
+    <div className="space-y-5">
+      {/* Breadcrumb Header */}
+      <nav className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <span
+          className="flex items-center gap-1 hover:text-foreground cursor-pointer transition-colors"
+          onClick={() => navigate({ to: "/" })}
+        >
+          <Home className="size-3.5" /> Home
+        </span>
+        <span>&gt;</span>
+        <span className="hover:text-foreground cursor-pointer">Verification</span>
+        <span>&gt;</span>
+        <span className="font-semibold text-foreground">Check Student</span>
+      </nav>
 
-      <section className="card-surface p-5 sm:p-6">
+      {/* Main Page Title & Subtitle Section */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Student Verification
+          </h1>
+          <p className="mt-1 text-xs text-muted-foreground sm:text-sm max-w-2xl">
+            Check academic status and movement permission before reporting unauthorized movement.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate({ to: "/violations" })}
+          className="h-9 gap-2 self-start rounded-xl border-border text-xs font-semibold text-foreground hover:bg-accent shrink-0 shadow-2xs"
+        >
+          <Clock className="size-3.5 text-muted-foreground" /> Verification History
+        </Button>
+      </div>
+
+      {/* Student ID / Roll Number Search Card */}
+      <section className="card-surface p-5 sm:p-6 rounded-2xl border border-border/80 shadow-xs">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -188,13 +273,16 @@ function CheckStudentPage() {
             runCheck(query);
           }}
         >
-          <Label htmlFor="student-id" className="text-[13px] font-medium">
-            Student ID
+          <Label
+            htmlFor="student-id"
+            className="text-xs font-bold uppercase tracking-wider text-foreground"
+          >
+            Student ID / Roll Number
           </Label>
-          <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-2.5 flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <Search
-                className="pointer-events-none absolute left-3 top-1/2 size-[18px] -translate-y-1/2 text-subtle-foreground"
+                className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
                 aria-hidden
               />
               <Input
@@ -202,16 +290,46 @@ function CheckStudentPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="23CSE1012"
-                className="h-11 pl-10"
+                className="h-11 pl-10 pr-9 text-sm font-semibold tracking-wide text-foreground focus-visible:ring-primary rounded-xl"
                 autoComplete="off"
               />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full"
+                  aria-label="Clear input"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
             </div>
-            <Button type="submit" size="lg" loading={loading} className="sm:w-40">
-              Check
-            </Button>
+            <div className="flex items-center gap-2.5">
+              <Button
+                type="submit"
+                size="lg"
+                loading={loading}
+                className="h-11 bg-primary text-primary-foreground hover:bg-primary/90 px-6 font-semibold rounded-xl shadow-xs"
+              >
+                <Search className="size-4 mr-1.5" /> Check Student
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={handleClear}
+                className="h-11 border-border text-foreground hover:bg-accent px-5 font-semibold rounded-xl"
+              >
+                <RotateCcw className="size-4 mr-1.5" /> Clear
+              </Button>
+            </div>
           </div>
-          <p className="mt-2 text-xs text-subtle-foreground">
-            Try 23CSE1012 (unauthorized), 23CSE1044 (authorized) or 22MEC3007 (no class).
+          <p className="mt-2.5 text-xs text-muted-foreground">
+            Enter roll number and press{" "}
+            <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-foreground">
+              Enter
+            </kbd>{" "}
+            or click Check Student
           </p>
         </form>
       </section>
@@ -219,13 +337,13 @@ function CheckStudentPage() {
       {loading && <VerificationSkeleton />}
 
       {notFound && !loading && (
-        <section className="card-surface">
+        <section className="card-surface p-8 rounded-2xl">
           <EmptyState
             icon={UserRound}
             title="No student found"
             description={`We couldn't find a student record for "${notFound}". Check the ID and try again.`}
             action={
-              <Button variant="outline" onClick={() => setNotFound(null)}>
+              <Button variant="outline" onClick={handleClear}>
                 Clear search
               </Button>
             }
@@ -235,203 +353,270 @@ function CheckStudentPage() {
 
       {result?.student && !loading && (
         <>
-          {/* Status banner */}
+          {/* Top Status Alert Banner */}
           <section
             className={cn(
-              "flex items-center gap-4 rounded-[14px] border px-5 py-4",
-              state === "authorized" && "border-success/30 bg-success-soft",
-              state === "no-class" && "border-info/30 bg-info-soft",
-              state === "unauthorized" && "border-destructive/30 bg-destructive-soft",
+              "flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between shadow-xs",
+              state === "unauthorized" &&
+                "border-l-4 border-l-red-600 border-red-200/80 bg-red-50/50 dark:bg-red-950/20 dark:border-red-900/50",
+              state === "authorized" &&
+                "border-l-4 border-l-emerald-600 border-emerald-200/80 bg-emerald-50/50 dark:bg-emerald-950/20 dark:border-emerald-900/50",
+              state === "no-class" &&
+                "border-l-4 border-l-blue-600 border-blue-200/80 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-900/50",
             )}
-            role="status"
           >
-            <span
-              className={cn(
-                "grid size-10 shrink-0 place-items-center rounded-xl",
-                state === "authorized" && "bg-success text-success-foreground",
-                state === "no-class" && "bg-info text-info-foreground",
-                state === "unauthorized" && "bg-destructive text-destructive-foreground",
-              )}
-            >
-              {state === "unauthorized" ? (
-                <AlertTriangle className="size-5" aria-hidden />
-              ) : (
-                <CheckCircle2 className="size-5" aria-hidden />
-              )}
-            </span>
-            <div className="min-w-0">
-              <p
+            <div className="flex items-center gap-3.5">
+              <span
                 className={cn(
-                  "text-base font-semibold",
-                  state === "authorized" && "text-success",
-                  state === "no-class" && "text-info",
-                  state === "unauthorized" && "text-destructive",
+                  "grid size-10 shrink-0 place-items-center rounded-full text-white shadow-xs",
+                  state === "unauthorized" && "bg-red-600",
+                  state === "authorized" && "bg-emerald-600",
+                  state === "no-class" && "bg-blue-600",
                 )}
               >
-                {state === "authorized" && "Student is authorized to be outside class"}
-                {state === "no-class" && "No class is currently scheduled"}
-                {state === "unauthorized" &&
-                  "Student appears to be outside class without permission"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Verification completed at 10:42 AM by {faculty.name}
-              </p>
+                {state === "unauthorized" ? (
+                  <ShieldAlert className="size-5" />
+                ) : (
+                  <CheckCircle2 className="size-5" />
+                )}
+              </span>
+              <div>
+                <h2
+                  className={cn(
+                    "text-sm font-bold uppercase tracking-wider",
+                    state === "unauthorized" && "text-red-700 dark:text-red-400",
+                    state === "authorized" && "text-emerald-700 dark:text-emerald-400",
+                    state === "no-class" && "text-blue-700 dark:text-blue-400",
+                  )}
+                >
+                  {state === "unauthorized" && "UNAUTHORIZED MOVEMENT"}
+                  {state === "authorized" && "AUTHORIZED MOVEMENT"}
+                  {state === "no-class" && "NO CLASS SCHEDULED"}
+                </h2>
+                <p className="text-xs font-medium text-muted-foreground mt-0.5">
+                  {state === "unauthorized" &&
+                    "Student is currently expected in class and has no active movement permission."}
+                  {state === "authorized" &&
+                    "Student is authorized with an active movement permission pass."}
+                  {state === "no-class" &&
+                    "Student is not currently expected in any class session."}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-5 text-xs font-medium text-muted-foreground self-end sm:self-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-red-200/40">
+              <div className="flex items-center gap-1.5">
+                <Clock className="size-3.5 text-muted-foreground" />
+                <div>
+                  <span className="block text-[10px] text-muted-foreground">Verified at</span>
+                  <span className="font-semibold text-foreground">10:42 AM</span>
+                </div>
+              </div>
+              <span className="text-border">|</span>
+              <div className="flex items-center gap-1.5">
+                <User className="size-3.5 text-muted-foreground" />
+                <div>
+                  <span className="block text-[10px] text-muted-foreground">Verified by</span>
+                  <span className="font-semibold text-foreground">{activeFacultyName}</span>
+                </div>
+              </div>
             </div>
           </section>
 
-          <div className="grid gap-6 lg:grid-cols-[1fr_1.15fr]">
-            {/* Student profile */}
-            <section className="card-surface p-6">
-              <div className="flex items-start gap-4">
-                <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-navy text-lg font-semibold text-navy-foreground">
-                  {result.student.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <h2 className="truncate text-lg font-semibold text-foreground">
-                    {result.student.name}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">{result.student.id}</p>
+          {/* Two-Column Middle Grid */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Left Card: STUDENT INFORMATION */}
+            <section className="card-surface p-6 rounded-2xl border border-border shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 border-b border-divider pb-3.5">
+                  <UserRound className="size-4 text-primary" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                    STUDENT INFORMATION
+                  </span>
+                </div>
+
+                <div className="mt-5 flex items-center gap-4">
+                  <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-xl font-bold text-primary border border-primary/20">
+                    {result.student.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="text-xl font-bold text-foreground">
+                        {result.student.name}
+                      </h3>
+                      <span className="rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 px-2.5 py-0.5 text-[11px] font-bold">
+                        Active
+                      </span>
+                    </div>
+                    <p className="text-sm font-semibold text-muted-foreground mt-0.5">
+                      {result.student.id}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-3 gap-3 border-t border-b border-divider py-5 text-xs">
+                  <div>
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Building2 className="size-3.5" /> Department
+                    </span>
+                    <p className="mt-1 font-bold text-foreground text-sm">
+                      {result.student.department}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Users className="size-3.5" /> Year / Section
+                    </span>
+                    <p className="mt-1 font-bold text-foreground text-sm">
+                      {result.student.year} • {result.student.section}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Calendar className="size-3.5" /> Semester
+                    </span>
+                    <p className="mt-1 font-bold text-foreground text-sm">
+                      Semester {result.student.semester}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">
-                {result.student.department} • {result.student.year} • {result.student.section}
-              </p>
-              <div className="mt-4 flex items-center justify-between border-t border-divider pt-4">
-                <span className="text-sm text-muted-foreground">
-                  Semester {result.student.semester}
+
+              <div className="mt-4 flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Status:</span>
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Active
                 </span>
-                <ToneBadge tone="success">
-                  <CheckCircle2 className="size-3.5" aria-hidden /> {result.student.status}
-                </ToneBadge>
               </div>
             </section>
 
-            {/* Current class */}
-            <section
-              className={cn(
-                "rounded-[14px] border p-6 shadow-card",
-                slot ? "border-primary/25 bg-card" : "border-success/30 bg-success-soft",
-              )}
-            >
-              {slot ? (
-                <>
+            {/* Right Card: CURRENT CLASS */}
+            <section className="card-surface p-6 rounded-2xl border border-border shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between border-b border-divider pb-3.5">
                   <div className="flex items-center gap-2">
-                    <span className="size-2.5 animate-pulse rounded-full bg-destructive" aria-hidden />
-                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-destructive">
-                      Class currently in session
-                    </p>
+                    <BookOpen className="size-4 text-primary" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                      CURRENT CLASS
+                    </span>
                   </div>
-                  <h3 className="mt-3 text-xl font-semibold text-foreground">{slot.subject}</h3>
-                  <dl className="mt-4 space-y-2.5 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <CalendarClock className="size-[18px] shrink-0" aria-hidden />
-                      <span>
-                        {slot.start} — {slot.end}
+                </div>
+
+                {slot ? (
+                  <div className="flex items-start justify-between mt-4">
+                    <div>
+                      <span className="inline-block rounded-full bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300 px-2.5 py-0.5 text-[11px] font-bold">
+                        Currently in session
                       </span>
+                      <h3 className="mt-2 text-xl font-bold text-foreground">
+                        {slot.subject}
+                      </h3>
+
+                      <div className="mt-4 space-y-2 text-xs sm:text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Clock className="size-4 text-muted-foreground shrink-0" />
+                          <span className="font-semibold text-foreground">
+                            {slot.start} — {slot.end}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="size-4 text-muted-foreground shrink-0" />
+                          <span className="font-semibold text-foreground">{slot.room}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <User className="size-4 text-muted-foreground shrink-0" />
+                          <span className="font-semibold text-foreground">{slot.faculty}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <DoorOpen className="size-[18px] shrink-0" aria-hidden />
-                      <span>{slot.room}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <BookOpen className="size-[18px] shrink-0" aria-hidden />
-                      <span>{slot.faculty}</span>
-                    </div>
-                  </dl>
-                  <p className="mt-4 rounded-xl bg-accent px-3 py-2.5 text-[13px] text-accent-foreground">
-                    Student should currently be attending this class.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2 text-success">
-                    <CheckCircle2 className="size-[18px]" aria-hidden />
-                    <p className="text-xs font-semibold uppercase tracking-[0.1em]">
-                      No class scheduled
+
+                    {/* Vector Classroom Graphic */}
+                    <ClassroomVectorIllustration />
+                  </div>
+                ) : (
+                  <div className="mt-6 py-4 text-center">
+                    <CheckCircle2 className="size-8 text-emerald-500 mx-auto" />
+                    <p className="mt-2 font-bold text-foreground">No Class Scheduled</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Student has no ongoing class right now.
                     </p>
                   </div>
-                  <p className="mt-3 text-sm text-foreground">
-                    The student is not currently scheduled for a class.
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-success">
-                    No violation should be created.
-                  </p>
-                </>
+                )}
+              </div>
+
+              {slot && (
+                <div className="mt-5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 px-3.5 py-2.5 text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                  <Info className="size-4 shrink-0 text-blue-600 dark:text-blue-400" />
+                  <span className="font-medium">Student should be attending this class.</span>
+                </div>
               )}
             </section>
           </div>
 
-          {/* Permission status */}
-          {slot && permission && (
-            <section className="rounded-[14px] border border-success/30 bg-success-soft p-6">
-              <div className="flex items-center gap-2 text-success">
-                <ShieldCheck className="size-[18px]" aria-hidden />
-                <p className="text-xs font-semibold uppercase tracking-[0.1em]">
-                  Authorized movement
-                </p>
-              </div>
-              <h3 className="mt-3 text-base font-semibold text-foreground">Active Permission</h3>
-              <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-                <div>
-                  <dt className="text-xs text-muted-foreground">Reason</dt>
-                  <dd className="mt-0.5 font-medium text-foreground">{permission.reason}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Issued By</dt>
-                  <dd className="mt-0.5 font-medium text-foreground">{permission.issuedBy}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Valid Until</dt>
-                  <dd className="mt-0.5 font-medium text-foreground">{permission.validUntil}</dd>
-                </div>
-              </dl>
-              <div className="mt-5 border-t border-success/20 pt-4">
-                <ToneBadge tone="success">
-                  <CheckCircle2 className="size-3.5" aria-hidden /> Authorized
-                </ToneBadge>
-              </div>
-            </section>
-          )}
-
+          {/* Movement Permission Card */}
           {slot && !permission && (
-            <section className="rounded-[14px] border border-destructive/35 bg-destructive-soft p-6">
-              <div className="flex items-center gap-2 text-destructive">
-                <AlertTriangle className="size-[18px]" aria-hidden />
-                <p className="text-xs font-semibold uppercase tracking-[0.1em]">
-                  Unauthorized movement
-                </p>
-              </div>
-              <p className="mt-3 text-sm text-foreground">
-                No active movement permission was found.
-              </p>
-              <div className="mt-4 rounded-xl border border-destructive/20 bg-card p-4">
-                <p className="text-xs text-muted-foreground">The student is scheduled for:</p>
-                <p className="mt-1 text-base font-semibold text-foreground">{slot.subject}</p>
-                <p className="text-sm text-muted-foreground">
-                  {slot.start} — {slot.end} • {slot.room}
-                </p>
+            <section className="rounded-2xl border border-l-4 border-l-red-600 border-red-200/80 bg-red-50/40 dark:bg-red-950/20 dark:border-red-900/50 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
+              <div className="flex items-start gap-3.5">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/60 dark:text-red-300 mt-0.5">
+                  <XCircle className="size-6" />
+                </span>
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    MOVEMENT PERMISSION
+                  </span>
+                  <h3 className="text-base font-bold text-red-700 dark:text-red-400 mt-0.5">
+                    No active movement permission
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+                    The student is scheduled to attend {slot.subject} from {slot.start} – {slot.end} in {slot.room}.
+                  </p>
+                </div>
               </div>
               {!formOpen && (
                 <Button
                   variant="destructive"
                   size="lg"
-                  className="mt-5 w-full sm:w-auto"
+                  className="bg-red-600 hover:bg-red-700 text-white font-bold shadow-xs shrink-0 h-11 px-6 rounded-xl"
                   onClick={() => setFormOpen(true)}
                 >
-                  <AlertTriangle /> Report Violation
+                  <AlertTriangle className="size-4 mr-2" /> Report Violation
                 </Button>
               )}
             </section>
           )}
 
-          {/* Report form */}
+          {slot && permission && (
+            <section className="rounded-2xl border border-l-4 border-l-emerald-600 border-emerald-200/80 bg-emerald-50/40 dark:bg-emerald-950/20 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
+              <div className="flex items-start gap-3.5">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-emerald-600 text-white shadow-xs mt-0.5">
+                  <ShieldCheck className="size-6" />
+                </span>
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    MOVEMENT PERMISSION
+                  </span>
+                  <h3 className="text-base font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
+                    Authorized Movement Pass Found
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Reason: <strong className="text-foreground">{permission.reason}</strong> • Issued by {permission.issuedBy} (Valid until {permission.validUntil})
+                  </p>
+                </div>
+              </div>
+              <ToneBadge tone="success" className="px-4 py-1.5 text-xs font-bold rounded-lg">
+                <CheckCircle2 className="size-4 mr-1.5" /> Authorized
+              </ToneBadge>
+            </section>
+          )}
+
+          {/* Report Form */}
           {formOpen && slot && (
-            <section className="card-surface overflow-hidden">
-              <div className="border-b border-divider px-6 py-4">
-                <h2 className="text-base font-semibold text-foreground">Report Unauthorized Movement</h2>
+            <section className="card-surface rounded-2xl overflow-hidden border border-border shadow-md">
+              <div className="border-b border-divider px-6 py-4 bg-muted/30">
+                <h2 className="text-base font-bold text-foreground">Report Unauthorized Movement</h2>
                 <p className="text-xs text-muted-foreground">
                   Review the incident details and add your report before submitting.
                 </p>
@@ -439,7 +624,7 @@ function CheckStudentPage() {
               <div className="grid gap-6 p-6 lg:grid-cols-2">
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">Incident Information</h3>
-                  <dl className="mt-4 divide-y divide-divider text-sm">
+                  <dl className="mt-4 divide-y divide-divider text-xs sm:text-sm">
                     {[
                       ["Student", result.student.name],
                       ["Student ID", result.student.id],
@@ -449,7 +634,7 @@ function CheckStudentPage() {
                       ["Scheduled Time", `${slot.start} — ${slot.end}`],
                       ["Room", slot.room],
                       ["Incident Time", "10:42 AM"],
-                      ["Reported By", faculty.name],
+                      ["Reported By", activeFacultyName],
                     ].map(([k, v]) => (
                       <div key={k} className="flex items-center justify-between gap-4 py-2.5">
                         <dt className="text-muted-foreground">{k}</dt>
@@ -463,9 +648,9 @@ function CheckStudentPage() {
                   <h3 className="text-sm font-semibold text-foreground">Report Details</h3>
                   <div className="mt-4 space-y-4">
                     <div>
-                      <Label htmlFor="loc">Location</Label>
+                      <Label htmlFor="loc" className="text-xs font-medium">Location</Label>
                       <Select value={location} onValueChange={setLocation}>
-                        <SelectTrigger id="loc" className="mt-1.5 h-11">
+                        <SelectTrigger id="loc" className="mt-1.5 h-11 rounded-xl">
                           <SelectValue placeholder="Select location" />
                         </SelectTrigger>
                         <SelectContent>
@@ -480,27 +665,24 @@ function CheckStudentPage() {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="remarks">Remarks</Label>
+                      <Label htmlFor="remarks" className="text-xs font-medium">Remarks</Label>
                       <Textarea
                         id="remarks"
-                        rows={5}
+                        rows={4}
                         value={remarks}
                         onChange={(e) => setRemarks(e.target.value)}
                         placeholder="Describe where and how the student was observed..."
-                        className="mt-1.5"
+                        className="mt-1.5 text-xs rounded-xl"
                       />
-                      <p className="mt-1 text-xs text-subtle-foreground">
-                        Keep the description factual and specific.
-                      </p>
                     </div>
                     <div>
-                      <Label htmlFor="evidence">Evidence (optional)</Label>
+                      <Label htmlFor="evidence" className="text-xs font-medium">Evidence (optional)</Label>
                       <label
                         htmlFor="evidence"
-                        className="mt-1.5 flex min-h-11 cursor-pointer items-center gap-2 rounded-[10px] border border-dashed border-input bg-background px-3 py-3 text-sm text-muted-foreground transition-colors hover:border-primary"
+                        className="mt-1.5 flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-dashed border-input bg-background px-3 py-2.5 text-xs text-muted-foreground transition-colors hover:border-primary"
                       >
-                        <Upload className="size-[18px]" aria-hidden />
-                        {evidence || "Upload file"}
+                        <Upload className="size-4" aria-hidden />
+                        {evidence || "Upload photo or file"}
                       </label>
                       <input
                         id="evidence"
@@ -512,12 +694,13 @@ function CheckStudentPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col gap-3 border-t border-divider px-6 py-4 sm:flex-row sm:justify-end">
-                <Button variant="outline" onClick={() => setFormOpen(false)}>
+              <div className="flex flex-col gap-3 border-t border-divider px-6 py-4 sm:flex-row sm:justify-end bg-muted/20">
+                <Button variant="outline" onClick={() => setFormOpen(false)} className="rounded-xl">
                   Cancel
                 </Button>
                 <Button
                   variant="destructive"
+                  className="bg-red-600 hover:bg-red-700 rounded-xl"
                   onClick={() => setConfirmOpen(true)}
                   disabled={!location}
                 >
@@ -529,16 +712,7 @@ function CheckStudentPage() {
         </>
       )}
 
-      {!result && !loading && !notFound && (
-        <section className="card-surface">
-          <EmptyState
-            icon={ClipboardCheck}
-            title="Start a verification"
-            description="Enter a student ID above to check the current class schedule and movement permission."
-          />
-        </section>
-      )}
-
+      {/* Confirmation Modal */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -562,28 +736,33 @@ function CheckStudentPage() {
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" loading={submitting} onClick={submitReport}>
+            <Button
+              variant="destructive"
+              loading={submitting}
+              onClick={submitReport}
+              className="bg-red-600 hover:bg-red-700"
+            >
               Confirm Report
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
 
 function VerificationSkeleton() {
   return (
     <div className="space-y-6">
-      <Skeleton className="h-20 w-full rounded-[14px]" />
+      <Skeleton className="h-16 w-full rounded-2xl" />
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="card-surface space-y-3 p-6">
+        <div className="card-surface space-y-3 p-6 rounded-2xl">
           <Skeleton className="size-14 rounded-2xl" />
           <Skeleton className="h-5 w-40" />
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-4 w-56" />
         </div>
-        <div className="card-surface space-y-3 p-6">
+        <div className="card-surface space-y-3 p-6 rounded-2xl">
           <Skeleton className="h-4 w-40" />
           <Skeleton className="h-6 w-52" />
           <Skeleton className="h-4 w-36" />

@@ -25,7 +25,7 @@ export const Route = createFileRoute("/timetable")({
 const days = ["Today", "Mon", "Tue", "Wed", "Thu", "Fri"];
 const CURRENT = "10:00 AM";
 
-function TimetablePage() {
+export function TimetablePage() {
   const [day, setDay] = useState("Today");
   const slots = timetable[day] ?? [];
 
