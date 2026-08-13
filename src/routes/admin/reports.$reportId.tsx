@@ -38,7 +38,12 @@ function AdminReportDetailPage() {
             { label: report.id },
           ]}
           actions={
-            <Button variant="outline" size="sm" asChild className="rounded-xl text-xs font-semibold">
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="rounded-xl text-xs font-semibold"
+            >
               <Link to="/admin/reports">
                 <ArrowLeft className="size-3.5 mr-1" /> Back to Cases List
               </Link>
@@ -51,7 +56,9 @@ function AdminReportDetailPage() {
           <div className="flex items-center gap-2">
             <ShieldCheck className="size-4 text-blue-600 shrink-0" />
             <span>
-              <strong>System Audit Access:</strong> You are viewing this case as System Administrator. Disciplinary decisions are executed by Department HOD (<strong>{report.departmentHod}</strong>).
+              <strong>System Audit Access:</strong> You are viewing this case as System
+              Administrator. Disciplinary decisions are executed by Department HOD (
+              <strong>{report.departmentHod}</strong>).
             </span>
           </div>
           <span className="rounded-full bg-blue-100 dark:bg-blue-900 px-3 py-1 font-bold text-[11px] text-blue-700 dark:text-blue-300">
@@ -66,7 +73,9 @@ function AdminReportDetailPage() {
             <section className="card-surface p-6 rounded-2xl border border-border shadow-xs space-y-4">
               <div className="flex items-center gap-2 border-b border-divider pb-3">
                 <GraduationCap className="size-4 text-primary" />
-                <span className="text-xs font-bold uppercase tracking-wider text-primary">STUDENT INFORMATION</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                  STUDENT INFORMATION
+                </span>
               </div>
 
               <dl className="grid grid-cols-2 gap-3 text-xs">
@@ -92,7 +101,9 @@ function AdminReportDetailPage() {
             <section className="card-surface p-6 rounded-2xl border border-border shadow-xs space-y-4">
               <div className="flex items-center gap-2 border-b border-divider pb-3">
                 <FileText className="size-4 text-primary" />
-                <span className="text-xs font-bold uppercase tracking-wider text-primary">INCIDENT REPORT DETAILS</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                  INCIDENT REPORT DETAILS
+                </span>
               </div>
 
               <dl className="space-y-2.5 text-xs">
@@ -119,8 +130,12 @@ function AdminReportDetailPage() {
               </dl>
 
               <div className="pt-3 border-t border-divider text-xs">
-                <span className="text-muted-foreground block text-[11px] font-semibold">Faculty Remarks:</span>
-                <p className="text-foreground mt-1 bg-muted/40 p-3 rounded-xl leading-relaxed">{report.remarks}</p>
+                <span className="text-muted-foreground block text-[11px] font-semibold">
+                  Faculty Remarks:
+                </span>
+                <p className="text-foreground mt-1 bg-muted/40 p-3 rounded-xl leading-relaxed">
+                  {report.remarks}
+                </p>
               </div>
             </section>
           </div>
@@ -130,7 +145,9 @@ function AdminReportDetailPage() {
             <section className="card-surface p-6 rounded-2xl border border-border shadow-xs space-y-4">
               <div className="flex items-center gap-2 border-b border-divider pb-3">
                 <Clock className="size-4 text-primary" />
-                <span className="text-xs font-bold uppercase tracking-wider text-primary">STUDENT 24-HR EXPLANATION</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                  STUDENT 24-HR EXPLANATION
+                </span>
               </div>
 
               {report.explanation ? (
@@ -140,7 +157,9 @@ function AdminReportDetailPage() {
                     {report.explanation}
                   </p>
                   {report.evidence && (
-                    <p className="text-[11px] text-muted-foreground">Attached Evidence: <strong>{report.evidence}</strong></p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Attached Evidence: <strong>{report.evidence}</strong>
+                    </p>
                   )}
                 </div>
               ) : (
@@ -154,7 +173,9 @@ function AdminReportDetailPage() {
             <section className="card-surface p-6 rounded-2xl border border-border shadow-xs space-y-4">
               <div className="flex items-center gap-2 border-b border-divider pb-3">
                 <ShieldCheck className="size-4 text-primary" />
-                <span className="text-xs font-bold uppercase tracking-wider text-primary">COMPLETE AUDIT TIMELINE</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                  COMPLETE AUDIT TIMELINE
+                </span>
               </div>
 
               <div className="space-y-3 divide-y divide-divider">
@@ -162,9 +183,13 @@ function AdminReportDetailPage() {
                   <div key={idx} className="pt-2.5 first:pt-0 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-foreground">{item.title}</span>
-                      <span className="text-[10px] text-subtle-foreground font-mono">{item.time}</span>
+                      <span className="text-[10px] text-subtle-foreground font-mono">
+                        {item.time}
+                      </span>
                     </div>
-                    {item.detail && <p className="text-muted-foreground text-[11px] mt-0.5">{item.detail}</p>}
+                    {item.detail && (
+                      <p className="text-muted-foreground text-[11px] mt-0.5">{item.detail}</p>
+                    )}
                   </div>
                 ))}
               </div>

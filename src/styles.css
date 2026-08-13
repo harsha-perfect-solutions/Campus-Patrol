@@ -1,4 +1,4 @@
-@import "tailwindcss" source(none);
+@import "tailwindcss";
 @source "../src";
 @import "tw-animate-css";
 
@@ -79,7 +79,7 @@
   --primary-foreground: oklch(0.99 0.002 290);
   --primary-hover: oklch(0.36 0.23 292);
 
-  --navy: oklch(0.30 0.18 292);
+  --navy: oklch(0.3 0.18 292);
   --navy-deep: oklch(0.18 0.08 292);
   --navy-foreground: oklch(0.985 0.003 290);
 
@@ -89,7 +89,7 @@
   --muted-foreground: oklch(0.52 0.04 292);
   --subtle-foreground: oklch(0.65 0.03 292);
   --accent: oklch(0.96 0.025 292);
-  --accent-foreground: oklch(0.35 0.20 292);
+  --accent-foreground: oklch(0.35 0.2 292);
 
   --destructive: oklch(0.577 0.223 27.3);
   --destructive-foreground: oklch(0.99 0.005 20);
@@ -131,7 +131,7 @@
 
   --primary: oklch(0.62 0.22 292);
   --primary-foreground: oklch(0.99 0.003 290);
-  --primary-hover: oklch(0.68 0.20 292);
+  --primary-hover: oklch(0.68 0.2 292);
 
   --navy: oklch(0.38 0.18 292);
   --navy-deep: oklch(0.166 0.028 292);

@@ -106,7 +106,10 @@ export function AppSidebar({
                 )}
               >
                 <item.icon
-                  className={cn("size-4 shrink-0", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")}
+                  className={cn(
+                    "size-4 shrink-0",
+                    active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                  )}
                 />
                 {!isCollapsed && <span className="truncate">{item.label}</span>}
                 {!isCollapsed && badge && (

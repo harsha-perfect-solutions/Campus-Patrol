@@ -12,7 +12,8 @@ const buttonVariants = cva(
       variant: {
         default: "bg-primary text-primary-foreground shadow-card hover:bg-primary-hover",
         navy: "bg-navy text-navy-foreground shadow-card hover:bg-navy/90",
-        destructive: "bg-destructive text-destructive-foreground shadow-card hover:bg-destructive/90",
+        destructive:
+          "bg-destructive text-destructive-foreground shadow-card hover:bg-destructive/90",
         success: "bg-success text-success-foreground shadow-card hover:bg-success/90",
         outline:
           "border border-input bg-card text-foreground shadow-card hover:bg-accent hover:text-accent-foreground",
@@ -36,8 +37,7 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   loading?: boolean;
 }

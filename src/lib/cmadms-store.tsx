@@ -20,12 +20,10 @@ import {
 } from "@/lib/cmadms-data";
 
 type AddReportResult =
-  | { success: true; report: Report }
-  | { success: false; error: string; existingReport: Report };
+  { success: true; report: Report } | { success: false; error: string; existingReport: Report };
 
 type SubmitExplanationResult =
-  | { success: true; report: Report }
-  | { success: false; error: string };
+  { success: true; report: Report } | { success: false; error: string };
 
 type Ctx = {
   reports: Report[];
@@ -37,14 +35,30 @@ type Ctx = {
   activeSemester: SemesterRecord;
 
   // Actions
-  addReport: (reportData: Omit<Report, "id" | "createdAt" | "explanationDeadline" | "status" | "timeline" | "departmentHod">) => AddReportResult;
-  updateReport: (id: string, patch: Partial<Report>, actor?: { name: string; role: AppRole }) => void;
+  addReport: (
+    reportData: Omit<
+      Report,
+      "id" | "createdAt" | "explanationDeadline" | "status" | "timeline" | "departmentHod"
+    >,
+  ) => AddReportResult;
+  updateReport: (
+    id: string,
+    patch: Partial<Report>,
+    actor?: { name: string; role: AppRole },
+  ) => void;
   checkDuplicateReport: (studentId: string, className: string) => Report | undefined;
   submitExplanation: (reportId: string, text: string, evidence?: string) => SubmitExplanationResult;
-  executeHodDecision: (reportId: string, decision: "exonerate" | "warning" | "escalate", notes: string, hodName: string) => void;
+  executeHodDecision: (
+    reportId: string,
+    decision: "exonerate" | "warning" | "escalate",
+    notes: string,
+    hodName: string,
+  ) => void;
 
   // Permissions System
-  addPermission: (perm: Omit<MovementPermissionRecord, "id" | "createdAt" | "updatedAt">) => MovementPermissionRecord;
+  addPermission: (
+    perm: Omit<MovementPermissionRecord, "id" | "createdAt" | "updatedAt">,
+  ) => MovementPermissionRecord;
   updatePermissionStatus: (id: string, status: PermissionStatus, approvedBy?: string) => void;
   checkActivePermission: (studentId: string) => MovementPermissionRecord | undefined;
 
@@ -56,7 +70,14 @@ type Ctx = {
   clearNotifications: () => void;
 
   // Audit Logs
-  addAuditLog: (actor: string, actorRole: AppRole, action: string, target: string, targetId?: string, metadata?: Record<string, any>) => void;
+  addAuditLog: (
+    actor: string,
+    actorRole: AppRole,
+    action: string,
+    target: string,
+    targetId?: string,
+    metadata?: Record<string, any>,
+  ) => void;
 
   // Semester Management
   activateSemester: (semId: string) => void;
@@ -98,7 +119,14 @@ export function CmadmsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addAuditLog = useCallback(
-    (actor: string, actorRole: AppRole, action: string, target: string, targetId?: string, metadata?: Record<string, any>) => {
+    (
+      actor: string,
+      actorRole: AppRole,
+      action: string,
+      target: string,
+      targetId?: string,
+      metadata?: Record<string, any>,
+    ) => {
       const entry: AuditLogRecord = {
         id: `AUD-${Date.now()}`,
         actor,
@@ -126,7 +154,7 @@ export function CmadmsProvider({ children }: { children: ReactNode }) {
 
   const checkDuplicateReport = useCallback(
     (studentId: string, className: string): Report | undefined => {
-      const todayStr = (new Date().toISOString().split("T")[0]) || "";
+      const todayStr = new Date().toISOString().split("T")[0] || "";
       return reports.find(
         (r) =>
           r.studentId === studentId &&
@@ -140,7 +168,12 @@ export function CmadmsProvider({ children }: { children: ReactNode }) {
   );
 
   const addReport = useCallback(
-    (reportData: Omit<Report, "id" | "createdAt" | "explanationDeadline" | "status" | "timeline" | "departmentHod">): AddReportResult => {
+    (
+      reportData: Omit<
+        Report,
+        "id" | "createdAt" | "explanationDeadline" | "status" | "timeline" | "departmentHod"
+      >,
+    ): AddReportResult => {
       const duplicate = checkDuplicateReport(reportData.studentId, reportData.className);
       if (duplicate) {
         return {
@@ -167,13 +200,21 @@ export function CmadmsProvider({ children }: { children: ReactNode }) {
         semester: currentSemNumber,
         timeline: [
           {
-            time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
+            time: now.toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            }),
             title: "Violation reported",
             detail: `By ${reportData.reportedBy}`,
             tone: "violation",
           },
           {
-            time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
+            time: now.toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            }),
             title: "Student notified",
             detail: "24-hour explanation window opened",
             tone: "info",
@@ -210,7 +251,13 @@ export function CmadmsProvider({ children }: { children: ReactNode }) {
       });
 
       // Audit Log
-      addAuditLog(reportData.reportedBy, "faculty", "REPORT_VIOLATION", `Student ${reportData.studentId}`, reportId);
+      addAuditLog(
+        reportData.reportedBy,
+        "faculty",
+        "REPORT_VIOLATION",
+        `Student ${reportData.studentId}`,
+        reportId,
+      );
 
       return { success: true, report: newReport };
     },
@@ -242,11 +289,21 @@ export function CmadmsProvider({ children }: { children: ReactNode }) {
       const deadline = new Date(report.explanationDeadline);
 
       if (now > deadline) {
-        addAuditLog(report.studentName, "student", "SUBMIT_EXPLANATION_EXPIRED_REJECTED", `Case ${reportId}`, reportId);
+        addAuditLog(
+          report.studentName,
+          "student",
+          "SUBMIT_EXPLANATION_EXPIRED_REJECTED",
+          `Case ${reportId}`,
+          reportId,
+        );
         return { success: false, error: "Explanation deadline has passed. Submission rejected." };
       }
 
-      const time = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+      const time = now.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
 
       const updatedPatch: Partial<Report> = {
         explanation: text,
@@ -284,7 +341,13 @@ export function CmadmsProvider({ children }: { children: ReactNode }) {
         relatedReportId: reportId,
       });
 
-      addAuditLog(report.studentName, "student", "SUBMIT_EXPLANATION", `Case ${reportId}`, reportId);
+      addAuditLog(
+        report.studentName,
+        "student",
+        "SUBMIT_EXPLANATION",
+        `Case ${reportId}`,
+        reportId,
+      );
 
       return { success: true, report: { ...report, ...updatedPatch } };
     },
@@ -292,12 +355,21 @@ export function CmadmsProvider({ children }: { children: ReactNode }) {
   );
 
   const executeHodDecision = useCallback(
-    (reportId: string, decision: "exonerate" | "warning" | "escalate", notes: string, hodName: string) => {
+    (
+      reportId: string,
+      decision: "exonerate" | "warning" | "escalate",
+      notes: string,
+      hodName: string,
+    ) => {
       const report = reports.find((r) => r.id === reportId);
       if (!report) return;
 
       const now = new Date();
-      const time = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+      const time = now.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
 
       const statusMap: Record<typeof decision, ReportStatus> = {
         exonerate: "Exonerated",
@@ -347,7 +419,14 @@ export function CmadmsProvider({ children }: { children: ReactNode }) {
         relatedReportId: reportId,
       });
 
-      addAuditLog(hodName, "hod", `HOD_DECISION_${decision.toUpperCase()}`, `Case ${reportId}`, reportId, { notes });
+      addAuditLog(
+        hodName,
+        "hod",
+        `HOD_DECISION_${decision.toUpperCase()}`,
+        `Case ${reportId}`,
+        reportId,
+        { notes },
+      );
     },
     [reports, updateReport, addNotification, addAuditLog],
   );
@@ -360,7 +439,9 @@ export function CmadmsProvider({ children }: { children: ReactNode }) {
   );
 
   const addPermission = useCallback(
-    (perm: Omit<MovementPermissionRecord, "id" | "createdAt" | "updatedAt">): MovementPermissionRecord => {
+    (
+      perm: Omit<MovementPermissionRecord, "id" | "createdAt" | "updatedAt">,
+    ): MovementPermissionRecord => {
       const now = new Date().toISOString();
       const newPerm: MovementPermissionRecord = {
         ...perm,
@@ -369,7 +450,13 @@ export function CmadmsProvider({ children }: { children: ReactNode }) {
         updatedAt: now,
       };
       setPermissions((prev) => [newPerm, ...prev]);
-      addAuditLog(perm.approvedBy, "hod", "CREATE_MOVEMENT_PERMISSION", `Student ${perm.studentId}`, newPerm.id);
+      addAuditLog(
+        perm.approvedBy,
+        "hod",
+        "CREATE_MOVEMENT_PERMISSION",
+        `Student ${perm.studentId}`,
+        newPerm.id,
+      );
       return newPerm;
     },
     [addAuditLog],

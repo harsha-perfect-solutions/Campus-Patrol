@@ -33,6 +33,7 @@ import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { LiveClock } from "@/components/live-clock";
 
 /* ==========================================================================
    FACULTY SIDEBAR & SHELL
@@ -75,7 +76,8 @@ export function FacultyShell({ children }: { children: ReactNode }) {
           <nav className="space-y-1 p-3">
             {facultyNav.map((item) => {
               const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
-              const badge = item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
+              const badge =
+                item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
               return (
                 <Link
                   key={item.to}
@@ -115,22 +117,28 @@ export function FacultyShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-4 lg:px-6">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon-sm" className="lg:hidden" onClick={() => setMobileOpen(true)}>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="lg:hidden"
+              onClick={() => setMobileOpen(true)}
+            >
               <Menu className="size-5" />
             </Button>
-            <span className="text-xs font-bold text-foreground">Faculty Portal &bull; CSE Department</span>
+            <span className="text-xs font-bold text-foreground">
+              Faculty Portal &bull; CSE Department
+            </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
-              <Clock className="size-3.5 text-muted-foreground" />
-              <span>10:42 AM &nbsp; 8 Nov 2026</span>
-            </div>
+            <LiveClock />
 
             <span className="grid size-8 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">
               RK
             </span>
-            <span className="hidden text-xs font-semibold text-foreground sm:inline">{activeName}</span>
+            <span className="hidden text-xs font-semibold text-foreground sm:inline">
+              {activeName}
+            </span>
           </div>
         </header>
 
@@ -162,7 +170,15 @@ export function HODShell({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const activeName = profile?.full_name || "Dr. Anjali Rao (HOD)";
+  const activeName = profile?.full_name || "Department HOD";
+  const activeDept = profile?.department || "General";
+  const initials = activeName
+    .split(" ")
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
@@ -181,7 +197,8 @@ export function HODShell({ children }: { children: ReactNode }) {
           <nav className="space-y-1 p-3">
             {hodNav.map((item) => {
               const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
-              const badge = item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
+              const badge =
+                item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
               return (
                 <Link
                   key={item.to}
@@ -219,13 +236,18 @@ export function HODShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-4 lg:px-6">
-          <span className="text-xs font-bold text-foreground">HOD Office &bull; CSE Department</span>
+          <span className="text-xs font-bold text-foreground">
+            HOD Office &bull; {activeDept} Department
+          </span>
 
           <div className="flex items-center gap-3">
+            <LiveClock />
             <span className="grid size-8 place-items-center rounded-full bg-primary/10 text-primary text-xs font-bold">
-              AR
+              {initials}
             </span>
-            <span className="hidden text-xs font-semibold text-foreground sm:inline">{activeName}</span>
+            <span className="hidden text-xs font-semibold text-foreground sm:inline">
+              {activeName}
+            </span>
           </div>
         </header>
 
@@ -258,7 +280,15 @@ export function StudentShell({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const activeName = profile?.full_name || "Meera Nair";
+  const activeName = profile?.full_name || "Student User";
+  const studentCode = profile?.student_code || "";
+  const initials = activeName
+    .split(" ")
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
@@ -277,7 +307,8 @@ export function StudentShell({ children }: { children: ReactNode }) {
           <nav className="space-y-1 p-3">
             {studentNav.map((item) => {
               const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
-              const badge = item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
+              const badge =
+                item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
               return (
                 <Link
                   key={item.to}
@@ -315,13 +346,18 @@ export function StudentShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-4 lg:px-6">
-          <span className="text-xs font-bold text-foreground">Student Portal &bull; Roll No: 23CSE1042</span>
+          <span className="text-xs font-bold text-foreground">
+            Student Portal {studentCode ? `• Roll No: ${studentCode}` : ""}
+          </span>
 
           <div className="flex items-center gap-3">
+            <LiveClock />
             <span className="grid size-8 place-items-center rounded-full bg-primary/10 text-primary text-xs font-bold">
-              MN
+              {initials}
             </span>
-            <span className="hidden text-xs font-semibold text-foreground sm:inline">{activeName}</span>
+            <span className="hidden text-xs font-semibold text-foreground sm:inline">
+              {activeName}
+            </span>
           </div>
         </header>
 
@@ -408,13 +444,18 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-4 lg:px-6">
-          <span className="text-xs font-bold text-foreground">System Administration &bull; Master Control</span>
+          <span className="text-xs font-bold text-foreground">
+            System Administration &bull; Master Control
+          </span>
 
           <div className="flex items-center gap-3">
+            <LiveClock />
             <span className="grid size-8 place-items-center rounded-full bg-primary/10 text-primary text-xs font-bold">
               AD
             </span>
-            <span className="hidden text-xs font-semibold text-foreground sm:inline">{activeName}</span>
+            <span className="hidden text-xs font-semibold text-foreground sm:inline">
+              {activeName}
+            </span>
           </div>
         </header>
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -24,7 +24,10 @@ import { Label } from "@/components/ui/label";
 import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
-import type { TimelineEvent } from "@/lib/cmadms-data";
+import { getHodCaseByIdApi, submitHodDecisionApi } from "@/lib/api/hod.server";
+import { getViolationReportDetailApi } from "@/lib/api/faculty.server";
+import { submitStudentExplanationApi } from "@/lib/api/student.server";
+import type { Report, TimelineEvent } from "@/lib/cmadms-data";
 
 export const Route = createFileRoute("/reports/$reportId")({
   head: ({ params }) => ({
@@ -68,7 +71,10 @@ function Facts({ items }: { items: [string, string][] }) {
   return (
     <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
       {items.map(([k, v]) => (
-        <div key={k} className="flex items-start justify-between gap-4 border-b border-divider pb-2.5">
+        <div
+          key={k}
+          className="flex items-start justify-between gap-4 border-b border-divider pb-2.5"
+        >
           <dt className="text-xs text-muted-foreground">{k}</dt>
           <dd className="text-right text-xs font-semibold text-foreground">{v}</dd>
         </div>
@@ -87,14 +93,136 @@ const toneStyles: Record<TimelineEvent["tone"], string> = {
 export function ReportDetail() {
   const params = useParams({ strict: false }) as { reportId?: string };
   const reportId = params?.reportId;
-  const { reports, updateReport, executeHodDecision } = useCmadms();
+  const { reports: storeReports, updateReport, executeHodDecision } = useCmadms();
   const { role, profile } = useAuth();
-  const report = reports.find((r) => r.id === reportId);
+
+  const [dbReport, setDbReport] = useState<Report | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [hodAction, setHodAction] = useState<"excuse" | "warning" | "violation">("excuse");
   const [hodNotes, setHodNotes] = useState("");
   const [submittingDecision, setSubmittingDecision] = useState(false);
+  const [submittingExplanation, setSubmittingExplanation] = useState(false);
   const [studentText, setStudentText] = useState("");
+
+  const activeStoreReport = storeReports.find((r) => r.id === reportId);
+  const report = dbReport || activeStoreReport;
+
+  useEffect(() => {
+    if (!reportId) return;
+    let isMounted = true;
+
+    async function loadReportDetail() {
+      try {
+        const res = await getViolationReportDetailApi({ data: { reportId: reportId! } });
+        if (isMounted && res.success && res.report) {
+          const r = res.report;
+          const mapped: Report = {
+            id: r.id,
+            studentName: r.student_name,
+            studentId: r.student_code,
+            department: r.department,
+            departmentHod: profile?.full_name || "Dr. Anjali Rao",
+            yearSection: r.year_section,
+            className: r.class_name,
+            scheduledTime: r.scheduled_time,
+            room: r.room,
+            incidentTime: r.incident_time,
+            location: r.location,
+            remarks: r.remarks,
+            evidence: r.evidence ?? undefined,
+            reportedBy: r.reported_by,
+            createdAt:
+              (r.created_at as unknown) instanceof Date
+                ? (r.created_at as unknown as Date).toISOString()
+                : String(r.created_at),
+            explanationDeadline: r.explanation_deadline
+              ? (r.explanation_deadline as unknown) instanceof Date
+                ? (r.explanation_deadline as unknown as Date).toISOString()
+                : String(r.explanation_deadline)
+              : (r.created_at as unknown) instanceof Date
+                ? (r.created_at as unknown as Date).toISOString()
+                : String(r.created_at),
+            status: r.status as any,
+            explanation: r.explanation ?? undefined,
+            explanationSubmittedAt: r.explanation_submitted_at
+              ? (r.explanation_submitted_at as unknown) instanceof Date
+                ? (r.explanation_submitted_at as unknown as Date).toISOString()
+                : String(r.explanation_submitted_at)
+              : undefined,
+            decision: r.decision ?? undefined,
+            decisionBy: r.decision_by ?? undefined,
+            decisionAt: r.decision_at
+              ? (r.decision_at as unknown) instanceof Date
+                ? (r.decision_at as unknown as Date).toISOString()
+                : String(r.decision_at)
+              : undefined,
+            semester: r.semester,
+            timeline: [
+              {
+                time:
+                  (r.created_at as unknown) instanceof Date
+                    ? (r.created_at as unknown as Date).toISOString()
+                    : String(r.created_at),
+                title: "Violation Reported",
+                detail: `Reported by ${r.reported_by} at ${r.location}`,
+                tone: "violation",
+              },
+            ],
+          };
+
+          if (r.explanation) {
+            mapped.timeline.push({
+              time: r.explanation_submitted_at
+                ? (r.explanation_submitted_at as unknown) instanceof Date
+                  ? (r.explanation_submitted_at as unknown as Date).toISOString()
+                  : String(r.explanation_submitted_at)
+                : (r.created_at as unknown) instanceof Date
+                  ? (r.created_at as unknown as Date).toISOString()
+                  : String(r.created_at),
+              title: "Student explanation submitted",
+              detail: r.explanation,
+              tone: "info",
+            });
+          }
+
+          if (r.decision) {
+            mapped.timeline.push({
+              time: r.decision_at
+                ? (r.decision_at as unknown) instanceof Date
+                  ? (r.decision_at as unknown as Date).toISOString()
+                  : String(r.decision_at)
+                : (r.created_at as unknown) instanceof Date
+                  ? (r.created_at as unknown as Date).toISOString()
+                  : String(r.created_at),
+              title: `HOD Decision: ${r.status}`,
+              detail: `${r.decision_by || "HOD"}: ${r.decision}`,
+              tone: r.status === "exonerated" ? "resolved" : "violation",
+            });
+          }
+
+          setDbReport(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to load report detail from PostgreSQL:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadReportDetail();
+    return () => {
+      isMounted = false;
+    };
+  }, [reportId, profile?.full_name]);
+
+  if (loading && !report) {
+    return (
+      <div className="card-surface p-8 rounded-2xl border border-border text-center text-xs text-muted-foreground">
+        Loading case file detail...
+      </div>
+    );
+  }
 
   if (!report) {
     return (
@@ -113,43 +241,119 @@ export function ReportDetail() {
     );
   }
 
-  const handleHodSubmit = (e: React.FormEvent) => {
+  const handleHodSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmittingDecision(true);
-    window.setTimeout(() => {
-      const decisionKey = hodAction === "excuse" ? "exonerate" : hodAction === "warning" ? "warning" : "escalate";
-      const hodName = profile?.full_name || "Dr. Anjali Rao (HOD)";
-      
+    const decisionEnum: "exonerated" | "warned" | "escalated" =
+      hodAction === "excuse" ? "exonerated" : hodAction === "warning" ? "warned" : "escalated";
+    const decisionKey =
+      hodAction === "excuse" ? "exonerate" : hodAction === "warning" ? "warning" : "escalate";
+    const hodName = profile?.full_name || "Dr. Anjali Rao (HOD)";
+    const hodDept = profile?.department || report.department;
+
+    try {
+      // 1. Execute HOD decision in PostgreSQL + Audit log
+      const res = await submitHodDecisionApi({
+        data: {
+          reportId: report.id,
+          decision: decisionEnum,
+          decisionText: hodNotes || `Decision executed: ${hodAction}`,
+        },
+      });
+
+      // 2. Update frontend store as well
       executeHodDecision(report.id, decisionKey, hodNotes, hodName);
 
+      if (res.success && res.report) {
+        setDbReport((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: res.report!.status as any,
+                decision: res.report!.decision ?? undefined,
+                decisionBy: res.report!.decision_by ?? undefined,
+                decisionAt: res.report!.decision_at ?? undefined,
+              }
+            : null,
+        );
+      }
+
       setSubmittingDecision(false);
-      toast.success("HOD Decision Recorded", { description: `Case ${report.id} updated successfully.` });
-    }, 500);
+      toast.success("HOD Decision Recorded", {
+        description: `Case ${report.id} updated and saved to PostgreSQL.`,
+      });
+    } catch (err) {
+      console.error("Failed to submit HOD decision:", err);
+      toast.error("Failed to record HOD decision in database.");
+      setSubmittingDecision(false);
+    }
   };
 
-  const handleStudentSubmitExplanation = (e: React.FormEvent) => {
+  const handleStudentSubmitExplanation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!studentText.trim()) return;
-    const now = new Date();
-    const time = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
-    
-    updateReport(report.id, {
-      explanation: studentText.trim(),
-      timeline: [
-        ...report.timeline,
-        {
-          time,
-          title: "Student explanation submitted",
-          detail: studentText.trim(),
-          tone: "info",
+    setSubmittingExplanation(true);
+
+    try {
+      // 1. Submit explanation to PostgreSQL + Audit log
+      const res = await submitStudentExplanationApi({
+        data: {
+          reportId: report.id,
+          explanation: studentText.trim(),
         },
-      ],
-    });
-    setStudentText("");
-    toast.success("Explanation Submitted", { description: "Your response has been sent to HOD for review." });
+      });
+
+      // 2. Update store
+      const now = new Date();
+      const time = now.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+      updateReport(report.id, {
+        explanation: studentText.trim(),
+        status: "Explanation Submitted",
+        timeline: [
+          ...report.timeline,
+          {
+            time,
+            title: "Student explanation submitted",
+            detail: studentText.trim(),
+            tone: "info",
+          },
+        ],
+      });
+
+      if (res.success && res.report) {
+        setDbReport((prev) =>
+          prev
+            ? {
+                ...prev,
+                explanation: res.report!.explanation ?? undefined,
+                explanationSubmittedAt: res.report!.explanation_submitted_at ?? undefined,
+                status: res.report!.status as any,
+              }
+            : null,
+        );
+      }
+
+      setStudentText("");
+      setSubmittingExplanation(false);
+      toast.success("Explanation Submitted", {
+        description: "Your response has been saved to PostgreSQL and sent to HOD for review.",
+      });
+    } catch (err) {
+      console.error("Failed to submit student explanation:", err);
+      toast.error("Failed to submit explanation to database.");
+      setSubmittingExplanation(false);
+    }
   };
 
-  const isHodUser = role === "hod" || profile?.staff_code?.includes("HOD") || true;
+  const isHodUser =
+    role === "hod" ||
+    role === "admin" ||
+    (profile?.staff_code ? profile.staff_code.includes("HOD") : false);
+  const isStudentUser = role === "student";
 
   return (
     <div className="space-y-6">
@@ -220,7 +424,9 @@ export function ReportDetail() {
           <Section title="Evidence Attachment" icon={Paperclip}>
             {report.evidence ? (
               <div className="flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 bg-card">
-                <span className="truncate text-xs font-semibold text-foreground">{report.evidence}</span>
+                <span className="truncate text-xs font-semibold text-foreground">
+                  {report.evidence}
+                </span>
                 <Button variant="outline" size="sm" className="rounded-lg text-xs h-8">
                   <Download className="size-3.5 mr-1" /> Download
                 </Button>
@@ -233,28 +439,49 @@ export function ReportDetail() {
           {/* Student Explanation Section */}
           <Section title="Student 24-Hour Explanation" icon={MessageSquare}>
             {report.explanation ? (
-              <div className="rounded-xl border border-blue-200/80 bg-blue-50/50 dark:bg-blue-950/20 p-4">
-                <p className="text-xs font-bold text-primary mb-1">Student Explanation:</p>
-                <blockquote className="text-xs text-foreground leading-relaxed italic">
-                  "{report.explanation}"
-                </blockquote>
+              <div className="rounded-xl border border-blue-200/80 bg-blue-50/50 dark:bg-blue-950/20 p-4 space-y-3">
+                <div>
+                  <p className="text-xs font-bold text-primary mb-1">
+                    Student Explanation Statement:
+                  </p>
+                  <blockquote className="text-xs text-foreground leading-relaxed italic">
+                    "{report.explanation}"
+                  </blockquote>
+                </div>
+
+                {report.evidence && (
+                  <div className="flex items-center justify-between gap-3 rounded-lg border border-blue-200 bg-card px-3.5 py-2.5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Paperclip className="size-3.5 text-primary shrink-0" />
+                      <span className="truncate text-xs font-semibold text-foreground">
+                        Attached Document: {report.evidence}
+                      </span>
+                    </div>
+                    <Button variant="outline" size="sm" className="rounded-lg text-xs h-7 shrink-0">
+                      <Download className="size-3 mr-1" /> View Document
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : isStudentUser ? (
+              <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
+                <p className="text-xs text-muted-foreground font-medium">
+                  An explanation is required for this movement incident. Please submit your
+                  statement and attach any supporting documents (e.g. Lab Slip, Medical Pass) via
+                  the <strong>Submit 24-Hour Explanation</strong> portal section.
+                </p>
+                <Button
+                  asChild
+                  size="sm"
+                  className="rounded-xl text-xs font-semibold bg-primary text-primary-foreground shadow-xs"
+                >
+                  <Link to="/student/explanations">Go to Submit 24-Hour Explanation &rarr;</Link>
+                </Button>
               </div>
             ) : (
-              <form onSubmit={handleStudentSubmitExplanation} className="space-y-3">
-                <p className="text-xs text-muted-foreground">
-                  The student has 24 hours to submit an explanation for this reported movement.
-                </p>
-                <Textarea
-                  value={studentText}
-                  onChange={(e) => setStudentText(e.target.value)}
-                  placeholder="Enter student explanation text (e.g. Sent by Lab Assistant for emergency component)..."
-                  className="text-xs rounded-xl"
-                  rows={3}
-                />
-                <Button type="submit" size="sm" variant="outline" className="rounded-xl text-xs font-semibold">
-                  Submit Explanation
-                </Button>
-              </form>
+              <p className="text-xs text-muted-foreground">
+                Awaiting student explanation (24-hour response window active).
+              </p>
             )}
           </Section>
 
@@ -272,7 +499,8 @@ export function ReportDetail() {
             ) : isHodUser ? (
               <form onSubmit={handleHodSubmit} className="space-y-4">
                 <p className="text-xs text-muted-foreground font-medium">
-                  Select your HOD decision for case <strong className="text-foreground">{report.id}</strong>:
+                  Select your HOD decision for case{" "}
+                  <strong className="text-foreground">{report.id}</strong>:
                 </p>
 
                 <div className="grid gap-2.5 sm:grid-cols-3">
@@ -356,7 +584,10 @@ export function ReportDetail() {
               {report.timeline.map((e, i) => (
                 <li key={`${e.time}-${i}`} className="relative flex gap-3">
                   {i !== report.timeline.length - 1 && (
-                    <span className="absolute left-[7px] top-4 h-full w-px bg-divider" aria-hidden />
+                    <span
+                      className="absolute left-[7px] top-4 h-full w-px bg-divider"
+                      aria-hidden
+                    />
                   )}
                   <span
                     className={cn(
@@ -366,10 +597,14 @@ export function ReportDetail() {
                     aria-hidden
                   />
                   <span className="min-w-0">
-                    <span className="block text-[10px] font-bold text-muted-foreground">{e.time}</span>
+                    <span className="block text-[10px] font-bold text-muted-foreground">
+                      {e.time}
+                    </span>
                     <span className="block text-xs font-bold text-foreground">{e.title}</span>
                     {e.detail && (
-                      <span className="block text-[11px] text-muted-foreground mt-0.5">{e.detail}</span>
+                      <span className="block text-[11px] text-muted-foreground mt-0.5">
+                        {e.detail}
+                      </span>
                     )}
                   </span>
                 </li>

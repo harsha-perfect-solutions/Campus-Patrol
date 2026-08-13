@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertTriangle, Search } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { ReportsTable } from "./reports.index";
+import { ReportsTable } from "@/components/reports-table";
 import { useCmadms } from "@/lib/cmadms-store";
 
 export const Route = createFileRoute("/violations")({

@@ -106,6 +106,7 @@ export type Notification = {
   id: string;
   recipientRole: NotificationTargetRole;
   recipientId?: string | undefined;
+  department?: string | undefined;
   title: string;
   detail: string;
   time: string;
@@ -150,6 +151,7 @@ export const hodByDepartment: Record<string, { name: string; email: string }> = 
   EEE: { name: "Dr. R. Ramakrishnan", email: "hod.eee@cmadms.edu" },
   CIVIL: { name: "Dr. M. K. Varma", email: "hod.civil@cmadms.edu" },
   IT: { name: "Dr. N. Swaminathan", email: "hod.it@cmadms.edu" },
+  AIML: { name: "Dr. K. V. Sharma", email: "hod.aiml@cmadms.edu" },
 };
 
 export const seedSemesters: SemesterRecord[] = [
@@ -354,12 +356,23 @@ export const seedReports: Report[] = [
     createdAt: now.toISOString(),
     explanationDeadline: deadlineDate.toISOString(),
     location: "Main Corridor — Block C",
-    remarks: "Student observed roaming near cafeteria during scheduled Data Structures session without gate pass.",
+    remarks:
+      "Student observed roaming near cafeteria during scheduled Data Structures session without gate pass.",
     reportedBy: "Prof. Ravi Kumar",
     status: "Awaiting Explanation",
     timeline: [
-      { time: "10:42 AM", title: "Violation reported", detail: "Prof. Ravi Kumar", tone: "violation" },
-      { time: "10:43 AM", title: "Student notified", detail: "24-hour explanation window opened", tone: "info" },
+      {
+        time: "10:42 AM",
+        title: "Violation reported",
+        detail: "Prof. Ravi Kumar",
+        tone: "violation",
+      },
+      {
+        time: "10:43 AM",
+        title: "Student notified",
+        detail: "24-hour explanation window opened",
+        tone: "info",
+      },
     ],
     semester: 6,
   },
@@ -383,8 +396,18 @@ export const seedReports: Report[] = [
     reportedBy: "Prof. Ravi Kumar",
     status: "Explanation Submitted",
     timeline: [
-      { time: "08:15 AM", title: "Violation reported", detail: "Prof. Ravi Kumar", tone: "violation" },
-      { time: "09:15 AM", title: "Explanation submitted", detail: "Library reference book collection", tone: "info" },
+      {
+        time: "08:15 AM",
+        title: "Violation reported",
+        detail: "Prof. Ravi Kumar",
+        tone: "violation",
+      },
+      {
+        time: "09:15 AM",
+        title: "Explanation submitted",
+        detail: "Library reference book collection",
+        tone: "info",
+      },
     ],
     semester: 6,
   },

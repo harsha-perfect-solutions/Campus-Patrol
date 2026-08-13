@@ -43,7 +43,9 @@ export function RoleGuard({
         </div>
         <h2 className="text-xl font-bold text-foreground">403 — Access Forbidden</h2>
         <p className="mt-1.5 text-xs text-muted-foreground max-w-md">
-          Your account role (<strong className="uppercase text-foreground">{role ?? "Guest"}</strong>) does not have authorization to access this portal route.
+          Your account role (
+          <strong className="uppercase text-foreground">{role ?? "Guest"}</strong>) does not have
+          authorization to access this portal route.
         </p>
         <Button
           onClick={() => navigate({ to: getDefaultDashboardForRole(role) as any })}

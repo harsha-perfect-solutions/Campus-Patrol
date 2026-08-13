@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { resetPasswordApi } from "@/lib/api/auth.server";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/reset-password")({
 function ResetPassword() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function submit(e: React.FormEvent) {
@@ -29,15 +30,24 @@ function ResetPassword() {
       toast.error("Password must be at least 8 characters");
       return;
     }
-    setBusy(true);
-    const { error } = await supabase.auth.updateUser({ password });
-    setBusy(false);
-    if (error) {
-      toast.error(error.message);
+    if (password !== confirm) {
+      toast.error("Passwords do not match");
       return;
     }
-    toast.success("Password updated");
-    void navigate({ to: "/check" });
+    setBusy(true);
+    try {
+      const res = await resetPasswordApi({ data: { password } });
+      if (!res.success) {
+        toast.error(res.error ?? "Failed to update password");
+        return;
+      }
+      toast.success("Password updated successfully");
+      void navigate({ to: "/auth" });
+    } catch (err: any) {
+      toast.error(err?.message ?? "Unexpected error — please try again");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -57,8 +67,18 @@ function ResetPassword() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="pw-confirm">Confirm password</Label>
+          <Input
+            id="pw-confirm"
+            type="password"
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+          />
+        </div>
         <Button type="submit" className="w-full" disabled={busy}>
-          Update password
+          {busy ? "Updating…" : "Update password"}
         </Button>
       </form>
     </main>

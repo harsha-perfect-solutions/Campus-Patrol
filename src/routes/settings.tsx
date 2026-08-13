@@ -83,7 +83,11 @@ export function SettingsPage() {
         </Card>
 
         <div className="space-y-6">
-          <Card title="Appearance" icon={theme === "dark" ? Moon : Sun} description="Theme preference">
+          <Card
+            title="Appearance"
+            icon={theme === "dark" ? Moon : Sun}
+            description="Theme preference"
+          >
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-foreground">Dark mode</p>

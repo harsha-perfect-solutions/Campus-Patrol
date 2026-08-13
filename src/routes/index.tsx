@@ -1,5 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Calendar, CheckCircle2, ShieldCheck, Sparkles, UserSearch } from "lucide-react";
+import {
+  ArrowRight,
+  Calendar,
+  CheckCircle2,
+  ShieldCheck,
+  Sparkles,
+  UserSearch,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 
@@ -76,7 +83,8 @@ function Landing() {
 
         {/* Subtitle */}
         <p className="mt-4 max-w-xl text-sm sm:text-base text-muted-foreground font-normal leading-relaxed">
-          Instant student verification against live timetables & approved movement passes. Eliminating unauthorized corridor movement across all departments.
+          Instant student verification against live timetables & approved movement passes.
+          Eliminating unauthorized corridor movement across all departments.
         </p>
 
         {/* Action Buttons */}
@@ -124,7 +132,8 @@ function Landing() {
 
         {/* Social Proof */}
         <p className="mt-7 text-xs font-medium text-muted-foreground/80">
-          Verified <strong className="text-foreground font-semibold">12,400+</strong> student passes across CSE, ECE, EEE & Mech
+          Verified <strong className="text-foreground font-semibold">12,400+</strong> student passes
+          across CSE, ECE, EEE & Mech
         </p>
       </main>
 

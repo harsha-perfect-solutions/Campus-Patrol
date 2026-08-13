@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AlertTriangle, Bell, CheckCircle2, CheckCheck, Clock, Info, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { getHodNotificationsApi } from "@/lib/api/hod.server";
 
 export const Route = createFileRoute("/notifications")({
   head: () => ({
@@ -22,7 +24,11 @@ export const Route = createFileRoute("/notifications")({
 });
 
 const tones = {
-  violation: { cls: "bg-destructive-soft text-destructive", Icon: AlertTriangle, label: "Violation" },
+  violation: {
+    cls: "bg-destructive-soft text-destructive",
+    Icon: AlertTriangle,
+    label: "Violation",
+  },
   pending: { cls: "bg-warning-soft text-warning", Icon: Clock, label: "Pending" },
   resolved: { cls: "bg-success-soft text-success", Icon: CheckCircle2, label: "Resolved" },
   info: { cls: "bg-info-soft text-info", Icon: Info, label: "Info" },
@@ -30,13 +36,34 @@ const tones = {
 
 export function NotificationsPage() {
   const { notifications, markRead, markAllRead, clearNotifications } = useCmadms();
-  const { role } = useAuth();
+  const { role, profile } = useAuth();
   const navigate = useNavigate();
+  const [dbNotifs, setDbNotifs] = useState<any[]>([]);
 
-  // Filter notifications for active user role
-  const roleNotifications = notifications.filter(
-    (n) => n.recipientRole === "all" || n.recipientRole === role || !n.recipientRole,
-  );
+  useEffect(() => {
+    if (role === "hod") {
+      getHodNotificationsApi()
+        .then((res) => {
+          if (res.success && res.notifications.length > 0) {
+            setDbNotifs(res.notifications);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load HOD notifications from API:", err);
+        });
+    }
+  }, [role]);
+
+  // Filter notifications for active user role and department
+  const roleNotifications =
+    dbNotifs.length > 0
+      ? dbNotifs
+      : notifications.filter(
+          (n) =>
+            n.recipientRole === "all" ||
+            (n.recipientRole === role && (!n.department || n.department === profile?.department)) ||
+            !n.recipientRole,
+        );
 
   const unreadCount = roleNotifications.filter((n) => !n.read).length;
 
@@ -90,7 +117,7 @@ export function NotificationsPage() {
         ) : (
           <ul className="divide-y divide-divider">
             {roleNotifications.map((n) => {
-              const { cls, Icon, label } = tones[n.tone] || tones.info;
+              const { cls, Icon, label } = (tones as Record<string, any>)[n.tone] || tones.info;
               return (
                 <li
                   key={n.id}

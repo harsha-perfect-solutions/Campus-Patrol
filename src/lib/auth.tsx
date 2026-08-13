@@ -1,184 +1,151 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { signInApi, getSelfProfileApi, signOutApi } from "@/lib/api/auth.server";
+import type { ServerSession, AppRole } from "@/lib/session.server";
 
-export type AppRole = "faculty" | "student" | "hod" | "admin";
+export type { AppRole };
 
-export type Profile = {
+export type UserProfile = {
   id: string;
-  full_name: string;
   email: string;
+  full_name: string;
+  role: AppRole;
   department: string;
   staff_code: string | null;
   student_code: string | null;
   avatar_url: string | null;
 };
 
-export type DemoUser = {
-  id: string;
-  email: string;
-  full_name: string;
-  role: AppRole;
-  department: string;
-  staff_code?: string | null;
-  student_code?: string | null;
-};
-
 type AuthCtx = {
   loading: boolean;
-  session: Session | null;
-  user: User | null;
-  profile: Profile | null;
+  session: { user: UserProfile } | null;
+  user: UserProfile | null;
+  profile: UserProfile | null;
   role: AppRole | null;
   isStaff: boolean;
-  setDemoUser: (u: DemoUser | null) => void;
-  refresh: () => Promise<void>;
+  signIn: (
+    email: string,
+    pass?: string,
+  ) => Promise<{ success: boolean; role?: AppRole; error?: string }>;
   signOut: () => Promise<void>;
+  refresh: () => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
 
-const DEMO_STORAGE_KEY = "cmadms-demo-user";
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [role, setRole] = useState<AppRole | null>(null);
+  const [sessionData, setSessionData] = useState<ServerSession | null>(null);
   const [loading, setLoading] = useState(true);
-  const [demoUser, setDemoUserState] = useState<DemoUser | null>(null);
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(DEMO_STORAGE_KEY);
-      if (stored) {
-        setDemoUserState(JSON.parse(stored));
-      }
-    } catch {
-      // Ignore JSON parse errors
-    }
-  }, []);
-
-  const setDemoUser = useCallback((u: DemoUser | null) => {
-    setDemoUserState(u);
-    if (u) {
-      localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(u));
-    } else {
-      localStorage.removeItem(DEMO_STORAGE_KEY);
-    }
-  }, []);
-
-  const load = useCallback(async (uid: string | undefined) => {
-    if (!uid) {
-      setProfile(null);
-      setRole(null);
-      return;
-    }
-    const [{ data: p }, { data: r }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", uid),
-    ]);
-    setProfile((p as Profile) ?? null);
-    const roles = (r ?? []).map((x) => x.role as AppRole);
-    setRole(
-      roles.includes("admin")
-        ? "admin"
-        : roles.includes("hod")
-          ? "hod"
-          : roles.includes("faculty")
-            ? "faculty"
-            : (roles[0] ?? null),
-    );
-  }, []);
-
+  // Initialize session by querying server (browser sends HttpOnly cookie automatically)
   useEffect(() => {
     let active = true;
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      if (!active) return;
-      setSession(s);
-      void load(s?.user.id).then(() => setLoading(false));
-    });
-
-    void supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      void load(data.session?.user.id).then(() => setLoading(false));
-    });
-
+    async function initAuth() {
+      try {
+        const res = await getSelfProfileApi();
+        if (active && res.success && res.session) {
+          setSessionData(res.session);
+        } else if (active) {
+          setSessionData(null);
+        }
+      } catch (err) {
+        console.error("Auth init error:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    initAuth();
     return () => {
       active = false;
-      sub.subscription.unsubscribe();
     };
-  }, [load]);
+  }, []);
 
-  const effectiveUser: User | null = useMemo(() => {
-    if (session?.user) return session.user;
-    if (demoUser) {
-      return {
-        id: demoUser.id,
-        email: demoUser.email,
-        app_metadata: {},
-        user_metadata: {},
-        aud: "authenticated",
-        created_at: new Date().toISOString(),
-      } as unknown as User;
+  const signIn = useCallback(async (email: string, password?: string) => {
+    setLoading(true);
+    try {
+      const res = await signInApi({
+        data: {
+          email,
+          ...(password ? { password } : {}),
+        },
+      });
+      if (res.success && res.user) {
+        setSessionData({
+          sessionId: "HTTPONLY",
+          userId: res.user.id,
+          role: res.user.role,
+          email: res.user.email,
+          department: res.user.department,
+          staffCode: res.user.staffCode,
+          studentCode: res.user.studentCode,
+          fullName: res.user.fullName,
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        });
+        setLoading(false);
+        return { success: true, role: res.user.role };
+      }
+      setLoading(false);
+      return { success: false, error: res.error || "Invalid credentials." };
+    } catch (err: any) {
+      setLoading(false);
+      console.error("SignIn failed:", err);
+      return { success: false, error: "Authentication failed." };
     }
-    return null;
-  }, [session, demoUser]);
+  }, []);
 
-  const effectiveSession: Session | null = useMemo(() => {
-    if (session) return session;
-    if (demoUser && effectiveUser) {
-      return {
-        access_token: "demo-access-token",
-        token_type: "bearer",
-        expires_in: 3600,
-        refresh_token: "demo-refresh-token",
-        user: effectiveUser,
-      } as unknown as Session;
+  const signOut = useCallback(async () => {
+    setLoading(true);
+    try {
+      await signOutApi();
+    } catch (err) {
+      console.error("SignOut error:", err);
+    } finally {
+      setSessionData(null);
+      setLoading(false);
     }
-    return null;
-  }, [session, demoUser, effectiveUser]);
+  }, []);
 
-  const effectiveProfile: Profile | null = useMemo(() => {
-    if (profile) return profile;
-    if (demoUser) {
-      return {
-        id: demoUser.id,
-        full_name: demoUser.full_name,
-        email: demoUser.email,
-        department: demoUser.department,
-        staff_code: demoUser.staff_code ?? null,
-        student_code: demoUser.student_code ?? null,
-        avatar_url: null,
-      };
+  const refresh = useCallback(async () => {
+    try {
+      const res = await getSelfProfileApi();
+      if (res.success && res.session) {
+        setSessionData(res.session);
+      }
+    } catch (err) {
+      console.error("Refresh auth error:", err);
     }
-    return null;
-  }, [profile, demoUser]);
+  }, []);
 
-  const effectiveRole: AppRole | null = useMemo(() => {
-    if (role) return role;
-    if (demoUser) return demoUser.role;
-    return null;
-  }, [role, demoUser]);
+  const profile: UserProfile | null = useMemo(() => {
+    if (!sessionData) return null;
+    return {
+      id: sessionData.userId,
+      email: sessionData.email,
+      full_name: sessionData.fullName,
+      role: sessionData.role,
+      department: sessionData.department,
+      staff_code: sessionData.staffCode,
+      student_code: sessionData.studentCode,
+      avatar_url: null,
+    };
+  }, [sessionData]);
+
+  const role: AppRole | null = sessionData?.role ?? null;
+  const isStaff = role === "faculty" || role === "hod" || role === "admin";
 
   const value = useMemo<AuthCtx>(
     () => ({
       loading,
-      session: effectiveSession,
-      user: effectiveUser,
-      profile: effectiveProfile,
-      role: effectiveRole,
-      isStaff: effectiveRole === "faculty" || effectiveRole === "hod" || effectiveRole === "admin",
-      setDemoUser,
-      refresh: () => load(session?.user.id),
-      signOut: async () => {
-        setDemoUser(null);
-        await supabase.auth.signOut();
-      },
+      session: profile ? { user: profile } : null,
+      user: profile,
+      profile,
+      role,
+      isStaff,
+      signIn,
+      signOut,
+      refresh,
     }),
-    [loading, effectiveSession, effectiveUser, effectiveProfile, effectiveRole, setDemoUser, load, session],
+    [loading, profile, role, isStaff, signIn, signOut, refresh],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

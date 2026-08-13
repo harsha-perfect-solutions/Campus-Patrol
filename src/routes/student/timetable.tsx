@@ -17,7 +17,7 @@ function StudentTimetablePage() {
           description="View your semester class schedule and assigned rooms."
           breadcrumb={[{ label: "Student", to: "/student/dashboard" }, { label: "My Timetable" }]}
         />
-        <TimetablePage />
+        <TimetablePage hideHeader />
       </div>
     </RoleGuard>
   );

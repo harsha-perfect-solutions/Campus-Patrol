@@ -13,7 +13,8 @@ export const Route = createFileRoute("/timetable")({
       { title: "My Timetable — CMADMS" },
       {
         name: "description",
-        content: "Your weekly teaching schedule with rooms, batches and the class currently running.",
+        content:
+          "Your weekly teaching schedule with rooms, batches and the class currently running.",
       },
       { property: "og:title", content: "My Timetable — CMADMS" },
       { property: "og:description", content: "Weekly teaching schedule for CMADMS faculty." },
@@ -25,17 +26,19 @@ export const Route = createFileRoute("/timetable")({
 const days = ["Today", "Mon", "Tue", "Wed", "Thu", "Fri"];
 const CURRENT = "10:00 AM";
 
-export function TimetablePage() {
+export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } = {}) {
   const [day, setDay] = useState("Today");
   const slots = timetable[day] ?? [];
 
   return (
     <>
-      <PageHeader
-        title="My Timetable"
-        description="Your teaching schedule for the current academic week."
-        breadcrumb={[{ label: "Home", to: "/" }, { label: "Academic" }, { label: "Timetable" }]}
-      />
+      {!hideHeader && (
+        <PageHeader
+          title="My Timetable"
+          description="Your teaching schedule for the current academic week."
+          breadcrumb={[{ label: "Home", to: "/" }, { label: "Academic" }, { label: "Timetable" }]}
+        />
+      )}
 
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="Select day">
         {days.map((d) => (

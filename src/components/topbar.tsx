@@ -5,6 +5,7 @@ import { faculty, students } from "@/lib/cmadms-data";
 import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { LiveClock } from "@/components/live-clock";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,10 +81,7 @@ export function Topbar({
         {/* Right Section */}
         <div className="flex items-center gap-3">
           {/* Time Badge */}
-          <div className="hidden sm:flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-2xs">
-            <Clock className="size-3.5 text-subtle-foreground" />
-            <span>10:42 AM &nbsp; 8 Nov 2026</span>
-          </div>
+          <LiveClock />
 
           {/* Notifications Button */}
           <Button variant="ghost" size="icon-sm" asChild aria-label="Notifications">

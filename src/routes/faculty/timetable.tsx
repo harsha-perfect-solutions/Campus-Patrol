@@ -17,7 +17,7 @@ function FacultyTimetablePage() {
           description="View your teaching schedule and classroom period assignments."
           breadcrumb={[{ label: "Faculty", to: "/faculty/dashboard" }, { label: "My Timetable" }]}
         />
-        <TimetablePage />
+        <TimetablePage hideHeader />
       </div>
     </RoleGuard>
   );

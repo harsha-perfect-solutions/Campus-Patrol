@@ -22,36 +22,34 @@ Navy + Blue + Neutral + Semantic Status Colors
 
 Primary Colors
 
-Deep Navy       #1E3A8A
-Navy Hover      #1E40AF
-Primary Blue    #2563EB
-Light Blue      #EFF6FF
+Deep Navy #1E3A8A
+Navy Hover #1E40AF
+Primary Blue #2563EB
+Light Blue #EFF6FF
 
-Background      #F5F7FB
-Card            #FFFFFF
+Background #F5F7FB
+Card #FFFFFF
 
-Main Text       #0F172A
-Secondary Text  #64748B
-Muted Text      #94A3B8
+Main Text #0F172A
+Secondary Text #64748B
+Muted Text #94A3B8
 
-Border          #E2E8F0
-Divider         #F1F5F9
-
+Border #E2E8F0
+Divider #F1F5F9
 
 Semantic Colors
 
-Success         #16A34A
-Success Light   #F0FDF4
+Success #16A34A
+Success Light #F0FDF4
 
-Warning         #F59E0B
-Warning Light   #FFFBEB
+Warning #F59E0B
+Warning Light #FFFBEB
 
-Danger          #DC2626
-Danger Light    #FEF2F2
+Danger #DC2626
+Danger Light #FEF2F2
 
-Info            #0EA5E9
-Info Light      #F0F9FF
-
+Info #0EA5E9
+Info Light #F0F9FF
 
 IMPORTANT COLOR RULE
 
@@ -152,20 +150,19 @@ Create a premium application shell.
 Desktop:
 
 ┌──────────────────────────────────────────────────────────────────┐
-│ CMADMS     Search...                    🔔   Faculty Profile     │
+│ CMADMS Search... 🔔 Faculty Profile │
 ├───────────────┬──────────────────────────────────────────────────┤
-│               │                                                  │
-│  Sidebar      │              Main Content                        │
-│               │                                                  │
-│  Dashboard    │                                                  │
-│  Check        │                                                  │
-│  Reports      │                                                  │
-│  Timetable    │                                                  │
-│  Notifications│                                                  │
-│  Settings     │                                                  │
-│               │                                                  │
+│ │ │
+│ Sidebar │ Main Content │
+│ │ │
+│ Dashboard │ │
+│ Check │ │
+│ Reports │ │
+│ Timetable │ │
+│ Notifications│ │
+│ Settings │ │
+│ │ │
 └───────────────┴──────────────────────────────────────────────────┘
-
 
 Use:
 
@@ -189,12 +186,10 @@ Background:
 
 #0F172A
 
-
 Logo area:
 
 CMADMS
 Faculty Portal
-
 
 Use a clean CMADMS logo mark.
 
@@ -204,28 +199,23 @@ MAIN
 
 ⌂ Dashboard
 
-
 VERIFICATION
 
 ⌕ Check Student
-
 
 REPORTING
 
 ⚠ Reported Violations
 ▣ My Reports
 
-
 ACADEMIC
 
 ▣ My Timetable
-
 
 SYSTEM
 
 🔔 Notifications
 ⚙ Settings
-
 
 Bottom:
 
@@ -233,13 +223,11 @@ Faculty Profile
 Faculty ID
 Logout
 
-
 Active navigation
 
 Use:
 
 background: #1E3A8A
-
 
 with a subtle blue glow/highlight.
 
@@ -266,11 +254,9 @@ Left:
 Dashboard
 Home / Dashboard
 
-
 Center:
 
 🔍 Search student, report or Student ID...
-
 
 Right:
 
@@ -280,7 +266,6 @@ Avatar
 Prof. Ravi Kumar
 Faculty
 ⌄
-
 
 Add:
 
@@ -307,47 +292,41 @@ Good Morning, Professor 👋
 Monitor student movement and review today's
 verification activity.
 
-
 Add a small date indicator:
 
 Monday, 10 August 2026
-
 
 7. STATISTICS
 
 Create four premium cards:
 
 ┌────────────────────────┐
-│ Reports Today       ⚠  │
-│                        │
-│ 05                     │
-│ +2 from yesterday      │
+│ Reports Today ⚠ │
+│ │
+│ 05 │
+│ +2 from yesterday │
 └────────────────────────┘
-
 
 ┌────────────────────────┐
-│ Under Review        ◷  │
-│                        │
-│ 03                     │
-│ 2 awaiting action      │
+│ Under Review ◷ │
+│ │
+│ 03 │
+│ 2 awaiting action │
 └────────────────────────┘
-
 
 ┌────────────────────────┐
-│ Resolved            ✓  │
-│                        │
-│ 18                     │
-│ +12% this month        │
+│ Resolved ✓ │
+│ │
+│ 18 │
+│ +12% this month │
 └────────────────────────┘
-
 
 ┌────────────────────────┐
-│ Escalated           !  │
-│                        │
-│ 02                     │
-│ Requires attention     │
+│ Escalated ! │
+│ │
+│ 02 │
+│ Requires attention │
 └────────────────────────┘
-
 
 Use subtle semantic colors.
 
@@ -360,36 +339,32 @@ Make Check Student the largest and most important component on the dashboard.
 Create a premium blue gradient/header area but keep it subtle.
 
 ┌──────────────────────────────────────────────────────────────┐
-│                                                              │
-│  Check Student                                  🔍           │
-│                                                              │
-│  Verify whether a student should currently be                │
-│  attending their scheduled class.                            │
-│                                                              │
-│  ┌──────────────────────────────────────────────┐             │
-│  │ Student ID                                  │             │
-│  │ 23CSE1012                                   │             │
-│  └──────────────────────────────────────────────┘             │
-│                                                              │
-│                    [ CHECK STUDENT ]                         │
-│                                                              │
+│ │
+│ Check Student 🔍 │
+│ │
+│ Verify whether a student should currently be │
+│ attending their scheduled class. │
+│ │
+│ ┌──────────────────────────────────────────────┐ │
+│ │ Student ID │ │
+│ │ 23CSE1012 │ │
+│ └──────────────────────────────────────────────┘ │
+│ │
+│ [ CHECK STUDENT ] │
+│ │
 └──────────────────────────────────────────────────────────────┘
-
 
 Primary button:
 
 #2563EB
 
-
 Hover:
 
 #1E40AF
 
-
 Add keyboard shortcut:
 
 Ctrl + K
-
 
 for quick student search.
 
@@ -399,17 +374,16 @@ Add a "Recent Activity" section below the main action.
 
 Example:
 
-Recent Activity                         View All
+Recent Activity View All
 
-✓  V-1021  Violation resolved
-   10 minutes ago
+✓ V-1021 Violation resolved
+10 minutes ago
 
-⚠  V-1024  New violation reported
-   32 minutes ago
+⚠ V-1024 New violation reported
+32 minutes ago
 
-◷  V-1025  Student explanation submitted
-   1 hour ago
-
+◷ V-1025 Student explanation submitted
+1 hour ago
 
 Use timeline-style activity indicators.
 
@@ -424,15 +398,13 @@ Student Verification
 Verify the student's current academic status
 before reporting unauthorized movement.
 
-
 Create a prominent search area:
 
 ┌──────────────────────────────────────────────────────────────┐
-│ 🔍 Student ID                                                │
-│                                                              │
-│ 23CSE1012                                      [ CHECK ]      │
+│ 🔍 Student ID │
+│ │
+│ 23CSE1012 [ CHECK ] │
 └──────────────────────────────────────────────────────────────┘
-
 
 11. VERIFICATION RESULT
 
@@ -443,16 +415,15 @@ Section 1
 Student Profile
 
 ┌──────────────────────────────────────────────────────┐
-│  [Avatar]                                            │
-│                                                      │
-│  Ashok Dora                                           │
-│  23CSE1012                                            │
-│                                                      │
-│  CSE  •  3rd Year  •  Section A                     │
-│                                                      │
-│  Semester 6                         Active ✓         │
+│ [Avatar] │
+│ │
+│ Ashok Dora │
+│ 23CSE1012 │
+│ │
+│ CSE • 3rd Year • Section A │
+│ │
+│ Semester 6 Active ✓ │
 └──────────────────────────────────────────────────────┘
-
 
 12. CURRENT CLASS CARD
 
@@ -461,30 +432,28 @@ Show the current academic state prominently.
 If class exists:
 
 ┌──────────────────────────────────────────────────────┐
-│ 🔴 CLASS CURRENTLY IN SESSION                        │
-│                                                      │
-│ Data Structures                                      │
-│                                                      │
-│ 10:00 AM — 11:00 AM                                 │
-│ Room C-204                                           │
-│ Prof. Ravi Kumar                                     │
-│                                                      │
-│ Student should currently be attending this class.   │
+│ 🔴 CLASS CURRENTLY IN SESSION │
+│ │
+│ Data Structures │
+│ │
+│ 10:00 AM — 11:00 AM │
+│ Room C-204 │
+│ Prof. Ravi Kumar │
+│ │
+│ Student should currently be attending this class. │
 └──────────────────────────────────────────────────────┘
-
 
 If no class:
 
 Use a green/blue neutral card:
 
 ┌──────────────────────────────────────────────────────┐
-│ ✓ NO CLASS SCHEDULED                                 │
-│                                                      │
+│ ✓ NO CLASS SCHEDULED │
+│ │
 │ The student is not currently scheduled for a class. │
-│                                                      │
-│ No violation should be created.                      │
+│ │
+│ No violation should be created. │
 └──────────────────────────────────────────────────────┘
-
 
 13. PERMISSION STATUS
 
@@ -493,17 +462,16 @@ Create a dedicated status card.
 Authorized
 
 ┌──────────────────────────────────────────────────────┐
-│ ✓ AUTHORIZED MOVEMENT                               │
-│                                                      │
-│ Active Permission                                    │
-│                                                      │
-│ Reason        Library                                 │
-│ Issued By     Prof. Ravi Kumar                        │
-│ Valid Until   10:50 AM                               │
-│                                                      │
-│              AUTHORIZED                              │
+│ ✓ AUTHORIZED MOVEMENT │
+│ │
+│ Active Permission │
+│ │
+│ Reason Library │
+│ Issued By Prof. Ravi Kumar │
+│ Valid Until 10:50 AM │
+│ │
+│ AUTHORIZED │
 └──────────────────────────────────────────────────────┘
-
 
 Use green.
 
@@ -514,19 +482,18 @@ No violation button should appear.
 When no permission exists:
 
 ┌──────────────────────────────────────────────────────┐
-│ ⚠ UNAUTHORIZED MOVEMENT                              │
-│                                                      │
-│ No active movement permission was found.             │
-│                                                      │
-│ The student is scheduled for:                        │
-│                                                      │
-│ Data Structures                                      │
-│ 10:00 AM — 11:00 AM                                 │
-│ Room C-204                                           │
-│                                                      │
-│              [ REPORT VIOLATION ]                    │
+│ ⚠ UNAUTHORIZED MOVEMENT │
+│ │
+│ No active movement permission was found. │
+│ │
+│ The student is scheduled for: │
+│ │
+│ Data Structures │
+│ 10:00 AM — 11:00 AM │
+│ Room C-204 │
+│ │
+│ [ REPORT VIOLATION ] │
 └──────────────────────────────────────────────────────┘
-
 
 This is the ONLY place where strong red styling should dominate.
 
@@ -534,7 +501,6 @@ Use:
 
 #DC2626
 #FEF2F2
-
 
 15. VERIFICATION STATUS BANNER
 
@@ -548,20 +514,17 @@ Green:
 
 ✓ Student is authorized to be outside class
 
-
 No Class
 
 Blue:
 
 ✓ No class is currently scheduled
 
-
 Unauthorized
 
 Red:
 
 ⚠ Student appears to be outside class without permission
-
 
 This allows faculty to understand the result within one second.
 
@@ -585,7 +548,6 @@ Room
 Incident Time
 Reported By
 
-
 Right:
 
 Report Details
@@ -599,11 +561,9 @@ Remarks
 Evidence
 [ Upload File ]
 
-
 At bottom:
 
-[ Cancel ]     [ Submit Violation ]
-
+[ Cancel ] [ Submit Violation ]
 
 Use red only for Submit Violation.
 
@@ -629,8 +589,7 @@ No active permission found.
 
 ────────────────────────
 
-[ Cancel ]     [ Confirm Report ]
-
+[ Cancel ] [ Confirm Report ]
 
 Use red only on the confirmation action.
 
@@ -648,7 +607,6 @@ Unauthorized Movement
 
 Under Review
 
-
 Add status badge.
 
 Then:
@@ -660,7 +618,6 @@ Faculty Report
 Evidence
 Student Explanation
 HOD Decision
-
 
 Use cards with clear section headers.
 
@@ -684,7 +641,6 @@ Create a vertical timeline.
 ● 12:35 PM
 │ Decision: Warning
 
-
 Use blue for normal events.
 
 Use red only for the original violation.
@@ -703,7 +659,6 @@ Manage and track the violations you have submitted.
 
 [ Search... ] [ Status ] [ Date ]
 
-
 Table:
 
 Report ID
@@ -715,14 +670,12 @@ Status
 Created
 Action
 
-
 Status badges:
 
-Pending       Amber
-Under Review  Blue
-Resolved      Green
-Escalated     Red
-
+Pending Amber
+Under Review Blue
+Resolved Green
+Escalated Red
 
 Add:
 
@@ -758,7 +711,6 @@ Data Structures
 
 [ View Details ]
 
-
 22. MY TIMETABLE
 
 Create a modern timeline instead of a basic table.
@@ -768,25 +720,23 @@ Example:
 TODAY
 
 09:00 ─────────────────
-       Data Structures
-       CSE-A
-       Room C-204
+Data Structures
+CSE-A
+Room C-204
 
 11:00 ─────────────────
-       Database Management
-       CSE-B
-       Room B-102
+Database Management
+CSE-B
+Room B-102
 
 02:00 ─────────────────
-       Operating Systems
-       CSE-A
-       Room C-301
-
+Operating Systems
+CSE-A
+Room C-301
 
 Add tabs:
 
 Today | Mon | Tue | Wed | Thu | Fri
-
 
 Current class should have a blue highlighted state.
 
@@ -797,20 +747,17 @@ Create a modern notification center.
 Unread notification:
 
 🔴 HOD reviewed violation V-1024
-   2 minutes ago
-
+2 minutes ago
 
 Student explanation:
 
 🟡 Student submitted explanation for V-1025
-   15 minutes ago
-
+15 minutes ago
 
 Resolved:
 
 🟢 Violation V-1021 has been resolved
-   1 hour ago
-
+1 hour ago
 
 Add:
 
@@ -839,7 +786,6 @@ your current filters.
 
         [ Check Student ]
 
-
 Use subtle illustration/icon.
 
 25. LOADING STATES
@@ -864,7 +810,6 @@ Skeleton color:
 
 #E2E8F0
 
-
 Use subtle shimmer animation.
 
 26. BUTTON SYSTEM
@@ -877,13 +822,11 @@ Blue:
 
 #2563EB
 
-
 Secondary
 
 White with border:
 
 border: #CBD5E1
-
 
 Success
 
@@ -925,23 +868,20 @@ Label
 Input
 Helper text / validation
 
-
 Example:
 
 Student ID
 
 ┌──────────────────────────────────────┐
-│ 23CSE1012                         🔍 │
+│ 23CSE1012 🔍 │
 └──────────────────────────────────────┘
 
 Enter a valid student ID.
-
 
 Focus:
 
 border: #2563EB
 box-shadow: 0 0 0 3px #DBEAFE
-
 
 28. TYPOGRAPHY
 
@@ -951,20 +891,17 @@ Preferred:
 
 Inter
 
-
 Fallback:
 
 system-ui, sans-serif
 
-
 Typography hierarchy:
 
-Page title       28–32px
-Section title    18–20px
-Card title       15–17px
-Body             14–15px
-Small text       12–13px
-
+Page title 28–32px
+Section title 18–20px
+Card title 15–17px
+Body 14–15px
+Small text 12–13px
 
 Use font weight carefully.
 
@@ -999,11 +936,9 @@ Eye
 Filter
 Download
 
-
 Icons should generally be:
 
 18–20px
-
 
 30. CARD SYSTEM
 
@@ -1014,7 +949,6 @@ border: 1px solid #E2E8F0
 border-radius: 14px
 box-shadow: subtle
 
-
 Hover only where interactive.
 
 Do NOT make every card float heavily.
@@ -1023,13 +957,12 @@ Do NOT make every card float heavily.
 
 Use professional animations:
 
-Button hover       150ms
-Card hover         200ms
-Sidebar            200ms
-Modal              200ms
-Toast              250ms
-Page transition    200ms
-
+Button hover 150ms
+Card hover 200ms
+Sidebar 200ms
+Modal 200ms
+Toast 250ms
+Page transition 200ms
 
 Use:
 
@@ -1049,16 +982,15 @@ Add optional dark mode through Settings.
 
 Dark theme:
 
-Background      #0B1120
-Surface         #111827
-Card            #172033
-Border          #263244
-Text            #F8FAFC
-Secondary       #94A3B8
-Primary         #3B82F6
-Danger          #EF4444
-Success         #22C55E
-
+Background #0B1120
+Surface #111827
+Card #172033
+Border #263244
+Text #F8FAFC
+Secondary #94A3B8
+Primary #3B82F6
+Danger #EF4444
+Success #22C55E
 
 Do not simply invert colors.
 
@@ -1100,15 +1032,13 @@ Minimum touch target:
 
 44px
 
-
 34. MOBILE HEADER
 
 Create:
 
 ┌─────────────────────────────────────┐
-│ ☰   CMADMS                 🔔  👤  │
+│ ☰ CMADMS 🔔 👤 │
 └─────────────────────────────────────┘
-
 
 Keep it compact.
 
@@ -1117,15 +1047,14 @@ Keep it compact.
 The dashboard must visually prioritize:
 
 1. Check Student
-        ↓
+   ↓
 2. Current verification activity
-        ↓
+   ↓
 3. Reports requiring attention
-        ↓
+   ↓
 4. Recent activity
-        ↓
+   ↓
 5. Statistics
-
 
 Do not let statistics dominate the dashboard.
 
@@ -1191,11 +1120,9 @@ Do not show only:
 
 🟢
 
-
 Instead:
 
 ✓ Authorized
-
 
 38. IMPORTANT PRODUCT RULE
 
@@ -1234,15 +1161,14 @@ Modern University ERP + Enterprise SaaS + Case Management System
 Visual priority:
 
 NAVY
-   ↓
+↓
 BLUE
-   ↓
+↓
 WHITE / SLATE
-   ↓
+↓
 SEMANTIC COLORS
-   ↓
+↓
 RED ONLY FOR VIOLATIONS
-
 
 The user should immediately understand:
 
@@ -1260,8 +1186,7 @@ The UI must look polished enough for an actual university deployment, not like a
 
 Every button, filter, form, modal, navigation item, search field, status badge, loading state, and interaction must be functional rather than decorative.
 
-
-use nextjs  i want this application fully human type
+use nextjs i want this application fully human type
 
 This project was built with [Lovable](https://lovable.dev).
 

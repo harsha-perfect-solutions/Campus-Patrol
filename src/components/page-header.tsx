@@ -17,7 +17,10 @@ export function PageHeader({
     <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
       <div className="min-w-0">
         {breadcrumb && breadcrumb.length > 0 && (
-          <nav aria-label="Breadcrumb" className="mb-2 flex items-center gap-1 text-xs text-subtle-foreground">
+          <nav
+            aria-label="Breadcrumb"
+            className="mb-2 flex items-center gap-1 text-xs text-subtle-foreground"
+          >
             {breadcrumb.map((c, i) => (
               <span key={c.label} className="flex items-center gap-1">
                 {i > 0 && <ChevronRight className="size-3.5" aria-hidden />}

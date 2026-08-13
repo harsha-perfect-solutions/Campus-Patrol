@@ -1,5 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AlertTriangle, BookOpen, CheckCircle2, Clock, FileText, Search, UserSearch } from "lucide-react";
+import {
+  AlertTriangle,
+  BookOpen,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Search,
+  UserSearch,
+} from "lucide-react";
 import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -46,16 +54,37 @@ function FacultyDashboardContent() {
       {/* Summary Stat Cards */}
       <div className="grid gap-4 sm:grid-cols-4">
         {[
-          { label: "Today's Reports", value: myReports.length, color: "text-primary bg-primary/10" },
-          { label: "Pending Review", value: pendingCount, color: "text-amber-600 bg-amber-50 dark:bg-amber-950/40" },
-          { label: "Under Review", value: reviewCount, color: "text-blue-600 bg-blue-50 dark:bg-blue-950/40" },
-          { label: "Resolved Cases", value: resolvedCount, color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40" },
+          {
+            label: "Today's Reports",
+            value: myReports.length,
+            color: "text-primary bg-primary/10",
+          },
+          {
+            label: "Pending Review",
+            value: pendingCount,
+            color: "text-amber-600 bg-amber-50 dark:bg-amber-950/40",
+          },
+          {
+            label: "Under Review",
+            value: reviewCount,
+            color: "text-blue-600 bg-blue-50 dark:bg-blue-950/40",
+          },
+          {
+            label: "Resolved Cases",
+            value: resolvedCount,
+            color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40",
+          },
         ].map((s) => (
-          <div key={s.label} className="card-surface p-5 rounded-2xl border border-border shadow-2xs">
+          <div
+            key={s.label}
+            className="card-surface p-5 rounded-2xl border border-border shadow-2xs"
+          >
             <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold ${s.color}`}>
               {s.label}
             </span>
-            <p className="mt-3 text-3xl font-extrabold text-foreground">{String(s.value).padStart(2, "0")}</p>
+            <p className="mt-3 text-3xl font-extrabold text-foreground">
+              {String(s.value).padStart(2, "0")}
+            </p>
           </div>
         ))}
       </div>
@@ -73,15 +102,17 @@ function FacultyDashboardContent() {
             </div>
             <h3 className="mt-4 text-xl font-bold text-foreground">Verify Student Movement</h3>
             <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Check identity, timetable schedule, and active gate permissions for any student roll number before reporting unauthorized movement.
+              Check identity, timetable schedule, and active gate permissions for any student roll
+              number before reporting unauthorized movement.
             </p>
           </div>
 
           <div className="mt-6">
-            <Button asChild className="w-full h-11 rounded-xl font-semibold bg-primary text-primary-foreground shadow-xs">
-              <Link to="/faculty/check">
-                Open Verification Workspace &rarr;
-              </Link>
+            <Button
+              asChild
+              className="w-full h-11 rounded-xl font-semibold bg-primary text-primary-foreground shadow-xs"
+            >
+              <Link to="/faculty/check">Open Verification Workspace &rarr;</Link>
             </Button>
           </div>
         </section>
@@ -97,9 +128,24 @@ function FacultyDashboardContent() {
 
           <div className="mt-4 space-y-3">
             {[
-              { time: "09:00 AM – 10:00 AM", subject: "Data Structures Lab", room: "Lab C-102", active: false },
-              { time: "10:00 AM – 11:00 AM", subject: "Data Structures (3rd Year CSE)", room: "Room C-204", active: true },
-              { time: "02:00 PM – 03:00 PM", subject: "Algorithms & Logic", room: "Room C-206", active: false },
+              {
+                time: "09:00 AM – 10:00 AM",
+                subject: "Data Structures Lab",
+                room: "Lab C-102",
+                active: false,
+              },
+              {
+                time: "10:00 AM – 11:00 AM",
+                subject: "Data Structures (3rd Year CSE)",
+                room: "Room C-204",
+                active: true,
+              },
+              {
+                time: "02:00 PM – 03:00 PM",
+                subject: "Algorithms & Logic",
+                room: "Room C-206",
+                active: false,
+              },
             ].map((slot) => (
               <div
                 key={slot.time}
@@ -111,7 +157,9 @@ function FacultyDashboardContent() {
               >
                 <div>
                   <p className="font-bold text-foreground">{slot.subject}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{slot.time} &bull; {slot.room}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {slot.time} &bull; {slot.room}
+                  </p>
                 </div>
                 {slot.active && (
                   <span className="rounded-full bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300 px-2 py-0.5 text-[10px] font-bold">
@@ -144,7 +192,9 @@ function FacultyDashboardContent() {
               <div>
                 <span className="font-bold text-foreground">{r.id}</span> &bull;{" "}
                 <strong className="text-foreground">{r.studentName}</strong> ({r.studentId})
-                <p className="text-[11px] text-muted-foreground mt-0.5">{r.className} &bull; {r.incidentTime}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {r.className} &bull; {r.incidentTime}
+                </p>
               </div>
               <Button variant="ghost" size="sm" asChild className="rounded-xl text-xs">
                 <Link to="/faculty/reports">Details</Link>

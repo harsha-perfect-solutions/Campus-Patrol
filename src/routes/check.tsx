@@ -5,6 +5,7 @@ import {
   BookOpen,
   Building2,
   Calendar,
+  Camera,
   CheckCircle2,
   Clock,
   HelpCircle,
@@ -22,6 +23,7 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+import { CameraModal } from "@/components/camera-modal";
 import { z } from "zod";
 import { toast } from "sonner";
 import { ToneBadge } from "@/components/status-badge";
@@ -57,6 +59,13 @@ import {
 import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import {
+  getFacultyStudent,
+  getStudentMovementStatus,
+  submitViolationReportApi,
+  getStudentCurrentClassApi,
+} from "@/lib/api/faculty.server";
+import type { DBStudent } from "@/lib/db/students.server";
 
 export const Route = createFileRoute("/check")({
   validateSearch: z.object({ student: z.string().optional() }),
@@ -79,26 +88,83 @@ export const Route = createFileRoute("/check")({
 });
 
 type Result = {
-  student: (typeof students)[number] | null;
+  student: {
+    id: string;
+    name: string;
+    department: string;
+    year: string;
+    section: string;
+    semester: number;
+    status: "Active" | "Inactive";
+    photo_url?: string | null;
+  } | null;
   slot: (typeof currentClassByStudent)[string];
   permission: ReturnType<() => (typeof permissionByStudent)[string]>;
 };
 
 function ClassroomVectorIllustration() {
   return (
-    <svg className="w-44 h-28 hidden md:block text-indigo-500/80 shrink-0" viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      className="w-44 h-28 hidden md:block text-indigo-500/80 shrink-0"
+      viewBox="0 0 200 130"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       {/* Board */}
-      <rect x="25" y="15" width="85" height="50" rx="6" fill="#EEF2FF" stroke="#C7D2FE" strokeWidth="2" />
-      <line x1="35" y1="28" x2="85" y2="28" stroke="#818CF8" strokeWidth="2" strokeLinecap="round" />
-      <line x1="35" y1="38" x2="70" y2="38" stroke="#A5B4FC" strokeWidth="2" strokeLinecap="round" />
-      <line x1="35" y1="48" x2="95" y2="48" stroke="#C7D2FE" strokeWidth="2" strokeLinecap="round" />
+      <rect
+        x="25"
+        y="15"
+        width="85"
+        height="50"
+        rx="6"
+        fill="#EEF2FF"
+        stroke="#C7D2FE"
+        strokeWidth="2"
+      />
+      <line
+        x1="35"
+        y1="28"
+        x2="85"
+        y2="28"
+        stroke="#818CF8"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="35"
+        y1="38"
+        x2="70"
+        y2="38"
+        stroke="#A5B4FC"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="35"
+        y1="48"
+        x2="95"
+        y2="48"
+        stroke="#C7D2FE"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
       {/* Clock on wall */}
       <circle cx="15" cy="22" r="7" fill="#E0E7FF" stroke="#818CF8" strokeWidth="1.5" />
       <path d="M15 19V22L17.5 24.5" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round" />
       {/* Teacher */}
       <circle cx="145" cy="52" r="7" fill="#818CF8" />
-      <path d="M145 62V84M145 68L128 54M145 68L158 76" stroke="#6366F1" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M137 84L145 104M153 84L145 104" stroke="#4F46E5" strokeWidth="2.5" strokeLinecap="round" />
+      <path
+        d="M145 62V84M145 68L128 54M145 68L158 76"
+        stroke="#6366F1"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M137 84L145 104M153 84L145 104"
+        stroke="#4F46E5"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
       {/* Students */}
       <circle cx="45" cy="80" r="5" fill="#A5B4FC" />
       <path d="M35 102V92C35 89 37 87 40 87H50C53 87 55 89 55 92V102" fill="#C7D2FE" />
@@ -126,30 +192,91 @@ export function CheckStudentPage() {
   const [location, setLocation] = useState("");
   const [remarks, setRemarks] = useState("");
   const [evidence, setEvidence] = useState("");
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const activeFacultyName = profile?.full_name || faculty.name;
 
-  const runCheck = (raw: string) => {
+  const runCheck = async (raw: string) => {
     const id = raw.trim().toUpperCase();
     if (!id) return;
     setLoading(true);
     setResult(null);
     setNotFound(null);
     setFormOpen(false);
-    window.setTimeout(() => {
-      const student = students.find((s) => s.id === id) ?? null;
-      if (!student) {
+
+    try {
+      const [stRes, passRes, classRes] = await Promise.all([
+        getFacultyStudent({ data: { rollNo: id } }),
+        getStudentMovementStatus({ data: { rollNo: id } }),
+        getStudentCurrentClassApi({ data: { rollNo: id } }).catch(() => ({
+          success: false,
+          slot: null,
+        })),
+      ]);
+
+      if (!stRes.success || !stRes.student) {
         setNotFound(id);
         setLoading(false);
         return;
       }
+
+      const dbStudent = stRes.student;
+      const studentObj = {
+        id: dbStudent.student_code,
+        name: dbStudent.name,
+        department: dbStudent.department,
+        year: dbStudent.year,
+        section: dbStudent.section,
+        semester: dbStudent.semester,
+        status: (dbStudent.status || "Active") as "Active" | "Inactive",
+        photo_url: dbStudent.photo_url,
+      };
+
+      const permissionObj = passRes.activePass
+        ? {
+            reason: passRes.activePass.reason,
+            validUntil: `${passRes.activePass.valid_until} (${passRes.activePass.date})`,
+            issuedBy: passRes.activePass.issued_by,
+          }
+        : permissionByStudent[id];
+
+      // Map DB class slot → ClassSlot shape; fall back to legacy mock map
+      let slot = currentClassByStudent[id] ?? null;
+      if (classRes.success && classRes.slot) {
+        const s = classRes.slot;
+        // Convert 24h "HH:MM" → "HH:MM AM/PM"
+        const fmt = (t: string) => {
+          if (!t) return "";
+          const parts = t.split(":").map(Number);
+          const h = parts[0] ?? 0;
+          const m = parts[1] ?? 0;
+          const ampm = h >= 12 ? "PM" : "AM";
+          const h12 = h % 12 || 12;
+          return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+        };
+        slot = {
+          subject: s.subject,
+          code: s.subject_code,
+          start: fmt(s.start_time),
+          end: fmt(s.end_time),
+          room: s.room,
+          faculty: s.faculty_name,
+          batch: s.batch ?? "",
+        };
+      }
+
       setResult({
-        student,
-        slot: currentClassByStudent[id] ?? null,
-        permission: permissionByStudent[id],
+        student: studentObj,
+        slot,
+        permission: permissionObj as any,
       });
+    } catch (err: any) {
+      console.error("Failed to query student status from DB:", err);
+      toast.error("Error querying student status.");
+    } finally {
       setLoading(false);
-    }, 350);
+    }
   };
 
   useEffect(() => {
@@ -177,22 +304,44 @@ export function CheckStudentPage() {
         ? "authorized"
         : "unauthorized";
 
-  const submitReport = () => {
+  const submitReport = async () => {
     if (!result?.student || !slot) return;
     setSubmitting(true);
-    window.setTimeout(() => {
-      const now = new Date();
-      const time = now.toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
+    const now = new Date();
+    const time = now.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    try {
+      // 1. Submit violation report + audit log to Docker PostgreSQL
+      const dbRes = await submitViolationReportApi({
+        data: {
+          studentCode: result.student.id,
+          studentName: result.student.name,
+          department: result.student.department,
+          yearSection: `${result.student.year} • ${result.student.section}`,
+          className: slot.subject,
+          scheduledTime: `${slot.start} — ${slot.end}`,
+          room: slot.room,
+          incidentTime: time,
+          location: location || "Not specified",
+          remarks: remarks || "No additional remarks provided.",
+          evidence: evidence || null,
+          semester: result.student.semester || 6,
+        },
       });
 
-      const reportPayload: Omit<Report, "id" | "createdAt" | "explanationDeadline" | "status" | "timeline" | "departmentHod"> = {
-        studentName: result.student!.name,
-        studentId: result.student!.id,
-        department: result.student!.department,
-        yearSection: `${result.student!.year} • ${result.student!.section}`,
+      // 2. Sync payload to store
+      const reportPayload: Omit<
+        Report,
+        "id" | "createdAt" | "explanationDeadline" | "status" | "timeline" | "departmentHod"
+      > = {
+        studentName: result.student.name,
+        studentId: result.student.id,
+        department: result.student.department,
+        yearSection: `${result.student.year} • ${result.student.section}`,
         className: slot.subject,
         scheduledTime: `${slot.start} — ${slot.end}`,
         room: slot.room,
@@ -200,22 +349,18 @@ export function CheckStudentPage() {
         location: location || "Not specified",
         remarks: remarks || "No additional remarks provided.",
         reportedBy: activeFacultyName,
-        semester: result.student!.semester || 6,
+        semester: result.student.semester || 6,
       };
+      if (evidence) reportPayload.evidence = evidence;
 
-      if (evidence) {
-        reportPayload.evidence = evidence;
-      }
-
-      const res = addReport(reportPayload);
-
+      const storeRes = addReport(reportPayload);
       setSubmitting(false);
 
-      if (!res.success) {
-        toast.error(res.error, {
+      if (!storeRes.success) {
+        toast.error(storeRes.error, {
           action: {
             label: "View Existing Report",
-            onClick: () => navigate({ to: `/hod/cases/${res.existingReport.id}` as any }),
+            onClick: () => navigate({ to: `/hod/cases/${storeRes.existingReport.id}` as any }),
           },
         });
         return;
@@ -223,9 +368,15 @@ export function CheckStudentPage() {
 
       setConfirmOpen(false);
       setFormOpen(false);
-      toast.success("Violation reported", { description: `Case ${res.report.id} created.` });
+      toast.success("Violation reported", {
+        description: `Case ${dbRes.report?.id ?? storeRes.report.id} created and logged in PostgreSQL.`,
+      });
       navigate({ to: "/faculty/reports" as any });
-    }, 600);
+    } catch (err) {
+      console.error("Violation submission failed:", err);
+      toast.error("Failed to record violation report in database.");
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -443,9 +594,7 @@ export function CheckStudentPage() {
                   </span>
                   <div>
                     <div className="flex items-center gap-2.5">
-                      <h3 className="text-xl font-bold text-foreground">
-                        {result.student.name}
-                      </h3>
+                      <h3 className="text-xl font-bold text-foreground">{result.student.name}</h3>
                       <span className="rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 px-2.5 py-0.5 text-[11px] font-bold">
                         Active
                       </span>
@@ -511,9 +660,7 @@ export function CheckStudentPage() {
                       <span className="inline-block rounded-full bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300 px-2.5 py-0.5 text-[11px] font-bold">
                         Currently in session
                       </span>
-                      <h3 className="mt-2 text-xl font-bold text-foreground">
-                        {slot.subject}
-                      </h3>
+                      <h3 className="mt-2 text-xl font-bold text-foreground">{slot.subject}</h3>
 
                       <div className="mt-4 space-y-2 text-xs sm:text-sm text-muted-foreground">
                         <div className="flex items-center gap-2">
@@ -571,7 +718,8 @@ export function CheckStudentPage() {
                     No active movement permission
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-                    The student is scheduled to attend {slot.subject} from {slot.start} – {slot.end} in {slot.room}.
+                    The student is scheduled to attend {slot.subject} from {slot.start} – {slot.end}{" "}
+                    in {slot.room}.
                   </p>
                 </div>
               </div>
@@ -602,7 +750,8 @@ export function CheckStudentPage() {
                     Authorized Movement Pass Found
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Reason: <strong className="text-foreground">{permission.reason}</strong> • Issued by {permission.issuedBy} (Valid until {permission.validUntil})
+                    Reason: <strong className="text-foreground">{permission.reason}</strong> •
+                    Issued by {permission.issuedBy} (Valid until {permission.validUntil})
                   </p>
                 </div>
               </div>
@@ -616,7 +765,9 @@ export function CheckStudentPage() {
           {formOpen && slot && (
             <section className="card-surface rounded-2xl overflow-hidden border border-border shadow-md">
               <div className="border-b border-divider px-6 py-4 bg-muted/30">
-                <h2 className="text-base font-bold text-foreground">Report Unauthorized Movement</h2>
+                <h2 className="text-base font-bold text-foreground">
+                  Report Unauthorized Movement
+                </h2>
                 <p className="text-xs text-muted-foreground">
                   Review the incident details and add your report before submitting.
                 </p>
@@ -648,7 +799,9 @@ export function CheckStudentPage() {
                   <h3 className="text-sm font-semibold text-foreground">Report Details</h3>
                   <div className="mt-4 space-y-4">
                     <div>
-                      <Label htmlFor="loc" className="text-xs font-medium">Location</Label>
+                      <Label htmlFor="loc" className="text-xs font-medium">
+                        Location
+                      </Label>
                       <Select value={location} onValueChange={setLocation}>
                         <SelectTrigger id="loc" className="mt-1.5 h-11 rounded-xl">
                           <SelectValue placeholder="Select location" />
@@ -665,7 +818,9 @@ export function CheckStudentPage() {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="remarks" className="text-xs font-medium">Remarks</Label>
+                      <Label htmlFor="remarks" className="text-xs font-medium">
+                        Remarks
+                      </Label>
                       <Textarea
                         id="remarks"
                         rows={4}
@@ -676,21 +831,93 @@ export function CheckStudentPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="evidence" className="text-xs font-medium">Evidence (optional)</Label>
-                      <label
-                        htmlFor="evidence"
-                        className="mt-1.5 flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-dashed border-input bg-background px-3 py-2.5 text-xs text-muted-foreground transition-colors hover:border-primary"
-                      >
-                        <Upload className="size-4" aria-hidden />
-                        {evidence || "Upload photo or file"}
-                      </label>
-                      <input
-                        id="evidence"
-                        type="file"
-                        className="sr-only"
-                        onChange={(e) => setEvidence(e.target.files?.[0]?.name ?? "")}
-                      />
+                      <Label className="text-xs font-medium">
+                        Evidence Photo / File (optional)
+                      </Label>
+
+                      <div className="mt-1.5 space-y-2">
+                        {evidence ? (
+                          <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-primary/30 bg-primary/5">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              {photoPreview ? (
+                                <img
+                                  src={photoPreview}
+                                  alt="Captured preview"
+                                  className="size-9 rounded-lg object-cover border border-primary/30 shrink-0"
+                                />
+                              ) : (
+                                <Camera className="size-4 text-primary shrink-0" />
+                              )}
+                              <span className="truncate text-xs font-semibold text-foreground">
+                                {evidence}
+                              </span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-8 text-destructive hover:bg-destructive/10 rounded-lg shrink-0"
+                              onClick={() => {
+                                setEvidence("");
+                                setPhotoPreview(null);
+                              }}
+                            >
+                              <X className="size-3.5 mr-1" /> Remove
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-2">
+                            {/* Live In-App Camera Capture Button */}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-11 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 border border-primary/40 bg-primary/5 text-primary hover:bg-primary/10 shadow-2xs"
+                              onClick={() => setCameraOpen(true)}
+                            >
+                              <Camera className="size-4" />
+                              <span>Take Photo</span>
+                            </Button>
+
+                            {/* File Upload Button */}
+                            <label
+                              htmlFor="evidence-file-upload"
+                              className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-input bg-background px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary shadow-2xs"
+                            >
+                              <Upload className="size-4" />
+                              <span>Upload File</span>
+                            </label>
+                            <input
+                              id="evidence-file-upload"
+                              type="file"
+                              accept="image/*,.pdf,.doc,.docx"
+                              className="sr-only"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  setEvidence(file.name);
+                                  if (file.type.startsWith("image/")) {
+                                    const reader = new FileReader();
+                                    reader.onload = (ev) =>
+                                      setPhotoPreview(ev.target?.result as string);
+                                    reader.readAsDataURL(file);
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
+
+                    <CameraModal
+                      open={cameraOpen}
+                      onClose={() => setCameraOpen(false)}
+                      onCapture={(dataUrl, filename) => {
+                        setPhotoPreview(dataUrl);
+                        setEvidence(filename);
+                        toast.success(`Photo captured: ${filename}`);
+                      }}
+                    />
                   </div>
                 </div>
               </div>
