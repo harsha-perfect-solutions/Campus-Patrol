@@ -691,3 +691,6 @@ export async function getMyStudentDashboardStats(
   }
 }
 
+export const getStudentDashboardStats = getMyStudentDashboardStats;
+
+
