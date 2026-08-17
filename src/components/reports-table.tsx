@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpDown, Eye, FileSearch, Filter, Search } from "lucide-react";
+import { ArrowUpDown, Download, Eye, FileSearch, Filter, Search } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Report, ReportStatus } from "@/lib/cmadms-data";
+import { downloadEvidenceImage } from "@/lib/download-evidence";
 
 const PAGE_SIZE = 4;
 
@@ -129,6 +130,7 @@ export function ReportsTable({
                   <th className="px-5 py-3 font-medium">Incident</th>
                   <th className="px-5 py-3 font-medium">Status</th>
                   <th className="px-5 py-3 font-medium">Created</th>
+                  <th className="px-5 py-3 font-medium">Evidence</th>
                   <th className="px-5 py-3 text-right font-medium">Action</th>
                 </tr>
               </thead>
@@ -146,6 +148,22 @@ export function ReportsTable({
                       <StatusBadge status={r.status} />
                     </td>
                     <td className="px-5 py-3.5 text-muted-foreground">{r.createdAt}</td>
+                    <td className="px-5 py-3.5">
+                      {r.evidence ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => downloadEvidenceImage(r.evidence!, r.id)}
+                          className="h-8 px-2.5 rounded-lg text-xs gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
+                          title="Download attached faculty/security evidence photo"
+                        >
+                          <Download className="size-3.5" />
+                          <span>Download Photo</span>
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">None</span>
+                      )}
+                    </td>
                     <td className="px-5 py-3.5 text-right">
                       <Button variant="ghost" size="sm" asChild>
                         <Link to="/reports/$reportId" params={{ reportId: r.id }}>
@@ -174,6 +192,15 @@ export function ReportsTable({
                 <p className="text-sm text-muted-foreground">
                   {r.className} • {r.incidentTime}
                 </p>
+                {r.evidence && (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-1.5 border-primary/40 text-primary"
+                    onClick={() => downloadEvidenceImage(r.evidence!, r.id)}
+                  >
+                    <Download className="size-3.5" /> Download Evidence Photo
+                  </Button>
+                )}
                 <Button variant="outline" className="w-full" asChild>
                   <Link to="/reports/$reportId" params={{ reportId: r.id }}>
                     <Eye /> View Details

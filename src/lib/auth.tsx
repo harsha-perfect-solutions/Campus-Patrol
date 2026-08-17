@@ -14,6 +14,7 @@ export type UserProfile = {
   staff_code: string | null;
   student_code: string | null;
   avatar_url: string | null;
+  assigned_post: string | null;
 };
 
 type AuthCtx = {
@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           staffCode: res.user.staffCode,
           studentCode: res.user.studentCode,
           fullName: res.user.fullName,
+          assignedPost: res.user.department || null,
           expiresAt: new Date(Date.now() + 86400000).toISOString(),
         });
         setLoading(false);
@@ -127,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       staff_code: sessionData.staffCode,
       student_code: sessionData.studentCode,
       avatar_url: null,
+      assigned_post: (sessionData as any).assignedPost ?? null,
     };
   }, [sessionData]);
 

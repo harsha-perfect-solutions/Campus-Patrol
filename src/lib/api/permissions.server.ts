@@ -62,14 +62,14 @@ export const issueMovementPass = createServerFn({ method: "POST" })
       data,
     }): Promise<{ success: boolean; permission: DBPermission | null; error?: string }> => {
       try {
-        // Task 6 & 14.9: Only staff (Faculty/HOD/Admin) can issue/approve passes
-        const identity = await requireAnyRole(["faculty", "hod", "admin"]);
+        // Enforce: Only Department HOD can issue/approve passes
+        const identity = await requireAnyRole(["hod"]);
         const permission = await createMovementPermission({
           studentCode: data.studentCode,
           reason: data.reason,
           validFrom: data.validFrom,
           validUntil: data.validUntil,
-          issuedBy: identity.fullName,
+          issuedBy: `HOD (${identity.fullName})`,
         });
         return { success: true, permission };
       } catch (err: any) {
@@ -84,7 +84,7 @@ export const issueMovementPass = createServerFn({ method: "POST" })
   );
 
 export const approveMovementPassApi = createServerFn({ method: "POST" })
-  .validator((data: { passId: string; status: "approved" | "rejected" }) => {
+  .validator((data: { passId: string; status: "approved" | "rejected"; rejectionReason?: string }) => {
     if (!data?.passId || !data?.status) {
       throw new Error("Pass ID and Status are required.");
     }
@@ -95,12 +95,12 @@ export const approveMovementPassApi = createServerFn({ method: "POST" })
       data,
     }): Promise<{ success: boolean; permission: DBPermission | null; error?: string }> => {
       try {
-        // Task 6 & 14.9: Only staff (Faculty/HOD/Admin) can approve pending passes
-        const identity = await requireAnyRole(["admin", "hod", "faculty"]);
+        // Enforce: Only Department HOD can approve/reject student movement passes
+        const identity = await requireAnyRole(["hod"]);
         const permission = await approveMovementPermission(
           data.passId,
           data.status,
-          identity.fullName,
+          `HOD (${identity.fullName})`,
         );
         return { success: true, permission };
       } catch (err: any) {
@@ -113,3 +113,4 @@ export const approveMovementPassApi = createServerFn({ method: "POST" })
       }
     },
   );
+

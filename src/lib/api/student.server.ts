@@ -6,8 +6,15 @@ import {
   requestMovementPermission,
   getMyViolationReports,
   getMyViolationById,
+  getMyViolationReportById,
+  getMyViolationStats,
+  getMyViolationTimeline,
+  submitViolationExplanation,
   getMyStudentDashboardStats,
   type StudentDashboardStats,
+  type StudentViolationStats,
+  type StudentViolationFilters,
+  type StudentTimelineEvent,
 } from "../db/student.server";
 import { submitStudentExplanation } from "../db/hod.server";
 import type { DBStudent } from "../db/students.server";
@@ -98,40 +105,52 @@ export const requestMovementPermissionApi = createServerFn({ method: "POST" })
         const studentCode = getTrustedStudentCode(identity);
         const permission = await requestMovementPermission(
           studentCode,
-          String(data.reason),
+          data.reason,
           dateStr,
-          String(data.validFrom),
-          String(data.validUntil),
+          data.validFrom,
+          data.validUntil,
         );
         return { success: true, permission };
       } catch (err: any) {
         console.error("[Student Server API Error] requestMovementPermissionApi:", err);
-        return { success: false, error: err.message || "Failed to request movement permission." };
+        return {
+          success: false,
+          error: err.message || "Failed to submit movement permission request.",
+        };
       }
     },
   );
 
-export const getMyViolationReportsApi = createServerFn({ method: "GET" }).handler(
-  async (): Promise<{
-    success: boolean;
-    reports: DBViolationReport[];
-    error?: string;
-  }> => {
-    try {
-      const identity = await requireRole("student");
-      const studentCode = getTrustedStudentCode(identity);
-      const reports = await getMyViolationReports(studentCode);
-      return { success: true, reports };
-    } catch (err: any) {
-      console.error("[Student Server API Error] getMyViolationReportsApi:", err);
-      return {
-        success: false,
-        reports: [],
-        error: err.message || "Failed to fetch violation reports.",
-      };
-    }
-  },
-);
+export const getMyViolationReportsApi = createServerFn({ method: "GET" })
+  .validator((filters?: StudentViolationFilters) => {
+    const sanitized: StudentViolationFilters = {};
+    if (filters?.status && filters.status !== "ALL") sanitized.status = filters.status.trim();
+    if (filters?.severity && filters.severity !== "ALL") sanitized.severity = filters.severity.trim();
+    if (filters?.violationType && filters.violationType !== "ALL") sanitized.violationType = filters.violationType.trim();
+    if (filters?.search?.trim()) sanitized.search = filters.search.trim();
+    return sanitized;
+  })
+  .handler(
+    async ({ data }): Promise<{
+      success: boolean;
+      reports: DBViolationReport[];
+      error?: string;
+    }> => {
+      try {
+        const identity = await requireRole("student");
+        const studentCode = getTrustedStudentCode(identity);
+        const reports = await getMyViolationReports(studentCode, data);
+        return { success: true, reports };
+      } catch (err: any) {
+        console.error("[Student Server API Error] getMyViolationReportsApi:", err);
+        return {
+          success: false,
+          reports: [],
+          error: err.message || "Failed to fetch violation reports.",
+        };
+      }
+    },
+  );
 
 export const getMyViolationByIdApi = createServerFn({ method: "GET" })
   .validator((data: { reportId: string }) => {
@@ -163,8 +182,62 @@ export const getMyViolationByIdApi = createServerFn({ method: "GET" })
     },
   );
 
-export const submitStudentExplanationApi = createServerFn({ method: "POST" })
-  .validator((data: { reportId: string; explanation: string; evidence?: string }) => {
+export const getMyViolationReportByIdApi = getMyViolationByIdApi;
+
+export const getMyViolationStatsApi = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{
+    success: boolean;
+    stats: StudentViolationStats | null;
+    error?: string;
+  }> => {
+    try {
+      const identity = await requireRole("student");
+      const studentCode = getTrustedStudentCode(identity);
+      const stats = await getMyViolationStats(studentCode);
+      return { success: true, stats };
+    } catch (err: any) {
+      console.error("[Student Server API Error] getMyViolationStatsApi:", err);
+      return {
+        success: false,
+        stats: null,
+        error: err.message || "Failed to load student incident statistics.",
+      };
+    }
+  },
+);
+
+export const getMyViolationTimelineApi = createServerFn({ method: "GET" })
+  .validator((data: { reportId: string }) => {
+    const reportId = typeof data?.reportId === "string" ? data.reportId.trim() : "";
+    if (!reportId) throw new Error("Report ID is required.");
+    return { reportId };
+  })
+  .handler(
+    async ({
+      data,
+    }): Promise<{
+      success: boolean;
+      timeline: StudentTimelineEvent[];
+      error?: string;
+    }> => {
+      try {
+        const identity = await requireRole("student");
+        const studentCode = getTrustedStudentCode(identity);
+        const timeline = await getMyViolationTimeline(data.reportId, studentCode);
+        return { success: true, timeline };
+      } catch (err: any) {
+        console.error("[Student Server API Error] getMyViolationTimelineApi:", err);
+        return {
+          success: false,
+          timeline: [],
+          error: err.message || "Failed to load incident timeline.",
+        };
+      }
+    },
+  );
+
+export const submitViolationExplanationApi = createServerFn({ method: "POST" })
+  .validator((data: { reportId: string; explanation: string; evidence?: string | undefined }) => {
     const reportId = typeof data?.reportId === "string" ? data.reportId.trim() : "";
     const explanation = typeof data?.explanation === "string" ? data.explanation.trim() : "";
     const evidence = typeof data?.evidence === "string" ? data.evidence.trim() : undefined;
@@ -182,7 +255,7 @@ export const submitStudentExplanationApi = createServerFn({ method: "POST" })
       try {
         const identity = await requireRole("student");
         const studentCode = getTrustedStudentCode(identity);
-        const report = await submitStudentExplanation(
+        const report = await submitViolationExplanation(
           data.reportId,
           studentCode,
           data.explanation,
@@ -190,11 +263,13 @@ export const submitStudentExplanationApi = createServerFn({ method: "POST" })
         );
         return { success: true, report };
       } catch (err: any) {
-        console.error("[Student Server API Error] submitStudentExplanationApi:", err);
-        return { success: false, error: err.message || "Failed to submit explanation." };
+        console.error("[Student Server API Error] submitViolationExplanationApi:", err);
+        return { success: false, error: err.message || "Failed to submit explanation statement." };
       }
     },
   );
+
+export const submitStudentExplanationApi = submitViolationExplanationApi;
 
 export const getMyStudentDashboardStatsApi = createServerFn({ method: "GET" }).handler(
   async (): Promise<{

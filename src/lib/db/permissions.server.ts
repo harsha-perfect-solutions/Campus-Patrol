@@ -1,4 +1,8 @@
 import { db } from "../db.server";
+import {
+  findStudentUserIdByCode,
+  createNotificationServer,
+} from "./notifications.server";
 
 export type DBPermission = {
   id: string;
@@ -116,10 +120,31 @@ export async function approveMovementPermission(
         created_at::text;
     `;
     const res = await db.query<DBPermission>(query, [newStatus, approverName, cleanId]);
-    if (!res.rows[0]) {
+    const updated = res.rows[0];
+    if (!updated) {
       throw new Error(`Movement permission ${cleanId} not found.`);
     }
-    return res.rows[0];
+
+    // Notify the specific student about the approval/rejection
+    const studentUserId = await findStudentUserIdByCode(updated.student_code);
+    if (studentUserId) {
+      const isApproved = newStatus === "approved";
+      await createNotificationServer({
+        recipientUserId: studentUserId,
+        recipientRole: "student",
+        recipientId: updated.student_code,
+        type: isApproved ? "gate_pass_approved" : "gate_pass_rejected",
+        title: isApproved ? "Gate Pass Approved ✅" : "Gate Pass Rejected ❌",
+        detail: isApproved
+          ? `Your gate pass request has been approved by ${approverName}. Reason: ${updated.reason?.slice(0, 80) ?? ""}`
+          : `Your gate pass request has been rejected by ${approverName}. Please contact your HOD for further information.`,
+        tone: isApproved ? "resolved" : "violation",
+        relatedId: cleanId,
+        relatedType: "movement_permission",
+      });
+    }
+
+    return updated;
   } catch (error) {
     console.error("[Database Error] Error approving movement permission:", error);
     throw new Error("Failed to update movement permission status.");

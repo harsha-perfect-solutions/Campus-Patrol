@@ -67,6 +67,11 @@ function AdminReportsPage() {
           title="All Institutional Reported Cases"
           description="System-wide monitoring of student unauthorized movement reports across all academic departments."
           breadcrumb={[{ label: "Admin", to: "/admin/dashboard" }, { label: "Reported Cases" }]}
+          actions={
+            <Button size="sm" asChild className="rounded-xl text-xs font-bold h-9">
+              <Link to="/admin/violations">Violations & Cases Console &rarr;</Link>
+            </Button>
+          }
         />
 
         {/* Search & Filter Bar */}

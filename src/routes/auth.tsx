@@ -68,10 +68,11 @@ function AuthPage() {
     }
   }
 
-  async function handleDemoLogin(demoRole: "faculty" | "hod" | "student" | "admin") {
+  async function handleDemoLogin(demoRole: "faculty" | "security" | "hod" | "student" | "admin") {
     setBusy(true);
     const demoEmails = {
       faculty: "faculty@cmadms.edu",
+      security: "security@cmadms.edu",
       hod: "hod.cse@cmadms.edu",
       student: "student@cmadms.edu",
       admin: "admin@cmadms.edu",
@@ -117,7 +118,7 @@ function AuthPage() {
           <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-2">
             Instant Demo Sign-In
           </p>
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-5">
             <Button
               type="button"
               variant="outline"
@@ -127,6 +128,16 @@ function AuthPage() {
               onClick={() => handleDemoLogin("faculty")}
             >
               Faculty
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 text-[11px] font-bold bg-white text-foreground hover:bg-accent border-border shadow-xs rounded-xl"
+              disabled={busy}
+              onClick={() => handleDemoLogin("security")}
+            >
+              Security
             </Button>
             <Button
               type="button"

@@ -183,14 +183,14 @@ function StudentDashboardContent() {
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-divider flex items-center justify-between">
+          <div className="mt-6 pt-4 border-t border-divider flex items-center justify-between gap-2">
             <Button
               variant="outline"
               size="sm"
               asChild
               className="rounded-xl text-xs font-semibold"
             >
-              <Link to="/student/profile">View Full Profile & ID</Link>
+              <Link to="/student/profile">Profile & ID</Link>
             </Button>
             <Button
               variant="outline"
@@ -199,6 +199,14 @@ function StudentDashboardContent() {
               className="rounded-xl text-xs font-semibold"
             >
               <Link to="/student/passes">My Passes</Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="rounded-xl text-xs font-semibold text-amber-600 dark:text-amber-400 border-amber-300"
+            >
+              <Link to="/student/violations">My Incidents</Link>
             </Button>
           </div>
         </section>

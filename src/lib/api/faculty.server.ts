@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireAnyRole, requireAuthenticatedUser } from "../session.server";
-import { getStudentByRollNo, type DBStudent } from "../db/students.server";
+import { requireRole, requireAnyRole, requireAuthenticatedUser } from "../session.server";
+import { getStudentByRollNo, resolveStudentByQuery, type DBStudent } from "../db/students.server";
 import { getActiveMovementPermission, type DBMovementPermission } from "../db/passes.server";
 import {
   createViolationReport,
@@ -9,7 +9,8 @@ import {
   type DBViolationReport,
   type NewViolationReportInput,
 } from "../db/violations.server";
-import { getCurrentClassForStudent, type DBClassSlot } from "../db/timetable.server";
+import { getCurrentClassForStudent, type DBClassSlot, type CurrentClassResolution } from "../db/timetable.server";
+import { db } from "../db.server";
 
 export type StudentQueryResult = {
   success: boolean;
@@ -152,7 +153,7 @@ export const getStudentCurrentClassApi = createServerFn({ method: "GET" })
     return { rollNo };
   })
   .handler(
-    async ({ data }): Promise<{ success: boolean; slot: DBClassSlot | null; error?: string }> => {
+    async ({ data }): Promise<{ success: boolean; slot: CurrentClassResolution | null; error?: string }> => {
       try {
         await requireAnyRole(["faculty", "hod", "admin", "security"]);
         const slot = await getCurrentClassForStudent(data.rollNo);
@@ -218,3 +219,301 @@ export const getViolationReportDetailApi = createServerFn({ method: "GET" })
       }
     },
   );
+
+/**
+ * Server function for Faculty to verify a student by Student ID QR Token or Roll Number.
+ * Strictly enforces role === 'faculty'.
+ */
+export const verifyStudentForFacultyApi = createServerFn({ method: "POST" })
+  .validator((data: { studentQrOrRollNo: string }) => data)
+  .handler(async ({ data }) => {
+    try {
+      // 1. Strictly enforce Faculty role
+      const identity = await requireRole("faculty");
+
+      const query = (data.studentQrOrRollNo || "").trim();
+      if (!query) {
+        throw new Error("Student ID QR or Roll Number is required.");
+      }
+
+      // 2. Resolve student record
+      const student = await resolveStudentByQuery(query);
+      if (!student) {
+        return {
+          success: false,
+          student: null,
+          slot: null,
+          activePass: null,
+          isAuthorized: false,
+          resultStatus: "UNAUTHORIZED MOVEMENT",
+          error: `Student ID or QR Code '${query}' not found in campus database.`,
+        };
+      }
+
+      // 3. Query authoritative timetable slot & active movement permission
+      const slotResolution = await getCurrentClassForStudent(student.student_code);
+      const activePass = await getActiveMovementPermission(student.student_code);
+
+      let isAuthorized = false;
+      let resultStatus: string;
+      let statusTone: "violation" | "resolved" | "pending" | "info" = "info";
+
+      if (student.status && student.status.toLowerCase() !== "active") {
+        resultStatus = `INACTIVE STUDENT (${student.status.toUpperCase()})`;
+        statusTone = "violation";
+        isAuthorized = false;
+      } else if (!slotResolution.isCurrentlyInScheduledClass) {
+        // FREE PERIOD / NO CLASS SCHEDULED: DO NOT report violation
+        resultStatus = "NO ACTIVE CLASS";
+        statusTone = "resolved";
+        isAuthorized = true;
+      } else if (activePass) {
+        // In scheduled class BUT has valid movement pass
+        resultStatus = "AUTHORIZED MOVEMENT";
+        statusTone = "pending";
+        isAuthorized = true;
+      } else {
+        // In scheduled class AND NO movement pass
+        resultStatus = "POSSIBLE CLASS MOVEMENT VIOLATION";
+        statusTone = "violation";
+        isAuthorized = false;
+      }
+
+      // 4. Log audit record
+      await db.query(
+        `INSERT INTO audit_logs (actor, actor_role, action, target, target_id, metadata)
+         VALUES ($1, 'faculty', 'student_timetable_verified', $2, $3, $4);`,
+        [
+          identity.email,
+          student.student_code,
+          student.student_code,
+          JSON.stringify({
+            faculty_name: identity.fullName,
+            department: student.department,
+            is_authorized: isAuthorized,
+            result_status: resultStatus,
+            scheduled_class: slotResolution.currentClass,
+            active_pass: activePass ? activePass.id : null,
+            query,
+            timestamp: new Date().toISOString(),
+          }),
+        ]
+      );
+
+      return {
+        success: true,
+        student: {
+          id: student.student_code,
+          name: student.name,
+          department: student.department,
+          year: student.year,
+          section: student.section,
+          semester: student.semester,
+          status: student.status,
+          photo_url: student.photo_url,
+          qr_token: student.qr_token,
+        },
+        slot: slotResolution.currentClass
+          ? {
+              course_code: slotResolution.currentClass.subjectCode,
+              course_name: slotResolution.currentClass.subject,
+              room: slotResolution.currentClass.room,
+              start_time: slotResolution.currentClass.startTime,
+              end_time: slotResolution.currentClass.endTime,
+              faculty_name: slotResolution.currentClass.facultyName,
+            }
+          : null,
+        activePass: activePass
+          ? {
+              id: activePass.id,
+              reason: activePass.reason,
+              validFrom: activePass.valid_from,
+              validUntil: activePass.valid_until,
+              issuedBy: activePass.issued_by,
+            }
+          : null,
+        isAuthorized,
+        resultStatus,
+        statusTone,
+        isCurrentlyInScheduledClass: slotResolution.isCurrentlyInScheduledClass,
+      };
+    } catch (err: any) {
+      console.error("[Faculty Server API Error] verifyStudentForFacultyApi error:", err);
+      return {
+        success: false,
+        student: null,
+        slot: null,
+        activePass: null,
+        isAuthorized: false,
+        resultStatus: "UNAUTHORIZED MOVEMENT",
+        statusTone: "violation" as const,
+        isCurrentlyInScheduledClass: false,
+        error: err.message || "Failed to verify student QR.",
+      };
+    }
+  });
+
+// ─── ADMIN FACULTY MANAGEMENT SERVER FUNCTIONS ────────────────────────────────
+import {
+  getAdminFacultyList,
+  createFacultyMember,
+  updateFacultyMember,
+  setFacultyStatus,
+  deleteFacultyMember,
+  type DBFacultyMember,
+  type CreateFacultyInput,
+  type UpdateFacultyInput,
+  type FacultyFilterOptions,
+} from "../db/faculty.server";
+
+export const getAdminFacultyListApi = createServerFn({ method: "POST" })
+  .validator((d: FacultyFilterOptions | undefined) => d)
+  .handler(
+    async ({
+      data,
+    }): Promise<{
+      success: boolean;
+      facultyList: DBFacultyMember[];
+      totalFaculty: number;
+      activeCount: number;
+      inactiveCount: number;
+      error?: string;
+    }> => {
+      try {
+        await requireAnyRole(["admin", "hod", "faculty", "security"]);
+        const facultyList = await getAdminFacultyList(data || {});
+
+        const activeCount = facultyList.filter((f) => f.status === "Active").length;
+        const inactiveCount = facultyList.filter((f) => f.status === "Inactive").length;
+
+        return {
+          success: true,
+          facultyList,
+          totalFaculty: facultyList.length,
+          activeCount,
+          inactiveCount,
+        };
+      } catch (err: any) {
+        console.error("[Faculty API Error] getAdminFacultyListApi:", err);
+        return {
+          success: false,
+          facultyList: [],
+          totalFaculty: 0,
+          activeCount: 0,
+          inactiveCount: 0,
+          error: err.message || "Failed to fetch faculty list.",
+        };
+      }
+    },
+  );
+
+export const createAdminFacultyApi = createServerFn({ method: "POST" })
+  .validator((d: CreateFacultyInput) => d)
+  .handler(
+    async ({
+      data,
+    }): Promise<{
+      success: boolean;
+      faculty: DBFacultyMember | null;
+      error?: string;
+    }> => {
+      try {
+        const session = await requireRole("admin");
+        const faculty = await createFacultyMember(data, session.fullName, session.role);
+        return {
+          success: true,
+          faculty,
+        };
+      } catch (err: any) {
+        console.error("[Faculty API Error] createAdminFacultyApi:", err);
+        return {
+          success: false,
+          faculty: null,
+          error: err.message || "Failed to create faculty member.",
+        };
+      }
+    },
+  );
+
+export const updateAdminFacultyApi = createServerFn({ method: "POST" })
+  .validator((d: { id: string; input: UpdateFacultyInput }) => d)
+  .handler(
+    async ({
+      data,
+    }): Promise<{
+      success: boolean;
+      faculty: DBFacultyMember | null;
+      error?: string;
+    }> => {
+      try {
+        const session = await requireRole("admin");
+        const faculty = await updateFacultyMember(data.id, data.input, session.fullName, session.role);
+        return {
+          success: true,
+          faculty,
+        };
+      } catch (err: any) {
+        console.error("[Faculty API Error] updateAdminFacultyApi:", err);
+        return {
+          success: false,
+          faculty: null,
+          error: err.message || "Failed to update faculty member.",
+        };
+      }
+    },
+  );
+
+export const toggleAdminFacultyStatusApi = createServerFn({ method: "POST" })
+  .validator((d: { id: string; status: "Active" | "Inactive" }) => d)
+  .handler(
+    async ({
+      data,
+    }): Promise<{
+      success: boolean;
+      faculty: DBFacultyMember | null;
+      error?: string;
+    }> => {
+      try {
+        const session = await requireRole("admin");
+        const faculty = await setFacultyStatus(data.id, data.status, session.fullName, session.role);
+        return {
+          success: true,
+          faculty,
+        };
+      } catch (err: any) {
+        console.error("[Faculty API Error] toggleAdminFacultyStatusApi:", err);
+        return {
+          success: false,
+          faculty: null,
+          error: err.message || "Failed to toggle faculty status.",
+        };
+      }
+    },
+  );
+
+export const deleteAdminFacultyApi = createServerFn({ method: "POST" })
+  .validator((d: { id: string }) => d)
+  .handler(
+    async ({
+      data,
+    }): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
+      try {
+        const session = await requireRole("admin");
+        await deleteFacultyMember(data.id, session.fullName, session.role);
+        return {
+          success: true,
+        };
+      } catch (err: any) {
+        console.error("[Faculty API Error] deleteAdminFacultyApi:", err);
+        return {
+          success: false,
+          error: err.message || "Failed to remove faculty member.",
+        };
+      }
+    },
+  );
+
+

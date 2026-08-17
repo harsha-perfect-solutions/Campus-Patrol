@@ -22,8 +22,10 @@ import {
   Users,
   X,
   XCircle,
+  QrCode,
 } from "lucide-react";
 import { CameraModal } from "@/components/camera-modal";
+import { QRScannerModal } from "@/components/qr-scanner-modal";
 import { z } from "zod";
 import { toast } from "sonner";
 import { ToneBadge } from "@/components/status-badge";
@@ -64,6 +66,7 @@ import {
   getStudentMovementStatus,
   submitViolationReportApi,
   getStudentCurrentClassApi,
+  verifyStudentForFacultyApi,
 } from "@/lib/api/faculty.server";
 import type { DBStudent } from "@/lib/db/students.server";
 
@@ -193,12 +196,13 @@ export function CheckStudentPage() {
   const [remarks, setRemarks] = useState("");
   const [evidence, setEvidence] = useState("");
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [qrScannerOpen, setQrScannerOpen] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const activeFacultyName = profile?.full_name || faculty.name;
 
   const runCheck = async (raw: string) => {
-    const id = raw.trim().toUpperCase();
+    const id = raw.trim();
     if (!id) return;
     setLoading(true);
     setResult(null);
@@ -206,24 +210,17 @@ export function CheckStudentPage() {
     setFormOpen(false);
 
     try {
-      const [stRes, passRes, classRes] = await Promise.all([
-        getFacultyStudent({ data: { rollNo: id } }),
-        getStudentMovementStatus({ data: { rollNo: id } }),
-        getStudentCurrentClassApi({ data: { rollNo: id } }).catch(() => ({
-          success: false,
-          slot: null,
-        })),
-      ]);
+      const res = await verifyStudentForFacultyApi({ data: { studentQrOrRollNo: id } });
 
-      if (!stRes.success || !stRes.student) {
+      if (!res.success || !res.student) {
         setNotFound(id);
         setLoading(false);
         return;
       }
 
-      const dbStudent = stRes.student;
+      const dbStudent = res.student;
       const studentObj = {
-        id: dbStudent.student_code,
+        id: dbStudent.id,
         name: dbStudent.name,
         department: dbStudent.department,
         year: dbStudent.year,
@@ -233,46 +230,33 @@ export function CheckStudentPage() {
         photo_url: dbStudent.photo_url,
       };
 
-      const permissionObj = passRes.activePass
+      const permissionObj = res.activePass
         ? {
-            reason: passRes.activePass.reason,
-            validUntil: `${passRes.activePass.valid_until} (${passRes.activePass.date})`,
-            issuedBy: passRes.activePass.issued_by,
+            reason: res.activePass.reason,
+            validUntil: `${res.activePass.validUntil}`,
+            issuedBy: res.activePass.issuedBy,
           }
-        : permissionByStudent[id];
+        : null;
 
-      // Map DB class slot → ClassSlot shape; fall back to legacy mock map
-      let slot = currentClassByStudent[id] ?? null;
-      if (classRes.success && classRes.slot) {
-        const s = classRes.slot;
-        // Convert 24h "HH:MM" → "HH:MM AM/PM"
-        const fmt = (t: string) => {
-          if (!t) return "";
-          const parts = t.split(":").map(Number);
-          const h = parts[0] ?? 0;
-          const m = parts[1] ?? 0;
-          const ampm = h >= 12 ? "PM" : "AM";
-          const h12 = h % 12 || 12;
-          return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
-        };
-        slot = {
-          subject: s.subject,
-          code: s.subject_code,
-          start: fmt(s.start_time),
-          end: fmt(s.end_time),
-          room: s.room,
-          faculty: s.faculty_name,
-          batch: s.batch ?? "",
-        };
-      }
+      const slotObj = res.slot
+        ? {
+            subject: res.slot.course_name,
+            code: res.slot.course_code,
+            start: res.slot.start_time,
+            end: res.slot.end_time,
+            room: res.slot.room,
+            faculty: res.slot.faculty_name,
+            batch: "",
+          }
+        : null;
 
       setResult({
         student: studentObj,
-        slot,
+        slot: slotObj as any,
         permission: permissionObj as any,
       });
     } catch (err: any) {
-      console.error("Failed to query student status from DB:", err);
+      console.error("Failed to verify student:", err);
       toast.error("Error querying student status.");
     } finally {
       setLoading(false);
@@ -304,6 +288,10 @@ export function CheckStudentPage() {
         ? "authorized"
         : "unauthorized";
 
+  const [violationType, setViolationType] = useState("Unauthorized Class Movement");
+  const [severity, setSeverity] = useState<"Low" | "Medium" | "High" | "Critical">("Medium");
+  const [witnessNotes, setWitnessNotes] = useState("");
+
   const submitReport = async () => {
     if (!result?.student || !slot) return;
     setSubmitting(true);
@@ -323,58 +311,46 @@ export function CheckStudentPage() {
           department: result.student.department,
           yearSection: `${result.student.year} • ${result.student.section}`,
           className: slot.subject,
+          subjectCode: slot.code || undefined,
           scheduledTime: `${slot.start} — ${slot.end}`,
           room: slot.room,
+          scheduledFaculty: slot.faculty || undefined,
           incidentTime: time,
-          location: location || "Not specified",
-          remarks: remarks || "No additional remarks provided.",
+          location: location || "Campus Corridor",
+          violationType,
+          severity,
+          remarks: remarks || "Observed in corridor outside scheduled classroom during lecture hours.",
+          witnessNotes: witnessNotes || undefined,
           evidence: evidence || null,
           semester: result.student.semester || 6,
         },
       });
 
-      // 2. Sync payload to store
-      const reportPayload: Omit<
-        Report,
-        "id" | "createdAt" | "explanationDeadline" | "status" | "timeline" | "departmentHod"
-      > = {
-        studentName: result.student.name,
-        studentId: result.student.id,
-        department: result.student.department,
-        yearSection: `${result.student.year} • ${result.student.section}`,
-        className: slot.subject,
-        scheduledTime: `${slot.start} — ${slot.end}`,
-        room: slot.room,
-        incidentTime: time,
-        location: location || "Not specified",
-        remarks: remarks || "No additional remarks provided.",
-        reportedBy: activeFacultyName,
-        semester: result.student.semester || 6,
-      };
-      if (evidence) reportPayload.evidence = evidence;
-
-      const storeRes = addReport(reportPayload);
       setSubmitting(false);
 
-      if (!storeRes.success) {
-        toast.error(storeRes.error, {
-          action: {
-            label: "View Existing Report",
-            onClick: () => navigate({ to: `/hod/cases/${storeRes.existingReport.id}` as any }),
-          },
-        });
+      if (!dbRes.success) {
+        toast.error(dbRes.error || "Failed to submit violation report.");
         return;
       }
 
       setConfirmOpen(false);
       setFormOpen(false);
-      toast.success("Violation reported", {
-        description: `Case ${dbRes.report?.id ?? storeRes.report.id} created and logged in PostgreSQL.`,
-      });
+
+      if (violationType.includes("Violence") || severity === "Critical") {
+        toast.error("🚨 Emergency Response Activated", {
+          description: `Emergency Case ${dbRes.report?.id} created for ${result.student.name} (${result.student.id}). Security Quick-Response, Department HOD, and Administration have been immediately dispatched.`,
+          duration: 8000,
+        });
+      } else {
+        toast.success("Incident Reported Successfully", {
+          description: `Case ${dbRes.report?.id} recorded for ${result.student.name} (${result.student.id}). Severity: ${severity} • Department HOD notified for review.`,
+          duration: 6000,
+        });
+      }
       navigate({ to: "/faculty/reports" as any });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Violation submission failed:", err);
-      toast.error("Failed to record violation report in database.");
+      toast.error(err.message || "Failed to record violation report in database.");
       setSubmitting(false);
     }
   };
@@ -455,7 +431,15 @@ export function CheckStudentPage() {
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Button
+                type="button"
+                onClick={() => setQrScannerOpen(true)}
+                className="h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 rounded-xl shadow-xs gap-2"
+              >
+                <QrCode className="size-4" />
+                <span>[ 📷 Scan Student ID ]</span>
+              </Button>
               <Button
                 type="submit"
                 size="lg"
@@ -799,37 +783,108 @@ export function CheckStudentPage() {
                   <h3 className="text-sm font-semibold text-foreground">Report Details</h3>
                   <div className="mt-4 space-y-4">
                     <div>
-                      <Label htmlFor="loc" className="text-xs font-medium">
-                        Location
+                      <Label htmlFor="vtype" className="text-xs font-medium">
+                        Violation Category *
                       </Label>
-                      <Select value={location} onValueChange={setLocation}>
-                        <SelectTrigger id="loc" className="mt-1.5 h-11 rounded-xl">
-                          <SelectValue placeholder="Select location" />
+                      <Select value={violationType} onValueChange={setViolationType}>
+                        <SelectTrigger id="vtype" className="mt-1.5 h-11 rounded-xl">
+                          <SelectValue placeholder="Select violation category" />
                         </SelectTrigger>
                         <SelectContent>
-                          {locations.map((l) => (
-                            <SelectItem key={l} value={l}>
-                              <span className="flex items-center gap-2">
-                                <MapPin className="size-4" aria-hidden /> {l}
-                              </span>
-                            </SelectItem>
-                          ))}
+                          <SelectItem value="Unauthorized Class Movement">
+                            Unauthorized Class Movement
+                          </SelectItem>
+                          <SelectItem value="Corridor Presence During Class">
+                            Corridor Presence During Class
+                          </SelectItem>
+                          <SelectItem value="Unauthorized Campus Movement">
+                            Unauthorized Campus Movement
+                          </SelectItem>
+                          <SelectItem value="Suspected Violence / Physical Altercation">
+                            ⚠️ Suspected Violence / Physical Altercation
+                          </SelectItem>
+                          <SelectItem value="Verbal Altercation">
+                            Verbal Altercation / Misconduct
+                          </SelectItem>
+                          <SelectItem value="Disruptive Behaviour">
+                            Disruptive Behaviour
+                          </SelectItem>
+                          <SelectItem value="Other">
+                            Other Institutional Violation
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="sev" className="text-xs font-medium">
+                          Severity Level *
+                        </Label>
+                        <Select
+                          value={severity}
+                          onValueChange={(val: any) => setSeverity(val)}
+                        >
+                          <SelectTrigger id="sev" className="mt-1.5 h-11 rounded-xl">
+                            <SelectValue placeholder="Severity" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Low">Low (Informational / First Warning)</SelectItem>
+                            <SelectItem value="Medium">Medium (Standard Absence / Corridor)</SelectItem>
+                            <SelectItem value="High">High (Serious Misconduct / Escalation)</SelectItem>
+                            <SelectItem value="Critical">Critical (Immediate Security / Violence Alert)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="loc" className="text-xs font-medium">
+                          Observed Location *
+                        </Label>
+                        <Select value={location} onValueChange={setLocation}>
+                          <SelectTrigger id="loc" className="mt-1.5 h-11 rounded-xl">
+                            <SelectValue placeholder="Select location" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {locations.map((l) => (
+                              <SelectItem key={l} value={l}>
+                                <span className="flex items-center gap-2">
+                                  <MapPin className="size-4" aria-hidden /> {l}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
                     <div>
                       <Label htmlFor="remarks" className="text-xs font-medium">
-                        Remarks
+                        Observation Details & Description *
                       </Label>
                       <Textarea
                         id="remarks"
-                        rows={4}
+                        rows={3}
                         value={remarks}
                         onChange={(e) => setRemarks(e.target.value)}
-                        placeholder="Describe where and how the student was observed..."
+                        placeholder="Describe what you observed (e.g. roaming in 2nd floor corridor while lecture is in progress)..."
                         className="mt-1.5 text-xs rounded-xl"
                       />
                     </div>
+
+                    <div>
+                      <Label htmlFor="witness" className="text-xs font-medium">
+                        Witness / Additional Notes (optional)
+                      </Label>
+                      <Input
+                        id="witness"
+                        value={witnessNotes}
+                        onChange={(e) => setWitnessNotes(e.target.value)}
+                        placeholder="e.g. Observed alongside Lab Assistant Sharma"
+                        className="mt-1.5 text-xs h-10 rounded-xl"
+                      />
+                    </div>
+
                     <div>
                       <Label className="text-xs font-medium">
                         Evidence Photo / File (optional)
@@ -931,7 +986,7 @@ export function CheckStudentPage() {
                   onClick={() => setConfirmOpen(true)}
                   disabled={!location}
                 >
-                  Submit Violation
+                  <AlertTriangle className="size-4 mr-2" /> Confirm Observation
                 </Button>
               </div>
             </section>
@@ -943,37 +998,73 @@ export function CheckStudentPage() {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Report Unauthorized Movement?</DialogTitle>
-            <DialogDescription>You are about to submit a violation report.</DialogDescription>
+            <DialogTitle className="flex items-center gap-2 text-red-600 font-black">
+              <AlertTriangle className="size-5" />
+              {violationType.includes("Violence") || severity === "Critical"
+                ? "🚨 Confirm Campus Emergency Incident?"
+                : "Confirm Observation & Report Violation?"}
+            </DialogTitle>
+            <DialogDescription>
+              {violationType.includes("Violence") || severity === "Critical"
+                ? "You are reporting a serious institutional safety incident. Confirm that you directly observed this incident before submitting. This will immediately dispatch campus emergency alerts to HOD, Administration, and Security."
+                : "Are you sure you observed this student outside their scheduled class location? This will create an official case and alert the Department HOD."}
+            </DialogDescription>
           </DialogHeader>
-          <dl className="divide-y divide-divider text-sm">
+
+          {/* Strong Warning Banner for Violence / Emergency */}
+          {(violationType.includes("Violence") || severity === "Critical") && (
+            <div className="p-3 bg-red-100 dark:bg-red-950/60 border border-red-300 dark:border-red-800 rounded-xl text-xs text-red-900 dark:text-red-200 font-bold space-y-1">
+              <p>⚠️ CRITICAL INSTITUTIONAL ACTION</p>
+              <p className="font-normal text-[11px] text-red-800 dark:text-red-300">
+                Never report violence unless explicitly verified. An emergency coordination file will be created.
+              </p>
+            </div>
+          )}
+
+          <dl className="divide-y divide-divider text-xs sm:text-sm">
             {[
-              ["Student", result?.student?.name ?? "—"],
-              ["Class", slot?.subject ?? "—"],
-              ["Time", "10:42 AM"],
-              ["Reason", "No active permission found."],
+              ["Student", `${result?.student?.name} (${result?.student?.id})`],
+              ["Department", result?.student?.department ?? "—"],
+              ["Scheduled Class", `${slot?.subject} (${slot?.start} – ${slot?.end})`],
+              ["Assigned Room", slot?.room ?? "—"],
+              ["Violation Category", violationType],
+              ["Severity Level", severity],
+              ["Observed Location", location || "Campus Corridor"],
             ].map(([k, v]) => (
-              <div key={k} className="flex items-center justify-between gap-4 py-2.5">
+              <div key={k} className="flex items-center justify-between gap-4 py-2">
                 <dt className="text-muted-foreground">{k}</dt>
                 <dd className="text-right font-medium text-foreground">{v}</dd>
               </div>
             ))}
           </dl>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={submitting}>
               Cancel
             </Button>
             <Button
               variant="destructive"
               loading={submitting}
               onClick={submitReport}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 font-bold"
             >
-              Confirm Report
+              {violationType.includes("Violence") || severity === "Critical"
+                ? "🚨 Confirm Emergency Incident"
+                : "Confirm & Report"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <QRScannerModal
+        open={qrScannerOpen}
+        onClose={() => setQrScannerOpen(false)}
+        onScan={(token) => {
+          setQuery(token);
+          runCheck(token);
+        }}
+        title="Scan Student ID QR (Faculty Verification)"
+        loading={loading}
+      />
     </div>
   );
 }

@@ -14,7 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { CmadmsProvider } from "@/lib/cmadms-store";
-import { FacultyShell, HODShell, StudentShell, AdminShell } from "@/components/shells/role-shells";
+import { FacultyShell, HODShell, StudentShell, AdminShell, SecurityShell } from "@/components/shells/role-shells";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -156,6 +156,14 @@ function RootContent() {
     );
   }
 
+  if (role === "security" || pathname.startsWith("/security")) {
+    return (
+      <SecurityShell>
+        <Outlet />
+      </SecurityShell>
+    );
+  }
+
   return (
     <FacultyShell>
       <Outlet />
@@ -171,7 +179,7 @@ function RootComponent() {
       <CmadmsProvider>
         <AuthProvider>
           <RootContent />
-          <Toaster position="top-right" richColors />
+          <Toaster position="top-right" richColors closeButton duration={3500} />
         </AuthProvider>
       </CmadmsProvider>
     </QueryClientProvider>

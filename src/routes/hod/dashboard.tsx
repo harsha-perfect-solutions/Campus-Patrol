@@ -145,8 +145,8 @@ function HODDashboardContent() {
             asChild
             className="rounded-xl font-semibold bg-primary text-primary-foreground shadow-xs"
           >
-            <Link to="/hod/cases">
-              <ShieldAlert className="size-4 mr-2" /> Review Cases Queue ({stats.newCases})
+            <Link to="/hod/violations">
+              <ShieldAlert className="size-4 mr-2" /> Disciplinary Console ({stats.newCases})
             </Link>
           </Button>
         }
@@ -196,11 +196,11 @@ function HODDashboardContent() {
           <div className="flex items-center gap-2">
             <AlertTriangle className="size-4 text-amber-600" />
             <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-              CASES REQUIRING ATTENTION
+              INCIDENTS & VIOLATIONS REQUIRING ATTENTION
             </span>
           </div>
-          <Button variant="outline" size="sm" asChild className="rounded-xl text-xs">
-            <Link to="/hod/cases">View Full Case Queue</Link>
+          <Button variant="outline" size="sm" asChild className="rounded-xl text-xs font-semibold">
+            <Link to="/hod/violations">Open Full Incident Console &rarr;</Link>
           </Button>
         </div>
 

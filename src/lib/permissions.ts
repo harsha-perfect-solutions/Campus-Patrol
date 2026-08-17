@@ -4,6 +4,8 @@ export function getDefaultDashboardForRole(role: AppRole | null): string {
   switch (role) {
     case "faculty":
       return "/faculty/dashboard";
+    case "security":
+      return "/security/dashboard";
     case "hod":
       return "/hod/dashboard";
     case "student":
@@ -16,11 +18,11 @@ export function getDefaultDashboardForRole(role: AppRole | null): string {
 }
 
 export function canVerifyStudent(role: AppRole | null): boolean {
-  return role === "faculty" || role === "hod";
+  return role === "faculty" || role === "hod" || role === "security";
 }
 
 export function canReportViolation(role: AppRole | null): boolean {
-  return role === "faculty";
+  return role === "faculty" || role === "security";
 }
 
 export function canMakeHodDecision(role: AppRole | null): boolean {

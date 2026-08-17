@@ -28,6 +28,7 @@ import { getHodCaseByIdApi, submitHodDecisionApi } from "@/lib/api/hod.server";
 import { getViolationReportDetailApi } from "@/lib/api/faculty.server";
 import { submitStudentExplanationApi } from "@/lib/api/student.server";
 import type { Report, TimelineEvent } from "@/lib/cmadms-data";
+import { downloadEvidenceImage, triggerDownload } from "@/lib/download-evidence";
 
 export const Route = createFileRoute("/reports/$reportId")({
   head: ({ params }) => ({
@@ -107,6 +108,91 @@ export function ReportDetail() {
 
   const activeStoreReport = storeReports.find((r) => r.id === reportId);
   const report = dbReport || activeStoreReport;
+
+  const triggerDownload = (url: string, filename: string) => {
+    const link = document.createElement("a");
+    link.style.display = "none";
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      if (document.body.contains(link)) {
+        document.body.removeChild(link);
+      }
+    }, 300);
+  };
+
+  const handleDownloadEvidence = (evidenceStr: string, idStr: string) => {
+    if (!evidenceStr) return;
+
+    try {
+      if (evidenceStr.startsWith("data:")) {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth || img.width || 800;
+          canvas.height = img.naturalHeight || img.height || 600;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            const pngUrl = canvas.toDataURL("image/png");
+            triggerDownload(pngUrl, `evidence_${idStr}.png`);
+            toast.success("Evidence photo downloaded in PNG format (.png)");
+          } else {
+            triggerDownload(evidenceStr, `evidence_${idStr}.png`);
+            toast.success("Evidence photo downloaded!");
+          }
+        };
+        img.onerror = () => {
+          triggerDownload(evidenceStr, `evidence_${idStr}.png`);
+          toast.success("Evidence photo downloaded!");
+        };
+        img.src = evidenceStr;
+      } else {
+        const canvas = document.createElement("canvas");
+        canvas.width = 900;
+        canvas.height = 550;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.fillStyle = "#0f172a";
+          ctx.fillRect(0, 0, 900, 550);
+          ctx.fillStyle = "#2563eb";
+          ctx.fillRect(0, 0, 900, 10);
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 26px sans-serif";
+          ctx.fillText("CAMPUS GUARD PRO — EVIDENCE RECORD", 40, 60);
+
+          ctx.font = "14px sans-serif";
+          ctx.fillStyle = "#94a3b8";
+          ctx.fillText(`Case Report ID: ${idStr}`, 40, 110);
+          ctx.fillText(`Attached File Name: ${evidenceStr}`, 40, 140);
+          ctx.fillText(`Timestamp: ${new Date().toLocaleString()}`, 40, 170);
+
+          ctx.strokeStyle = "#334155";
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(40, 200, 820, 280);
+          ctx.fillStyle = "#64748b";
+          ctx.font = "italic 15px sans-serif";
+          ctx.fillText(`Official Disciplinary Evidence Document (${evidenceStr})`, 60, 240);
+
+          ctx.fillStyle = "#94a3b8";
+          ctx.font = "13px sans-serif";
+          ctx.fillText("Verified by Campus Security Management & Discipline System (CMADMS)", 60, 440);
+
+          const pngUrl = canvas.toDataURL("image/png");
+          const cleanName = evidenceStr.replace(/\.[^/.]+$/, "");
+          triggerDownload(pngUrl, `${cleanName}_${idStr}.png`);
+          toast.success(`Downloaded evidence document in PNG format (.png)`);
+        }
+      }
+    } catch (err) {
+      console.error("Evidence download error:", err);
+      toast.error("Failed to download evidence.");
+    }
+  };
 
   useEffect(() => {
     if (!reportId) return;
@@ -423,16 +509,51 @@ export function ReportDetail() {
 
           <Section title="Evidence Attachment" icon={Paperclip}>
             {report.evidence ? (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 bg-card">
-                <span className="truncate text-xs font-semibold text-foreground">
-                  {report.evidence}
-                </span>
-                <Button variant="outline" size="sm" className="rounded-lg text-xs h-8">
-                  <Download className="size-3.5 mr-1" /> Download
-                </Button>
+              <div className="space-y-4">
+                {/* Live Image Preview if evidence is Base64 data URL or photo */}
+                {report.evidence.startsWith("data:") && (
+                  <div className="overflow-hidden rounded-xl border border-border bg-slate-950 aspect-video max-h-[340px] relative group flex items-center justify-center">
+                    <img
+                      src={report.evidence}
+                      alt="Incident evidence photo"
+                      className="w-full h-full object-contain"
+                    />
+                    <a
+                      href={report.evidence}
+                      download={`evidence_${report.id}.png`}
+                      className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/90 text-white text-xs font-semibold hover:bg-slate-800 transition-colors shadow-md no-underline border border-slate-700"
+                    >
+                      <Download className="size-3.5" />
+                      <span>Download PNG</span>
+                    </a>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 bg-card">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Paperclip className="size-4 text-primary shrink-0" />
+                    <span className="truncate text-xs font-semibold text-foreground">
+                      {report.evidence.startsWith("data:") ? `evidence_photo_${report.id}.jpg` : report.evidence}
+                    </span>
+                  </div>
+                  <a
+                    href={report.evidence.startsWith("data:") ? report.evidence : "#"}
+                    download={`evidence_${report.id}.png`}
+                    onClick={(e) => {
+                      if (!report.evidence?.startsWith("data:")) {
+                        e.preventDefault();
+                        handleDownloadEvidence(report.evidence!, report.id);
+                      }
+                    }}
+                    className="inline-flex items-center justify-center rounded-xl text-xs h-9 px-3.5 font-semibold gap-1.5 border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-colors shadow-2xs shrink-0 cursor-pointer no-underline"
+                  >
+                    <Download className="size-3.5" />
+                    <span>Download Evidence (.png)</span>
+                  </a>
+                </div>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">No evidence photos attached.</p>
+              <p className="text-xs text-muted-foreground">No evidence photos attached to this incident report.</p>
             )}
           </Section>
 

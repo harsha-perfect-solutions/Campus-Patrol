@@ -129,14 +129,14 @@ export function CameraModal({ open, onClose, onCapture }: CameraModalProps) {
     const ctx = canvas.getContext("2d");
     if (ctx) {
       ctx.drawImage(video, 0, 0, width, height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      const dataUrl = canvas.toDataURL("image/png");
       setCaptured(dataUrl);
     }
   };
 
   const handleConfirm = () => {
     if (!captured) return;
-    const filename = `camera_photo_${Date.now()}.jpg`;
+    const filename = `camera_photo_${Date.now()}.png`;
     onCapture(captured, filename);
     onClose();
   };

@@ -1,0 +1,493 @@
+import { useState, useEffect } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  ShieldCheck,
+  QrCode,
+  Search,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  User,
+  Building2,
+  MapPin,
+  Loader2,
+  Camera,
+  RotateCcw,
+  Sparkles,
+  ShieldAlert,
+} from "lucide-react";
+import { toast } from "sonner";
+import { RoleGuard } from "@/components/role-guard";
+import { useAuth } from "@/lib/auth";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { QRScannerModal } from "@/components/qr-scanner-modal";
+import { verifyGatePassApi, type VerificationResultPayload } from "@/lib/api/security.server";
+
+export const Route = createFileRoute("/security/check")({
+  head: () => ({ meta: [{ title: "Gate Pass Verification — Security Portal" }] }),
+  component: SecurityCheckPage,
+});
+
+const checkpointOptions = [
+  "Main Gate",
+  "Boys Hostel Gate",
+  "Girls Hostel Gate",
+  "Back Gate",
+  "Library Gate",
+  "Parking Gate",
+];
+
+function SecurityCheckPage() {
+  const { profile } = useAuth();
+  const [activeTab, setActiveTab] = useState<"qr" | "manual">("qr");
+  const [passInput, setPassInput] = useState("");
+  const [checkpoint, setCheckpoint] = useState(profile?.department || "Main Gate");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<VerificationResultPayload | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+
+  // Update checkpoint if profile loads late
+  useEffect(() => {
+    if (profile?.department) {
+      if (checkpointOptions.includes(profile.department)) {
+        setCheckpoint(profile.department);
+      }
+    }
+  }, [profile]);
+
+  const handleVerify = async (e?: React.FormEvent, overrideInput?: string) => {
+    if (e) e.preventDefault();
+    const query = (overrideInput ?? passInput).trim();
+
+    if (!query) {
+      toast.error("Please enter a Pass ID, QR token, or Student Roll Number.");
+      return;
+    }
+
+    setLoading(true);
+    setResult(null);
+
+    try {
+      const res = await verifyGatePassApi({
+        data: {
+          passIdOrRollNo: query,
+          checkpoint,
+        },
+      });
+
+      if (res.success) {
+        setResult(res as VerificationResultPayload);
+        if (res.authorized) {
+          toast.success("✅ EXIT AUTHORIZED", {
+            description: `${res.student?.name || "Student"} is authorized to exit.`,
+          });
+        } else {
+          toast.error("🚫 EXIT NOT AUTHORIZED", {
+            description: res.failureReason || "Student is not authorized.",
+          });
+        }
+      } else {
+        toast.error("Verification error occurred.");
+      }
+    } catch (err: any) {
+      console.error("Verification error:", err);
+      toast.error("Failed to verify gate pass. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCameraCapture = (imageDataUrl: string) => {
+    setCameraOpen(false);
+    toast.info("QR Code captured from camera scanner.");
+    // In demo/scanner mode, simulate scanning an active pass or use current input
+    const simulatedPassId = passInput.trim() || "23CSE1012";
+    handleVerify(undefined, simulatedPassId);
+  };
+
+  const handleReset = () => {
+    setPassInput("");
+    setResult(null);
+  };
+
+  return (
+    <RoleGuard allowedRoles={["security"]}>
+      <div className="space-y-6 max-w-4xl mx-auto">
+        <PageHeader
+          title="Gate Pass Verification"
+          description="Verify whether a student is authorized to exit the campus."
+          breadcrumb={[
+            { label: "Security Portal", to: "/security/check" },
+            { label: "Gate Pass Verification" },
+          ]}
+          actions={
+            <Button
+              asChild
+              size="sm"
+              className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-9"
+            >
+              <Link to="/security/incidents">
+                <ShieldAlert className="size-3.5 mr-1.5" /> Emergency Incidents &rarr;
+              </Link>
+            </Button>
+          }
+        />
+
+        {/* Checkpoint Banner */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-card border border-border shadow-xs gap-3">
+          <div className="flex items-center gap-3">
+            <span className="grid size-10 place-items-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold">
+              <MapPin className="size-5" />
+            </span>
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Current Checkpoint Location
+              </p>
+              <p className="text-sm font-bold text-foreground">{checkpoint}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">Select Post:</span>
+            <select
+              value={checkpoint}
+              onChange={(e) => setCheckpoint(e.target.value)}
+              className="h-9 px-3 rounded-xl border border-input bg-card text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {checkpointOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Verification Options Card */}
+        <div className="card-surface p-6 rounded-2xl border border-border shadow-xs space-y-6">
+          {/* Method Selection Tabs */}
+          <div className="flex items-center gap-2 border-b border-border pb-4">
+            <button
+              onClick={() => {
+                setActiveTab("qr");
+                setResult(null);
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === "qr"
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <QrCode className="size-4" />
+              <span>OPTION A: QR / Digital Pass Scanning</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab("manual");
+                setResult(null);
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === "manual"
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <Search className="size-4" />
+              <span>OPTION B: Manual Pass ID / Roll No</span>
+            </button>
+          </div>
+
+          {/* Option A: QR Scanning Interface */}
+          {activeTab === "qr" && (
+            <div className="space-y-4">
+              <div className="p-6 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 text-center space-y-4">
+                <div className="mx-auto size-16 rounded-2xl bg-primary/10 text-primary grid place-items-center">
+                  <QrCode className="size-8 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground">
+                    Scan Student Digital QR Gate Pass
+                  </h3>
+                  <p className="text-xs text-muted-foreground max-w-md mx-auto mt-1">
+                    Scan the student's mobile QR pass or enter the scanned pass token code (e.g. CMADMS-PASS-XXXXXXXX).
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto pt-2">
+                  <Button
+                    type="button"
+                    onClick={() => setCameraOpen(true)}
+                    className="w-full sm:w-auto h-12 px-6 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md gap-2"
+                  >
+                    <Camera className="size-5" />
+                    <span>[ SCAN QR PASS ]</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Direct QR / Token input */}
+              <form onSubmit={handleVerify} className="space-y-3 pt-2">
+                <label className="text-xs font-semibold text-muted-foreground block">
+                  Or Paste/Type Scanned Pass Code:
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="e.g. CMADMS-PASS-101 or 23CSE1012"
+                    value={passInput}
+                    onChange={(e) => setPassInput(e.target.value)}
+                    className="h-11 rounded-xl text-xs font-mono"
+                  />
+                  <Button
+                    type="submit"
+                    loading={loading}
+                    className="h-11 px-6 rounded-xl font-bold bg-primary text-primary-foreground"
+                  >
+                    Verify
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Option B: Manual Lookup Interface */}
+          {activeTab === "manual" && (
+            <form onSubmit={handleVerify} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground block">
+                  Manual Pass ID / Student Roll Number Lookup
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  Enter the student's Roll Number (e.g. 23CSE1012) or explicit Movement Pass ID.
+                </p>
+                <div className="flex gap-2 pt-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Enter Student Roll No (e.g. 23CSE1012) or Pass ID..."
+                      value={passInput}
+                      onChange={(e) => setPassInput(e.target.value)}
+                      className="pl-10 h-12 rounded-xl text-sm font-semibold"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    loading={loading}
+                    className="h-12 px-8 rounded-xl font-bold bg-primary text-primary-foreground shadow-xs text-sm"
+                  >
+                    [ ENTER PASS ID ]
+                  </Button>
+                </div>
+              </div>
+
+              {/* Quick Preset Buttons for Testing */}
+              <div className="pt-2 flex flex-wrap items-center gap-2">
+                <span className="text-[11px] font-semibold text-muted-foreground">Quick Test Roll Nos:</span>
+                {["23CSE1012", "23CSE1044", "23ECE2031"].map((code) => (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => {
+                      setPassInput(code);
+                      handleVerify(undefined, code);
+                    }}
+                    className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-accent text-accent-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    {code}
+                  </button>
+                ))}
+              </div>
+            </form>
+          )}
+        </div>
+
+        {/* VERIFICATION RESULT DISPLAY */}
+        {loading && (
+          <div className="card-surface p-12 rounded-2xl border border-border text-center space-y-3">
+            <Loader2 className="size-8 text-primary animate-spin mx-auto" />
+            <p className="text-sm font-bold text-foreground">Querying Server & Database...</p>
+            <p className="text-xs text-muted-foreground">Validating pass authenticity, status, date, and valid window.</p>
+          </div>
+        )}
+
+        {result && !loading && (
+          <div className="space-y-4">
+            {/* SUCCESS RESULT CARD (GREEN FOR EXIT, CYAN/BLUE FOR ENTRY) */}
+            {result.authorized ? (
+              <div
+                className={`card-surface p-6 sm:p-8 rounded-2xl border-2 shadow-lg space-y-6 ${
+                  result.verificationType === "ENTRY"
+                    ? "border-cyan-500 bg-cyan-500/10 dark:bg-cyan-950/40"
+                    : "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/40"
+                }`}
+              >
+                <div
+                  className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-4 ${
+                    result.verificationType === "ENTRY"
+                      ? "border-cyan-500/30"
+                      : "border-emerald-500/30"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`grid size-12 place-items-center rounded-2xl text-white font-bold shadow-md ${
+                        result.verificationType === "ENTRY" ? "bg-cyan-600" : "bg-emerald-500"
+                      }`}
+                    >
+                      <CheckCircle2 className="size-7" />
+                    </span>
+                    <div>
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-white font-black text-xs tracking-wider uppercase shadow-xs ${
+                          result.verificationType === "ENTRY" ? "bg-cyan-600" : "bg-emerald-500"
+                        }`}
+                      >
+                        ✅ {result.resultStatus || (result.verificationType === "ENTRY" ? "ENTRY VERIFIED" : "EXIT AUTHORIZED")}
+                      </span>
+                      <p
+                        className={`text-xs font-semibold mt-1 ${
+                          result.verificationType === "ENTRY"
+                            ? "text-cyan-800 dark:text-cyan-300"
+                            : "text-emerald-800 dark:text-emerald-300"
+                        }`}
+                      >
+                        {result.message}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReset}
+                    className={`rounded-xl text-xs font-semibold ${
+                      result.verificationType === "ENTRY"
+                        ? "border-cyan-500/40 text-cyan-800 dark:text-cyan-200 hover:bg-cyan-500/20"
+                        : "border-emerald-500/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-500/20"
+                    }`}
+                  >
+                    <RotateCcw className="size-3.5 mr-1.5" /> Next Verification
+                  </Button>
+                </div>
+
+                {/* Details Table Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
+                      Student Name
+                    </span>
+                    <p className="text-sm font-bold text-foreground">{result.student?.name}</p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
+                      Roll Number
+                    </span>
+                    <p className="text-sm font-bold font-mono text-primary">{result.student?.studentCode}</p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
+                      Department
+                    </span>
+                    <p className="text-sm font-bold text-foreground">{result.student?.department}</p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
+                      Reason for Leaving
+                    </span>
+                    <p className="text-sm font-bold text-foreground">{result.pass?.reason}</p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
+                      Valid Window
+                    </span>
+                    <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                      {result.pass?.validFrom} – {result.pass?.validUntil}
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
+                      Approved By
+                    </span>
+                    <p className="text-sm font-bold text-foreground">{result.pass?.issuedBy}</p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1 sm:col-span-2 lg:col-span-3 flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
+                        Verified Checkpoint & Pass ID
+                      </span>
+                      <p className="text-xs font-mono font-bold text-foreground">
+                        {result.checkpoint} &bull; {result.pass?.passCode}
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-md bg-emerald-600 text-white uppercase">
+                      {result.verificationType || "EXIT"} RECORDED
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* FAILED RESULT CARD (RED) */
+              <div className="card-surface p-6 sm:p-8 rounded-2xl border-2 border-rose-500 bg-rose-500/10 dark:bg-rose-950/40 shadow-lg space-y-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-rose-500/30 pb-4">
+                  <div className="flex items-center gap-3">
+                    <span className="grid size-12 place-items-center rounded-2xl bg-rose-500 text-white font-bold shadow-md">
+                      <XCircle className="size-7" />
+                    </span>
+                    <div>
+                      <span className="inline-block px-3 py-1 rounded-full bg-rose-500 text-white font-black text-xs tracking-wider uppercase shadow-xs">
+                        🚫 {result.resultStatus || "EXIT NOT AUTHORIZED"}
+                      </span>
+                      <p className="text-xs font-semibold text-rose-800 dark:text-rose-300 mt-1">
+                        {result.message}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReset}
+                    className="rounded-xl text-xs font-semibold border-rose-500/40 text-rose-800 dark:text-rose-200 hover:bg-rose-500/20"
+                  >
+                    <RotateCcw className="size-3.5 mr-1.5" /> Try Again
+                  </Button>
+                </div>
+
+                <div className="p-4 rounded-xl bg-card/90 border border-rose-500/30 space-y-2 text-xs">
+                  <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300 font-bold text-sm">
+                    <XCircle className="size-4 shrink-0" />
+                    <span>Reason for Denial:</span>
+                  </div>
+                  <p className="text-sm font-semibold text-foreground pl-6">
+                    {result.failureReason || "Pass not found or invalid."}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground pl-6 pt-1">
+                    Checkpoint: <strong className="text-foreground">{checkpoint}</strong> &bull; Verification Logged Server-Side.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* QR Scanner Modal */}
+        <QRScannerModal
+          open={cameraOpen}
+          onClose={() => setCameraOpen(false)}
+          onScan={(scannedToken) => {
+            setPassInput(scannedToken);
+            handleVerify(undefined, scannedToken);
+          }}
+          title="Scan Student ID QR (Security Gate Check)"
+          loading={loading}
+        />
+      </div>
+    </RoleGuard>
+  );
+}

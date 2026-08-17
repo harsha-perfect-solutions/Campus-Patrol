@@ -50,6 +50,7 @@ export const signInApi = createServerFn({ method: "POST" })
           p.staff_code,
           p.student_code,
           p.password_hash,
+          p.assigned_post,
           COALESCE(ur.role::text, 'student') AS role
         FROM profiles p
         LEFT JOIN user_roles ur ON ur.user_id = p.id
@@ -66,6 +67,7 @@ export const signInApi = createServerFn({ method: "POST" })
         staff_code: string | null;
         student_code: string | null;
         password_hash: string | null;
+        assigned_post: string | null;
         role: AppRole;
       }>(query, [data.email]);
 
@@ -130,6 +132,7 @@ export const signInApi = createServerFn({ method: "POST" })
         user.staff_code,
         user.student_code,
         user.full_name,
+        user.assigned_post ?? null,
       );
 
       // 4. Set HttpOnly Session Cookie (Do NOT expose session token in response JSON)
@@ -155,7 +158,7 @@ export const signInApi = createServerFn({ method: "POST" })
       };
     } catch (err: any) {
       console.error("[Auth API Error] signInApi:", err);
-      return { success: false, error: "Authentication server error." };
+      return { success: false, error: err.message || "Authentication server error." };
     }
   });
 

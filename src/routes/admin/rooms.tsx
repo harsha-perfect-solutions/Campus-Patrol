@@ -1,10 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Building2,
   DoorOpen,
   Filter,
-  Layers,
   Plus,
   Pencil,
   RotateCcw,
@@ -13,8 +12,7 @@ import {
   Users,
   CheckCircle2,
   Monitor,
-  Wifi,
-  Wind,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
@@ -37,22 +35,19 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ToneBadge } from "@/components/status-badge";
+import { cn } from "@/lib/utils";
+import {
+  getCampusRoomsApi,
+  createRoomApi,
+  updateRoomApi,
+  deleteRoomApi,
+} from "@/lib/api/rooms.server";
+import type { CampusRoom } from "@/lib/db/rooms.server";
 
 export const Route = createFileRoute("/admin/rooms")({
   head: () => ({ meta: [{ title: "Rooms & Buildings — Admin Console" }] }),
   component: AdminRoomsPage,
 });
-
-export interface CampusRoom {
-  id: string;
-  roomCode: string;
-  buildingBlock: string;
-  floor: string;
-  roomType: "Classroom" | "Laboratory" | "Seminar Hall" | "Auditorium";
-  capacity: number;
-  facilities: string[];
-  status: "Active" | "Maintenance";
-}
 
 const BUILDINGS = [
   "ALL",
@@ -67,131 +62,12 @@ const BUILDINGS = [
 
 const ROOM_TYPES = ["ALL", "Classroom", "Laboratory", "Seminar Hall", "Auditorium"] as const;
 
-const INITIAL_ROOMS_DATA: CampusRoom[] = [
-  {
-    id: "RM-101",
-    roomCode: "Room C-204",
-    buildingBlock: "C-Block (CSE)",
-    floor: "2nd Floor",
-    roomType: "Classroom",
-    capacity: 60,
-    facilities: ["Smartboard", "Projector", "AC", "High-speed LAN"],
-    status: "Active",
-  },
-  {
-    id: "RM-102",
-    roomCode: "Room C-205",
-    buildingBlock: "C-Block (CSE)",
-    floor: "2nd Floor",
-    roomType: "Classroom",
-    capacity: 60,
-    facilities: ["Projector", "AC"],
-    status: "Active",
-  },
-  {
-    id: "RM-103",
-    roomCode: "Computer Lab 3",
-    buildingBlock: "C-Block (CSE)",
-    floor: "3rd Floor",
-    roomType: "Laboratory",
-    capacity: 45,
-    facilities: ["High-Performance Workstations", "AC", "Smartboard", "Gigabit LAN"],
-    status: "Active",
-  },
-  {
-    id: "RM-104",
-    roomCode: "Room E-102",
-    buildingBlock: "E-Block (ECE)",
-    floor: "1st Floor",
-    roomType: "Classroom",
-    capacity: 60,
-    facilities: ["Projector", "AC"],
-    status: "Active",
-  },
-  {
-    id: "RM-105",
-    roomCode: "Microcontroller Lab 2",
-    buildingBlock: "E-Block (ECE)",
-    floor: "1st Floor",
-    roomType: "Laboratory",
-    capacity: 40,
-    facilities: ["Embedded Kits", "Oscilloscopes", "AC", "Projector"],
-    status: "Active",
-  },
-  {
-    id: "RM-106",
-    roomCode: "Room B-101",
-    buildingBlock: "B-Block (EEE)",
-    floor: "1st Floor",
-    roomType: "Classroom",
-    capacity: 65,
-    facilities: ["Projector", "AC"],
-    status: "Active",
-  },
-  {
-    id: "RM-107",
-    roomCode: "AI Supercomputing Lab",
-    buildingBlock: "A-Block (AIML)",
-    floor: "3rd Floor",
-    roomType: "Laboratory",
-    capacity: 50,
-    facilities: ["NVIDIA GPU Workstations", "Smartboard", "AC", "10Gbps Fiber Network"],
-    status: "Active",
-  },
-  {
-    id: "RM-108",
-    roomCode: "Room A-301",
-    buildingBlock: "A-Block (AIML)",
-    floor: "3rd Floor",
-    roomType: "Classroom",
-    capacity: 60,
-    facilities: ["Projector", "AC"],
-    status: "Active",
-  },
-  {
-    id: "RM-109",
-    roomCode: "Room V-201",
-    buildingBlock: "V-Block (CIVIL)",
-    floor: "2nd Floor",
-    roomType: "Classroom",
-    capacity: 60,
-    facilities: ["Projector", "AC"],
-    status: "Active",
-  },
-  {
-    id: "RM-110",
-    roomCode: "Room M-104",
-    buildingBlock: "M-Block (MECH)",
-    floor: "1st Floor",
-    roomType: "Classroom",
-    capacity: 60,
-    facilities: ["Projector", "AC"],
-    status: "Active",
-  },
-  {
-    id: "RM-111",
-    roomCode: "Mechanical Workshop Lab",
-    buildingBlock: "M-Block (MECH)",
-    floor: "Ground Floor",
-    roomType: "Laboratory",
-    capacity: 50,
-    facilities: ["CNC Lathes", "3D Printers", "Safety Gear"],
-    status: "Active",
-  },
-  {
-    id: "RM-112",
-    roomCode: "Seminar Hall SH-1",
-    buildingBlock: "SH-Block (Seminar)",
-    floor: "Ground Floor",
-    roomType: "Seminar Hall",
-    capacity: 180,
-    facilities: ["Dual Projectors", "Surround Sound Audio", "Podium System", "Central AC"],
-    status: "Active",
-  },
-];
-
 function AdminRoomsPage() {
-  const [roomsList, setRoomsList] = useState<CampusRoom[]>(INITIAL_ROOMS_DATA);
+  const [roomsList, setRoomsList] = useState<CampusRoom[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Filters State
   const [selectedBuilding, setSelectedBuilding] = useState<string>("ALL");
   const [selectedType, setSelectedType] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
@@ -212,40 +88,50 @@ function AdminRoomsPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deletingRoom, setDeletingRoom] = useState<CampusRoom | null>(null);
 
+  const fetchRooms = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await getCampusRoomsApi({
+        data: {
+          buildingBlock: selectedBuilding,
+          roomType: selectedType,
+          search: searchQuery,
+        },
+      });
+
+      if (res.success) {
+        setRoomsList(res.rooms);
+      } else {
+        toast.error(res.error || "Failed to load campus rooms.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Failed to connect to rooms server.");
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedBuilding, selectedType, searchQuery]);
+
+  useEffect(() => {
+    fetchRooms();
+  }, [fetchRooms]);
+
   const handleResetFilters = () => {
     setSelectedBuilding("ALL");
     setSelectedType("ALL");
     setSearchQuery("");
   };
 
-  // Filtered rooms list
-  const filteredRooms = useMemo(() => {
-    return roomsList.filter((r) => {
-      if (selectedBuilding !== "ALL" && r.buildingBlock !== selectedBuilding) return false;
-      if (selectedType !== "ALL" && r.roomType !== selectedType) return false;
-
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const matchesCode = r.roomCode.toLowerCase().includes(q);
-        const matchesBuilding = r.buildingBlock.toLowerCase().includes(q);
-        const matchesFacility = r.facilities.some((f) => f.toLowerCase().includes(q));
-        if (!matchesCode && !matchesBuilding && !matchesFacility) return false;
-      }
-
-      return true;
-    });
-  }, [roomsList, selectedBuilding, selectedType, searchQuery]);
-
-  // Dynamic Metrics
+  // Metrics calculation
   const metrics = useMemo(() => {
-    const totalCap = filteredRooms.reduce((acc, r) => acc + r.capacity, 0);
-    const labsCount = filteredRooms.filter((r) => r.roomType === "Laboratory").length;
+    const totalCap = roomsList.reduce((acc, r) => acc + r.capacity, 0);
+    const labsCount = roomsList.filter((r) => r.roomType === "Laboratory").length;
     return {
-      totalRooms: filteredRooms.length,
+      totalRooms: roomsList.length,
       totalCapacity: totalCap,
       labsCount,
     };
-  }, [filteredRooms]);
+  }, [roomsList]);
 
   const handleOpenAddModal = () => {
     setEditingRoom(null);
@@ -269,10 +155,10 @@ function AdminRoomsPage() {
     setFormModalOpen(true);
   };
 
-  const handleSaveRoom = (e: React.FormEvent) => {
+  const handleSaveRoom = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formRoomCode.trim() || !formBuilding.trim()) {
-      toast.error("Please enter a valid Room Code and Building Block.");
+    if (!formRoomCode.trim() || !formBuilding.trim() || !formFloor.trim()) {
+      toast.error("Please enter valid Room Code, Building Block, and Floor.");
       return;
     }
 
@@ -281,50 +167,85 @@ function AdminRoomsPage() {
       .map((f) => f.trim())
       .filter(Boolean);
 
-    if (editingRoom) {
-      const updated: CampusRoom = {
-        ...editingRoom,
-        roomCode: formRoomCode.trim(),
-        buildingBlock: formBuilding,
-        floor: formFloor.trim(),
-        roomType: formType,
-        capacity: formCapacity,
-        facilities: parsedFacilities.length ? parsedFacilities : ["Projector", "AC"],
-      };
+    setSubmitting(true);
+    try {
+      if (editingRoom) {
+        const res = await updateRoomApi({
+          data: {
+            id: editingRoom.id,
+            input: {
+              roomCode: formRoomCode.trim(),
+              buildingBlock: formBuilding,
+              floor: formFloor.trim(),
+              roomType: formType,
+              capacity: formCapacity,
+              facilities: parsedFacilities.length ? parsedFacilities : ["Projector", "AC"],
+            },
+          },
+        });
 
-      setRoomsList((prev) => prev.map((r) => (r.id === editingRoom.id ? updated : r)));
-      toast.success(`Room Updated!`, {
-        description: `${formRoomCode} in ${formBuilding} updated successfully.`,
-      });
-    } else {
-      const newRoom: CampusRoom = {
-        id: `RM-${Date.now()}`,
-        roomCode: formRoomCode.trim(),
-        buildingBlock: formBuilding,
-        floor: formFloor.trim(),
-        roomType: formType,
-        capacity: formCapacity,
-        facilities: parsedFacilities.length ? parsedFacilities : ["Projector", "AC"],
-        status: "Active",
-      };
+        if (res.success && res.room) {
+          toast.success("Room Updated!", {
+            description: `${res.room.roomCode} in ${res.room.buildingBlock} updated successfully.`,
+          });
+          setFormModalOpen(false);
+          fetchRooms();
+        } else {
+          toast.error(res.error || "Failed to update room.");
+        }
+      } else {
+        const res = await createRoomApi({
+          data: {
+            roomCode: formRoomCode.trim(),
+            buildingBlock: formBuilding,
+            floor: formFloor.trim(),
+            roomType: formType,
+            capacity: formCapacity,
+            facilities: parsedFacilities.length ? parsedFacilities : ["Projector", "AC"],
+            status: "Active",
+          },
+        });
 
-      setRoomsList((prev) => [newRoom, ...prev]);
-      toast.success(`New Room Added!`, {
-        description: `${formRoomCode} registered under ${formBuilding}.`,
-      });
+        if (res.success && res.room) {
+          toast.success("New Room Added!", {
+            description: `${res.room.roomCode} registered under ${res.room.buildingBlock}.`,
+          });
+          setFormModalOpen(false);
+          fetchRooms();
+        } else {
+          toast.error(res.error || "Failed to add room.");
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred while saving room.");
+    } finally {
+      setSubmitting(false);
     }
-
-    setFormModalOpen(false);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deletingRoom) return;
-    setRoomsList((prev) => prev.filter((r) => r.id !== deletingRoom.id));
-    toast.success(`Room Removed!`, {
-      description: `${deletingRoom.roomCode} removed from campus registry.`,
-    });
-    setDeleteModalOpen(false);
-    setDeletingRoom(null);
+    setSubmitting(true);
+    try {
+      const res = await deleteRoomApi({
+        data: { id: deletingRoom.id },
+      });
+
+      if (res.success) {
+        toast.success("Room Removed!", {
+          description: `${deletingRoom.roomCode} removed from campus registry.`,
+        });
+        setDeleteModalOpen(false);
+        setDeletingRoom(null);
+        fetchRooms();
+      } else {
+        toast.error(res.error || "Failed to remove room.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred while removing room.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -339,6 +260,18 @@ function AdminRoomsPage() {
               { label: "Admin", to: "/admin/dashboard" },
               { label: "Rooms & Buildings" },
             ]}
+            actions={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchRooms}
+                disabled={loading}
+                className="rounded-xl text-xs h-9 gap-1.5 shadow-2xs font-semibold"
+              >
+                <RefreshCw className={cn("size-3.5", loading && "animate-spin")} />
+                Refresh
+              </Button>
+            }
           />
           <Button
             onClick={handleOpenAddModal}
@@ -458,10 +391,15 @@ function AdminRoomsPage() {
               <Building2 className="size-4 text-primary" />
               <span>Campus Rooms Directory</span>
             </h3>
-            <ToneBadge tone="info">{filteredRooms.length} Facilities Listed</ToneBadge>
+            <ToneBadge tone="info">{roomsList.length} Facilities Listed</ToneBadge>
           </div>
 
-          {filteredRooms.length === 0 ? (
+          {loading ? (
+            <div className="p-12 text-center text-xs text-muted-foreground space-y-2">
+              <RefreshCw className="size-5 animate-spin mx-auto text-primary" />
+              <p>Loading rooms directory from PostgreSQL database...</p>
+            </div>
+          ) : roomsList.length === 0 ? (
             <div className="p-8 text-center text-xs text-muted-foreground space-y-2">
               <p className="font-semibold text-foreground">
                 No rooms match the selected building or type filters.
@@ -487,7 +425,7 @@ function AdminRoomsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredRooms.map((room) => (
+              {roomsList.map((room) => (
                 <div
                   key={room.id}
                   className="p-4 rounded-xl border border-border bg-card space-y-3 flex flex-col justify-between hover:border-primary/40 transition-colors"
@@ -672,15 +610,21 @@ function AdminRoomsPage() {
                   type="button"
                   variant="outline"
                   onClick={() => setFormModalOpen(false)}
+                  disabled={submitting}
                   className="rounded-xl text-xs"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
+                  disabled={submitting}
                   className="rounded-xl text-xs font-semibold bg-primary text-primary-foreground"
                 >
-                  {editingRoom ? "Save Room Changes" : "Register Campus Room"}
+                  {submitting
+                    ? "Saving..."
+                    : editingRoom
+                      ? "Save Room Changes"
+                      : "Register Campus Room"}
                 </Button>
               </DialogFooter>
             </form>
@@ -717,16 +661,18 @@ function AdminRoomsPage() {
               <Button
                 variant="outline"
                 onClick={() => setDeleteModalOpen(false)}
+                disabled={submitting}
                 className="rounded-xl text-xs"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleConfirmDelete}
+                disabled={submitting}
                 variant="destructive"
                 className="rounded-xl text-xs font-semibold"
               >
-                Remove Room
+                {submitting ? "Removing..." : "Remove Room"}
               </Button>
             </DialogFooter>
           </DialogContent>
