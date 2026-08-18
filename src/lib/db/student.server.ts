@@ -21,6 +21,8 @@ export type StudentDashboardStats = {
 /**
  * Retrieves full student profile combining students and profiles table information.
  */
+import { seedDemoStudentAccount } from "./demo-student.server";
+
 export async function getMyStudentProfile(studentCode: string): Promise<{
   student: DBStudent | null;
   email?: string;
@@ -28,6 +30,10 @@ export async function getMyStudentProfile(studentCode: string): Promise<{
 }> {
   const cleanCode = studentCode.trim().toUpperCase();
   if (!cleanCode) return { student: null };
+
+  if (cleanCode === "23CSE1012" || cleanCode === "23CSE9999") {
+    await seedDemoStudentAccount();
+  }
 
   try {
     const student = await getStudentByCode(cleanCode);
@@ -527,31 +533,46 @@ export async function submitViolationExplanation(
   try {
     await db.query("BEGIN");
 
-    // 1. Verify ownership and current status
+    // 1. Verify if report exists at all (404)
+    const existCheck = await db.query(
+      `SELECT id, student_code, status FROM violation_reports WHERE UPPER(id) = UPPER($1) LIMIT 1;`,
+      [cleanId],
+    );
+    if (!existCheck.rows[0]) {
+      throw new Error(`Violation report #${cleanId} does not exist in system records (404).`);
+    }
+
+    // 2. Verify ownership against authenticated student (403)
     const checkQuery = `
       SELECT ${STUDENT_VIOLATION_COLUMNS}
       FROM violation_reports
       WHERE UPPER(id) = UPPER($1)
-        AND UPPER(student_code) = UPPER($2)
+        AND (
+          UPPER(student_code) = UPPER($2)
+          OR UPPER(student_code) IN (
+            SELECT UPPER(student_code) FROM profiles WHERE LOWER(email) = LOWER($2) OR UPPER(student_code) = UPPER($2)
+          )
+        )
       LIMIT 1;
     `;
     const checkRes = await db.query<DBViolationReport>(checkQuery, [cleanId, cleanCode]);
     const report = checkRes.rows[0];
 
     if (!report) {
-      throw new Error(`Violation report #${cleanId} not found or access denied.`);
+      throw new Error(`Access Denied: Violation report #${cleanId} belongs to another student account (403).`);
     }
 
+    // 3. Status Invariant Checks (409 Conflict)
     if (report.explanation && report.explanation.trim().length > 0) {
-      throw new Error("An explanation has already been submitted for this case. Responses cannot be modified.");
+      throw new Error("An explanation has already been submitted for this case. Responses cannot be modified (409).");
     }
 
     if (report.status === "resolved" || report.status === "dismissed") {
-      throw new Error(`Cannot submit explanation: This case is already ${report.status}.`);
+      throw new Error(`Cannot submit explanation: Case #${cleanId} is already finalized as ${report.status.toUpperCase()} (409).`);
     }
 
     if (report.explanation_deadline && new Date(report.explanation_deadline) < new Date()) {
-      throw new Error("The deadline to submit an explanation for this incident has expired.");
+      throw new Error(`The 24-hour deadline to submit an explanation for incident #${cleanId} has expired (409).`);
     }
 
     // 2. Update explanation and status to explanation_submitted
@@ -563,14 +584,12 @@ export async function submitViolationExplanation(
         explanation_submitted_at = NOW(),
         status = 'explanation_submitted'::violation_status
       WHERE UPPER(id) = UPPER($3)
-        AND UPPER(student_code) = UPPER($4)
       RETURNING ${STUDENT_VIOLATION_COLUMNS};
     `;
     const updateRes = await db.query<DBViolationReport>(updateQuery, [
       cleanExp,
       cleanEvidence,
-      cleanId,
-      cleanCode,
+      report.id,
     ]);
     const updated = updateRes.rows[0];
     if (!updated) {

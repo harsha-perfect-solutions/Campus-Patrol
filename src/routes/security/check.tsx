@@ -23,7 +23,11 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QRScannerModal } from "@/components/qr-scanner-modal";
-import { verifyGatePassApi, type VerificationResultPayload } from "@/lib/api/security.server";
+import {
+  verifyGatePassApi,
+  authorizeEarlyExitApi,
+  type VerificationResultPayload,
+} from "@/lib/api/security.server";
 
 export const Route = createFileRoute("/security/check")({
   head: () => ({ meta: [{ title: "Gate Pass Verification — Security Portal" }] }),
@@ -41,10 +45,10 @@ const checkpointOptions = [
 
 function SecurityCheckPage() {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<"qr" | "manual">("qr");
   const [passInput, setPassInput] = useState("");
   const [checkpoint, setCheckpoint] = useState(profile?.department || "Main Gate");
   const [loading, setLoading] = useState(false);
+  const [earlyExitLoading, setEarlyExitLoading] = useState(false);
   const [result, setResult] = useState<VerificationResultPayload | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
 
@@ -56,6 +60,34 @@ function SecurityCheckPage() {
       }
     }
   }, [profile]);
+
+  const handleAllowEarlyExit = async () => {
+    if (!result?.pass?.id) return;
+    setEarlyExitLoading(true);
+    try {
+      const res = await authorizeEarlyExitApi({
+        data: {
+          passId: result.pass.id,
+          checkpoint,
+        },
+      });
+      if (res.success) {
+        setResult(res as VerificationResultPayload);
+        toast.success("✅ EARLY EXIT AUTHORIZED", {
+          description: `Early exit authorized by Security at ${checkpoint}.`,
+        });
+      } else {
+        toast.error("Early Exit Error", {
+          description: res.failureReason || (res as any).error || "Failed to authorize early exit.",
+        });
+      }
+    } catch (err: any) {
+      console.error("Early exit error:", err);
+      toast.error("Failed to authorize early exit.");
+    } finally {
+      setEarlyExitLoading(false);
+    }
+  };
 
   const handleVerify = async (e?: React.FormEvent, overrideInput?: string) => {
     if (e) e.preventDefault();
@@ -122,17 +154,6 @@ function SecurityCheckPage() {
             { label: "Security Portal", to: "/security/check" },
             { label: "Gate Pass Verification" },
           ]}
-          actions={
-            <Button
-              asChild
-              size="sm"
-              className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-9"
-            >
-              <Link to="/security/incidents">
-                <ShieldAlert className="size-3.5 mr-1.5" /> Emergency Incidents &rarr;
-              </Link>
-            </Button>
-          }
         />
 
         {/* Checkpoint Banner */}
@@ -165,119 +186,51 @@ function SecurityCheckPage() {
         </div>
 
         {/* Verification Options Card */}
-        <div className="card-surface p-6 rounded-2xl border border-border shadow-xs space-y-6">
-          {/* Method Selection Tabs */}
-          <div className="flex items-center gap-2 border-b border-border pb-4">
-            <button
-              onClick={() => {
-                setActiveTab("qr");
-                setResult(null);
-              }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === "qr"
-                  ? "bg-primary text-primary-foreground shadow-xs"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <QrCode className="size-4" />
-              <span>OPTION A: QR / Digital Pass Scanning</span>
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("manual");
-                setResult(null);
-              }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === "manual"
-                  ? "bg-primary text-primary-foreground shadow-xs"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <Search className="size-4" />
-              <span>OPTION B: Manual Pass ID / Roll No</span>
-            </button>
-          </div>
-
-          {/* Option A: QR Scanning Interface */}
-          {activeTab === "qr" && (
-            <div className="space-y-4">
-              <div className="p-6 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 text-center space-y-4">
-                <div className="mx-auto size-16 rounded-2xl bg-primary/10 text-primary grid place-items-center">
-                  <QrCode className="size-8 animate-pulse" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-foreground">
-                    Scan Student Digital QR Gate Pass
-                  </h3>
-                  <p className="text-xs text-muted-foreground max-w-md mx-auto mt-1">
-                    Scan the student's mobile QR pass or enter the scanned pass token code (e.g. CMADMS-PASS-XXXXXXXX).
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto pt-2">
-                  <Button
-                    type="button"
-                    onClick={() => setCameraOpen(true)}
-                    className="w-full sm:w-auto h-12 px-6 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md gap-2"
-                  >
-                    <Camera className="size-5" />
-                    <span>[ SCAN QR PASS ]</span>
-                  </Button>
-                </div>
+        <div className="card-surface p-6 rounded-2xl border border-border shadow-xs space-y-4">
+          <div className="p-6 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 text-center space-y-4">
+              <div className="mx-auto size-16 rounded-2xl bg-primary/10 text-primary grid place-items-center">
+                <QrCode className="size-8 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-foreground">
+                  Scan Student Digital QR Gate Pass
+                </h3>
+                <p className="text-xs text-muted-foreground max-w-md mx-auto mt-1">
+                  Scan the student's mobile QR pass or enter the scanned pass token code (e.g. CMADMS-PASS-XXXXXXXX).
+                </p>
               </div>
 
-              {/* Direct QR / Token input */}
-              <form onSubmit={handleVerify} className="space-y-3 pt-2">
-                <label className="text-xs font-semibold text-muted-foreground block">
-                  Or Paste/Type Scanned Pass Code:
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="e.g. CMADMS-PASS-101 or 23CSE1012"
-                    value={passInput}
-                    onChange={(e) => setPassInput(e.target.value)}
-                    className="h-11 rounded-xl text-xs font-mono"
-                  />
-                  <Button
-                    type="submit"
-                    loading={loading}
-                    className="h-11 px-6 rounded-xl font-bold bg-primary text-primary-foreground"
-                  >
-                    Verify
-                  </Button>
-                </div>
-              </form>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto pt-2">
+                <Button
+                  type="button"
+                  onClick={() => setCameraOpen(true)}
+                  className="w-full sm:w-auto h-12 px-6 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md gap-2"
+                >
+                  <Camera className="size-5" />
+                  <span>[ SCAN QR PASS ]</span>
+                </Button>
+              </div>
             </div>
-          )}
 
-          {/* Option B: Manual Lookup Interface */}
-          {activeTab === "manual" && (
-            <form onSubmit={handleVerify} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground block">
-                  Manual Pass ID / Student Roll Number Lookup
-                </label>
-                <p className="text-xs text-muted-foreground">
-                  Enter the student's Roll Number (e.g. 23CSE1012) or explicit Movement Pass ID.
-                </p>
-                <div className="flex gap-2 pt-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Enter Student Roll No (e.g. 23CSE1012) or Pass ID..."
-                      value={passInput}
-                      onChange={(e) => setPassInput(e.target.value)}
-                      className="pl-10 h-12 rounded-xl text-sm font-semibold"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    loading={loading}
-                    className="h-12 px-8 rounded-xl font-bold bg-primary text-primary-foreground shadow-xs text-sm"
-                  >
-                    [ ENTER PASS ID ]
-                  </Button>
-                </div>
+            {/* Direct QR / Token / Roll No input */}
+            <form onSubmit={handleVerify} className="space-y-3 pt-2">
+              <label className="text-xs font-semibold text-muted-foreground block">
+                Or Paste/Type Scanned Pass Code / Student Roll No:
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="e.g. CMADMS-PASS-101 or 23CSE1012"
+                  value={passInput}
+                  onChange={(e) => setPassInput(e.target.value)}
+                  className="h-11 rounded-xl text-xs font-mono"
+                />
+                <Button
+                  type="submit"
+                  loading={loading}
+                  className="h-11 px-6 rounded-xl font-bold bg-primary text-primary-foreground"
+                >
+                  Verify
+                </Button>
               </div>
 
               {/* Quick Preset Buttons for Testing */}
@@ -298,8 +251,7 @@ function SecurityCheckPage() {
                 ))}
               </div>
             </form>
-          )}
-        </div>
+          </div>
 
         {/* VERIFICATION RESULT DISPLAY */}
         {loading && (
@@ -312,8 +264,132 @@ function SecurityCheckPage() {
 
         {result && !loading && (
           <div className="space-y-4">
-            {/* SUCCESS RESULT CARD (GREEN FOR EXIT, CYAN/BLUE FOR ENTRY) */}
-            {result.authorized ? (
+            {/* CASE A: BEFORE VALIDITY (AMBER/GOLD CARD) */}
+            {result.timeState === "BEFORE_VALIDITY" ? (
+              <div className="card-surface p-6 sm:p-8 rounded-2xl border-2 border-amber-500 bg-amber-500/10 dark:bg-amber-950/40 shadow-lg space-y-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-amber-500/30 pb-4">
+                  <div className="flex items-center gap-3">
+                    <span className="grid size-12 place-items-center rounded-2xl bg-amber-500 text-white font-bold shadow-md">
+                      <Clock className="size-7 animate-pulse" />
+                    </span>
+                    <div>
+                      <span className="inline-block px-3 py-1 rounded-full bg-amber-500 text-white font-black text-xs tracking-wider uppercase shadow-xs">
+                        ⏳ PASS NOT STARTED
+                      </span>
+                      <p className="text-sm font-bold text-amber-900 dark:text-amber-200 mt-1">
+                        Starts in {result.timeUntilStartMinutes || 10} minutes ({result.pass?.validFrom} – {result.pass?.validUntil})
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Button
+                      type="button"
+                      onClick={handleAllowEarlyExit}
+                      loading={earlyExitLoading}
+                      className="w-full sm:w-auto h-11 px-6 rounded-xl font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-md gap-2"
+                    >
+                      <Sparkles className="size-4" />
+                      <span>[ ALLOW EARLY EXIT ]</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleReset}
+                      className="rounded-xl text-xs font-semibold border-amber-500/40 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20"
+                    >
+                      <RotateCcw className="size-3.5 mr-1.5" /> Next
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-amber-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Student Name</span>
+                    <p className="text-sm font-bold text-foreground">{result.student?.name}</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-amber-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Roll Number</span>
+                    <p className="text-sm font-bold font-mono text-primary">{result.student?.studentCode}</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-amber-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Department / Section</span>
+                    <p className="text-sm font-bold text-foreground">{result.student?.department} • {result.student?.yearSection}</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-amber-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Reason for Leaving</span>
+                    <p className="text-sm font-bold text-foreground">{result.pass?.reason}</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-amber-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Pass Validity Window</span>
+                    <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
+                      {result.pass?.validFrom} – {result.pass?.validUntil}
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-amber-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Server Current Time</span>
+                    <p className="text-sm font-bold text-foreground">{result.serverCurrentTime || new Date().toLocaleTimeString()}</p>
+                  </div>
+                </div>
+              </div>
+            ) : result.timeState === "EARLY_EXIT_AUTHORIZED" ? (
+              /* CASE D: EARLY EXIT ALREADY AUTHORIZED */
+              <div className="card-surface p-6 sm:p-8 rounded-2xl border-2 border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/40 shadow-lg space-y-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-emerald-500/30 pb-4">
+                  <div className="flex items-center gap-3">
+                    <span className="grid size-12 place-items-center rounded-2xl bg-emerald-500 text-white font-bold shadow-md">
+                      <CheckCircle2 className="size-7" />
+                    </span>
+                    <div>
+                      <span className="inline-block px-3 py-1 rounded-full bg-emerald-600 text-white font-black text-xs tracking-wider uppercase shadow-xs">
+                        ✅ EARLY EXIT AUTHORIZED
+                      </span>
+                      <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 mt-1">
+                        {result.message}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReset}
+                    className="rounded-xl text-xs font-semibold border-emerald-500/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-500/20"
+                  >
+                    <RotateCcw className="size-3.5 mr-1.5" /> Next Verification
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Student Name</span>
+                    <p className="text-sm font-bold text-foreground">{result.student?.name}</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Roll Number</span>
+                    <p className="text-sm font-bold font-mono text-primary">{result.student?.studentCode}</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Authorized By Officer</span>
+                    <p className="text-sm font-bold text-foreground">{result.earlyExitDetails?.earlyExitBy || result.pass?.earlyExitBy || "Security Officer"}</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Scheduled Start</span>
+                    <p className="text-sm font-bold text-foreground">{result.pass?.validFrom}</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Scheduled End</span>
+                    <p className="text-sm font-bold text-foreground">{result.pass?.validUntil}</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Gate Checkpoint</span>
+                    <p className="text-sm font-bold text-foreground">{result.checkpoint || checkpoint}</p>
+                  </div>
+                </div>
+              </div>
+            ) : result.authorized ? (
+              /* CASE B: ACTIVE / AUTHORIZED (GREEN CARD) */
               <div
                 className={`card-surface p-6 sm:p-8 rounded-2xl border-2 shadow-lg space-y-6 ${
                   result.verificationType === "ENTRY"
@@ -342,7 +418,7 @@ function SecurityCheckPage() {
                           result.verificationType === "ENTRY" ? "bg-cyan-600" : "bg-emerald-500"
                         }`}
                       >
-                        ✅ {result.resultStatus || (result.verificationType === "ENTRY" ? "ENTRY VERIFIED" : "EXIT AUTHORIZED")}
+                        🟢 {result.resultStatus || (result.verificationType === "ENTRY" ? "ENTRY VERIFIED" : "AUTHORIZED")}
                       </span>
                       <p
                         className={`text-xs font-semibold mt-1 ${
@@ -432,7 +508,7 @@ function SecurityCheckPage() {
                 </div>
               </div>
             ) : (
-              /* FAILED RESULT CARD (RED) */
+              /* CASE C: EXPIRED / DENIED (RED CARD) */
               <div className="card-surface p-6 sm:p-8 rounded-2xl border-2 border-rose-500 bg-rose-500/10 dark:bg-rose-950/40 shadow-lg space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-rose-500/30 pb-4">
                   <div className="flex items-center gap-3">
@@ -441,7 +517,7 @@ function SecurityCheckPage() {
                     </span>
                     <div>
                       <span className="inline-block px-3 py-1 rounded-full bg-rose-500 text-white font-black text-xs tracking-wider uppercase shadow-xs">
-                        🚫 {result.resultStatus || "EXIT NOT AUTHORIZED"}
+                        🔴 {result.resultStatus || "EXIT NOT AUTHORIZED"}
                       </span>
                       <p className="text-xs font-semibold text-rose-800 dark:text-rose-300 mt-1">
                         {result.message}
@@ -467,6 +543,11 @@ function SecurityCheckPage() {
                   <p className="text-sm font-semibold text-foreground pl-6">
                     {result.failureReason || "Pass not found or invalid."}
                   </p>
+                  {result.pass && (
+                    <p className="text-[11px] text-muted-foreground pl-6 pt-1">
+                      Scheduled Window: <strong className="text-foreground">{result.pass.validFrom} – {result.pass.validUntil}</strong>
+                    </p>
+                  )}
                   <p className="text-[11px] text-muted-foreground pl-6 pt-1">
                     Checkpoint: <strong className="text-foreground">{checkpoint}</strong> &bull; Verification Logged Server-Side.
                   </p>

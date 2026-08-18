@@ -13,6 +13,8 @@ import {
   type AppRole,
 } from "../session.server";
 
+import { seedDemoStudentAccount } from "../db/demo-student.server";
+
 export type AuthResponse = {
   success: boolean;
   user?: {
@@ -40,6 +42,15 @@ export const signInApi = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }): Promise<AuthResponse> => {
     try {
+      // Ensure demo student account is seeded if demo student credentials are used
+      if (
+        data.email.includes("student") ||
+        data.email.includes("23cse") ||
+        data.email.includes("23CSE") ||
+        data.email.includes("demo")
+      ) {
+        await seedDemoStudentAccount();
+      }
       // 1. Query user profile by email or student code
       const query = `
         SELECT

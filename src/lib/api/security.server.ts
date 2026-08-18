@@ -7,6 +7,7 @@ import {
   checkStudentForSecurity,
   createSecurityViolationReport,
   verifyGatePass,
+  authorizeEarlyExit,
   getGatePassVerificationHistory,
   type VerificationResultPayload,
 } from "../db/security.server";
@@ -91,6 +92,26 @@ export const verifyGatePassApi = createServerFn({ method: "POST" })
         resultStatus: "EXIT NOT AUTHORIZED",
         failureReason: err.message || "Verification failed.",
         message: "Student is NOT authorized to exit the campus.",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  });
+
+export const authorizeEarlyExitApi = createServerFn({ method: "POST" })
+  .validator((data: { passId: string; checkpoint?: string; remarks?: string }) => data)
+  .handler(async ({ data }) => {
+    try {
+      const session = await requireSecurityAuth();
+      const res = await authorizeEarlyExit(session, data);
+      return { ...res };
+    } catch (err: any) {
+      console.error("[Security API Error] authorizeEarlyExitApi:", err);
+      return {
+        success: false,
+        authorized: false,
+        resultStatus: "EARLY EXIT DENIED",
+        failureReason: err.message || "Failed to authorize early exit.",
+        message: err.message || "Early exit request failed.",
         timestamp: new Date().toISOString(),
       };
     }

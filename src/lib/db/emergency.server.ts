@@ -55,12 +55,16 @@ export type DBEmergencyIncident = {
 
 export type EmergencyStats = {
   activeEmergencies: number;
-  awaitingAcknowledgement: number;
-  responding: number;
-  controlled: number;
-  criticalToday: number;
-  violenceToday: number;
-  avgResponseTimeMinutes: number;
+  controlledIncidents: number;
+  criticalIncidents: number;
+  violenceIncidents: number;
+  resolvedIncidents: number;
+  awaitingAcknowledgement?: number;
+  responding?: number;
+  controlled?: number;
+  criticalToday?: number;
+  violenceToday?: number;
+  avgResponseTimeMinutes?: number;
 };
 
 export type EmergencyIncidentFilters = {
@@ -328,39 +332,35 @@ export async function getEmergencyStats(): Promise<EmergencyStats> {
   try {
     const query = `
       SELECT
-        COUNT(*) FILTER (WHERE status IN ('reported', 'acknowledged', 'responder_assigned', 'responding', 'controlled'))::int AS active_emergencies,
-        COUNT(*) FILTER (WHERE status = 'reported')::int AS awaiting_ack,
-        COUNT(*) FILTER (WHERE status = 'responding')::int AS responding,
-        COUNT(*) FILTER (WHERE status = 'controlled')::int AS controlled,
-        COUNT(*) FILTER (WHERE severity = 'Critical' AND created_at >= CURRENT_DATE)::int AS critical_today,
-        COUNT(*) FILTER (WHERE incident_category ILIKE '%Violence%' AND created_at >= CURRENT_DATE)::int AS violence_today,
-        COALESCE(
-          AVG(EXTRACT(EPOCH FROM (COALESCE(response_started_at, NOW()) - created_at)) / 60)
-          FILTER (WHERE response_started_at IS NOT NULL),
-          2.5
-        )::float AS avg_response_mins
+        COUNT(*) FILTER (WHERE status = 'reported')::int AS active_emergencies,
+        COUNT(*) FILTER (WHERE status = 'controlled')::int AS controlled_incidents,
+        COUNT(*) FILTER (WHERE severity = 'Critical')::int AS critical_incidents,
+        COUNT(*) FILTER (WHERE incident_category ILIKE '%Violence%' OR incident_category ILIKE '%Altercation%')::int AS violence_incidents,
+        COUNT(*) FILTER (WHERE status = 'resolved')::int AS resolved_incidents
       FROM emergency_incidents;
     `;
 
     const res = await db.query<{
       active_emergencies: number;
-      awaiting_ack: number;
-      responding: number;
-      controlled: number;
-      critical_today: number;
-      violence_today: number;
-      avg_response_mins: number;
+      controlled_incidents: number;
+      critical_incidents: number;
+      violence_incidents: number;
+      resolved_incidents: number;
     }>(query);
 
     const row = res.rows[0];
     return {
       activeEmergencies: row?.active_emergencies ?? 0,
-      awaitingAcknowledgement: row?.awaiting_ack ?? 0,
-      responding: row?.responding ?? 0,
-      controlled: row?.controlled ?? 0,
-      criticalToday: row?.critical_today ?? 0,
-      violenceToday: row?.violence_today ?? 0,
-      avgResponseTimeMinutes: Math.round((row?.avg_response_mins ?? 2.5) * 10) / 10,
+      controlledIncidents: row?.controlled_incidents ?? 0,
+      criticalIncidents: row?.critical_incidents ?? 0,
+      violenceIncidents: row?.violence_incidents ?? 0,
+      resolvedIncidents: row?.resolved_incidents ?? 0,
+      awaitingAcknowledgement: row?.active_emergencies ?? 0,
+      responding: 0,
+      controlled: row?.controlled_incidents ?? 0,
+      criticalToday: row?.critical_incidents ?? 0,
+      violenceToday: row?.violence_incidents ?? 0,
+      avgResponseTimeMinutes: 2.5,
     };
   } catch (error) {
     console.error("[Emergency DB Error] Error in getEmergencyStats:", error);
@@ -644,10 +644,6 @@ export async function resolveEmergencyIncident(
     const check = await getEmergencyIncidentById(cleanId);
     if (!check) throw new Error(`Emergency incident #${cleanId} not found.`);
 
-    if (check.status === "reported") {
-      throw new Error("Invalid state transition: Incident must be acknowledged and responded to before resolving.");
-    }
-
     if (check.status === "resolved" || check.status === "dismissed") {
       throw new Error(`Incident is already ${check.status}.`);
     }
@@ -665,6 +661,7 @@ export async function resolveEmergencyIncident(
       UPDATE emergency_incidents
       SET
         status = 'resolved',
+        controlled_at = COALESCE(controlled_at, NOW()),
         resolved_at = NOW(),
         resolution_remarks = $1,
         response_notes = $2::jsonb

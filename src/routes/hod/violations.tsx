@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,6 @@ import {
   startViolationReviewApi,
   resolveViolationReportApi,
   dismissViolationReportApi,
-  escalateViolationReportApi,
   getViolationAuditHistoryApi,
 } from "@/lib/api/hod.server";
 import type { DBViolationReport } from "@/lib/db/violations.server";
@@ -60,9 +59,15 @@ import {
   XCircle,
   Eye,
   Send,
-  AlertOctagon,
   History,
+  Lock,
+  FileCheck,
+  Paperclip,
+  Check,
+  Download,
+  Image as ImageIcon,
 } from "lucide-react";
+import { downloadEvidenceImage } from "@/lib/download-evidence";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/hod/violations")({
@@ -79,7 +84,7 @@ export default function HODViolationsPage() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [selectedQueue, setSelectedQueue] = useState<"ALL" | "NEW" | "UNDER_REVIEW" | "ESCALATED" | "CRITICAL" | "VIOLENCE" | "RESOLVED" | "DISMISSED">("NEW");
+  const [selectedQueue, setSelectedQueue] = useState<"ALL" | "NEW" | "UNDER_REVIEW" | "CRITICAL" | "VIOLENCE" | "RESOLVED" | "DISMISSED">("NEW");
   const [severityFilter, setSeverityFilter] = useState("ALL");
   const [violationTypeFilter, setViolationTypeFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,14 +94,13 @@ export default function HODViolationsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [auditHistory, setAuditHistory] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [investigationNotes, setInvestigationNotes] = useState("");
 
   // Action Modals
   const [resolveOpen, setResolveOpen] = useState(false);
   const [resolveRemarks, setResolveRemarks] = useState("");
   const [dismissOpen, setDismissOpen] = useState(false);
   const [dismissReason, setDismissReason] = useState("");
-  const [escalateOpen, setEscalateOpen] = useState(false);
-  const [escalateReason, setEscalateReason] = useState("");
   const [submittingAction, setSubmittingAction] = useState(false);
 
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -166,20 +170,10 @@ export default function HODViolationsPage() {
     return () => clearInterval(interval);
   }, [selectedQueue, severityFilter, violationTypeFilter]);
 
+  const navigate = useNavigate();
+
   async function handleOpenDrawer(report: DBViolationReport) {
-    setSelectedReport(report);
-    setDrawerOpen(true);
-    setHistoryLoading(true);
-    try {
-      const res = await getViolationAuditHistoryApi({ data: { reportId: report.id } });
-      if (res.success) {
-        setAuditHistory(res.history);
-      }
-    } catch (err) {
-      console.error("Error loading audit history:", err);
-    } finally {
-      setHistoryLoading(false);
-    }
+    navigate({ to: "/reports/$reportId", params: { reportId: report.id } });
   }
 
   async function handleStartReview() {
@@ -188,16 +182,19 @@ export default function HODViolationsPage() {
     try {
       const res = await startViolationReviewApi({ data: { reportId: selectedReport.id } });
       if (res.success && res.report) {
-        toast.success("Review started", {
-          description: `Case ${selectedReport.id} is now under HOD review. Faculty notified.`,
+        toast.success("Investigation Started", {
+          description: `Case #${selectedReport.id} is now under HOD review. Faculty & Student notified.`,
         });
         setSelectedReport(res.report);
-        loadData();
+        loadData(true);
+        // Refresh audit history
+        const histRes = await getViolationAuditHistoryApi({ data: { reportId: selectedReport.id } });
+        if (histRes.success) setAuditHistory(histRes.history);
       } else {
-        toast.error(res.error || "Failed to start review.");
+        toast.error(res.error || "Failed to start investigation.");
       }
     } catch (err: any) {
-      toast.error(err.message || "Failed to start review.");
+      toast.error(err.message || "Failed to start investigation.");
     } finally {
       setSubmittingAction(false);
     }
@@ -207,17 +204,28 @@ export default function HODViolationsPage() {
     if (!selectedReport || !resolveRemarks.trim()) return;
     setSubmittingAction(true);
     try {
+      const finalRemarks = investigationNotes.trim()
+        ? `[HOD Notes: ${investigationNotes.trim()}] Resolution: ${resolveRemarks.trim()}`
+        : resolveRemarks.trim();
+
       const res = await resolveViolationReportApi({
-        data: { reportId: selectedReport.id, remarks: resolveRemarks.trim() },
+        data: {
+          reportId: selectedReport.id,
+          remarks: finalRemarks,
+        },
       });
+
       if (res.success && res.report) {
-        toast.success("Violation case resolved", {
-          description: `Resolution recorded for case ${selectedReport.id}. Faculty and Student notified.`,
+        toast.success("Case Resolved", {
+          description: `Violation #${selectedReport.id} resolved. Student and Faculty notified.`,
         });
+        setSelectedReport(res.report);
         setResolveOpen(false);
         setResolveRemarks("");
-        setSelectedReport(res.report);
-        loadData();
+        loadData(true);
+        // Refresh audit history
+        const histRes = await getViolationAuditHistoryApi({ data: { reportId: selectedReport.id } });
+        if (histRes.success) setAuditHistory(histRes.history);
       } else {
         toast.error(res.error || "Failed to resolve case.");
       }
@@ -232,47 +240,33 @@ export default function HODViolationsPage() {
     if (!selectedReport || !dismissReason.trim()) return;
     setSubmittingAction(true);
     try {
+      const finalReason = investigationNotes.trim()
+        ? `[HOD Notes: ${investigationNotes.trim()}] Dismissal Reason: ${dismissReason.trim()}`
+        : dismissReason.trim();
+
       const res = await dismissViolationReportApi({
-        data: { reportId: selectedReport.id, dismissalReason: dismissReason.trim() },
+        data: {
+          reportId: selectedReport.id,
+          dismissalReason: finalReason,
+        },
       });
+
       if (res.success && res.report) {
-        toast.success("Violation report dismissed", {
-          description: `Case ${selectedReport.id} dismissed. Faculty and Student notified.`,
+        toast.success("Case Dismissed", {
+          description: `Violation #${selectedReport.id} dismissed. Faculty reporter notified.`,
         });
+        setSelectedReport(res.report);
         setDismissOpen(false);
         setDismissReason("");
-        setSelectedReport(res.report);
-        loadData();
+        loadData(true);
+        // Refresh audit history
+        const histRes = await getViolationAuditHistoryApi({ data: { reportId: selectedReport.id } });
+        if (histRes.success) setAuditHistory(histRes.history);
       } else {
         toast.error(res.error || "Failed to dismiss report.");
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to dismiss report.");
-    } finally {
-      setSubmittingAction(false);
-    }
-  }
-
-  async function handleEscalateSubmit() {
-    if (!selectedReport || !escalateReason.trim()) return;
-    setSubmittingAction(true);
-    try {
-      const res = await escalateViolationReportApi({
-        data: { reportId: selectedReport.id, escalationReason: escalateReason.trim() },
-      });
-      if (res.success && res.report) {
-        toast.success("Incident escalated to Admin", {
-          description: `Critical case ${selectedReport.id} escalated to Institutional Admin.`,
-        });
-        setEscalateOpen(false);
-        setEscalateReason("");
-        setSelectedReport(res.report);
-        loadData();
-      } else {
-        toast.error(res.error || "Failed to escalate incident.");
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to escalate incident.");
     } finally {
       setSubmittingAction(false);
     }
@@ -299,10 +293,10 @@ export default function HODViolationsPage() {
       <div className="space-y-6">
         <PageHeader
           title="HOD Incident & Violation Management"
-          description={`Department Discipline Oversight & Investigation Queue (${userDept} Department)`}
+          description={`Department Disciplinary Authority & Investigation Console (${userDept} Department)`}
           breadcrumb={[
             { label: "HOD Portal", to: "/hod/dashboard" },
-            { label: "Violations & Incidents" },
+            { label: "Violations & Cases" },
           ]}
           actions={
             <div className="flex items-center gap-3">
@@ -323,17 +317,17 @@ export default function HODViolationsPage() {
 
         {/* Critical Incidents Warning Banner */}
         {hasCriticalIncidents && (
-          <div className="rounded-2xl border-2 border-red-500/80 bg-red-50/90 dark:bg-red-950/40 p-4 sm:p-5 flex items-center justify-between gap-4 shadow-sm animate-pulse">
+          <div className="rounded-2xl border-2 border-red-500/80 bg-red-50/90 dark:bg-red-950/40 p-4 sm:p-5 flex items-center justify-between gap-4 shadow-xs animate-pulse">
             <div className="flex items-center gap-3.5">
               <span className="grid size-10 place-items-center rounded-xl bg-red-600 text-white shadow-xs">
                 <ShieldAlert className="size-6" />
               </span>
               <div>
                 <h3 className="text-sm font-bold text-red-900 dark:text-red-300 uppercase tracking-wide">
-                  🚨 CRITICAL INCIDENTS REQUIRE IMMEDIATE ATTENTION
+                  🚨 CRITICAL INCIDENTS REQUIRE IMMEDIATE HOD ATTENTION
                 </h3>
                 <p className="text-xs text-red-700 dark:text-red-400 mt-0.5">
-                  There are <strong>{stats?.criticalIncidents}</strong> critical or suspected violence report(s) awaiting your review in the {userDept} department queue.
+                  There are <strong>{stats?.criticalIncidents}</strong> critical or suspected violence report(s) awaiting your final review in the {userDept} department queue.
                 </p>
               </div>
             </div>
@@ -350,15 +344,14 @@ export default function HODViolationsPage() {
           </div>
         )}
 
-        {/* 8-Metric KPI Grid */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+        {/* KPI Ribbon (7 Metrics) */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
           {[
             { label: "Total Reports", value: stats?.totalReports ?? 0, color: "text-foreground", bg: "bg-muted/40" },
-            { label: "New / Pending", value: stats?.newReports ?? 0, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50/60 dark:bg-amber-950/20" },
+            { label: "New Reports", value: stats?.newReports ?? 0, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50/60 dark:bg-amber-950/20" },
             { label: "Under Review", value: stats?.underReview ?? 0, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50/60 dark:bg-blue-950/20" },
             { label: "High Severity", value: stats?.highSeverity ?? 0, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50/60 dark:bg-orange-950/20" },
             { label: "Critical", value: stats?.criticalIncidents ?? 0, color: "text-red-600 dark:text-red-400", bg: "bg-red-50/60 dark:bg-red-950/20" },
-            { label: "Violence", value: stats?.violenceReports ?? 0, color: "text-rose-700 dark:text-rose-400", bg: "bg-rose-50/60 dark:bg-rose-950/20" },
             { label: "Resolved", value: stats?.resolved ?? 0, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50/60 dark:bg-emerald-950/20" },
             { label: "Dismissed", value: stats?.dismissed ?? 0, color: "text-muted-foreground", bg: "bg-muted/30" },
           ].map((kpi) => (
@@ -378,14 +371,13 @@ export default function HODViolationsPage() {
             {/* Queue Tabs */}
             <div className="flex flex-wrap items-center gap-1.5 p-1 bg-muted/60 rounded-xl">
               {[
+                { id: "ALL", label: "All Cases" },
                 { id: "NEW", label: "New Reports" },
                 { id: "UNDER_REVIEW", label: "Under Review" },
-                { id: "ESCALATED", label: "Escalated" },
                 { id: "CRITICAL", label: "Critical" },
                 { id: "VIOLENCE", label: "Violence" },
                 { id: "RESOLVED", label: "Resolved" },
                 { id: "DISMISSED", label: "Dismissed" },
-                { id: "ALL", label: "All Queue" },
               ].map((q) => (
                 <button
                   key={q.id}
@@ -404,7 +396,7 @@ export default function HODViolationsPage() {
 
             <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
               <Building2 className="size-3.5 text-primary" />
-              <span>Department: <strong className="text-foreground">{userDept}</strong></span>
+              <span>Department Isolation: <strong className="text-foreground">{userDept}</strong> (Server Enforced)</span>
             </div>
           </div>
 
@@ -452,50 +444,30 @@ export default function HODViolationsPage() {
               </Select>
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-10 text-xs rounded-xl border-border hover:bg-accent"
-              onClick={() => {
-                setSelectedQueue("NEW");
-                setSeverityFilter("ALL");
-                setViolationTypeFilter("ALL");
-                setSearchQuery("");
-                loadData();
-              }}
-            >
-              <RotateCcw className="size-3.5 mr-1.5" /> Reset Filters
-            </Button>
+            <div className="flex items-center justify-end text-xs text-muted-foreground font-medium">
+              Showing <strong className="text-foreground mx-1">{filteredReports.length}</strong> case(s)
+            </div>
           </div>
         </div>
 
-        {/* Violation Reports Table */}
+        {/* Violations Table Queue */}
         <div className="card-surface rounded-2xl border border-border overflow-hidden shadow-xs">
-          <div className="px-6 py-4 border-b border-divider flex items-center justify-between bg-muted/20">
-            <div>
-              <h2 className="text-sm font-bold text-foreground">Discipline & Violation Cases Queue</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Showing {filteredReports.length} report(s) strictly scoped to {userDept} Department.
-              </p>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="p-12 text-center text-xs text-muted-foreground">
-              Loading department violation cases...
+          {loading && reports.length === 0 ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             </div>
           ) : filteredReports.length === 0 ? (
-            <div className="p-12 text-center">
-              <CheckCircle2 className="size-10 text-emerald-500 mx-auto" />
-              <h3 className="mt-3 font-bold text-foreground">No reports found</h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                There are no violation reports matching the current queue and filter criteria.
+            <div className="text-center py-16 space-y-2">
+              <ShieldCheck className="size-10 text-emerald-500 mx-auto" />
+              <p className="text-sm font-bold text-foreground">No Violation Reports Found</p>
+              <p className="text-xs text-muted-foreground">
+                No reports match the selected filters for {userDept} department.
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead className="border-b border-divider bg-muted/40 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-muted/40 border-b border-border text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   <tr>
                     <th className="py-3.5 px-4">Case / Student</th>
                     <th className="py-3.5 px-4">Violation Category</th>
@@ -540,7 +512,7 @@ export default function HODViolationsPage() {
                           <span className="font-semibold text-foreground block">
                             {report.violation_type}
                           </span>
-                          <span className="text-[10px] text-muted-foreground">ID: {report.id}</span>
+                          <span className="text-[10px] text-muted-foreground">ID: #{report.id}</span>
                         </td>
 
                         <td className="py-3.5 px-4">
@@ -584,26 +556,27 @@ export default function HODViolationsPage() {
                         <td className="py-3.5 px-4">
                           <span
                             className={cn(
-                              "inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase",
+                              "inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider",
                               report.status === "resolved" && "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
                               report.status === "dismissed" && "bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300",
                               report.status === "under_review" && "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
                               report.status === "reported" && "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-                              report.status === "escalated" && "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300",
                             )}
                           >
-                            {report.status.replace("_", " ")}
+                            {report.status === "reported" ? "REPORTED" : report.status.replace("_", " ")}
                           </span>
                         </td>
 
                         <td className="py-3.5 px-4 text-right">
                           <Button
+                            asChild
                             size="sm"
                             variant="outline"
                             className="h-8 text-xs font-semibold rounded-xl"
-                            onClick={() => handleOpenDrawer(report)}
                           >
-                            <Eye className="size-3.5 mr-1" /> Investigate
+                            <Link to="/reports/$reportId" params={{ reportId: report.id }}>
+                              <Eye className="size-3.5 mr-1" /> Open Case
+                            </Link>
                           </Button>
                         </td>
                       </tr>
@@ -615,240 +588,430 @@ export default function HODViolationsPage() {
           )}
         </div>
 
-        {/* Investigation Sheet / Drawer */}
+        {/* REDESIGNED ENTERPRISE HOD CASE INVESTIGATION DRAWER */}
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <SheetContent className="sm:max-w-xl overflow-y-auto space-y-6">
+          <SheetContent className="sm:max-w-2xl overflow-y-auto p-0 flex flex-col justify-between">
             {selectedReport && (
-              <>
-                <SheetHeader>
+              <div className="flex-1 flex flex-col min-h-0">
+                {/* STICKY HEADER */}
+                <div className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur-xs px-6 py-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <span className="text-[11px] font-mono font-bold tracking-wider text-muted-foreground uppercase">
                       CASE INVESTIGATION #{selectedReport.id}
                     </span>
                     <span
                       className={cn(
-                        "inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase",
-                        selectedReport.status === "resolved" && "bg-emerald-100 text-emerald-800",
-                        selectedReport.status === "dismissed" && "bg-zinc-200 text-zinc-800",
-                        selectedReport.status === "under_review" && "bg-blue-100 text-blue-800",
-                        selectedReport.status === "reported" && "bg-amber-100 text-amber-800",
-                        selectedReport.status === "escalated" && "bg-purple-100 text-purple-800",
+                        "px-3 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider shadow-2xs",
+                        selectedReport.status === "resolved" && "bg-emerald-500 text-white",
+                        selectedReport.status === "dismissed" && "bg-zinc-600 text-white",
+                        selectedReport.status === "under_review" && "bg-blue-600 text-white",
+                        selectedReport.status === "reported" && "bg-amber-500 text-white",
                       )}
                     >
-                      {selectedReport.status.replace("_", " ")}
+                      {selectedReport.status === "reported" ? "REPORTED" : selectedReport.status.replace("_", " ")}
                     </span>
                   </div>
-                  <SheetTitle className="text-lg font-bold text-foreground">
+                  <h2 className="text-base font-bold text-foreground">
                     {selectedReport.violation_type}
-                  </SheetTitle>
-                  <SheetDescription className="text-xs">
-                    Reported by {selectedReport.reported_by} on{" "}
-                    {new Date(selectedReport.created_at).toLocaleString("en-IN")}
-                  </SheetDescription>
-                </SheetHeader>
-
-                {/* Section A: Student Information */}
-                <div className="p-4 rounded-2xl border border-border bg-muted/20 space-y-3">
-                  <div className="flex items-center gap-2 border-b border-divider pb-2">
-                    <User className="size-4 text-primary" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                      STUDENT INFORMATION
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-muted-foreground block text-[10px]">Name</span>
-                      <span className="font-bold text-foreground">{selectedReport.student_name}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-[10px]">Roll Number</span>
-                      <span className="font-bold text-foreground">{selectedReport.student_code}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-[10px]">Department</span>
-                      <span className="font-bold text-foreground">{selectedReport.department}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-[10px]">Year / Section</span>
-                      <span className="font-bold text-foreground">{selectedReport.year_section}</span>
-                    </div>
-                  </div>
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    Reported by <strong className="text-foreground">{selectedReport.reported_by}</strong> &bull;{" "}
+                    {new Date(selectedReport.created_at).toLocaleString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
                 </div>
 
-                {/* Section B: Academic Timetable Snapshot (Historical Immutability) */}
-                <div className="p-4 rounded-2xl border border-blue-200/60 bg-blue-50/40 dark:bg-blue-950/20 space-y-3">
-                  <div className="flex items-center justify-between border-b border-blue-200/60 pb-2">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="size-4 text-blue-600 dark:text-blue-400" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                        HISTORICAL TIMETABLE SNAPSHOT
+                {/* DRAWER BODY CONTENT */}
+                <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+                  {/* SECTION 1 — STUDENT INFORMATION */}
+                  <div className="card-surface p-4 rounded-2xl border border-border shadow-2xs space-y-3">
+                    <div className="flex items-center gap-2 border-b border-divider pb-2.5">
+                      <User className="size-4 text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                        SECTION 1 — STUDENT INFORMATION
                       </span>
                     </div>
-                    <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">
-                      Immutable Record
-                    </span>
+                    <div className="flex items-start gap-4 pt-1">
+                      <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-sm font-black text-primary border border-primary/20">
+                        {selectedReport.student_name.slice(0, 2).toUpperCase()}
+                      </span>
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 text-xs flex-1">
+                        <div>
+                          <span className="text-[10px] font-semibold text-muted-foreground block uppercase">
+                            Student Name
+                          </span>
+                          <span className="font-bold text-foreground text-sm">{selectedReport.student_name}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-semibold text-muted-foreground block uppercase">
+                            Roll Number
+                          </span>
+                          <span className="font-bold font-mono text-primary">{selectedReport.student_code}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-semibold text-muted-foreground block uppercase">
+                            Department
+                          </span>
+                          <span className="font-bold text-foreground">{selectedReport.department}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-semibold text-muted-foreground block uppercase">
+                            Year / Section
+                          </span>
+                          <span className="font-bold text-foreground">{selectedReport.year_section}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-muted-foreground block text-[10px]">Scheduled Subject</span>
-                      <span className="font-bold text-foreground">{selectedReport.class_name}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-[10px]">Scheduled Room</span>
-                      <span className="font-bold text-foreground">{selectedReport.room}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-[10px]">Class Window</span>
-                      <span className="font-bold text-foreground">{selectedReport.scheduled_time}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-[10px]">Assigned Faculty</span>
-                      <span className="font-bold text-foreground">{selectedReport.scheduled_faculty || "—"}</span>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Section C: Incident Observation Details */}
-                <div className="p-4 rounded-2xl border border-border bg-muted/10 space-y-3">
-                  <div className="flex items-center gap-2 border-b border-divider pb-2">
-                    <MapPin className="size-4 text-primary" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                      FACULTY OBSERVATION
-                    </span>
+                  {/* SECTION 2 — HISTORICAL TIMETABLE SNAPSHOT */}
+                  <div className="p-4 rounded-2xl border border-blue-200/80 bg-blue-50/50 dark:bg-blue-950/20 shadow-2xs space-y-3">
+                    <div className="flex items-center justify-between border-b border-blue-200/80 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="size-4 text-blue-600 dark:text-blue-400" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-blue-800 dark:text-blue-300">
+                          SECTION 2 — HISTORICAL TIMETABLE SNAPSHOT
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 border border-blue-300">
+                        <Lock className="size-3" /> Immutable Record
+                      </span>
+                    </div>
+                    {selectedReport.class_name === "No Class Scheduled" || selectedReport.scheduled_time === "No Class Scheduled" ? (
+                      <div className="py-2 text-xs font-semibold text-muted-foreground italic">
+                        No class was scheduled at the time of the reported incident.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 text-xs">
+                        <div>
+                          <span className="text-[10px] font-semibold text-muted-foreground block uppercase">
+                            Scheduled Subject
+                          </span>
+                          <span className="font-bold text-foreground">{selectedReport.class_name}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-semibold text-muted-foreground block uppercase">
+                            Scheduled Room
+                          </span>
+                          <span className="font-bold text-foreground">{selectedReport.room}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-semibold text-muted-foreground block uppercase">
+                            Class Window
+                          </span>
+                          <span className="font-bold text-blue-700 dark:text-blue-300 font-mono">{selectedReport.scheduled_time}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-semibold text-muted-foreground block uppercase">
+                            Assigned Faculty
+                          </span>
+                          <span className="font-bold text-foreground">{selectedReport.scheduled_faculty || "—"}</span>
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-muted-foreground italic pt-1 border-t border-blue-200/50">
+                      🔒 Verified snapshot captured automatically at the time of reporting. Retains exact historical timetable identity.
+                    </p>
                   </div>
-                  <div className="space-y-2 text-xs">
-                    <div>
-                      <span className="text-muted-foreground block text-[10px]">Observed Location</span>
-                      <span className="font-semibold text-foreground">{selectedReport.location}</span>
+
+                  {/* SECTION 3 — FACULTY OBSERVATION */}
+                  <div className="card-surface p-4 rounded-2xl border border-border shadow-2xs space-y-3">
+                    <div className="flex items-center justify-between border-b border-divider pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="size-4 text-primary" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                          SECTION 3 — FACULTY OBSERVATION
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-semibold text-muted-foreground">
+                        Reported by: <strong className="text-foreground">{selectedReport.reported_by}</strong>
+                      </span>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground block text-[10px]">Observation Description</span>
-                      <p className="font-medium text-foreground bg-background p-2.5 rounded-xl border border-border mt-1">
-                        {selectedReport.remarks}
-                      </p>
-                    </div>
-                    {selectedReport.witness_notes && (
+                    <div className="space-y-3 text-xs">
                       <div>
-                        <span className="text-muted-foreground block text-[10px]">Witness / Additional Notes</span>
-                        <p className="font-medium text-foreground italic mt-0.5">{selectedReport.witness_notes}</p>
+                        <span className="text-[10px] font-semibold text-muted-foreground block uppercase">
+                          Observed Location
+                        </span>
+                        <span className="font-bold text-foreground">{selectedReport.location}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-semibold text-muted-foreground block uppercase">
+                          Observation Remarks
+                        </span>
+                        <div className="p-3 rounded-xl bg-muted/40 border border-border mt-1 font-medium text-foreground text-xs leading-relaxed">
+                          {selectedReport.remarks}
+                        </div>
+                      </div>
+                      {selectedReport.witness_notes && (
+                        <div>
+                          <span className="text-[10px] font-semibold text-muted-foreground block uppercase">
+                            Witness / Additional Notes
+                          </span>
+                          <p className="font-medium text-foreground italic mt-0.5 text-xs">
+                            {selectedReport.witness_notes}
+                          </p>
+                        </div>
+                      )}
+                      {selectedReport.evidence && (
+                        <div className="space-y-2 pt-2 border-t border-divider">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                              <ImageIcon className="size-3 text-primary" /> Evidence Photo / File Attachment
+                            </span>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-[11px] font-bold rounded-lg border-primary/40 text-primary hover:bg-primary/10 gap-1.5"
+                              onClick={() => downloadEvidenceImage(selectedReport.evidence!, selectedReport.id)}
+                            >
+                              <Download className="size-3" /> Download Evidence Photo
+                            </Button>
+                          </div>
+
+                          {selectedReport.evidence.startsWith("data:") ? (
+                            <div className="p-2.5 rounded-xl bg-background border border-border flex flex-col items-center gap-2">
+                              <img
+                                src={selectedReport.evidence}
+                                alt="Incident Evidence"
+                                className="max-h-64 w-auto rounded-lg object-contain border border-border shadow-2xs"
+                              />
+                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                <span>📷 Captured Evidence Photo</span>
+                                <span>•</span>
+                                <button
+                                  type="button"
+                                  onClick={() => downloadEvidenceImage(selectedReport.evidence!, selectedReport.id)}
+                                  className="text-primary font-bold hover:underline cursor-pointer"
+                                >
+                                  Click to Download Original Image (.png)
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/40 border border-border">
+                              <span className="text-xs font-semibold text-foreground truncate">
+                                📎 Attached: {selectedReport.evidence}
+                              </span>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs font-bold rounded-lg"
+                                onClick={() => downloadEvidenceImage(selectedReport.evidence!, selectedReport.id)}
+                              >
+                                <Download className="size-3 mr-1" /> Download
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* SECTION 4 — STUDENT EXPLANATION */}
+                  <div className="card-surface p-4 rounded-2xl border border-border shadow-2xs space-y-3">
+                    <div className="flex items-center justify-between border-b border-divider pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <FileText className="size-4 text-primary" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                          SECTION 4 — STUDENT EXPLANATION
+                        </span>
+                      </div>
+                      {selectedReport.explanation ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                          <Check className="size-3" /> SUBMITTED
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                          Awaiting Response
+                        </span>
+                      )}
+                    </div>
+
+                    {selectedReport.explanation ? (
+                      <div className="space-y-3 text-xs">
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium">
+                          <span>Submitted on: {selectedReport.explanation_submitted_at ? new Date(selectedReport.explanation_submitted_at).toLocaleString("en-IN") : "Recorded"}</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/80 text-foreground font-medium leading-relaxed">
+                          "{selectedReport.explanation}"
+                        </div>
+                        {selectedReport.evidence && (
+                          <div className="pt-1 space-y-2">
+                            <span className="text-[10px] font-semibold text-muted-foreground block uppercase">
+                              Student Supporting Evidence
+                            </span>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs font-bold rounded-xl border-emerald-300 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100/50 gap-1.5"
+                              onClick={() => downloadEvidenceImage(selectedReport.evidence!, selectedReport.id)}
+                            >
+                              <Download className="size-3.5" /> Download Student Evidence File
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-xl bg-muted/30 border border-border text-center space-y-1">
+                        <Info className="size-5 text-muted-foreground/60 mx-auto" />
+                        <p className="text-xs font-bold text-muted-foreground">No explanation submitted yet.</p>
+                        <p className="text-[11px] text-subtle-foreground">
+                          The student has not yet submitted an official statement for this case. HOD may proceed with investigation.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* SECTION 5 — HOD INVESTIGATION (EDITABLE BY HOD) */}
+                  <div className="p-4 rounded-2xl border border-primary/30 bg-primary/5 shadow-2xs space-y-3">
+                    <div className="flex items-center gap-2 border-b border-primary/20 pb-2.5">
+                      <FileCheck className="size-4 text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                        SECTION 5 — HOD INVESTIGATION & NOTES
+                      </span>
+                    </div>
+                    <div className="space-y-3 text-xs">
+                      <div>
+                        <Label htmlFor="hod-notes" className="text-xs font-bold text-foreground block mb-1">
+                          HOD Investigation Notes
+                        </Label>
+                        <Textarea
+                          id="hod-notes"
+                          rows={3}
+                          value={investigationNotes}
+                          onChange={(e) => setInvestigationNotes(e.target.value)}
+                          placeholder="Record HOD internal investigation observations, mentor discussions, or witness verification notes..."
+                          disabled={selectedReport.status === "resolved" || selectedReport.status === "dismissed"}
+                          className="text-xs rounded-xl bg-background border-border"
+                        />
+                      </div>
+                      {selectedReport.decision && (
+                        <div className="p-3 rounded-xl bg-card border border-border space-y-1">
+                          <span className="text-[10px] font-bold uppercase text-muted-foreground block">
+                            Final Recorded Decision ({selectedReport.decision_by})
+                          </span>
+                          <p className="text-xs font-semibold text-foreground">{selectedReport.decision}</p>
+                          <span className="text-[10px] text-muted-foreground block">
+                            Decided at: {new Date(selectedReport.decision_at || selectedReport.created_at).toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* SECTION 7 — CHRONOLOGICAL CASE AUDIT HISTORY */}
+                  <div className="card-surface p-4 rounded-2xl border border-border shadow-2xs space-y-3">
+                    <div className="flex items-center gap-2 border-b border-divider pb-2.5">
+                      <History className="size-4 text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                        SECTION 7 — CASE AUDIT HISTORY
+                      </span>
+                    </div>
+
+                    {historyLoading ? (
+                      <span className="text-xs text-muted-foreground">Loading audit trail...</span>
+                    ) : auditHistory.length === 0 ? (
+                      <span className="text-xs text-muted-foreground">Initial report filed.</span>
+                    ) : (
+                      <div className="space-y-3 text-xs pt-1">
+                        {auditHistory.map((item) => (
+                          <div key={item.id} className="flex items-start gap-3 border-l-2 border-primary/50 pl-3">
+                            <div className="space-y-0.5">
+                              <span className="font-bold text-foreground block">
+                                ● {item.action.replace(/_/g, " ").toUpperCase()}
+                              </span>
+                              <span className="text-[11px] text-muted-foreground block">
+                                By {item.actor} ({item.actorRole}) &bull; {new Date(item.timestamp).toLocaleString("en-IN")}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Section D: HOD Decision / Status Banner if resolved */}
-                {selectedReport.decision && (
-                  <div className="p-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="size-4 text-emerald-600" />
-                      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                        HOD DECISION RECORDED ({selectedReport.decision_by})
-                      </span>
-                    </div>
-                    <p className="text-xs text-foreground font-medium">{selectedReport.decision}</p>
-                    <span className="text-[10px] text-muted-foreground block">
-                      Decided at: {new Date(selectedReport.decision_at || selectedReport.created_at).toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                )}
-
-                {/* Section E: Action Workflow */}
-                <div className="pt-3 border-t border-divider space-y-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-                    HOD ACTIONS
+                {/* STICKY BOTTOM SECTION 6 — FINAL DECISION AREA */}
+                <div className="sticky bottom-0 z-20 border-t border-border bg-card p-4 space-y-2 shadow-lg">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    SECTION 6 — CASE DECISION & ACTIONS
                   </span>
 
                   {selectedReport.status === "reported" && (
                     <Button
-                      className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl"
+                      className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs"
                       onClick={handleStartReview}
                       loading={submittingAction}
                     >
-                      <Search className="size-4 mr-2" /> Start Case Investigation
+                      <Search className="size-4 mr-2" /> [ Start Investigation ]
                     </Button>
                   )}
 
                   {selectedReport.status === "under_review" && (
                     <div className="grid grid-cols-2 gap-3">
                       <Button
-                        className="h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl"
+                        className="h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs"
                         onClick={() => setResolveOpen(true)}
                         disabled={submittingAction}
                       >
-                        <CheckCircle2 className="size-4 mr-2" /> Resolve Case
+                        <CheckCircle2 className="size-4 mr-2" /> [ Resolve Case ]
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-11 border-border text-foreground hover:bg-accent font-bold rounded-xl"
+                        className="h-11 border-zinc-300 dark:border-zinc-700 text-foreground hover:bg-accent font-bold rounded-xl text-xs"
                         onClick={() => setDismissOpen(true)}
                         disabled={submittingAction}
                       >
-                        <XCircle className="size-4 mr-2" /> Dismiss Report
+                        <XCircle className="size-4 mr-2" /> [ Dismiss Case ]
                       </Button>
                     </div>
                   )}
 
-                  {selectedReport.status !== "resolved" && selectedReport.status !== "dismissed" && (
-                    <Button
-                      variant="destructive"
-                      className="w-full h-10 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-xs"
-                      onClick={() => setEscalateOpen(true)}
-                      disabled={submittingAction}
-                    >
-                      <AlertTriangle className="size-3.5 mr-2" /> Escalate to Institutional Admin
-                    </Button>
-                  )}
-                </div>
-
-                {/* Section F: Chronological Audit Trail */}
-                <div className="p-4 rounded-2xl border border-border bg-muted/10 space-y-3">
-                  <div className="flex items-center gap-2 border-b border-divider pb-2">
-                    <History className="size-4 text-primary" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                      CASE AUDIT HISTORY
-                    </span>
-                  </div>
-
-                  {historyLoading ? (
-                    <span className="text-xs text-muted-foreground">Loading audit trail...</span>
-                  ) : auditHistory.length === 0 ? (
-                    <span className="text-xs text-muted-foreground">Initial report filed.</span>
-                  ) : (
-                    <div className="space-y-3 text-xs">
-                      {auditHistory.map((item) => (
-                        <div key={item.id} className="flex items-start gap-2.5 border-l-2 border-primary/40 pl-3">
-                          <div>
-                            <span className="font-bold text-foreground block">
-                              {item.action.replace(/_/g, " ").toUpperCase()}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground">
-                              By {item.actor} ({item.actorRole}) • {new Date(item.timestamp).toLocaleString("en-IN")}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                  {(selectedReport.status === "resolved" || selectedReport.status === "dismissed") && (
+                    <div className="p-3 rounded-xl bg-muted/40 border border-border text-center flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {selectedReport.status === "resolved" ? (
+                          <CheckCircle2 className="size-4 text-emerald-600" />
+                        ) : (
+                          <XCircle className="size-4 text-zinc-500" />
+                        )}
+                        <span className="text-xs font-bold uppercase">
+                          Case Closed ({selectedReport.status})
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-semibold text-muted-foreground">
+                        Final Authority: HOD {userDept}
+                      </span>
                     </div>
                   )}
                 </div>
-              </>
+              </div>
             )}
           </SheetContent>
         </Sheet>
 
-        {/* Resolve Modal */}
+        {/* Resolve Confirmation Modal */}
         <Dialog open={resolveOpen} onOpenChange={setResolveOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-emerald-600">
+              <DialogTitle className="flex items-center gap-2 text-emerald-600 font-bold">
                 <CheckCircle2 className="size-5" /> Resolve Violation Case
               </DialogTitle>
-              <DialogDescription>
-                Provide official HOD resolution remarks. This will resolve the case and notify both the faculty reporter and the student.
+              <DialogDescription className="text-xs">
+                Provide official HOD resolution decision reason. This will resolve the case and notify both the faculty reporter and the student.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-2">
-              <Label htmlFor="res-remarks" className="text-xs font-medium">
-                HOD Resolution Remarks *
+              <Label htmlFor="res-remarks" className="text-xs font-bold text-foreground">
+                Mandatory Decision Reason *
               </Label>
               <Textarea
                 id="res-remarks"
@@ -862,7 +1025,7 @@ export default function HODViolationsPage() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setResolveOpen(false)}>Cancel</Button>
               <Button
-                className="bg-emerald-600 hover:bg-emerald-700 font-bold"
+                className="bg-emerald-600 hover:bg-emerald-700 font-bold text-white"
                 onClick={handleResolveSubmit}
                 loading={submittingAction}
                 disabled={!resolveRemarks.trim()}
@@ -873,19 +1036,19 @@ export default function HODViolationsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Dismiss Modal */}
+        {/* Dismiss Confirmation Modal */}
         <Dialog open={dismissOpen} onOpenChange={setDismissOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
+              <DialogTitle className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-bold">
                 <XCircle className="size-5" /> Dismiss Violation Report
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-xs">
                 A mandatory dismissal reason is required. The faculty reporter will be notified with this reason.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-2">
-              <Label htmlFor="dis-reason" className="text-xs font-medium">
+              <Label htmlFor="dis-reason" className="text-xs font-bold text-foreground">
                 Mandatory Dismissal Reason *
               </Label>
               <Textarea
@@ -905,45 +1068,7 @@ export default function HODViolationsPage() {
                 loading={submittingAction}
                 disabled={!dismissReason.trim()}
               >
-                Dismiss Report
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Escalate Modal */}
-        <Dialog open={escalateOpen} onOpenChange={setEscalateOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-red-600">
-                <AlertTriangle className="size-5" /> Escalate to Institutional Admin
-              </DialogTitle>
-              <DialogDescription>
-                Escalate critical disciplinary, violence, or high-severity cases directly to the Institutional Administration dashboard.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3 py-2">
-              <Label htmlFor="esc-reason" className="text-xs font-medium">
-                Reason for Admin Escalation *
-              </Label>
-              <Textarea
-                id="esc-reason"
-                rows={4}
-                value={escalateReason}
-                onChange={(e) => setEscalateReason(e.target.value)}
-                placeholder="e.g. Suspected physical violence requires campus security review and institutional disciplinary committee action."
-                className="text-xs rounded-xl"
-              />
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEscalateOpen(false)}>Cancel</Button>
-              <Button
-                className="bg-red-600 hover:bg-red-700 font-bold"
-                onClick={handleEscalateSubmit}
-                loading={submittingAction}
-                disabled={!escalateReason.trim()}
-              >
-                Confirm Escalation
+                Confirm Dismissal
               </Button>
             </DialogFooter>
           </DialogContent>

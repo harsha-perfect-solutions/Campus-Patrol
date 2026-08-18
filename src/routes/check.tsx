@@ -288,15 +288,34 @@ export function CheckStudentPage() {
         ? "authorized"
         : "unauthorized";
 
-  const [violationType, setViolationType] = useState("Unauthorized Class Movement");
+  const [violationType, setViolationType] = useState("Suspected Violence / Physical Altercation");
   const [severity, setSeverity] = useState<"Low" | "Medium" | "High" | "Critical">("Medium");
   const [witnessNotes, setWitnessNotes] = useState("");
+  const [incidentTime, setIncidentTime] = useState("");
+
+  const handleOpenReportForm = () => {
+    const nowStr = new Date().toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    setIncidentTime(nowStr);
+    if (!location) setLocation("Corridor");
+    if (!violationType) {
+      setViolationType(slot ? "Unauthorized Class Movement" : "Suspected Violence / Physical Altercation");
+    }
+    setFormOpen(true);
+  };
 
   const submitReport = async () => {
-    if (!result?.student || !slot) return;
+    if (!result?.student) return;
+    if (remarks.trim().length < 10) {
+      toast.error("Observation description must be at least 10 characters.");
+      return;
+    }
     setSubmitting(true);
     const now = new Date();
-    const time = now.toLocaleTimeString("en-IN", {
+    const time = incidentTime || now.toLocaleTimeString("en-IN", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
@@ -310,18 +329,18 @@ export function CheckStudentPage() {
           studentName: result.student.name,
           department: result.student.department,
           yearSection: `${result.student.year} • ${result.student.section}`,
-          className: slot.subject,
-          subjectCode: slot.code || undefined,
-          scheduledTime: `${slot.start} — ${slot.end}`,
-          room: slot.room,
-          scheduledFaculty: slot.faculty || undefined,
+          className: slot ? slot.subject : "No Class Scheduled",
+          subjectCode: slot ? slot.code || undefined : undefined,
+          scheduledTime: slot ? `${slot.start} — ${slot.end}` : "No Class Scheduled",
+          room: slot ? slot.room : "N/A",
+          scheduledFaculty: slot ? slot.faculty || undefined : undefined,
           incidentTime: time,
-          location: location || "Campus Corridor",
+          location: location || "Corridor",
           violationType,
           severity,
-          remarks: remarks || "Observed in corridor outside scheduled classroom during lecture hours.",
+          remarks: remarks.trim(),
           witnessNotes: witnessNotes || undefined,
-          evidence: evidence || null,
+          evidence: photoPreview || evidence || null,
           semester: result.student.semester || 6,
         },
       });
@@ -336,17 +355,10 @@ export function CheckStudentPage() {
       setConfirmOpen(false);
       setFormOpen(false);
 
-      if (violationType.includes("Violence") || severity === "Critical") {
-        toast.error("🚨 Emergency Response Activated", {
-          description: `Emergency Case ${dbRes.report?.id} created for ${result.student.name} (${result.student.id}). Security Quick-Response, Department HOD, and Administration have been immediately dispatched.`,
-          duration: 8000,
-        });
-      } else {
-        toast.success("Incident Reported Successfully", {
-          description: `Case ${dbRes.report?.id} recorded for ${result.student.name} (${result.student.id}). Severity: ${severity} • Department HOD notified for review.`,
-          duration: 6000,
-        });
-      }
+      toast.success("Incident Reported Successfully", {
+        description: `Case #${dbRes.report?.id} has been submitted to the Department HOD.`,
+        duration: 6000,
+      });
       navigate({ to: "/faculty/reports" as any });
     } catch (err: any) {
       console.error("Violation submission failed:", err);
@@ -538,7 +550,7 @@ export function CheckStudentPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-5 text-xs font-medium text-muted-foreground self-end sm:self-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-red-200/40">
+            <div className="flex items-center gap-5 text-xs font-medium text-muted-foreground self-end sm:self-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-red-200/40">
               <div className="flex items-center gap-1.5">
                 <Clock className="size-3.5 text-muted-foreground" />
                 <div>
@@ -707,16 +719,6 @@ export function CheckStudentPage() {
                   </p>
                 </div>
               </div>
-              {!formOpen && (
-                <Button
-                  variant="destructive"
-                  size="lg"
-                  className="bg-red-600 hover:bg-red-700 text-white font-bold shadow-xs shrink-0 h-11 px-6 rounded-xl"
-                  onClick={() => setFormOpen(true)}
-                >
-                  <AlertTriangle className="size-4 mr-2" /> Report Violation
-                </Button>
-              )}
             </section>
           )}
 
@@ -745,30 +747,53 @@ export function CheckStudentPage() {
             </section>
           )}
 
-          {/* Report Form */}
-          {formOpen && slot && (
+          {/* Dedicated Faculty Incident Action Bar */}
+          {!formOpen && (
+            <section className="card-surface p-5 sm:p-6 rounded-2xl border border-border shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400">
+                  <AlertTriangle className="size-5" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">Faculty Incident Reporting</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Observed violence, disruptive behavior, or campus violation by this student? Report directly to HOD.
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                onClick={handleOpenReportForm}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold h-11 px-6 rounded-xl shadow-xs gap-2 shrink-0"
+              >
+                <AlertTriangle className="size-4" />
+                <span>[ REPORT INCIDENT ]</span>
+              </Button>
+            </section>
+          )}
+
+          {/* Report Incident Form */}
+          {formOpen && (
             <section className="card-surface rounded-2xl overflow-hidden border border-border shadow-md">
               <div className="border-b border-divider px-6 py-4 bg-muted/30">
                 <h2 className="text-base font-bold text-foreground">
-                  Report Unauthorized Movement
+                  Report Student Incident
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  Review the incident details and add your report before submitting.
+                  Record an observed incident and submit it to the Department HOD for review.
                 </p>
               </div>
               <div className="grid gap-6 p-6 lg:grid-cols-2">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Incident Information</h3>
+                  <h3 className="text-sm font-semibold text-foreground">Student Information</h3>
                   <dl className="mt-4 divide-y divide-divider text-xs sm:text-sm">
                     {[
-                      ["Student", result.student.name],
-                      ["Student ID", result.student.id],
+                      ["Student Name", result.student.name],
+                      ["Student ID / Roll Number", result.student.id],
                       ["Department", result.student.department],
                       ["Year / Section", `${result.student.year} • ${result.student.section}`],
-                      ["Current Class", slot.subject],
-                      ["Scheduled Time", `${slot.start} — ${slot.end}`],
-                      ["Room", slot.room],
-                      ["Incident Time", "10:42 AM"],
+                      ["Current Class Status", slot ? `${slot.subject} (${slot.start} — ${slot.end})` : "No Class Scheduled"],
+                      ["Incident Time", incidentTime || "10:42 AM"],
                       ["Reported By", activeFacultyName],
                     ].map(([k, v]) => (
                       <div key={k} className="flex items-center justify-between gap-4 py-2.5">
@@ -780,7 +805,7 @@ export function CheckStudentPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Report Details</h3>
+                  <h3 className="text-sm font-semibold text-foreground">Incident Details</h3>
                   <div className="mt-4 space-y-4">
                     <div>
                       <Label htmlFor="vtype" className="text-xs font-medium">
@@ -791,23 +816,26 @@ export function CheckStudentPage() {
                           <SelectValue placeholder="Select violation category" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Unauthorized Class Movement">
-                            Unauthorized Class Movement
-                          </SelectItem>
-                          <SelectItem value="Corridor Presence During Class">
-                            Corridor Presence During Class
-                          </SelectItem>
-                          <SelectItem value="Unauthorized Campus Movement">
-                            Unauthorized Campus Movement
-                          </SelectItem>
                           <SelectItem value="Suspected Violence / Physical Altercation">
                             ⚠️ Suspected Violence / Physical Altercation
                           </SelectItem>
-                          <SelectItem value="Verbal Altercation">
-                            Verbal Altercation / Misconduct
+                          <SelectItem value="Disruptive Behavior">
+                            Disruptive Behavior
                           </SelectItem>
-                          <SelectItem value="Disruptive Behaviour">
-                            Disruptive Behaviour
+                          <SelectItem value="Unauthorized Campus Activity">
+                            Unauthorized Campus Activity
+                          </SelectItem>
+                          <SelectItem value="Unauthorized Class Movement">
+                            Unauthorized Class Movement
+                          </SelectItem>
+                          <SelectItem value="Misconduct">
+                            Misconduct
+                          </SelectItem>
+                          <SelectItem value="Property Damage">
+                            Property Damage
+                          </SelectItem>
+                          <SelectItem value="Harassment / Intimidation">
+                            Harassment / Intimidation
                           </SelectItem>
                           <SelectItem value="Other">
                             Other Institutional Violation
@@ -829,10 +857,10 @@ export function CheckStudentPage() {
                             <SelectValue placeholder="Severity" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Low">Low (Informational / First Warning)</SelectItem>
-                            <SelectItem value="Medium">Medium (Standard Absence / Corridor)</SelectItem>
-                            <SelectItem value="High">High (Serious Misconduct / Escalation)</SelectItem>
-                            <SelectItem value="Critical">Critical (Immediate Security / Violence Alert)</SelectItem>
+                            <SelectItem value="Low">Low</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="High">High</SelectItem>
+                            <SelectItem value="Critical">Critical</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -846,7 +874,7 @@ export function CheckStudentPage() {
                             <SelectValue placeholder="Select location" />
                           </SelectTrigger>
                           <SelectContent>
-                            {locations.map((l) => (
+                            {["Classroom", "Laboratory", "Corridor", "Library", "Canteen", "Playground", "Parking Area", "Campus Entrance", "Other"].map((l) => (
                               <SelectItem key={l} value={l}>
                                 <span className="flex items-center gap-2">
                                   <MapPin className="size-4" aria-hidden /> {l}
@@ -859,15 +887,28 @@ export function CheckStudentPage() {
                     </div>
 
                     <div>
+                      <Label htmlFor="incident-time" className="text-xs font-medium">
+                        Incident Time *
+                      </Label>
+                      <Input
+                        id="incident-time"
+                        value={incidentTime}
+                        onChange={(e) => setIncidentTime(e.target.value)}
+                        placeholder="10:42 AM"
+                        className="mt-1.5 h-10 text-xs rounded-xl"
+                      />
+                    </div>
+
+                    <div>
                       <Label htmlFor="remarks" className="text-xs font-medium">
-                        Observation Details & Description *
+                        Observation Description * (min 10 characters)
                       </Label>
                       <Textarea
                         id="remarks"
                         rows={3}
                         value={remarks}
                         onChange={(e) => setRemarks(e.target.value)}
-                        placeholder="Describe what you observed (e.g. roaming in 2nd floor corridor while lecture is in progress)..."
+                        placeholder="Describe exactly what you observed, including what the student was doing, where it occurred, and any relevant circumstances."
                         className="mt-1.5 text-xs rounded-xl"
                       />
                     </div>
@@ -944,18 +985,23 @@ export function CheckStudentPage() {
                             <input
                               id="evidence-file-upload"
                               type="file"
-                              accept="image/*,.pdf,.doc,.docx"
+                              accept=".png,.jpg,.jpeg,image/png,image/jpeg"
                               className="sr-only"
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  setEvidence(file.name);
-                                  if (file.type.startsWith("image/")) {
-                                    const reader = new FileReader();
-                                    reader.onload = (ev) =>
-                                      setPhotoPreview(ev.target?.result as string);
-                                    reader.readAsDataURL(file);
+                                  const ext = file.name.split(".").pop()?.toLowerCase();
+                                  if (!ext || !["png", "jpg", "jpeg"].includes(ext)) {
+                                    toast.error("Invalid file format. Only PNG, JPG, and JPEG image files are allowed.");
+                                    return;
                                   }
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    const dataUrl = ev.target?.result as string;
+                                    setPhotoPreview(dataUrl);
+                                    setEvidence(dataUrl);
+                                  };
+                                  reader.readAsDataURL(file);
                                 }
                               }}
                             />
@@ -969,7 +1015,7 @@ export function CheckStudentPage() {
                       onClose={() => setCameraOpen(false)}
                       onCapture={(dataUrl, filename) => {
                         setPhotoPreview(dataUrl);
-                        setEvidence(filename);
+                        setEvidence(dataUrl);
                         toast.success(`Photo captured: ${filename}`);
                       }}
                     />
@@ -982,11 +1028,21 @@ export function CheckStudentPage() {
                 </Button>
                 <Button
                   variant="destructive"
-                  className="bg-red-600 hover:bg-red-700 rounded-xl"
-                  onClick={() => setConfirmOpen(true)}
-                  disabled={!location}
+                  className="bg-red-600 hover:bg-red-700 rounded-xl font-bold px-6"
+                  onClick={() => {
+                    if (remarks.trim().length < 10) {
+                      toast.error("Observation description must be at least 10 characters.");
+                      return;
+                    }
+                    if (!location) {
+                      toast.error("Please select or specify observed location.");
+                      return;
+                    }
+                    setConfirmOpen(true);
+                  }}
+                  disabled={remarks.trim().length < 10 || !location}
                 >
-                  <AlertTriangle className="size-4 mr-2" /> Confirm Observation
+                  <AlertTriangle className="size-4 mr-2" /> [ SUBMIT INCIDENT TO HOD ]
                 </Button>
               </div>
             </section>
@@ -1000,36 +1056,22 @@ export function CheckStudentPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600 font-black">
               <AlertTriangle className="size-5" />
-              {violationType.includes("Violence") || severity === "Critical"
-                ? "🚨 Confirm Campus Emergency Incident?"
-                : "Confirm Observation & Report Violation?"}
+              Submit Incident Report?
             </DialogTitle>
             <DialogDescription>
-              {violationType.includes("Violence") || severity === "Critical"
-                ? "You are reporting a serious institutional safety incident. Confirm that you directly observed this incident before submitting. This will immediately dispatch campus emergency alerts to HOD, Administration, and Security."
-                : "Are you sure you observed this student outside their scheduled class location? This will create an official case and alert the Department HOD."}
+              Submit this incident report to the Department HOD?
             </DialogDescription>
           </DialogHeader>
-
-          {/* Strong Warning Banner for Violence / Emergency */}
-          {(violationType.includes("Violence") || severity === "Critical") && (
-            <div className="p-3 bg-red-100 dark:bg-red-950/60 border border-red-300 dark:border-red-800 rounded-xl text-xs text-red-900 dark:text-red-200 font-bold space-y-1">
-              <p>⚠️ CRITICAL INSTITUTIONAL ACTION</p>
-              <p className="font-normal text-[11px] text-red-800 dark:text-red-300">
-                Never report violence unless explicitly verified. An emergency coordination file will be created.
-              </p>
-            </div>
-          )}
 
           <dl className="divide-y divide-divider text-xs sm:text-sm">
             {[
               ["Student", `${result?.student?.name} (${result?.student?.id})`],
               ["Department", result?.student?.department ?? "—"],
-              ["Scheduled Class", `${slot?.subject} (${slot?.start} – ${slot?.end})`],
-              ["Assigned Room", slot?.room ?? "—"],
+              ["Class Status", slot ? `${slot.subject} (${slot.start} – ${slot.end})` : "No Class Scheduled"],
               ["Violation Category", violationType],
               ["Severity Level", severity],
-              ["Observed Location", location || "Campus Corridor"],
+              ["Observed Location", location || "Corridor"],
+              ["Incident Time", incidentTime || "10:42 AM"],
             ].map(([k, v]) => (
               <div key={k} className="flex items-center justify-between gap-4 py-2">
                 <dt className="text-muted-foreground">{k}</dt>
@@ -1047,9 +1089,7 @@ export function CheckStudentPage() {
               onClick={submitReport}
               className="bg-red-600 hover:bg-red-700 font-bold"
             >
-              {violationType.includes("Violence") || severity === "Critical"
-                ? "🚨 Confirm Emergency Incident"
-                : "Confirm & Report"}
+              Submit Report
             </Button>
           </DialogFooter>
         </DialogContent>

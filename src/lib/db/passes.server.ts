@@ -38,7 +38,11 @@ export async function getActiveMovementPermission(
       WHERE UPPER(student_code) = $1
         AND status = 'approved'
         AND date = CURRENT_DATE
-        AND CURRENT_TIME BETWEEN valid_from AND valid_until
+        AND (
+          CURRENT_TIME BETWEEN valid_from AND valid_until
+          OR exit_at IS NOT NULL
+          OR early_exit_authorized = TRUE
+        )
       ORDER BY created_at DESC
       LIMIT 1;
     `;

@@ -202,6 +202,7 @@ export async function createViolationReport(
     `;
 
     const metadata = JSON.stringify({
+      event_message: "Incident reported by Faculty and submitted to HOD.",
       student_code: cleanCode,
       student_name: resolvedStudentName,
       location: input.location,

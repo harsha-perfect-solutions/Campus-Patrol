@@ -285,11 +285,36 @@ export async function createSecurityViolationReport(
   return { success: true, reportId };
 }
 
+async function ensureSecurityTableColumns(): Promise<void> {
+  try {
+    await db.query(`
+      ALTER TABLE movement_permissions ADD COLUMN IF NOT EXISTS early_exit_authorized BOOLEAN DEFAULT FALSE;
+      ALTER TABLE movement_permissions ADD COLUMN IF NOT EXISTS early_exit_by TEXT;
+      ALTER TABLE movement_permissions ADD COLUMN IF NOT EXISTS early_exit_by_id TEXT;
+      ALTER TABLE movement_permissions ADD COLUMN IF NOT EXISTS early_exit_at TIMESTAMPTZ;
+    `);
+  } catch (err) {
+    console.warn("[Security DB Warning] Column addition notice:", err);
+  }
+}
+
 export type VerificationResultPayload = {
   success: boolean;
   authorized: boolean;
+  timeState?: "BEFORE_VALIDITY" | "ACTIVE" | "EXPIRED" | "EARLY_EXIT_AUTHORIZED";
   resultStatus: string;
   failureReason?: string;
+  timeUntilStartMinutes?: number;
+  timeRemainingMinutes?: number;
+  serverCurrentTime?: string;
+  earlyExitDetails?: {
+    earlyExitAuthorized: boolean;
+    earlyExitBy?: string | null;
+    earlyExitById?: string | null;
+    earlyExitAt?: string | null;
+    actualExitAt?: string | null;
+    checkpoint?: string | null;
+  };
   student?: {
     name: string;
     studentCode: string;
@@ -305,6 +330,10 @@ export type VerificationResultPayload = {
     date: string;
     issuedBy: string;
     status: string;
+    exitAt?: string | null;
+    entryAt?: string | null;
+    earlyExitAuthorized?: boolean;
+    earlyExitBy?: string | null;
   };
   checkpoint?: string;
   verificationType?: "EXIT" | "ENTRY";
@@ -317,6 +346,7 @@ export async function verifyGatePass(
   payload: { passIdOrRollNo: string; checkpoint?: string }
 ): Promise<VerificationResultPayload> {
   await requireSecuritySession(session);
+  await ensureSecurityTableColumns();
 
   const rawInput = payload.passIdOrRollNo.trim();
   const checkpoint = session.assignedPost || session.department || payload.checkpoint || "Main Gate";
@@ -354,7 +384,11 @@ export async function verifyGatePass(
          verified_by,
          revoked_at::text,
          cancelled_at::text,
-         created_at::text
+         created_at::text,
+         early_exit_authorized,
+         early_exit_by,
+         early_exit_by_id,
+         early_exit_at::text
        FROM movement_permissions
        WHERE UPPER(id::text) = UPPER($1) OR UPPER(id::text) LIKE $2
        ORDER BY created_at DESC
@@ -483,7 +517,11 @@ export async function verifyGatePass(
          verified_by,
          revoked_at::text,
          cancelled_at::text,
-         created_at::text
+         created_at::text,
+         early_exit_authorized,
+         early_exit_by,
+         early_exit_by_id,
+         early_exit_at::text
        FROM movement_permissions
        WHERE UPPER(student_code) = UPPER($1)
        ORDER BY 
@@ -778,47 +816,154 @@ export async function verifyGatePass(
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const fromMinutes = parseTimeToMinutes(pass.valid_from);
   const untilMinutes = parseTimeToMinutes(pass.valid_until);
+  const serverCurrentTime = now.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
 
+  // Check if early exit was ALREADY authorized for this pass
+  if (pass.early_exit_authorized || (pass.exit_at && !pass.entry_at)) {
+    return {
+      success: true,
+      authorized: true,
+      timeState: "EARLY_EXIT_AUTHORIZED",
+      resultStatus: "EARLY EXIT AUTHORIZED",
+      serverCurrentTime,
+      student: {
+        name: student.name,
+        studentCode: student.student_code,
+        department: student.department,
+        yearSection: `${student.year || "3rd Year"} • Section ${student.section || "A"}`,
+      },
+      pass: {
+        id: pass.id,
+        passCode,
+        reason: pass.reason,
+        validFrom: pass.valid_from,
+        validUntil: pass.valid_until,
+        date: pass.date,
+        issuedBy: pass.issued_by,
+        status: "APPROVED",
+        exitAt: pass.exit_at,
+        earlyExitAuthorized: true,
+        earlyExitBy: pass.early_exit_by || pass.verified_by,
+      },
+      earlyExitDetails: {
+        earlyExitAuthorized: true,
+        earlyExitBy: pass.early_exit_by || pass.verified_by,
+        earlyExitById: pass.early_exit_by_id,
+        earlyExitAt: pass.early_exit_at || pass.exit_at,
+        actualExitAt: pass.exit_at,
+        checkpoint: pass.checkpoint || checkpoint,
+      },
+      checkpoint,
+      verificationType: "EXIT",
+      message: `Early exit authorized by ${pass.early_exit_by || pass.verified_by || "Security Officer"} at ${pass.exit_at || pass.early_exit_at || "Gate"}.`,
+      timestamp,
+    };
+  }
+
+  // CASE A: BEFORE VALIDITY (currentMinutes < fromMinutes)
   if (currentMinutes < fromMinutes) {
-    const reason = `Pass not yet valid (Valid from ${pass.valid_from}).`;
-    await recordAudit(false, "EXIT NOT AUTHORIZED", "EXIT", reason);
+    const timeUntilStart = fromMinutes - currentMinutes;
+    const timeUntilStartStr = timeUntilStart === 1 ? "1 minute" : `${timeUntilStart} minutes`;
+    const reason = `Pass not yet started. Scheduled start is ${pass.valid_from} (${timeUntilStartStr} from now).`;
+
+    await recordAudit(false, "PASS NOT STARTED", "EXIT", reason);
+
     return {
       success: true,
       authorized: false,
-      resultStatus: "EXIT NOT AUTHORIZED",
+      timeState: "BEFORE_VALIDITY",
+      resultStatus: "PASS NOT STARTED",
       failureReason: reason,
-      message: "Student is NOT authorized to exit the campus.",
+      timeUntilStartMinutes: timeUntilStart,
+      serverCurrentTime,
+      student: {
+        name: student.name,
+        studentCode: student.student_code,
+        department: student.department,
+        yearSection: `${student.year || "3rd Year"} • Section ${student.section || "A"}`,
+      },
+      pass: {
+        id: pass.id,
+        passCode,
+        reason: pass.reason,
+        validFrom: pass.valid_from,
+        validUntil: pass.valid_until,
+        date: pass.date,
+        issuedBy: pass.issued_by,
+        status: "APPROVED",
+      },
+      checkpoint,
+      verificationType: "EXIT",
+      message: `Pass starts in ${timeUntilStartStr} (${pass.valid_from} – ${pass.valid_until}).`,
       timestamp,
     };
   }
 
-  if (currentMinutes > untilMinutes) {
-    const reason = `Pass expired at ${pass.valid_until}.`;
-    await recordAudit(false, "EXIT NOT AUTHORIZED", "EXIT", reason);
+  // CASE C: EXPIRED (currentMinutes >= untilMinutes)
+  if (currentMinutes >= untilMinutes) {
+    const timeExpiredMins = currentMinutes - untilMinutes;
+    const expiredStr = timeExpiredMins === 0 ? "just now" : `${timeExpiredMins} minutes ago`;
+    const reason = `Pass expired at ${pass.valid_until} (${expiredStr}).`;
+
+    await recordAudit(false, "PASS EXPIRED", "EXIT", reason);
+
     return {
       success: true,
       authorized: false,
-      resultStatus: "EXIT NOT AUTHORIZED",
+      timeState: "EXPIRED",
+      resultStatus: "PASS EXPIRED",
       failureReason: reason,
-      message: "Student is NOT authorized to exit the campus.",
+      serverCurrentTime,
+      student: {
+        name: student.name,
+        studentCode: student.student_code,
+        department: student.department,
+        yearSection: `${student.year || "3rd Year"} • Section ${student.section || "A"}`,
+      },
+      pass: {
+        id: pass.id,
+        passCode,
+        reason: pass.reason,
+        validFrom: pass.valid_from,
+        validUntil: pass.valid_until,
+        date: pass.date,
+        issuedBy: pass.issued_by,
+        status: "APPROVED",
+      },
+      checkpoint,
+      verificationType: "EXIT",
+      message: `Pass expired at ${pass.valid_until}. Exit blocked.`,
       timestamp,
     };
   }
 
-  // Atomically record Exit
+  // CASE B: ACTIVE (fromMinutes <= currentMinutes < untilMinutes)
+  const timeRemaining = untilMinutes - currentMinutes;
+  const remHours = Math.floor(timeRemaining / 60);
+  const remMins = timeRemaining % 60;
+  const remainingStr = remHours > 0 ? `${remHours}h ${remMins}m` : `${remMins}m`;
+
+  // Atomically record normal Exit
   await db.query(
     `UPDATE movement_permissions
      SET exit_at = NOW(), checkpoint = $1, verified_by = $2
      WHERE id = $3`,
-    [checkpoint, session.fullName, pass.id]
+    [checkpoint, session.fullName || session.email, pass.id]
   );
 
-  await recordAudit(true, "EXIT AUTHORIZED", "EXIT");
+  await recordAudit(true, "AUTHORIZED", "EXIT");
 
   return {
     success: true,
     authorized: true,
-    resultStatus: "EXIT AUTHORIZED",
+    timeState: "ACTIVE",
+    resultStatus: "AUTHORIZED",
+    timeRemainingMinutes: timeRemaining,
+    serverCurrentTime,
     student: {
       name: student.name,
       studentCode: student.student_code,
@@ -834,10 +979,183 @@ export async function verifyGatePass(
       date: pass.date,
       issuedBy: pass.issued_by,
       status: "APPROVED",
+      exitAt: new Date().toISOString(),
     },
     checkpoint,
     verificationType: "EXIT",
-    message: "Student is authorized to exit the campus.",
+    message: `Authorized exit. Valid until ${pass.valid_until} (${remainingStr} remaining).`,
+    timestamp,
+  };
+}
+
+/**
+ * Authorizes early exit for an approved movement pass whose scheduled start time is in the future.
+ * Preserves original valid_from and valid_until timestamps in the database while recording exit_at and officer identity.
+ */
+export async function authorizeEarlyExit(
+  session: ServerSession,
+  payload: { passId: string; checkpoint?: string; remarks?: string }
+): Promise<VerificationResultPayload> {
+  await requireSecuritySession(session);
+  await ensureSecurityTableColumns();
+
+  const cleanPassId = payload.passId.trim();
+  const checkpoint = session.assignedPost || session.department || payload.checkpoint || "Main Gate";
+  const timestamp = new Date().toISOString();
+
+  const passRes = await db.query(
+    `SELECT 
+       id::text, student_code, reason, to_char(date, 'YYYY-MM-DD') AS date,
+       valid_from::text, valid_until::text, status, issued_by, exit_at::text, entry_at::text,
+       early_exit_authorized, early_exit_by, early_exit_by_id, early_exit_at::text
+     FROM movement_permissions
+     WHERE UPPER(id::text) = UPPER($1) OR UPPER(id::text) LIKE $2
+     LIMIT 1;`,
+    [cleanPassId, `%${cleanPassId}%`]
+  );
+
+  if (passRes.rows.length === 0) {
+    throw new Error(`Movement pass "${cleanPassId}" not found.`);
+  }
+
+  const pass = passRes.rows[0];
+
+  // 1. Eligibility Check: Status must be APPROVED
+  if (pass.status.toLowerCase() !== "approved") {
+    throw new Error(`Early exit can only be authorized for APPROVED passes (current status: ${pass.status}).`);
+  }
+
+  // 2. Eligibility Check: Prevent duplicate early exit attempts or passes already exited
+  if (pass.early_exit_authorized || pass.exit_at) {
+    throw new Error(`Early exit has already been authorized for this pass at ${pass.exit_at || pass.early_exit_at}.`);
+  }
+
+  // 3. Eligibility Check: Must be BEFORE valid_from
+  const parseTimeToMinutes = (tStr: string): number => {
+    if (!tStr) return 0;
+    const clean = tStr.trim().toUpperCase();
+    const isPM = clean.includes("PM");
+    const isAM = clean.includes("AM");
+    const timeParts = clean.replace(/(AM|PM)/g, "").trim().split(":");
+    let hours = parseInt(timeParts[0] || "0", 10);
+    const minutes = parseInt(timeParts[1] || "0", 10);
+
+    if (isPM && hours < 12) hours += 12;
+    if (isAM && hours === 12) hours = 0;
+
+    return hours * 60 + minutes;
+  };
+
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const fromMinutes = parseTimeToMinutes(pass.valid_from);
+
+  if (currentMinutes >= fromMinutes) {
+    throw new Error(`Pass is already active or past valid_from (${pass.valid_from}). Use normal exit verification.`);
+  }
+
+  const officerName = session.fullName || session.email;
+  const officerId = session.userId || session.email;
+  const formattedNowTime = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+
+  // 4. Update Database: DO NOT CHANGE valid_from or valid_until!
+  await db.query(
+    `UPDATE movement_permissions
+     SET 
+       exit_at = NOW(),
+       early_exit_authorized = TRUE,
+       early_exit_by = $1,
+       early_exit_by_id = $2,
+       early_exit_at = NOW(),
+       checkpoint = $3,
+       verified_by = $1
+     WHERE id = $4`,
+    [officerName, officerId, checkpoint, pass.id]
+  );
+
+  // 5. Fetch student details for payload & audit log
+  const stRes = await db.query(
+    `SELECT student_code, name, department, year, section FROM students WHERE UPPER(student_code) = UPPER($1) LIMIT 1;`,
+    [pass.student_code]
+  );
+  const student = stRes.rows[0] || { student_code: pass.student_code, name: "Student", department: "General", year: "3", section: "A" };
+
+  // 6. Audit Log Entry: Exact required format
+  const auditMessage = `Early exit authorized by Security Officer ${officerName} at ${formattedNowTime}; scheduled pass start was ${pass.valid_from}.`;
+  await db.query(
+    `INSERT INTO audit_logs (actor, actor_role, action, target, target_id, metadata)
+     VALUES ($1, 'security', 'gate_early_exit_authorized', $2, $3, $4);`,
+    [
+      session.email,
+      student.student_code,
+      pass.id,
+      JSON.stringify({
+        officer_name: officerName,
+        officer_id: officerId,
+        checkpoint,
+        scheduled_start: pass.valid_from,
+        actual_exit_time: formattedNowTime,
+        audit_message: auditMessage,
+        timestamp,
+      }),
+    ]
+  );
+
+  // 7. Send notification to student
+  const studentUserId = await findStudentUserIdByCode(student.student_code);
+  if (studentUserId) {
+    await createNotificationServer({
+      recipientUserId: studentUserId,
+      recipientId: student.student_code,
+      recipientRole: "student",
+      department: student.department,
+      type: "gate_exit_authorized",
+      title: "Early Exit Authorized 🚪",
+      detail: `Your early campus exit was authorized at ${checkpoint} by Officer ${officerName}. Scheduled start was ${pass.valid_from}.`,
+      tone: "resolved",
+      relatedId: pass.id,
+      relatedType: "movement_permission",
+    });
+  }
+
+  const passCode = pass.id.startsWith("CMADMS-PASS-") ? pass.id : `CMADMS-PASS-${pass.id.slice(0, 8).toUpperCase()}`;
+
+  return {
+    success: true,
+    authorized: true,
+    timeState: "EARLY_EXIT_AUTHORIZED",
+    resultStatus: "EARLY EXIT AUTHORIZED",
+    serverCurrentTime: formattedNowTime,
+    student: {
+      name: student.name,
+      studentCode: student.student_code,
+      department: student.department,
+      yearSection: `${student.year || "3rd Year"} • Section ${student.section || "A"}`,
+    },
+    pass: {
+      id: pass.id,
+      passCode,
+      reason: pass.reason,
+      validFrom: pass.valid_from,
+      validUntil: pass.valid_until,
+      date: pass.date,
+      issuedBy: pass.issued_by,
+      status: "APPROVED",
+      exitAt: new Date().toISOString(),
+      earlyExitAuthorized: true,
+      earlyExitBy: officerName,
+    },
+    earlyExitDetails: {
+      earlyExitAuthorized: true,
+      earlyExitBy: officerName,
+      earlyExitById: officerId,
+      earlyExitAt: new Date().toISOString(),
+      actualExitAt: new Date().toISOString(),
+      checkpoint,
+    },
+    checkpoint,
+    verificationType: "EXIT",
+    message: auditMessage,
     timestamp,
   };
 }

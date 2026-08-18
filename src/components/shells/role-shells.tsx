@@ -937,7 +937,6 @@ const securityNavGroups = [
     category: "Gate & Operations",
     items: [
       { to: "/security/check", label: "Gate Pass Verification", icon: ShieldCheck },
-      { to: "/security/incidents", label: "Emergency Incidents", icon: ShieldAlert },
       { to: "/security/passes", label: "Verification History", icon: Clock },
     ],
   },

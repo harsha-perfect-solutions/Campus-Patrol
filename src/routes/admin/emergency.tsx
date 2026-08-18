@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
@@ -6,20 +6,12 @@ import {
   Shield,
   ShieldAlert,
   Clock,
-  UserCheck,
-  Building2,
   RefreshCw,
   Search,
-  Filter,
   CheckCircle2,
-  Activity,
-  PhoneCall,
-  User,
   Radio,
-  FileText,
   Send,
-  XCircle,
-  AlertOctagon,
+  FileText,
 } from "lucide-react";
 import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
@@ -38,9 +30,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   getEmergencyIncidentsApi,
   getEmergencyStatsApi,
-  acknowledgeEmergencyIncidentApi,
-  assignEmergencyResponderApi,
-  startEmergencyResponseApi,
   markEmergencyControlledApi,
   resolveEmergencyIncidentApi,
   addEmergencyResponseNoteApi,
@@ -62,18 +51,27 @@ function AdminEmergencyPage() {
   );
 }
 
-function formatElapsed(createdStr: string) {
+/**
+ * Single, backend-persisted Time Elapsed calculator.
+ * While active (reported): Current Time - Created At
+ * When Controlled / Resolved: Permanently frozen at (controlled_at || resolved_at) - Created At
+ */
+function formatElapsed(createdStr: string, controlledStr?: string | null, resolvedStr?: string | null) {
   try {
     const start = new Date(createdStr).getTime();
-    const now = Date.now();
-    const diffSec = Math.max(0, Math.floor((now - start) / 1000));
+    const frozenEndStr = controlledStr || resolvedStr;
+    const end = frozenEndStr ? new Date(frozenEndStr).getTime() : Date.now();
+    const diffSec = Math.max(0, Math.floor((end - start) / 1000));
     const mins = Math.floor(diffSec / 60);
-    const secs = diffSec % 60;
     const hours = Math.floor(mins / 60);
+
     if (hours > 0) {
-      return `${hours}h ${mins % 60}m ${secs}s`;
+      return `${hours}h ${mins % 60}m`;
     }
-    return `${mins}m ${secs}s`;
+    if (mins > 0) {
+      return `${mins} min`;
+    }
+    return `${diffSec} sec`;
   } catch {
     return "--";
   }
@@ -83,40 +81,37 @@ function EmergencyCommandContent() {
   const [incidents, setIncidents] = useState<DBEmergencyIncident[]>([]);
   const [stats, setStats] = useState<EmergencyStats>({
     activeEmergencies: 0,
-    awaitingAcknowledgement: 0,
-    responding: 0,
-    controlled: 0,
-    criticalToday: 0,
-    violenceToday: 0,
-    avgResponseTimeMinutes: 2.5,
+    controlledIncidents: 0,
+    criticalIncidents: 0,
+    violenceIncidents: 0,
+    resolvedIncidents: 0,
   });
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("active");
   const [deptFilter, setDeptFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Selected incident for Drawer
+  // Selected incident for Detail Dialog
   const [selectedIncident, setSelectedIncident] = useState<DBEmergencyIncident | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [timeline, setTimeline] = useState<Array<{ id: string; actor: string; actorRole: string; action: string; timestamp: string; description: string }>>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [timeline, setTimeline] = useState<
+    Array<{ id: string; actor: string; actorRole: string; action: string; timestamp: string; description: string }>
+  >([]);
   const [loadingTimeline, setLoadingTimeline] = useState(false);
 
-  // Modals
-  const [assignModalOpen, setAssignModalOpen] = useState(false);
-  const [responderName, setResponderName] = useState("Head of Security - Main Gate");
-  const [responderRole, setResponderRole] = useState("security");
-  const [responderId, setResponderId] = useState("sec-lead-01");
-
+  // Action Modals
   const [controlModalOpen, setControlModalOpen] = useState(false);
   const [controlNotes, setControlNotes] = useState("");
+  const [targetForControl, setTargetForControl] = useState<DBEmergencyIncident | null>(null);
 
   const [resolveModalOpen, setResolveModalOpen] = useState(false);
   const [resolveRemarks, setResolveRemarks] = useState("");
+  const [targetForResolve, setTargetForResolve] = useState<DBEmergencyIncident | null>(null);
 
   const [noteInput, setNoteInput] = useState("");
   const [submittingAction, setSubmittingAction] = useState(false);
 
-  // Live timer tick every 2 seconds
+  // Live timer tick every 2 seconds for active timers
   const [, setTick] = useState(0);
   useEffect(() => {
     const timer = setInterval(() => setTick((t) => t + 1), 2000);
@@ -154,9 +149,9 @@ function EmergencyCommandContent() {
     return () => clearInterval(interval);
   }, [statusFilter, deptFilter, searchQuery]);
 
-  async function openIncidentDrawer(inc: DBEmergencyIncident) {
+  async function openIncidentDialog(inc: DBEmergencyIncident) {
     setSelectedIncident(inc);
-    setDrawerOpen(true);
+    setDialogOpen(true);
     try {
       setLoadingTimeline(true);
       const res = await getEmergencyIncidentTimelineApi({ data: { incidentId: inc.id } });
@@ -168,110 +163,69 @@ function EmergencyCommandContent() {
     }
   }
 
-  async function handleAcknowledge(incidentId: string) {
-    try {
-      setSubmittingAction(true);
-      const res = await acknowledgeEmergencyIncidentApi({ data: { incidentId } });
-      if (res.success) {
-        toast.success(`Emergency #${incidentId} acknowledged.`);
-        await loadData();
-        if (selectedIncident?.id === incidentId) setSelectedIncident(res.incident);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to acknowledge incident.");
-    } finally {
-      setSubmittingAction(false);
-    }
+  function handlePromptControl(inc: DBEmergencyIncident) {
+    setTargetForControl(inc);
+    setControlNotes("");
+    setControlModalOpen(true);
   }
 
-  async function handleAssignResponder() {
-    if (!selectedIncident) return;
-    try {
-      setSubmittingAction(true);
-      const res = await assignEmergencyResponderApi({
-        data: {
-          incidentId: selectedIncident.id,
-          responderId,
-          responderName,
-          responderRole,
-        },
-      });
-      if (res.success) {
-        toast.success(`Responder assigned to #${selectedIncident.id}.`);
-        setAssignModalOpen(false);
-        await loadData();
-        setSelectedIncident(res.incident);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to assign responder.");
-    } finally {
-      setSubmittingAction(false);
-    }
-  }
-
-  async function handleStartResponse(incidentId: string) {
-    try {
-      setSubmittingAction(true);
-      const res = await startEmergencyResponseApi({ data: { incidentId } });
-      if (res.success) {
-        toast.success(`Response in progress for #${incidentId}.`);
-        await loadData();
-        if (selectedIncident?.id === incidentId) setSelectedIncident(res.incident);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to start response.");
-    } finally {
-      setSubmittingAction(false);
-    }
-  }
-
-  async function handleMarkControlled() {
-    if (!selectedIncident) return;
+  async function handleConfirmControlled() {
+    const target = targetForControl || selectedIncident;
+    if (!target) return;
     try {
       setSubmittingAction(true);
       const res = await markEmergencyControlledApi({
         data: {
-          incidentId: selectedIncident.id,
-          controlNotes,
+          incidentId: target.id,
+          controlNotes: controlNotes.trim() || undefined,
         },
       });
       if (res.success) {
-        toast.success(`Situation brought under control for #${selectedIncident.id}.`);
+        toast.success(`Situation marked CONTROLLED for Emergency #${target.id}. Time elapsed frozen.`);
         setControlModalOpen(false);
         setControlNotes("");
+        setTargetForControl(null);
         await loadData();
-        setSelectedIncident(res.incident);
+        if (selectedIncident?.id === target.id) setSelectedIncident(res.incident);
       }
     } catch (err: any) {
-      toast.error(err.message || "Failed to mark controlled.");
+      toast.error(err.message || "Failed to mark situation controlled.");
     } finally {
       setSubmittingAction(false);
     }
   }
 
-  async function handleResolve() {
-    if (!selectedIncident) return;
+  function handlePromptResolve(inc: DBEmergencyIncident) {
+    setTargetForResolve(inc);
+    setResolveRemarks("");
+    setResolveModalOpen(true);
+  }
+
+  async function handleConfirmResolve() {
+    const target = targetForResolve || selectedIncident;
+    if (!target) return;
     if (!resolveRemarks.trim() || resolveRemarks.trim().length < 5) {
-      toast.error("Please provide resolution remarks (min 5 characters).");
+      toast.error("Please enter resolution remarks (minimum 5 characters).");
       return;
     }
     try {
       setSubmittingAction(true);
       const res = await resolveEmergencyIncidentApi({
         data: {
-          incidentId: selectedIncident.id,
+          incidentId: target.id,
           resolutionRemarks: resolveRemarks.trim(),
         },
       });
       if (res.success) {
-        toast.success(`Emergency incident #${selectedIncident.id} resolved.`);
+        toast.success(`Emergency #${target.id} resolved and finalized.`);
         setResolveModalOpen(false);
         setResolveRemarks("");
+        setTargetForResolve(null);
         await loadData();
-        setSelectedIncident(res.incident);
+        if (selectedIncident?.id === target.id) setSelectedIncident(res.incident);
       }
     } catch (err: any) {
-      toast.error(err.message || "Failed to resolve incident.");
+      toast.error(err.message || "Failed to resolve emergency incident.");
     } finally {
       setSubmittingAction(false);
     }
@@ -288,32 +242,28 @@ function EmergencyCommandContent() {
         },
       });
       if (res.success) {
-        toast.success("Response note logged.");
+        toast.success("Operational note logged.");
         setNoteInput("");
         await loadData();
         setSelectedIncident(res.incident);
       }
     } catch (err: any) {
-      toast.error(err.message || "Failed to log note.");
+      toast.error(err.message || "Failed to log response note.");
     } finally {
       setSubmittingAction(false);
     }
   }
 
   const getStatusBadge = (st: string) => {
-    switch (st) {
+    switch (st.toLowerCase()) {
       case "reported":
         return "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30 animate-pulse";
-      case "acknowledged":
-        return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30";
-      case "responder_assigned":
-        return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30";
-      case "responding":
-        return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30";
       case "controlled":
-        return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30";
+        return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold";
       case "resolved":
         return "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/30";
+      case "dismissed":
+        return "bg-zinc-600/10 text-zinc-500 border-zinc-500/30";
       default:
         return "bg-muted text-muted-foreground border-border";
     }
@@ -322,11 +272,11 @@ function EmergencyCommandContent() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="🚨 Campus Emergency Incident Response & Coordination"
-        description="Institutional command center for active student safety emergencies, physical altercations, and immediate responder dispatch."
+        title="🚨 Campus Emergency Incident Response & Oversight"
+        description="Institutional oversight console for active student safety emergencies, physical altercations, and security response tracking."
         breadcrumb={[
           { label: "Admin", to: "/admin/dashboard" },
-          { label: "Emergency Command Center" },
+          { label: "Emergency Oversight" },
         ]}
         actions={
           <div className="flex items-center gap-2">
@@ -351,8 +301,8 @@ function EmergencyCommandContent() {
         }
       />
 
-      {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-7">
+      {/* Simplified KPI Cards (5 Cards) */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[
           {
             label: "Active Emergencies",
@@ -361,46 +311,31 @@ function EmergencyCommandContent() {
             color: "bg-red-500/10 text-red-600 border-red-500/20",
           },
           {
-            label: "Awaiting Ack",
-            val: stats.awaitingAcknowledgement,
-            icon: AlertOctagon,
-            color: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-          },
-          {
-            label: "Responding",
-            val: stats.responding,
-            icon: Radio,
-            color: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-          },
-          {
-            label: "Controlled",
-            val: stats.controlled,
-            icon: ShieldCheckIcon,
+            label: "Controlled Incidents",
+            val: stats.controlledIncidents,
+            icon: CheckCircle2,
             color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
           },
           {
-            label: "Critical Today",
-            val: stats.criticalToday,
+            label: "Critical Incidents",
+            val: stats.criticalIncidents,
             icon: AlertTriangle,
             color: "bg-rose-500/10 text-rose-600 border-rose-500/20",
           },
           {
             label: "Violence Cases",
-            val: stats.violenceToday,
+            val: stats.violenceIncidents,
             icon: ShieldAlert,
             color: "bg-orange-500/10 text-orange-600 border-orange-500/20",
           },
           {
-            label: "Avg Response",
-            val: `${stats.avgResponseTimeMinutes}m`,
-            icon: Clock,
-            color: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+            label: "Resolved Incidents",
+            val: stats.resolvedIncidents,
+            icon: Shield,
+            color: "bg-slate-500/10 text-slate-600 border-slate-500/20",
           },
         ].map((k) => (
-          <div
-            key={k.label}
-            className={`card-surface p-4 rounded-2xl border ${k.color} shadow-2xs`}
-          >
+          <div key={k.label} className={`card-surface p-4 rounded-2xl border ${k.color} shadow-2xs`}>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 {k.label}
@@ -415,15 +350,20 @@ function EmergencyCommandContent() {
       {/* Filter & Search Bar */}
       <div className="card-surface p-4 rounded-2xl border border-border shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
-          {["active", "reported", "responding", "controlled", "resolved", "ALL"].map((st) => (
+          {[
+            { id: "active", label: "Active (Reported)" },
+            { id: "controlled", label: "Controlled" },
+            { id: "resolved", label: "Resolved" },
+            { id: "ALL", label: "All Incidents" },
+          ].map((st) => (
             <Button
-              key={st}
+              key={st.id}
               size="sm"
-              variant={statusFilter === st ? "default" : "outline"}
-              onClick={() => setStatusFilter(st)}
-              className="rounded-xl text-xs capitalize h-8 font-semibold"
+              variant={statusFilter === st.id ? "default" : "outline"}
+              onClick={() => setStatusFilter(st.id)}
+              className="rounded-xl text-xs h-8 font-semibold"
             >
-              {st === "ALL" ? "All History" : st.replace("_", " ")}
+              {st.label}
             </Button>
           ))}
         </div>
@@ -456,130 +396,138 @@ function EmergencyCommandContent() {
         </div>
       </div>
 
-      {/* Active Incidents Queue */}
+      {/* Emergency Incidents List */}
       <div className="card-surface rounded-2xl border border-border shadow-xs overflow-hidden">
         <div className="p-4 border-b border-border bg-muted/40 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Radio className="size-4 text-red-600 animate-pulse" />
             <span className="text-xs font-black uppercase tracking-wider text-foreground">
-              LIVE EMERGENCY RESPONSE QUEUE ({incidents.length})
+              CAMPUS EMERGENCY INCIDENT RECORDS ({incidents.length})
             </span>
           </div>
           <span className="text-[11px] text-muted-foreground font-medium">
-            Auto-refreshing every 12 seconds
+            Live updates active
           </span>
         </div>
 
         {loading && incidents.length === 0 ? (
           <div className="p-12 text-center text-xs text-muted-foreground">
             <RefreshCw className="size-6 animate-spin mx-auto mb-2 text-primary" />
-            Connecting to Campus Emergency Dispatch...
+            Loading Campus Emergency Records...
           </div>
         ) : incidents.length === 0 ? (
           <div className="p-12 text-center">
             <CheckCircle2 className="size-10 text-emerald-500 mx-auto mb-2" />
-            <p className="text-sm font-bold text-foreground">All Clear</p>
+            <p className="text-sm font-bold text-foreground">No Active Emergency Incidents</p>
             <p className="text-xs text-muted-foreground mt-1">
-              No active emergency incidents matching current filters.
+              No emergency incidents matching the selected criteria.
             </p>
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {incidents.map((inc) => (
-              <div
-                key={inc.id}
-                className="p-5 hover:bg-muted/30 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
-              >
-                <div className="space-y-1.5 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-muted text-foreground">
-                      #{inc.id}
-                    </span>
-                    <span
-                      className={`text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${getStatusBadge(
-                        inc.status,
-                      )}`}
-                    >
-                      {inc.status.replace("_", " ")}
-                    </span>
-                    <span className="text-xs font-bold text-red-600 dark:text-red-400">
-                      🚨 {inc.incident_category}
-                    </span>
-                    <span className="text-xs text-muted-foreground">• {inc.department}</span>
-                  </div>
-
-                  <div className="text-sm font-black text-foreground flex items-center gap-2">
-                    <span>
-                      {inc.student_name} ({inc.student_code})
-                    </span>
-                    <span className="text-xs font-normal text-muted-foreground">
-                      • {inc.year_section}
-                    </span>
-                  </div>
-
-                  <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1">
-                    <span>
-                      📍 <strong>Location:</strong> {inc.location} ({inc.room})
-                    </span>
-                    <span>
-                      📚 <strong>Class:</strong> {inc.subject}
-                    </span>
-                    <span>
-                      👤 <strong>Reporter:</strong> {inc.faculty_reporter}
-                    </span>
-                  </div>
-
-                  {inc.responder_name && (
-                    <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1.5 pt-1">
-                      <UserCheck className="size-3.5" /> Assigned Responder: {inc.responder_name} (
-                      {inc.responder_role})
+            {incidents.map((inc) => {
+              const isControlledOrResolved = inc.status === "controlled" || inc.status === "resolved";
+              return (
+                <div
+                  key={inc.id}
+                  className="p-5 hover:bg-muted/30 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+                >
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-muted text-foreground">
+                        #{inc.id}
+                      </span>
+                      <span
+                        className={`text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${getStatusBadge(
+                          inc.status,
+                        )}`}
+                      >
+                        {inc.status.replace("_", " ")}
+                      </span>
+                      <span className="text-xs font-bold text-red-600 dark:text-red-400">
+                        🚨 {inc.incident_category}
+                      </span>
+                      <span className="text-xs text-muted-foreground">• {inc.department}</span>
                     </div>
-                  )}
-                </div>
 
-                <div className="flex flex-col sm:flex-row md:flex-col items-start md:items-end justify-between gap-3">
-                  <div className="text-right">
-                    <span className="text-[11px] font-bold text-muted-foreground block">
-                      Time Elapsed
-                    </span>
-                    <span className="font-mono text-sm font-extrabold text-foreground">
-                      ⏱️ {formatElapsed(inc.created_at)}
-                    </span>
+                    <div className="text-sm font-black text-foreground flex items-center gap-2">
+                      <span>
+                        {inc.student_name} ({inc.student_code})
+                      </span>
+                      <span className="text-xs font-normal text-muted-foreground">
+                        • {inc.year_section}
+                      </span>
+                    </div>
+
+                    <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1">
+                      <span>
+                        📍 <strong>Location:</strong> {inc.location} ({inc.room})
+                      </span>
+                      <span>
+                        📚 <strong>Class:</strong> {inc.subject}
+                      </span>
+                      <span>
+                        👤 <strong>Reported By:</strong> {inc.faculty_reporter}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {inc.status === "reported" && (
+                  <div className="flex flex-col sm:flex-row md:flex-col items-start md:items-end justify-between gap-3">
+                    <div className="text-right">
+                      <span className="text-[11px] font-bold text-muted-foreground block">
+                        {isControlledOrResolved ? "Time Elapsed (Frozen)" : "Time Elapsed"}
+                      </span>
+                      <span className="font-mono text-sm font-extrabold text-foreground flex items-center gap-1">
+                        <Clock className="size-3.5 text-primary shrink-0" />
+                        {formatElapsed(inc.created_at, inc.controlled_at, inc.resolved_at)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {inc.status === "reported" && (
+                        <Button
+                          size="sm"
+                          onClick={() => handlePromptControl(inc)}
+                          disabled={submittingAction}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl h-8 shadow-2xs"
+                        >
+                          <Shield className="size-3.5 mr-1" /> Mark Controlled
+                        </Button>
+                      )}
+
+                      {inc.status === "controlled" && (
+                        <Button
+                          size="sm"
+                          onClick={() => handlePromptResolve(inc)}
+                          disabled={submittingAction}
+                          className="bg-slate-900 hover:bg-slate-950 text-white text-xs font-bold rounded-xl h-8 shadow-2xs"
+                        >
+                          <CheckCircle2 className="size-3.5 mr-1" /> Resolve
+                        </Button>
+                      )}
+
                       <Button
                         size="sm"
-                        onClick={() => handleAcknowledge(inc.id)}
-                        disabled={submittingAction}
-                        className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl h-8"
+                        variant="outline"
+                        onClick={() => openIncidentDialog(inc)}
+                        className="text-xs font-bold rounded-xl h-8"
                       >
-                        Acknowledge
+                        View Details &rarr;
                       </Button>
-                    )}
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openIncidentDrawer(inc)}
-                      className="text-xs font-bold rounded-xl h-8"
-                    >
-                      Emergency Console &rarr;
-                    </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Incident Detail & Action Drawer */}
-      <Dialog open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      {/* Incident Detail Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           {selectedIncident && (
-            <div className="space-y-6">
+            <div className="space-y-5">
               <DialogHeader>
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-muted">
@@ -602,116 +550,82 @@ function EmergencyCommandContent() {
                 </DialogDescription>
               </DialogHeader>
 
-              {/* Action Buttons Toolbar */}
-              <div className="p-4 rounded-2xl bg-muted/50 border border-border flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mr-2">
-                  Response Controls:
-                </span>
+              {/* Status Action Banner */}
+              <div className="p-4 rounded-2xl bg-muted/40 border border-border flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    Persisted Time Elapsed
+                  </span>
+                  <span className="font-mono text-base font-extrabold text-foreground">
+                    ⏱️ {formatElapsed(selectedIncident.created_at, selectedIncident.controlled_at, selectedIncident.resolved_at)}
+                  </span>
+                </div>
 
-                {selectedIncident.status === "reported" && (
-                  <Button
-                    size="sm"
-                    onClick={() => handleAcknowledge(selectedIncident.id)}
-                    disabled={submittingAction}
-                    className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl"
-                  >
-                    Acknowledge Incident
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  {selectedIncident.status === "reported" && (
+                    <Button
+                      size="sm"
+                      onClick={() => handlePromptControl(selectedIncident)}
+                      disabled={submittingAction}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl"
+                    >
+                      <Shield className="size-3.5 mr-1" /> Mark Controlled
+                    </Button>
+                  )}
 
-                {(selectedIncident.status === "reported" ||
-                  selectedIncident.status === "acknowledged" ||
-                  selectedIncident.status === "responder_assigned") && (
-                  <Button
-                    size="sm"
-                    onClick={() => setAssignModalOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl"
-                  >
-                    <UserCheck className="size-3.5 mr-1" />
-                    {selectedIncident.responder_name ? "Reassign Responder" : "Assign Responder"}
-                  </Button>
-                )}
-
-                {(selectedIncident.status === "responder_assigned" ||
-                  selectedIncident.status === "acknowledged" ||
-                  selectedIncident.status === "reported") && (
-                  <Button
-                    size="sm"
-                    onClick={() => handleStartResponse(selectedIncident.id)}
-                    disabled={submittingAction}
-                    className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl"
-                  >
-                    <Radio className="size-3.5 mr-1" /> Start Response
-                  </Button>
-                )}
-
-                {(selectedIncident.status === "responding" ||
-                  selectedIncident.status === "responder_assigned") && (
-                  <Button
-                    size="sm"
-                    onClick={() => setControlModalOpen(true)}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl"
-                  >
-                    <Shield className="size-3.5 mr-1" /> Mark Controlled
-                  </Button>
-                )}
-
-                {selectedIncident.status === "controlled" && (
-                  <Button
-                    size="sm"
-                    onClick={() => setResolveModalOpen(true)}
-                    className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl"
-                  >
-                    <CheckCircle2 className="size-3.5 mr-1" /> Resolve & Finalize
-                  </Button>
-                )}
+                  {selectedIncident.status === "controlled" && (
+                    <Button
+                      size="sm"
+                      onClick={() => handlePromptResolve(selectedIncident)}
+                      disabled={submittingAction}
+                      className="bg-slate-900 hover:bg-slate-950 text-white text-xs font-bold rounded-xl"
+                    >
+                      <CheckCircle2 className="size-3.5 mr-1" /> Resolve Incident
+                    </Button>
+                  )}
+                </div>
               </div>
 
-              {/* Student & Academic Context Snapshot */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="p-4 rounded-2xl bg-card border border-border space-y-2">
-                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              {/* Student & Location Details */}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="p-4 rounded-xl bg-card border border-border space-y-1">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">
                     Student Details
-                  </h4>
-                  <p className="text-base font-black text-foreground">
-                    {selectedIncident.student_name}
-                  </p>
+                  </span>
+                  <p className="text-sm font-black text-foreground">{selectedIncident.student_name}</p>
                   <p className="text-xs text-muted-foreground">
-                    Roll No: <strong>{selectedIncident.student_code}</strong> •{" "}
-                    {selectedIncident.department} ({selectedIncident.year_section})
+                    Roll No: {selectedIncident.student_code} • {selectedIncident.department} (
+                    {selectedIncident.year_section})
                   </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-card border border-border space-y-2">
-                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Timetable Snapshot (Immutable)
-                  </h4>
-                  <p className="text-base font-black text-foreground">
-                    {selectedIncident.subject}
-                  </p>
+                <div className="p-4 rounded-xl bg-card border border-border space-y-1">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                    Location & Class Context
+                  </span>
+                  <p className="text-sm font-black text-foreground">{selectedIncident.subject}</p>
                   <p className="text-xs text-muted-foreground">
-                    Room: <strong>{selectedIncident.room}</strong> • Location:{" "}
-                    <strong>{selectedIncident.location}</strong>
+                    Room: {selectedIncident.room} • Location: {selectedIncident.location}
                   </p>
                 </div>
               </div>
 
-              {/* Response Log & Notes */}
-              <div className="space-y-3">
+              {/* Response Notes */}
+              <div className="space-y-2.5">
                 <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  Emergency Response Notes ({selectedIncident.response_notes?.length || 0})
+                  Operational Response Notes ({selectedIncident.response_notes?.length || 0})
                 </h4>
 
-                <div className="space-y-2 max-h-48 overflow-y-auto">
+                <div className="space-y-2 max-h-40 overflow-y-auto">
                   {selectedIncident.response_notes?.length === 0 ? (
-                    <p className="text-xs text-muted-foreground italic">No notes logged yet.</p>
+                    <p className="text-xs text-muted-foreground italic">No response notes logged.</p>
                   ) : (
                     selectedIncident.response_notes?.map((n) => (
                       <div
                         key={n.id}
                         className="p-3 bg-muted/40 rounded-xl border border-border text-xs space-y-1"
                       >
-                        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                           <span className="font-bold text-foreground">
                             {n.addedBy} ({n.addedByRole})
                           </span>
@@ -728,7 +642,7 @@ function EmergencyCommandContent() {
                     <Input
                       value={noteInput}
                       onChange={(e) => setNoteInput(e.target.value)}
-                      placeholder="Add timestamped operational response note..."
+                      placeholder="Add operational response note..."
                       className="text-xs rounded-xl h-9"
                     />
                     <Button
@@ -737,19 +651,19 @@ function EmergencyCommandContent() {
                       disabled={!noteInput.trim() || submittingAction}
                       className="rounded-xl text-xs h-9 font-bold"
                     >
-                      <Send className="size-3.5 mr-1" /> Log
+                      <Send className="size-3.5 mr-1" /> Log Note
                     </Button>
                   </div>
                 )}
               </div>
 
-              {/* Chronological Audit Timeline */}
-              <div className="space-y-3">
+              {/* Chronological Incident Timeline */}
+              <div className="space-y-2.5">
                 <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  Chronological Incident Timeline
+                  Audit History Timeline
                 </h4>
                 {loadingTimeline ? (
-                  <p className="text-xs text-muted-foreground">Loading timeline...</p>
+                  <p className="text-xs text-muted-foreground">Loading audit log...</p>
                 ) : (
                   <div className="space-y-2">
                     {timeline.map((evt, i) => (
@@ -757,7 +671,7 @@ function EmergencyCommandContent() {
                         <div className="size-2 rounded-full bg-primary mt-1.5 shrink-0" />
                         <div>
                           <p className="font-semibold text-foreground">{evt.description}</p>
-                          <p className="text-[11px] text-muted-foreground">
+                          <p className="text-[10px] text-muted-foreground">
                             {evt.actor} ({evt.actorRole}) •{" "}
                             {new Date(evt.timestamp).toLocaleString()}
                           </p>
@@ -772,61 +686,13 @@ function EmergencyCommandContent() {
         </DialogContent>
       </Dialog>
 
-      {/* Responder Assignment Modal */}
-      <Dialog open={assignModalOpen} onOpenChange={setAssignModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Assign Emergency Responder</DialogTitle>
-            <DialogDescription>
-              Dispatch an authorized security team or faculty member to the location.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Responder Name / Team</Label>
-              <Input
-                value={responderName}
-                onChange={(e) => setResponderName(e.target.value)}
-                className="text-xs rounded-xl"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Responder Role</Label>
-              <select
-                value={responderRole}
-                onChange={(e) => setResponderRole(e.target.value)}
-                aria-label="Responder Role"
-                className="w-full h-9 text-xs rounded-xl border border-input bg-background px-3 font-semibold text-foreground focus:outline-none"
-              >
-                <option value="security">Security Officer / Gate Lead</option>
-                <option value="faculty">Authorized Faculty / Proctor</option>
-                <option value="hod">Department HOD</option>
-                <option value="admin">Administrator</option>
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setAssignModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAssignResponder}
-              disabled={submittingAction}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs"
-            >
-              Confirm Dispatch
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Mark Controlled Modal */}
       <Dialog open={controlModalOpen} onOpenChange={setControlModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Mark Situation Controlled</DialogTitle>
             <DialogDescription>
-              Record that physical conflict has ceased and the area is secured.
+              Record that physical conflict has ceased and the area is secured. Time Elapsed will freeze permanently.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">
@@ -834,7 +700,7 @@ function EmergencyCommandContent() {
             <Textarea
               value={controlNotes}
               onChange={(e) => setControlNotes(e.target.value)}
-              placeholder="e.g. Students separated, medical assistance provided, proctor present."
+              placeholder="e.g. Conflict resolved, security on scene, students separated."
               className="text-xs rounded-xl min-h-[80px]"
             />
           </div>
@@ -843,11 +709,11 @@ function EmergencyCommandContent() {
               Cancel
             </Button>
             <Button
-              onClick={handleMarkControlled}
+              onClick={handleConfirmControlled}
               disabled={submittingAction}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs"
             >
-              Mark Controlled
+              Confirm Controlled
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -859,7 +725,7 @@ function EmergencyCommandContent() {
           <DialogHeader>
             <DialogTitle>Finalize Emergency Incident</DialogTitle>
             <DialogDescription>
-              Record formal resolution remarks before closing active emergency status.
+              Record mandatory resolution remarks before closing active emergency status.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">
@@ -867,7 +733,7 @@ function EmergencyCommandContent() {
             <Textarea
               value={resolveRemarks}
               onChange={(e) => setResolveRemarks(e.target.value)}
-              placeholder="Mandatory summary of actions taken, disciplinary referrals, and final safety status."
+              placeholder="Mandatory summary of security actions, disciplinary referrals, and final safety status..."
               className="text-xs rounded-xl min-h-[100px]"
             />
           </div>
@@ -876,7 +742,7 @@ function EmergencyCommandContent() {
               Cancel
             </Button>
             <Button
-              onClick={handleResolve}
+              onClick={handleConfirmResolve}
               disabled={!resolveRemarks.trim() || submittingAction}
               className="bg-slate-900 hover:bg-slate-950 text-white font-bold rounded-xl text-xs"
             >
@@ -887,8 +753,4 @@ function EmergencyCommandContent() {
       </Dialog>
     </div>
   );
-}
-
-function ShieldCheckIcon(props: any) {
-  return <CheckCircle2 {...props} />;
 }

@@ -491,14 +491,20 @@ export function ReportDetail() {
           </Section>
 
           <Section title="Timetable Schedule" icon={CalendarClock}>
-            <Facts
-              items={[
-                ["Scheduled Class", report.className],
-                ["Class Time Slot", report.scheduledTime],
-                ["Assigned Room", report.room],
-                ["Classroom Attendance", "Marked Absent"],
-              ]}
-            />
+            {report.className === "No Class Scheduled" || report.scheduledTime === "No Class Scheduled" ? (
+              <div className="py-2 text-xs font-semibold text-muted-foreground italic">
+                No class was scheduled at the time of the reported incident.
+              </div>
+            ) : (
+              <Facts
+                items={[
+                  ["Scheduled Class", report.className],
+                  ["Class Time Slot", report.scheduledTime],
+                  ["Assigned Room", report.room],
+                  ["Classroom Attendance", "Marked Absent"],
+                ]}
+              />
+            )}
           </Section>
 
           <Section title="Faculty Report Remarks" icon={FileText}>
@@ -507,7 +513,7 @@ export function ReportDetail() {
             </p>
           </Section>
 
-          <Section title="Evidence Attachment" icon={Paperclip}>
+          <Section title="Faculty Incident Evidence Photo / File" icon={Paperclip}>
             {report.evidence ? (
               <div className="space-y-4">
                 {/* Live Image Preview if evidence is Base64 data URL or photo */}
@@ -515,16 +521,16 @@ export function ReportDetail() {
                   <div className="overflow-hidden rounded-xl border border-border bg-slate-950 aspect-video max-h-[340px] relative group flex items-center justify-center">
                     <img
                       src={report.evidence}
-                      alt="Incident evidence photo"
+                      alt="Faculty incident evidence photo"
                       className="w-full h-full object-contain"
                     />
                     <a
                       href={report.evidence}
-                      download={`evidence_${report.id}.png`}
+                      download={`evidence_faculty_${report.id}.png`}
                       className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/90 text-white text-xs font-semibold hover:bg-slate-800 transition-colors shadow-md no-underline border border-slate-700"
                     >
                       <Download className="size-3.5" />
-                      <span>Download PNG</span>
+                      <span>Download Faculty Photo</span>
                     </a>
                   </div>
                 )}
@@ -533,54 +539,91 @@ export function ReportDetail() {
                   <div className="flex items-center gap-2.5 min-w-0">
                     <Paperclip className="size-4 text-primary shrink-0" />
                     <span className="truncate text-xs font-semibold text-foreground">
-                      {report.evidence.startsWith("data:") ? `evidence_photo_${report.id}.jpg` : report.evidence}
+                      {report.evidence.startsWith("data:") ? `faculty_evidence_photo_${report.id}.jpg` : report.evidence}
                     </span>
                   </div>
-                  <a
-                    href={report.evidence.startsWith("data:") ? report.evidence : "#"}
-                    download={`evidence_${report.id}.png`}
-                    onClick={(e) => {
-                      if (!report.evidence?.startsWith("data:")) {
-                        e.preventDefault();
-                        handleDownloadEvidence(report.evidence!, report.id);
-                      }
-                    }}
-                    className="inline-flex items-center justify-center rounded-xl text-xs h-9 px-3.5 font-semibold gap-1.5 border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-colors shadow-2xs shrink-0 cursor-pointer no-underline"
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl text-xs h-9 px-3.5 font-semibold gap-1.5 border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-colors shadow-2xs shrink-0"
+                    onClick={() => handleDownloadEvidence(report.evidence!, report.id)}
                   >
                     <Download className="size-3.5" />
-                    <span>Download Evidence (.png)</span>
-                  </a>
+                    <span>Download Faculty Evidence (.png)</span>
+                  </Button>
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">No evidence photos attached to this incident report.</p>
+              <p className="text-xs text-muted-foreground">No evidence photos attached by faculty to this incident report.</p>
             )}
           </Section>
 
           {/* Student Explanation Section */}
-          <Section title="Student 24-Hour Explanation" icon={MessageSquare}>
+          <Section title="Student 24-Hour Explanation & Supporting Evidence" icon={MessageSquare}>
             {report.explanation ? (
-              <div className="rounded-xl border border-blue-200/80 bg-blue-50/50 dark:bg-blue-950/20 p-4 space-y-3">
+              <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/40 dark:bg-emerald-950/20 p-4 space-y-4">
                 <div>
-                  <p className="text-xs font-bold text-primary mb-1">
-                    Student Explanation Statement:
-                  </p>
-                  <blockquote className="text-xs text-foreground leading-relaxed italic">
+                  <div className="flex items-center justify-between border-b border-emerald-200/60 pb-2 mb-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                      Student Official Statement
+                    </span>
+                    {report.explanationSubmittedAt && (
+                      <span className="text-[10px] font-semibold text-muted-foreground">
+                        Submitted: {new Date(report.explanationSubmittedAt).toLocaleString("en-IN")}
+                      </span>
+                    )}
+                  </div>
+                  <blockquote className="text-xs text-foreground leading-relaxed italic bg-background/90 p-3.5 rounded-xl border border-emerald-200/60 font-medium shadow-2xs">
                     "{report.explanation}"
                   </blockquote>
                 </div>
 
                 {report.evidence && (
-                  <div className="flex items-center justify-between gap-3 rounded-lg border border-blue-200 bg-card px-3.5 py-2.5">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Paperclip className="size-3.5 text-primary shrink-0" />
-                      <span className="truncate text-xs font-semibold text-foreground">
-                        Attached Document: {report.evidence}
+                  <div className="pt-2 border-t border-emerald-200/60 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
+                        <Paperclip className="size-3.5 text-primary" />
+                        Student Supporting Evidence Attachment
                       </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs font-bold rounded-lg border-primary/40 text-primary hover:bg-primary/10 gap-1.5"
+                        onClick={() => handleDownloadEvidence(report.evidence!, report.id)}
+                      >
+                        <Download className="size-3" /> Download Student Evidence
+                      </Button>
                     </div>
-                    <Button variant="outline" size="sm" className="rounded-lg text-xs h-7 shrink-0">
-                      <Download className="size-3 mr-1" /> View Document
-                    </Button>
+
+                    {report.evidence.startsWith("data:") ? (
+                      <div className="p-3 rounded-xl bg-background border border-border flex flex-col items-center gap-2">
+                        <img
+                          src={report.evidence}
+                          alt="Student supporting evidence photo"
+                          className="max-h-60 w-auto rounded-lg object-contain border border-border shadow-2xs"
+                        />
+                        <span className="text-[10px] font-semibold text-muted-foreground">
+                          📷 Official Supporting Attachment submitted by Student
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-background border border-border">
+                        <span className="text-xs font-semibold text-foreground truncate">
+                          📎 Attached: {report.evidence}
+                        </span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs font-bold rounded-lg"
+                          onClick={() => handleDownloadEvidence(report.evidence!, report.id)}
+                        >
+                          <Download className="size-3 mr-1" /> Download (.png)
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
