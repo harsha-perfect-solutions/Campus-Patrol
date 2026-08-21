@@ -142,11 +142,12 @@ function HodPassesPage() {
               variant="outline"
               size="sm"
               onClick={fetchPasses}
+              loading={loading}
               disabled={loading}
               className="gap-2 rounded-xl text-xs font-semibold"
             >
-              <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
-              Refresh
+              {!loading && <RefreshCw className="size-3.5" />}
+              {loading ? "Refreshing..." : "Refresh"}
             </Button>
           }
         />
@@ -403,22 +404,24 @@ function HodPassesPage() {
                         type="button"
                         variant="outline"
                         size="sm"
+                        loading={isProcessing}
                         disabled={isProcessing}
                         onClick={() => handleDecision(pass.id, "rejected", pass.student_name)}
                         className="rounded-xl text-xs font-bold text-destructive hover:bg-destructive/10 border-destructive/30 gap-1.5"
                       >
-                        <X className="size-4" />
-                        [ REJECT ]
+                        {!isProcessing && <X className="size-4" />}
+                        {isProcessing ? "Rejecting..." : "[ REJECT ]"}
                       </Button>
                       <Button
                         type="button"
                         size="sm"
+                        loading={isProcessing}
                         disabled={isProcessing}
                         onClick={() => handleDecision(pass.id, "approved", pass.student_name)}
                         className="rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs gap-1.5"
                       >
-                        <Check className="size-4" />
-                        [ APPROVE PASS ]
+                        {!isProcessing && <Check className="size-4" />}
+                        {isProcessing ? "Approving..." : "[ APPROVE PASS ]"}
                       </Button>
                     </div>
                   )}

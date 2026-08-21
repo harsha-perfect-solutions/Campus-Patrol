@@ -728,9 +728,10 @@ export function ReportDetail() {
                 <Button
                   type="submit"
                   loading={submittingDecision}
+                  disabled={submittingDecision}
                   className="bg-primary text-primary-foreground font-semibold rounded-xl w-full h-10 shadow-xs"
                 >
-                  Submit HOD Decision
+                  {submittingDecision ? "Submitting Decision..." : "Submit HOD Decision"}
                 </Button>
               </form>
             ) : (

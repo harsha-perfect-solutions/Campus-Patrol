@@ -450,10 +450,10 @@ function StudentExplanationsPage() {
                 <Button
                   type="submit"
                   loading={submitting}
-                  disabled={deadlineStatus?.expired || text.trim().length < 10}
+                  disabled={submitting || deadlineStatus?.expired || text.trim().length < 10}
                   className="w-full h-11 rounded-xl font-bold bg-primary text-primary-foreground text-xs shadow-xs"
                 >
-                  Submit Official Explanation to HOD
+                  {submitting ? "Submitting Explanation..." : "Submit Official Explanation to HOD"}
                 </Button>
               </form>
             )}

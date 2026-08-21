@@ -284,11 +284,12 @@ function EmergencyCommandContent() {
               variant="outline"
               size="sm"
               onClick={loadData}
+              loading={loading}
               disabled={loading}
               className="rounded-xl font-semibold text-xs"
             >
-              <RefreshCw className={`size-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
-              Refresh
+              {!loading && <RefreshCw className="size-3.5 mr-1.5" />}
+              {loading ? "Refreshing..." : "Refresh"}
             </Button>
             <Button
               size="sm"
@@ -648,10 +649,12 @@ function EmergencyCommandContent() {
                     <Button
                       size="sm"
                       onClick={handleAddNote}
+                      loading={submittingAction}
                       disabled={!noteInput.trim() || submittingAction}
                       className="rounded-xl text-xs h-9 font-bold"
                     >
-                      <Send className="size-3.5 mr-1" /> Log Note
+                      {!submittingAction && <Send className="size-3.5 mr-1" />}
+                      {submittingAction ? "Logging Note..." : "Log Note"}
                     </Button>
                   </div>
                 )}
@@ -710,10 +713,11 @@ function EmergencyCommandContent() {
             </Button>
             <Button
               onClick={handleConfirmControlled}
+              loading={submittingAction}
               disabled={submittingAction}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs"
             >
-              Confirm Controlled
+              {submittingAction ? "Marking Controlled..." : "Confirm Controlled"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -743,10 +747,11 @@ function EmergencyCommandContent() {
             </Button>
             <Button
               onClick={handleConfirmResolve}
+              loading={submittingAction}
               disabled={!resolveRemarks.trim() || submittingAction}
               className="bg-slate-900 hover:bg-slate-950 text-white font-bold rounded-xl text-xs"
             >
-              Resolve & Close Incident
+              {submittingAction ? "Resolving Incident..." : "Resolve & Close Incident"}
             </Button>
           </DialogFooter>
         </DialogContent>

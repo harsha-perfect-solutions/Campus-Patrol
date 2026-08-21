@@ -90,10 +90,12 @@ function FacultyPassesPage() {
             <Button
               variant="secondary"
               onClick={() => handleSearch(searchCode)}
+              loading={loading}
               disabled={loading}
               className="h-10 px-5 rounded-xl text-xs font-bold shrink-0"
             >
-              <Search className="size-3.5 mr-1.5" /> Lookup Pass Status
+              {!loading && <Search className="size-3.5 mr-1.5" />}
+              {loading ? "Looking up..." : "Lookup Pass Status"}
             </Button>
           </div>
         </div>

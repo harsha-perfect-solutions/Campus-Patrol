@@ -456,9 +456,11 @@ export function CheckStudentPage() {
                 type="submit"
                 size="lg"
                 loading={loading}
+                disabled={loading}
                 className="h-11 bg-primary text-primary-foreground hover:bg-primary/90 px-6 font-semibold rounded-xl shadow-xs"
               >
-                <Search className="size-4 mr-1.5" /> Check Student
+                {!loading && <Search className="size-4 mr-1.5" />}
+                {loading ? "Checking Student..." : "Check Student"}
               </Button>
               <Button
                 type="button"
@@ -1086,10 +1088,11 @@ export function CheckStudentPage() {
             <Button
               variant="destructive"
               loading={submitting}
+              disabled={submitting}
               onClick={submitReport}
               className="bg-red-600 hover:bg-red-700 font-bold"
             >
-              Submit Report
+              {submitting ? "Submitting Report..." : "Submit Report"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -227,9 +227,10 @@ function SecurityCheckPage() {
                 <Button
                   type="submit"
                   loading={loading}
+                  disabled={loading}
                   className="h-11 px-6 rounded-xl font-bold bg-primary text-primary-foreground"
                 >
-                  Verify
+                  {loading ? "Verifying..." : "Verify"}
                 </Button>
               </div>
 
@@ -287,10 +288,11 @@ function SecurityCheckPage() {
                       type="button"
                       onClick={handleAllowEarlyExit}
                       loading={earlyExitLoading}
+                      disabled={earlyExitLoading}
                       className="w-full sm:w-auto h-11 px-6 rounded-xl font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-md gap-2"
                     >
-                      <Sparkles className="size-4" />
-                      <span>[ ALLOW EARLY EXIT ]</span>
+                      {!earlyExitLoading && <Sparkles className="size-4" />}
+                      <span>{earlyExitLoading ? "Authorizing Early Exit..." : "[ ALLOW EARLY EXIT ]"}</span>
                     </Button>
                     <Button
                       variant="outline"

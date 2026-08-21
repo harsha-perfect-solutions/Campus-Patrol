@@ -237,11 +237,12 @@ function StudentPassesPage() {
               <Button
                 type="submit"
                 loading={submitting}
-                disabled={!reason.trim()}
+                disabled={submitting || !reason.trim()}
                 size="sm"
                 className="rounded-xl text-xs font-semibold bg-primary text-primary-foreground"
               >
-                <Send className="size-3.5 mr-1" /> Submit Request
+                {!submitting && <Send className="size-3.5 mr-1" />}
+                {submitting ? "Submitting Request..." : "Submit Request"}
               </Button>
             </div>
           </form>

@@ -307,9 +307,12 @@ export default function HODViolationsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => loadData()}
+                loading={loading}
+                disabled={loading}
                 className="h-9 rounded-xl text-xs font-semibold gap-1.5"
               >
-                <RotateCcw className="size-3.5" /> Refresh
+                {!loading && <RotateCcw className="size-3.5" />}
+                {loading ? "Refreshing..." : "Refresh"}
               </Button>
             </div>
           }
@@ -1028,9 +1031,9 @@ export default function HODViolationsPage() {
                 className="bg-emerald-600 hover:bg-emerald-700 font-bold text-white"
                 onClick={handleResolveSubmit}
                 loading={submittingAction}
-                disabled={!resolveRemarks.trim()}
+                disabled={!resolveRemarks.trim() || submittingAction}
               >
-                Confirm Resolution
+                {submittingAction ? "Resolving Case..." : "Confirm Resolution"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1066,9 +1069,9 @@ export default function HODViolationsPage() {
                 variant="destructive"
                 onClick={handleDismissSubmit}
                 loading={submittingAction}
-                disabled={!dismissReason.trim()}
+                disabled={!dismissReason.trim() || submittingAction}
               >
-                Confirm Dismissal
+                {submittingAction ? "Dismissing Case..." : "Confirm Dismissal"}
               </Button>
             </DialogFooter>
           </DialogContent>
