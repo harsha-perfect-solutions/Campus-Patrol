@@ -85,7 +85,7 @@ export function LandingNavbar() {
             size="sm"
             className="rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 px-4 shadow-2xs transition-all hover:scale-[1.02]"
           >
-            <Link to={session ? "/dashboard" : "/auth"}>
+            <Link to={session ? ("/admin/dashboard" as any) : "/auth"}>
               {session ? "Dashboard" : "Sign In"} <ArrowRight className="size-3.5 ml-1.5" />
             </Link>
           </Button>
@@ -117,7 +117,7 @@ export function LandingNavbar() {
           ))}
           <div className="pt-2 border-t border-border flex flex-col gap-2">
             <Button asChild size="sm" className="w-full rounded-xl font-semibold bg-primary text-primary-foreground">
-              <Link to={session ? "/dashboard" : "/auth"}>
+              <Link to={session ? ("/admin/dashboard" as any) : "/auth"}>
                 {session ? "Go to Dashboard" : "Sign In to System"}
               </Link>
             </Button>

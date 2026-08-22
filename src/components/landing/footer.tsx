@@ -29,7 +29,7 @@ export function LandingFooter() {
               size="lg"
               className="h-12 rounded-2xl bg-white text-primary hover:bg-white/90 px-7 font-extrabold shadow-md transition-all hover:scale-[1.02] text-xs sm:text-sm"
             >
-              <Link to={session ? "/dashboard" : "/auth"}>
+              <Link to={session ? ("/admin/dashboard" as any) : "/auth"}>
                 {session ? "Access Dashboard" : "Sign In to CMADMS"} <ArrowRight className="size-4 ml-1.5" />
               </Link>
             </Button>
