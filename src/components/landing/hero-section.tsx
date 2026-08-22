@@ -59,10 +59,10 @@ export function LandingHeroSection() {
                 <Button
                   asChild
                   size="lg"
-                  className="h-12 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 px-6 font-bold shadow-md transition-all hover:scale-[1.02] active:scale-95 text-xs sm:text-sm"
+                  className="h-12 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 px-7 font-extrabold shadow-md transition-all hover:scale-[1.02] active:scale-95 text-xs sm:text-sm"
                 >
                   <Link to="/auth">
-                    Sign In to Dashboard <ArrowRight className="size-4 ml-2" />
+                    Sign In <ArrowRight className="size-4 ml-2" />
                   </Link>
                 </Button>
 
@@ -144,27 +144,7 @@ export function LandingHeroSection() {
                   </div>
                 </div>
 
-                {/* Floating Card 2: Center Overlay Scan Verification Card */}
-                <div className="absolute left-4 sm:left-6 bottom-16 sm:bottom-20 max-w-xs card-surface p-4 rounded-2xl border border-primary/30 bg-card/95 backdrop-blur-md shadow-xl space-y-2">
-                  <div className="flex items-center gap-3">
-                    <span className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground shadow-xs shrink-0">
-                      <QrCode className="size-5" />
-                    </span>
-                    <div>
-                      <h4 className="text-xs font-extrabold text-foreground leading-snug">Scan QR to Verify</h4>
-                      <p className="text-[10px] text-muted-foreground font-medium">Instant • Secure • Accurate</p>
-                    </div>
-                  </div>
-                  <Button
-                    asChild
-                    size="sm"
-                    className="w-full h-8 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 mt-1"
-                  >
-                    <Link to="/check">Open Scanner</Link>
-                  </Button>
-                </div>
-
-                {/* Floating Card 3: Bottom Status Badge */}
+                {/* Floating Status Badge */}
                 <div className="absolute right-4 sm:right-6 bottom-4 flex items-center gap-2 rounded-full border border-emerald-500/30 bg-card/90 backdrop-blur-md px-3.5 py-1.5 text-[11px] font-bold text-foreground shadow-md">
                   <span className="size-2 rounded-full bg-emerald-500 animate-ping" />
                   <span className="size-2 rounded-full bg-emerald-500 shrink-0" />
