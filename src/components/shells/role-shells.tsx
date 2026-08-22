@@ -38,29 +38,11 @@ import { NotificationBell } from "@/components/notification-bell";
 import { useEffect } from "react";
 import { getUnreadNotificationCountApi } from "@/lib/api/notifications.server";
 
+import { useRealtimeNotifications } from "@/hooks/use-realtime-notifications";
+
 function useUnreadCount() {
-  const [count, setCount] = useState(0);
-  const { session } = useAuth();
-
-  useEffect(() => {
-    if (!session) return;
-    const fetchCount = async () => {
-      try {
-        const res = await getUnreadNotificationCountApi();
-        if (res.success) {
-          setCount(res.count);
-        }
-      } catch (err) {
-        console.error("Failed to fetch unread notification count:", err);
-      }
-    };
-
-    fetchCount();
-    const interval = setInterval(fetchCount, 15000);
-    return () => clearInterval(interval);
-  }, [session]);
-
-  return count;
+  const { unreadCount } = useRealtimeNotifications();
+  return unreadCount;
 }
 
 /* ==========================================================================

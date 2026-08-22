@@ -1,0 +1,18 @@
+{
+  "name": "CMADMS Security Gate",
+  "short_name": "CMADMS Gate",
+  "description": "Professional Mobile Security Gate Verification App for CampusGuard Pro CMADMS",
+  "start_url": "/security/check",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0f172a",
+  "background_color": "#090d16",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

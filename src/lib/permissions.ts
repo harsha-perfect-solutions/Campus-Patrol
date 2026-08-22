@@ -1,7 +1,37 @@
 import type { AppRole } from "@/lib/auth";
 
-export function getDefaultDashboardForRole(role: AppRole | null): string {
-  switch (role) {
+export function normalizeRole(rawRole: string | null | undefined): AppRole {
+  if (!rawRole) return "student";
+  const clean = String(rawRole).trim().toLowerCase();
+  if (
+    clean === "security" ||
+    clean === "security_guard" ||
+    clean === "security_officer" ||
+    clean === "gate_security" ||
+    clean === "guard"
+  ) {
+    return "security";
+  }
+  if (clean === "admin" || clean === "superadmin" || clean === "administrator") {
+    return "admin";
+  }
+  if (clean === "hod" || clean === "head_of_department" || clean === "head") {
+    return "hod";
+  }
+  if (
+    clean === "faculty" ||
+    clean === "professor" ||
+    clean === "teacher" ||
+    clean === "instructor"
+  ) {
+    return "faculty";
+  }
+  return "student";
+}
+
+export function getDefaultDashboardForRole(role: AppRole | string | null | undefined): string {
+  const norm = role ? normalizeRole(role) : null;
+  switch (norm) {
     case "faculty":
       return "/faculty/dashboard";
     case "security":

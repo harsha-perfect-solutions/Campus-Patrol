@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpDown, Download, Eye, FileSearch, Filter, Search } from "lucide-react";
+import { ArrowUpDown, Download, Eye, FileSearch, FileSpreadsheet, Filter, Search } from "lucide-react";
+import { toast } from "sonner";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import {
 import type { Report, ReportStatus } from "@/lib/cmadms-data";
 import { downloadEvidenceImage } from "@/lib/download-evidence";
 
-const PAGE_SIZE = 4;
+const PAGE_SIZE = 10;
 
 export function ReportsTable({
   reports,
@@ -55,6 +56,51 @@ export function ReportsTable({
   const current = Math.min(page, pages - 1);
   const rows = filtered.slice(current * PAGE_SIZE, current * PAGE_SIZE + PAGE_SIZE);
 
+  const handleExportAllToExcel = () => {
+    if (filtered.length === 0) {
+      toast.error("No reports available to export.");
+      return;
+    }
+    const headers = [
+      "Report ID",
+      "Student Name",
+      "Roll Number",
+      "Class",
+      "Incident Time",
+      "Location",
+      "Reported By",
+      "Status",
+      "Report Date",
+      "Remarks",
+    ];
+    const csvRows = filtered.map((r) => [
+      `"${r.id}"`,
+      `"${r.studentName}"`,
+      `"${r.studentId}"`,
+      `"${r.className}"`,
+      `"${r.incidentTime}"`,
+      `"${r.location}"`,
+      `"${r.reportedBy}"`,
+      `"${r.status}"`,
+      `"${r.createdAt}"`,
+      `"${(r.remarks || "").replace(/"/g, '""')}"`,
+    ]);
+
+    const csvContent = "\uFEFF" + headers.join(",") + "\n" + csvRows.map((e) => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `cmadms_reports_export_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Exported ${filtered.length} case reports to Excel CSV!`);
+  };
+
   return (
     <section className="card-surface overflow-hidden">
       <div className="grid gap-4 border-b border-divider px-5 py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
@@ -75,7 +121,7 @@ export function ReportsTable({
                 setPage(0);
               }}
               placeholder="Search..."
-              className="h-10 pl-9"
+              className="h-10 pl-9 text-xs"
               aria-label="Search reports"
             />
           </div>
@@ -86,7 +132,7 @@ export function ReportsTable({
               setPage(0);
             }}
           >
-            <SelectTrigger className="h-10 w-[150px]" aria-label="Filter by status">
+            <SelectTrigger className="h-10 w-[150px] text-xs" aria-label="Filter by status">
               <Filter className="mr-1 size-4" aria-hidden />
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -98,8 +144,18 @@ export function ReportsTable({
               <SelectItem value="escalated">Escalated</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={() => setSortDesc((v) => !v)}>
-            <ArrowUpDown /> {sortDesc ? "Newest" : "Oldest"}
+          <Button variant="outline" size="sm" onClick={() => setSortDesc((v) => !v)} className="h-10 text-xs">
+            <ArrowUpDown className="size-3.5 mr-1" /> {sortDesc ? "Newest" : "Oldest"}
+          </Button>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={handleExportAllToExcel}
+            className="h-10 px-3.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-xs text-xs"
+          >
+            <FileSpreadsheet className="size-4" />
+            <span>Export Excel</span>
           </Button>
         </div>
       </div>

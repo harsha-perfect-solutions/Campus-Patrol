@@ -1,4 +1,5 @@
 import { db } from "../db.server";
+import { publishNotificationRealtime } from "../notifications-bus.server";
 
 // ─── Notification Types ────────────────────────────────────────────────────
 
@@ -280,7 +281,7 @@ export async function createNotificationServer(
     }
   }
 
-  await db.query(
+  const insertRes = await db.query<{ id: string }>(
     `INSERT INTO notifications (
       recipient_user_id,
       recipient_role,
@@ -295,7 +296,8 @@ export async function createNotificationServer(
       related_type,
       related_report_id,
       created_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, false, $9, $10, $11, NOW())`,
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, false, $9, $10, $11, NOW())
+    RETURNING id::text;`,
     [
       uuidUserId,
       recipientRole,
@@ -310,6 +312,31 @@ export async function createNotificationServer(
       relatedId ? String(relatedId) : null,
     ],
   );
+
+  const newNotifId = insertRes.rows[0]?.id || `notif-${Date.now()}`;
+
+  // Broadcast to real-time subscribers via notification event bus
+  try {
+    publishNotificationRealtime({
+      id: newNotifId,
+      recipientUserId: uuidUserId,
+      recipientRole: recipientRole ?? "user",
+      recipientId: recId ?? null,
+      department: department ?? null,
+      type,
+      title,
+      detail,
+      tone,
+      read: false,
+      relatedId: relatedId ? String(relatedId) : null,
+      relatedType: relatedType ?? null,
+      relatedReportId: relatedId ? String(relatedId) : null,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (pubErr) {
+    // Non-blocking fallback: notification is safely persisted in PostgreSQL
+    console.warn("[Notification Bus Notice] Real-time publish skipped:", pubErr);
+  }
 }
 
 // ─── Query Functions ───────────────────────────────────────────────────────

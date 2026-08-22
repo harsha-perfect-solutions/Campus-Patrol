@@ -13,6 +13,8 @@ import {
   ShieldCheck,
   UserRound,
   AlertTriangle,
+  FileSpreadsheet,
+  Printer,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
@@ -28,7 +30,6 @@ import { getHodCaseByIdApi, submitHodDecisionApi } from "@/lib/api/hod.server";
 import { getViolationReportDetailApi } from "@/lib/api/faculty.server";
 import { submitStudentExplanationApi } from "@/lib/api/student.server";
 import type { Report, TimelineEvent } from "@/lib/cmadms-data";
-import { downloadEvidenceImage, triggerDownload } from "@/lib/download-evidence";
 
 export const Route = createFileRoute("/reports/$reportId")({
   head: ({ params }) => ({
@@ -335,10 +336,8 @@ export function ReportDetail() {
     const decisionKey =
       hodAction === "excuse" ? "exonerate" : hodAction === "warning" ? "warning" : "escalate";
     const hodName = profile?.full_name || "Dr. Anjali Rao (HOD)";
-    const hodDept = profile?.department || report.department;
 
     try {
-      // 1. Execute HOD decision in PostgreSQL + Audit log
       const res = await submitHodDecisionApi({
         data: {
           reportId: report.id,
@@ -347,7 +346,6 @@ export function ReportDetail() {
         },
       });
 
-      // 2. Update frontend store as well
       executeHodDecision(report.id, decisionKey, hodNotes, hodName);
 
       if (res.success && res.report) {
@@ -375,74 +373,110 @@ export function ReportDetail() {
     }
   };
 
-  const handleStudentSubmitExplanation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!studentText.trim()) return;
-    setSubmittingExplanation(true);
-
-    try {
-      // 1. Submit explanation to PostgreSQL + Audit log
-      const res = await submitStudentExplanationApi({
-        data: {
-          reportId: report.id,
-          explanation: studentText.trim(),
-        },
-      });
-
-      // 2. Update store
-      const now = new Date();
-      const time = now.toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-      updateReport(report.id, {
-        explanation: studentText.trim(),
-        status: "Explanation Submitted",
-        timeline: [
-          ...report.timeline,
-          {
-            time,
-            title: "Student explanation submitted",
-            detail: studentText.trim(),
-            tone: "info",
-          },
-        ],
-      });
-
-      if (res.success && res.report) {
-        setDbReport((prev) =>
-          prev
-            ? {
-                ...prev,
-                explanation: res.report!.explanation ?? undefined,
-                explanationSubmittedAt: res.report!.explanation_submitted_at ?? undefined,
-                status: res.report!.status as any,
-              }
-            : null,
-        );
-      }
-
-      setStudentText("");
-      setSubmittingExplanation(false);
-      toast.success("Explanation Submitted", {
-        description: "Your response has been saved to PostgreSQL and sent to HOD for review.",
-      });
-    } catch (err) {
-      console.error("Failed to submit student explanation:", err);
-      toast.error("Failed to submit explanation to database.");
-      setSubmittingExplanation(false);
-    }
-  };
-
   const isHodUser =
     role === "hod" ||
     role === "admin" ||
     (profile?.staff_code ? profile.staff_code.includes("HOD") : false);
   const isStudentUser = role === "student";
 
+  const handleExportPDF = () => {
+    try {
+      toast.dismiss();
+      setTimeout(() => {
+        window.print();
+      }, 100);
+    } catch (err) {
+      console.error("PDF export error:", err);
+      toast.error("Failed to launch PDF document print dialog.");
+    }
+  };
+
+  const handleExportExcel = () => {
+    try {
+      const headers = [
+        "Case Report ID",
+        "Student Name",
+        "Roll Number",
+        "Department",
+        "Year & Section",
+        "Semester",
+        "Case Status",
+        "Report Date",
+        "Incident Time",
+        "Observed Location",
+        "Reported By Faculty",
+        "Scheduled Class",
+        "Class Time Slot",
+        "Assigned Room",
+        "Faculty Remarks",
+        "Student Explanation",
+        "HOD Decision",
+        "Decision By",
+      ];
+
+      const row = [
+        `"${report.id}"`,
+        `"${report.studentName}"`,
+        `"${report.studentId}"`,
+        `"${report.department}"`,
+        `"${report.yearSection}"`,
+        `"${report.semester || 6}"`,
+        `"${report.status}"`,
+        `"${report.createdAt}"`,
+        `"${report.incidentTime}"`,
+        `"${report.location}"`,
+        `"${report.reportedBy}"`,
+        `"${report.className}"`,
+        `"${report.scheduledTime}"`,
+        `"${report.room}"`,
+        `"${(report.remarks || "").replace(/"/g, '""')}"`,
+        `"${(report.explanation || "N/A").replace(/"/g, '""')}"`,
+        `"${(report.decision || "N/A").replace(/"/g, '""')}"`,
+        `"${(report.decisionBy || "N/A").replace(/"/g, '""')}"`,
+      ];
+
+      const csvContent = "\uFEFF" + headers.join(",") + "\n" + row.join(",") + "\n";
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `case_report_${report.id}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("Excel (.csv) Case Report Downloaded!", {
+        description: `Saved case_report_${report.id}.csv to your downloads folder.`,
+      });
+    } catch (err) {
+      console.error("Excel export error:", err);
+      toast.error("Failed to generate Excel report.");
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Official Print & PDF Export Letterhead */}
+      <div className="hidden print:block border-b-2 border-slate-900 pb-4 mb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-black tracking-tight text-slate-900 uppercase">
+              CAMPUSGUARD PRO — OFFICIAL CASE REPORT
+            </h1>
+            <p className="text-xs font-semibold text-slate-600">
+              Campus Movement & Discipline Management System (CMADMS)
+            </p>
+          </div>
+          <div className="text-right text-xs">
+            <p className="font-bold text-slate-900">CASE FILE: {report.id}</p>
+            <p className="text-slate-600">Report Date: {new Date(report.createdAt).toLocaleDateString("en-IN")}</p>
+            <p className="text-slate-600">Status: {String(report.status || "").toUpperCase()}</p>
+          </div>
+        </div>
+      </div>
+
       <PageHeader
         title={report.id}
         description="Unauthorized Movement — Case Review & HOD Decision View"
@@ -454,8 +488,25 @@ export function ReportDetail() {
         actions={
           <div className="flex items-center gap-2">
             <StatusBadge status={report.status} />
-            <Button variant="outline" size="sm" className="rounded-xl">
-              <Download className="size-3.5 mr-1" /> Export PDF
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={handleExportExcel}
+              className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-xs"
+            >
+              <FileSpreadsheet className="size-4" />
+              <span>Export Excel</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleExportPDF}
+              className="rounded-xl font-semibold gap-1.5"
+            >
+              <Printer className="size-3.5" />
+              <span>Print PDF</span>
             </Button>
             <Button variant="ghost" size="sm" asChild className="rounded-xl">
               <Link to="/reports">
@@ -516,7 +567,6 @@ export function ReportDetail() {
           <Section title="Faculty Incident Evidence Photo / File" icon={Paperclip}>
             {report.evidence ? (
               <div className="space-y-4">
-                {/* Live Image Preview if evidence is Base64 data URL or photo */}
                 {report.evidence.startsWith("data:") && (
                   <div className="overflow-hidden rounded-xl border border-border bg-slate-950 aspect-video max-h-[340px] relative group flex items-center justify-center">
                     <img

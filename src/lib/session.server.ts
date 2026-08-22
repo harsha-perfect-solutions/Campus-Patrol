@@ -56,6 +56,35 @@ const SESSION_DURATION_HOURS = 24;
 
 export type AppRole = "admin" | "hod" | "faculty" | "student" | "security";
 
+export function normalizeRole(rawRole: string | null | undefined): AppRole {
+  if (!rawRole) return "student";
+  const clean = String(rawRole).trim().toLowerCase();
+  if (
+    clean === "security" ||
+    clean === "security_guard" ||
+    clean === "security_officer" ||
+    clean === "gate_security" ||
+    clean === "guard"
+  ) {
+    return "security";
+  }
+  if (clean === "admin" || clean === "superadmin" || clean === "administrator") {
+    return "admin";
+  }
+  if (clean === "hod" || clean === "head_of_department" || clean === "head") {
+    return "hod";
+  }
+  if (
+    clean === "faculty" ||
+    clean === "professor" ||
+    clean === "teacher" ||
+    clean === "instructor"
+  ) {
+    return "faculty";
+  }
+  return "student";
+}
+
 export type ServerSession = {
   sessionId: string;
   userId: string;
@@ -70,17 +99,60 @@ export type ServerSession = {
 };
 
 export function hashPassword(password: string): string {
-  const secret = getSessionSecret();
-  return crypto.scryptSync(password, secret, 64).toString("hex");
+  const salt = crypto.randomBytes(16).toString("hex");
+  const derived = crypto.scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${derived}`;
+}
+
+export function isLegacyPasswordHash(expectedHash: string): boolean {
+  return typeof expectedHash === "string" && expectedHash.length > 0 && !expectedHash.includes(":");
+}
+
+export function verifyPasswordDetailed(
+  password: string,
+  expectedHash: string,
+): { valid: boolean; isLegacy: boolean } {
+  if (!password || !expectedHash || typeof expectedHash !== "string") {
+    return { valid: false, isLegacy: false };
+  }
+
+  try {
+    if (expectedHash.includes(":")) {
+      const parts = expectedHash.split(":");
+      if (parts.length !== 2) return { valid: false, isLegacy: false };
+      const [salt, key] = parts;
+      if (!salt || !key) return { valid: false, isLegacy: false };
+
+      const computed = crypto.scryptSync(password, salt, 64).toString("hex");
+      const bufComputed = Buffer.from(computed, "hex");
+      const bufExpected = Buffer.from(key, "hex");
+
+      if (bufComputed.length !== bufExpected.length) {
+        return { valid: false, isLegacy: false };
+      }
+
+      const valid = crypto.timingSafeEqual(bufComputed, bufExpected);
+      return { valid, isLegacy: false };
+    } else {
+      const secret = getSessionSecret();
+      const computed = crypto.scryptSync(password, secret, 64).toString("hex");
+      const bufComputed = Buffer.from(computed, "hex");
+      const bufExpected = Buffer.from(expectedHash, "hex");
+
+      if (bufComputed.length !== bufExpected.length) {
+        return { valid: false, isLegacy: false };
+      }
+
+      const valid = crypto.timingSafeEqual(bufComputed, bufExpected);
+      return { valid, isLegacy: true };
+    }
+  } catch {
+    return { valid: false, isLegacy: false };
+  }
 }
 
 export function verifyPassword(password: string, expectedHash: string): boolean {
-  try {
-    const computed = hashPassword(password);
-    return crypto.timingSafeEqual(Buffer.from(computed, "hex"), Buffer.from(expectedHash, "hex"));
-  } catch {
-    return false;
-  }
+  return verifyPasswordDetailed(password, expectedHash).valid;
 }
 
 let userSessionsSchemaEnsured = false;
@@ -122,7 +194,7 @@ export async function cleanupExpiredSessions(): Promise<{ deletedCount: number }
  */
 export async function createSession(
   userId: string,
-  role: AppRole,
+  role: AppRole | string,
   email: string,
   department: string,
   staffCode: string | null,
@@ -134,6 +206,7 @@ export async function createSession(
   getSessionSecret();
   await ensureUserSessionsSchema();
 
+  const normalizedRole = normalizeRole(role);
   const sessionId = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_DURATION_HOURS * 3600 * 1000).toISOString();
 
@@ -156,7 +229,7 @@ export async function createSession(
   await db.query(query, [
     sessionId,
     userId,
-    role,
+    normalizedRole,
     email,
     department || "GENERAL",
     staffCode,
@@ -169,7 +242,7 @@ export async function createSession(
   return {
     sessionId,
     userId,
-    role,
+    role: normalizedRole,
     email,
     department: department || "GENERAL",
     staffCode,
@@ -206,7 +279,13 @@ export async function getSession(sessionId: string): Promise<ServerSession | nul
     `;
 
     const res = await db.query<ServerSession>(query, [cleanToken]);
-    return res.rows[0] ?? null;
+    const row = res.rows[0];
+    if (!row) return null;
+
+    return {
+      ...row,
+      role: normalizeRole(row.role),
+    };
   } catch (error) {
     console.error("[Session Error] Failed to query session from database:", error);
     return null;
@@ -259,8 +338,10 @@ export async function requireAuthenticatedUser(): Promise<ServerSession> {
  */
 export async function requireRole(allowedRole: AppRole): Promise<ServerSession> {
   const session = await requireAuthenticatedUser();
-  if (session.role !== allowedRole) {
-    throw new Error(`Forbidden: Role "${allowedRole.toUpperCase()}" required for this action.`);
+  const userRole = normalizeRole(session.role);
+  const targetRole = normalizeRole(allowedRole);
+  if (userRole !== targetRole) {
+    throw new Error(`Forbidden: Role "${targetRole.toUpperCase()}" required for this action.`);
   }
   return session;
 }
@@ -270,7 +351,9 @@ export async function requireRole(allowedRole: AppRole): Promise<ServerSession> 
  */
 export async function requireAnyRole(allowedRoles: AppRole[]): Promise<ServerSession> {
   const session = await requireAuthenticatedUser();
-  if (!allowedRoles.includes(session.role)) {
+  const userRole = normalizeRole(session.role);
+  const targetRoles = allowedRoles.map(normalizeRole);
+  if (!targetRoles.includes(userRole)) {
     throw new Error(`Forbidden: Access restricted to authorized roles only.`);
   }
   return session;

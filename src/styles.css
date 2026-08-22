@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * CMADMS design system — Navy / Blue / Neutral + semantic status colors.
- * Red is reserved for violations, escalation and destructive actions.
+ * CMADMS Design System — Signature Royal Purple / Indigo Campus Theme.
+ * All UI elements, portals, cards, and buttons inherit a unified color palette.
  */
 
 @theme inline {
@@ -59,36 +59,37 @@
   --color-sidebar-active: var(--sidebar-active);
   --color-sidebar-hover: var(--sidebar-hover);
   --color-sidebar-border: var(--sidebar-border);
-  --shadow-card: 0 1px 2px 0 oklch(0.2 0.04 265 / 0.04), 0 1px 3px 0 oklch(0.2 0.04 265 / 0.06);
-  --shadow-raised: 0 4px 16px -4px oklch(0.2 0.04 265 / 0.1);
-  --shadow-modal: 0 24px 48px -12px oklch(0.15 0.04 265 / 0.25);
+  --shadow-card: 0 2px 8px -2px oklch(0.2 0.05 292 / 0.08), 0 1px 3px 0 oklch(0.2 0.05 292 / 0.05);
+  --shadow-raised: 0 6px 20px -4px oklch(0.2 0.08 292 / 0.14);
+  --shadow-modal: 0 24px 48px -12px oklch(0.15 0.08 292 / 0.25);
 }
 
 :root {
   --radius: 14px;
 
-  --background: oklch(0.973 0.005 290);
-  --foreground: oklch(0.208 0.037 292);
-  --surface: oklch(0.981 0.004 290);
+  /* Signature Royal Purple / Indigo Campus Light Palette */
+  --background: oklch(0.975 0.006 292);
+  --foreground: oklch(0.18 0.04 292);
+  --surface: oklch(0.985 0.005 292);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.208 0.037 292);
+  --card-foreground: oklch(0.18 0.04 292);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.208 0.037 292);
+  --popover-foreground: oklch(0.18 0.04 292);
 
   --primary: oklch(0.42 0.22 292);
   --primary-foreground: oklch(0.99 0.002 290);
   --primary-hover: oklch(0.36 0.23 292);
 
-  --navy: oklch(0.3 0.18 292);
-  --navy-deep: oklch(0.18 0.08 292);
+  --navy: oklch(0.28 0.16 292);
+  --navy-deep: oklch(0.16 0.08 292);
   --navy-foreground: oklch(0.985 0.003 290);
 
   --secondary: oklch(0.965 0.012 292);
   --secondary-foreground: oklch(0.28 0.04 292);
   --muted: oklch(0.965 0.012 292);
-  --muted-foreground: oklch(0.52 0.04 292);
-  --subtle-foreground: oklch(0.65 0.03 292);
-  --accent: oklch(0.96 0.025 292);
+  --muted-foreground: oklch(0.50 0.04 292);
+  --subtle-foreground: oklch(0.62 0.03 292);
+  --accent: oklch(0.955 0.025 292);
   --accent-foreground: oklch(0.35 0.2 292);
 
   --destructive: oklch(0.577 0.223 27.3);
@@ -103,75 +104,60 @@
   --warning-foreground: oklch(0.24 0.05 70);
   --warning-soft: oklch(0.981 0.03 90);
 
-  --info: oklch(0.685 0.146 231.5);
-  --info-foreground: oklch(0.99 0.01 230);
-  --info-soft: oklch(0.977 0.014 227);
+  --info: oklch(0.50 0.20 292);
+  --info-foreground: oklch(0.99 0.002 290);
+  --info-soft: oklch(0.96 0.025 292);
 
-  --border: oklch(0.925 0.015 292);
-  --divider: oklch(0.965 0.01 292);
+  --border: oklch(0.915 0.018 292);
+  --divider: oklch(0.955 0.012 292);
   --input: oklch(0.895 0.018 292);
   --ring: oklch(0.42 0.22 292);
 
-  --sidebar: oklch(0.208 0.037 292);
-  --sidebar-foreground: oklch(0.93 0.012 290);
+  --sidebar: oklch(0.18 0.04 292);
+  --sidebar-foreground: oklch(0.95 0.012 290);
   --sidebar-muted: oklch(0.65 0.028 292);
   --sidebar-active: oklch(0.35 0.18 292);
-  --sidebar-hover: oklch(0.27 0.045 292);
-  --sidebar-border: oklch(0.3 0.038 292);
+  --sidebar-hover: oklch(0.25 0.045 292);
+  --sidebar-border: oklch(0.28 0.038 292);
 }
 
 .dark {
-  --background: oklch(0.166 0.028 292);
-  --surface: oklch(0.203 0.028 292);
-  --foreground: oklch(0.983 0.004 290);
-  --card: oklch(0.234 0.028 292);
-  --card-foreground: oklch(0.983 0.004 290);
-  --popover: oklch(0.234 0.028 292);
-  --popover-foreground: oklch(0.983 0.004 290);
+  /* Signature Royal Purple / Indigo Campus Dark Palette */
+  --background: oklch(0.15 0.028 292);
+  --surface: oklch(0.19 0.028 292);
+  --foreground: oklch(0.985 0.004 290);
+  --card: oklch(0.21 0.028 292);
+  --card-foreground: oklch(0.985 0.004 290);
+  --popover: oklch(0.21 0.028 292);
+  --popover-foreground: oklch(0.985 0.004 290);
 
-  --primary: oklch(0.62 0.22 292);
+  --primary: oklch(0.64 0.22 292);
   --primary-foreground: oklch(0.99 0.003 290);
-  --primary-hover: oklch(0.68 0.2 292);
+  --primary-hover: oklch(0.70 0.2 292);
 
-  --navy: oklch(0.38 0.18 292);
-  --navy-deep: oklch(0.166 0.028 292);
+  --navy: oklch(0.35 0.18 292);
+  --navy-deep: oklch(0.15 0.028 292);
   --navy-foreground: oklch(0.985 0.003 290);
 
-  --secondary: oklch(0.28 0.03 264);
-  --secondary-foreground: oklch(0.95 0.005 250);
-  --muted: oklch(0.28 0.03 264);
-  --muted-foreground: oklch(0.704 0.033 256.8);
-  --subtle-foreground: oklch(0.62 0.03 257);
-  --accent: oklch(0.3 0.045 264);
-  --accent-foreground: oklch(0.93 0.02 258);
+  --secondary: oklch(0.25 0.03 292);
+  --secondary-foreground: oklch(0.95 0.005 290);
+  --muted: oklch(0.25 0.03 292);
+  --muted-foreground: oklch(0.72 0.033 292);
+  --subtle-foreground: oklch(0.62 0.03 292);
+  --accent: oklch(0.28 0.045 292);
+  --accent-foreground: oklch(0.95 0.02 292);
 
-  --destructive: oklch(0.637 0.208 25.3);
-  --destructive-foreground: oklch(0.99 0.005 20);
-  --destructive-soft: oklch(0.3 0.06 22);
+  --border: oklch(0.28 0.028 292);
+  --divider: oklch(0.25 0.026 292);
+  --input: oklch(0.32 0.028 292);
+  --ring: oklch(0.64 0.22 292);
 
-  --success: oklch(0.723 0.17 149.6);
-  --success-foreground: oklch(0.16 0.03 150);
-  --success-soft: oklch(0.29 0.055 152);
-
-  --warning: oklch(0.79 0.155 75);
-  --warning-foreground: oklch(0.18 0.04 70);
-  --warning-soft: oklch(0.3 0.05 75);
-
-  --info: oklch(0.71 0.13 231);
-  --info-foreground: oklch(0.15 0.03 230);
-  --info-soft: oklch(0.29 0.05 231);
-
-  --border: oklch(0.318 0.028 260);
-  --divider: oklch(0.28 0.026 260);
-  --input: oklch(0.35 0.028 260);
-  --ring: oklch(0.623 0.194 259.8);
-
-  --sidebar: oklch(0.203 0.028 264.6);
-  --sidebar-foreground: oklch(0.94 0.006 250);
-  --sidebar-muted: oklch(0.66 0.03 257);
-  --sidebar-active: oklch(0.376 0.164 265.5);
-  --sidebar-hover: oklch(0.27 0.035 264);
-  --sidebar-border: oklch(0.31 0.03 262);
+  --sidebar: oklch(0.17 0.028 292);
+  --sidebar-foreground: oklch(0.95 0.006 290);
+  --sidebar-muted: oklch(0.66 0.03 292);
+  --sidebar-active: oklch(0.35 0.164 292);
+  --sidebar-hover: oklch(0.24 0.035 292);
+  --sidebar-border: oklch(0.28 0.03 292);
 }
 
 @layer base {
@@ -196,6 +182,10 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
+}
+
+@utility brand-gradient {
+  background-image: linear-gradient(135deg, oklch(0.38 0.22 292), oklch(0.48 0.22 270));
 }
 
 @utility focus-ringed {
@@ -237,7 +227,6 @@
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -268,3 +257,128 @@
   }
 }
 
+/*
+ * Ultra-Clean A4 Print & PDF Document Export Styling.
+ * Forces 100% pure white page background, high-contrast dark text,
+ * un-sticky sidebars, and centered symmetrical layout.
+ */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  /* Force pure clean white background & dark text everywhere */
+  html,
+  body,
+  #root,
+  div,
+  main,
+  aside,
+  section,
+  .dark,
+  :root {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Hide app navigation, sidebars, header controls, buttons, toasts */
+  header,
+  nav,
+  button,
+  [data-sonner-toaster],
+  [data-sonner-toast],
+  [role="status"],
+  .no-print {
+    display: none !important;
+  }
+
+  /* Reset sidebars & containers so they print in normal flow */
+  aside {
+    display: block !important;
+    position: static !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  main,
+  .space-y-6 {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+
+  /* Grid layout centered on paper */
+  .grid,
+  .lg\:grid-cols-\[1\.6fr_1fr\] {
+    display: grid !important;
+    grid-template-columns: 1.6fr 1fr !important;
+    gap: 14px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+
+  /* Cards & Sections styled for clean academic paper print */
+  .card-surface,
+  section {
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    margin-bottom: 10px !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  section > div:first-child {
+    background-color: #f1f5f9 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+    padding: 8px 16px !important;
+  }
+
+  /* Print typography contrast */
+  h1, h2, h3, h4, dt, dd, p, span, div, strong, b, li {
+    color: #0f172a !important;
+  }
+
+  .text-muted-foreground,
+  .text-subtle-foreground {
+    color: #475569 !important;
+  }
+
+  .bg-muted\/20,
+  .bg-muted\/30,
+  .bg-muted\/40,
+  .bg-muted\/60 {
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  blockquote {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+}

@@ -12,6 +12,11 @@ import {
   Calendar,
   Building2,
   User,
+  Search,
+  SlidersHorizontal,
+  Filter,
+  X,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
@@ -22,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
 import { QRCode } from "@/components/qr-code";
+import { cn } from "@/lib/utils";
 import {
   getMyMovementPermissionsApi,
   requestMovementPermissionApi,
@@ -51,6 +57,11 @@ function StudentPassesPage() {
   const rollNo = profile?.student_code || "23CSE1044";
   const [passes, setPasses] = useState<DBPermission[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Filter & Search states
+  const [statusFilter, setStatusFilter] = useState<"all" | "approved" | "pending" | "rejected">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
 
   // Apply new pass form state
   const [showApplyModal, setShowApplyModal] = useState(false);
@@ -95,7 +106,6 @@ function StudentPassesPage() {
       return;
     }
 
-    // Time comparison
     if (validFrom >= validUntil) {
       toast.error("Valid From time must be earlier than Valid Until time.");
       return;
@@ -132,9 +142,41 @@ function StudentPassesPage() {
     }
   };
 
+  // Filter calculation & counts
+  const counts = {
+    all: passes.length,
+    approved: passes.filter((p) => String(p.status || "").toLowerCase() === "approved").length,
+    pending: passes.filter((p) => String(p.status || "").toLowerCase() === "pending").length,
+    rejected: passes.filter((p) => String(p.status || "").toLowerCase() === "rejected").length,
+  };
+
+  const filteredPasses = passes
+    .filter((pass) => {
+      const statusStr = String(pass.status || "pending").toLowerCase();
+      if (statusFilter !== "all" && statusStr !== statusFilter) {
+        return false;
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        const reasonMatch = String(pass.reason || "").toLowerCase().includes(q);
+        const authorityMatch = String(pass.issued_by || "").toLowerCase().includes(q);
+        const studentMatch = String(pass.student_code || "").toLowerCase().includes(q);
+        const passIdMatch = String(pass.id || "").toLowerCase().includes(q);
+        if (!reasonMatch && !authorityMatch && !studentMatch && !passIdMatch) {
+          return false;
+        }
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const timeA = new Date(`${a.date || ""}T${a.valid_from || "00:00"}`).getTime() || 0;
+      const timeB = new Date(`${b.date || ""}T${b.valid_from || "00:00"}`).getTime() || 0;
+      return sortBy === "newest" ? timeB - timeA : timeA - timeB;
+    });
+
   return (
     <RoleGuard allowedRoles={["student"]}>
-      <div className="space-y-6">
+      <div className="space-y-6 w-full">
         <PageHeader
           title="My Movement Passes"
           description="View active and past campus corridor and gate movement passes issued to you."
@@ -156,7 +198,7 @@ function StudentPassesPage() {
         {showApplyModal && (
           <form
             onSubmit={handleRequestPass}
-            className="card-surface p-6 rounded-2xl border border-primary/30 shadow-xs max-w-xl space-y-4"
+            className="card-surface p-6 rounded-2xl border border-primary/30 shadow-xs w-full max-w-2xl space-y-4"
           >
             <div className="flex items-center justify-between border-b border-border pb-3">
               <h3 className="text-sm font-bold text-foreground">
@@ -248,13 +290,95 @@ function StudentPassesPage() {
           </form>
         )}
 
+        {/* Interactive Full-Width Filter & Search Bar */}
+        {!loading && passes.length > 0 && (
+          <div className="card-surface p-4 rounded-2xl border border-border shadow-xs space-y-3 w-full">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              {/* Live Search Input */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Filter by reason, authority, or pass ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 text-xs rounded-xl w-full"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Clear search query"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground p-0.5"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-2 shrink-0">
+                <SlidersHorizontal className="size-3.5 text-muted-foreground hidden sm:block" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as "newest" | "oldest")}
+                  className="h-9 px-3 rounded-xl bg-background border border-border text-xs font-medium text-foreground outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value="newest">Sort: Newest First</option>
+                  <option value="oldest">Sort: Oldest First</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Status Filter Badges */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-border/60">
+              {[
+                { id: "all", label: "All Passes", count: counts.all, icon: Filter },
+                { id: "approved", label: "Approved", count: counts.approved, icon: CheckCircle2 },
+                { id: "pending", label: "Pending", count: counts.pending, icon: Clock },
+                { id: "rejected", label: "Rejected", count: counts.rejected, icon: XCircle },
+              ].map((tab) => {
+                const isSelected = statusFilter === tab.id;
+                const TabIcon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setStatusFilter(tab.id as any)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 outline-none cursor-pointer",
+                      isSelected
+                        ? "bg-primary text-primary-foreground shadow-xs"
+                        : "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50"
+                    )}
+                  >
+                    <TabIcon className="size-3.5" />
+                    <span>{tab.label}</span>
+                    <span
+                      className={cn(
+                        "px-1.5 py-0.2 rounded-full text-[10px] font-bold ml-0.5",
+                        isSelected
+                          ? "bg-white/20 text-white"
+                          : "bg-background text-muted-foreground border border-border"
+                      )}
+                    >
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {loading ? (
-          <div className="card-surface p-8 rounded-2xl border border-border text-center max-w-xl text-xs text-muted-foreground">
+          <div className="card-surface p-8 rounded-2xl border border-border text-center w-full max-w-2xl mx-auto text-xs text-muted-foreground">
             Loading movement passes from database...
           </div>
-        ) : passes.length > 0 ? (
-          <div className="space-y-4 max-w-xl">
-            {passes.map((pass) => {
+        ) : filteredPasses.length > 0 ? (
+          /* Responsive Multi-Column Grid Layout for Pass Cards */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+            {filteredPasses.map((pass) => {
               const statusStr = String(pass.status || "pending").toLowerCase();
               const isApproved = statusStr === "approved";
               const isPending = statusStr === "pending";
@@ -271,7 +395,7 @@ function StudentPassesPage() {
               return (
                 <div
                   key={pass.id}
-                  className={`card-surface p-6 rounded-2xl border space-y-4 ${
+                  className={`card-surface p-5 sm:p-6 rounded-2xl border space-y-4 flex flex-col justify-between ${
                     isApproved
                       ? "border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20"
                       : isPending
@@ -281,7 +405,7 @@ function StudentPassesPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div
-                      className={`flex items-center gap-2 font-bold text-sm ${
+                      className={`flex items-center gap-2 font-bold text-xs sm:text-sm ${
                         isApproved
                           ? "text-emerald-700 dark:text-emerald-300"
                           : isPending
@@ -290,13 +414,13 @@ function StudentPassesPage() {
                       }`}
                     >
                       {isApproved ? (
-                        <CheckCircle2 className="size-5" />
+                        <CheckCircle2 className="size-4 sm:size-5 shrink-0" />
                       ) : isPending ? (
-                        <Clock className="size-5" />
+                        <Clock className="size-4 sm:size-5 shrink-0" />
                       ) : (
-                        <XCircle className="size-5" />
+                        <XCircle className="size-4 sm:size-5 shrink-0" />
                       )}
-                      <span>
+                      <span className="truncate">
                         {isApproved
                           ? "APPROVED DIGITAL GATE PASS"
                           : isPending
@@ -305,7 +429,7 @@ function StudentPassesPage() {
                       </span>
                     </div>
                     <span
-                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase shrink-0 ${
                         isApproved
                           ? "bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 border border-emerald-500/30"
                           : isPending
@@ -318,39 +442,39 @@ function StudentPassesPage() {
                   </div>
 
                   {isApproved && (
-                    <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-xl bg-card border border-emerald-500/20">
-                      <div className="flex flex-col items-center">
-                        <QRCode value={passCode} size={130} />
-                        <span className="mt-2 text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 p-4 rounded-xl bg-card border border-emerald-500/20 flex-1">
+                      <div className="flex flex-col items-center shrink-0">
+                        <QRCode value={passCode} size={120} />
+                        <span className="mt-2 text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-400 text-center">
                           {passCode}
                         </span>
                       </div>
-                      <div className="flex-1 text-xs space-y-2 text-foreground">
+                      <div className="flex-1 text-xs space-y-2 text-foreground w-full">
                         <div className="grid grid-cols-2 gap-2 text-[11px]">
                           <div>
-                            <span className="text-muted-foreground block">Student Name</span>
-                            <span className="font-bold">{profile?.full_name || "Student"}</span>
+                            <span className="text-muted-foreground block text-[10px]">Student Name</span>
+                            <span className="font-bold truncate block">{profile?.full_name || "Student"}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground block">Roll Number</span>
-                            <span className="font-bold font-mono text-primary">{pass.student_code}</span>
+                            <span className="text-muted-foreground block text-[10px]">Roll Number</span>
+                            <span className="font-bold font-mono text-primary truncate block">{pass.student_code}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground block">Department</span>
-                            <span className="font-bold">{profile?.department || "CSE"}</span>
+                            <span className="text-muted-foreground block text-[10px]">Department</span>
+                            <span className="font-bold truncate block">{profile?.department || "CSE"}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground block">Approved By</span>
-                            <span className="font-bold">{pass.issued_by}</span>
+                            <span className="text-muted-foreground block text-[10px]">Approved By</span>
+                            <span className="font-bold truncate block">{pass.issued_by}</span>
                           </div>
                         </div>
-                        <div className="pt-1 border-t border-border">
-                          <span className="text-muted-foreground block text-[11px]">Reason for Leaving</span>
-                          <span className="font-semibold">{pass.reason}</span>
+                        <div className="pt-1.5 border-t border-border">
+                          <span className="text-muted-foreground block text-[10px]">Reason for Leaving</span>
+                          <span className="font-semibold text-[11px] leading-tight block">{pass.reason}</span>
                         </div>
-                        <div className="pt-1 border-t border-border flex items-center justify-between text-[11px]">
-                          <span className="text-muted-foreground">Valid Window</span>
-                          <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                        <div className="pt-1.5 border-t border-border flex items-center justify-between text-[11px]">
+                          <span className="text-muted-foreground text-[10px]">Valid Window</span>
+                          <span className="font-bold text-emerald-700 dark:text-emerald-400 text-[10px] sm:text-[11px]">
                             {validFromStr} – {validUntilStr} ({formattedDate})
                           </span>
                         </div>
@@ -359,14 +483,14 @@ function StudentPassesPage() {
                   )}
 
                   {!isApproved && (
-                    <div className="text-xs space-y-1.5 text-foreground">
-                      <p className="flex items-center gap-1.5">
-                        <FileText className="size-3.5 text-muted-foreground" />
-                        Reason: <strong className="font-bold">{pass.reason}</strong>
+                    <div className="text-xs space-y-2 text-foreground flex-1 flex flex-col justify-center">
+                      <p className="flex items-start gap-1.5">
+                        <FileText className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                        <span>Reason: <strong className="font-bold">{pass.reason}</strong></span>
                       </p>
                       <p className="flex items-center gap-1.5 text-muted-foreground">
-                        <Clock className="size-3.5" />
-                        Valid Time: {validFromStr} — {validUntilStr} ({formattedDate})
+                        <Clock className="size-3.5 shrink-0" />
+                        <span>Valid Time: {validFromStr} — {validUntilStr} ({formattedDate})</span>
                       </p>
                       <p className="text-muted-foreground text-[11px]">
                         Authority: <strong className="text-foreground">{pass.issued_by}</strong>
@@ -377,8 +501,36 @@ function StudentPassesPage() {
               );
             })}
           </div>
+        ) : passes.length > 0 ? (
+          /* Filter Return Empty State */
+          <div className="card-surface p-8 rounded-2xl border border-border text-center w-full max-w-2xl mx-auto text-xs text-muted-foreground space-y-3">
+            <Filter className="size-8 text-muted-foreground/60 mx-auto" />
+            <div>
+              <p className="font-bold text-foreground text-sm">No Matching Movement Passes</p>
+              <p className="text-muted-foreground mt-0.5">
+                No movement passes match your active filter criteria:{" "}
+                <span className="font-semibold text-foreground">
+                  Status: "{statusFilter.toUpperCase()}"
+                  {searchQuery ? ` & Search: "${searchQuery}"` : ""}
+                </span>
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setStatusFilter("all");
+                setSearchQuery("");
+              }}
+              className="rounded-xl text-xs font-semibold gap-1.5"
+            >
+              <RotateCcw className="size-3.5" /> Clear Filters
+            </Button>
+          </div>
         ) : (
-          <div className="card-surface p-8 rounded-2xl border border-border text-center max-w-xl text-xs text-muted-foreground space-y-1">
+          /* Zero Total Passes Empty State */
+          <div className="card-surface p-8 rounded-2xl border border-border text-center w-full max-w-2xl mx-auto text-xs text-muted-foreground space-y-1">
             <p className="font-bold text-foreground">No Movement Passes Found</p>
             <p>
               No active or historical movement passes found in database for Roll No:{" "}

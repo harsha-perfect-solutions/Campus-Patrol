@@ -89,6 +89,105 @@ export async function seedDemoStudentAccount(): Promise<DemoStudentDetails> {
       }
     }
 
+    // 2b. Ensure Demo Security Account: security@cmadms.edu
+    const pSecCheck = await db.query(`SELECT id::text FROM profiles WHERE UPPER(email) = 'SECURITY@CMADMS.EDU';`);
+    let secUserId: string | null = null;
+    if (pSecCheck.rows.length > 0) {
+      secUserId = pSecCheck.rows[0].id;
+      await db.query(
+        `UPDATE profiles SET password_hash = $1, department = 'Main Gate', assigned_post = 'Main Gate' WHERE id = $2;`,
+        [passwordHash, secUserId]
+      );
+    } else {
+      const pSecRes = await db.query(
+        `INSERT INTO profiles (full_name, email, department, staff_code, assigned_post, password_hash)
+         VALUES ('Security Officer Rajesh', 'security@cmadms.edu', 'Main Gate', 'SEC-001', 'Main Gate', $1)
+         RETURNING id::text;`,
+        [passwordHash]
+      );
+      secUserId = pSecRes.rows[0]?.id || null;
+    }
+    if (secUserId) {
+      const rSec = await db.query(`SELECT user_id FROM user_roles WHERE user_id = $1;`, [secUserId]);
+      if (rSec.rows.length === 0) {
+        await db.query(`INSERT INTO user_roles (user_id, role) VALUES ($1, 'security');`, [secUserId]);
+      } else {
+        await db.query(`UPDATE user_roles SET role = 'security' WHERE user_id = $1;`, [secUserId]);
+      }
+    }
+
+    // 2c. Ensure Demo Faculty Account: faculty@cmadms.edu
+    const pFacCheck = await db.query(`SELECT id::text FROM profiles WHERE UPPER(email) = 'FACULTY@CMADMS.EDU';`);
+    let facUserId: string | null = null;
+    if (pFacCheck.rows.length > 0) {
+      facUserId = pFacCheck.rows[0].id;
+      await db.query(`UPDATE profiles SET password_hash = $1 WHERE id = $2;`, [passwordHash, facUserId]);
+    } else {
+      const pFacRes = await db.query(
+        `INSERT INTO profiles (full_name, email, department, staff_code, password_hash)
+         VALUES ('Prof. Ravi Kumar', 'faculty@cmadms.edu', 'AIML', 'F-101', $1)
+         RETURNING id::text;`,
+        [passwordHash]
+      );
+      facUserId = pFacRes.rows[0]?.id || null;
+    }
+    if (facUserId) {
+      const rFac = await db.query(`SELECT user_id FROM user_roles WHERE user_id = $1;`, [facUserId]);
+      if (rFac.rows.length === 0) {
+        await db.query(`INSERT INTO user_roles (user_id, role) VALUES ($1, 'faculty');`, [facUserId]);
+      } else {
+        await db.query(`UPDATE user_roles SET role = 'faculty' WHERE user_id = $1;`, [facUserId]);
+      }
+    }
+
+    // 2d. Ensure Demo HOD Account: hod.cse@cmadms.edu
+    const pHodCheck = await db.query(`SELECT id::text FROM profiles WHERE UPPER(email) = 'HOD.CSE@CMADMS.EDU';`);
+    let hodUserId: string | null = null;
+    if (pHodCheck.rows.length > 0) {
+      hodUserId = pHodCheck.rows[0].id;
+      await db.query(`UPDATE profiles SET password_hash = $1 WHERE id = $2;`, [passwordHash, hodUserId]);
+    } else {
+      const pHodRes = await db.query(
+        `INSERT INTO profiles (full_name, email, department, staff_code, password_hash)
+         VALUES ('Dr. K. V. Sharma (HOD CSE)', 'hod.cse@cmadms.edu', 'CSE', 'HOD-CSE', $1)
+         RETURNING id::text;`,
+        [passwordHash]
+      );
+      hodUserId = pHodRes.rows[0]?.id || null;
+    }
+    if (hodUserId) {
+      const rHod = await db.query(`SELECT user_id FROM user_roles WHERE user_id = $1;`, [hodUserId]);
+      if (rHod.rows.length === 0) {
+        await db.query(`INSERT INTO user_roles (user_id, role) VALUES ($1, 'hod');`, [hodUserId]);
+      } else {
+        await db.query(`UPDATE user_roles SET role = 'hod' WHERE user_id = $1;`, [hodUserId]);
+      }
+    }
+
+    // 2e. Ensure Demo Admin Account: admin@cmadms.edu
+    const pAdmCheck = await db.query(`SELECT id::text FROM profiles WHERE UPPER(email) = 'ADMIN@CMADMS.EDU';`);
+    let admUserId: string | null = null;
+    if (pAdmCheck.rows.length > 0) {
+      admUserId = pAdmCheck.rows[0].id;
+      await db.query(`UPDATE profiles SET password_hash = $1 WHERE id = $2;`, [passwordHash, admUserId]);
+    } else {
+      const pAdmRes = await db.query(
+        `INSERT INTO profiles (full_name, email, department, staff_code, password_hash)
+         VALUES ('System Administrator', 'admin@cmadms.edu', 'ADMIN', 'ADM-001', $1)
+         RETURNING id::text;`,
+        [passwordHash]
+      );
+      admUserId = pAdmRes.rows[0]?.id || null;
+    }
+    if (admUserId) {
+      const rAdm = await db.query(`SELECT user_id FROM user_roles WHERE user_id = $1;`, [admUserId]);
+      if (rAdm.rows.length === 0) {
+        await db.query(`INSERT INTO user_roles (user_id, role) VALUES ($1, 'admin');`, [admUserId]);
+      } else {
+        await db.query(`UPDATE user_roles SET role = 'admin' WHERE user_id = $1;`, [admUserId]);
+      }
+    }
+
     // 3. Ensure Sample Violation Report for 23CSE1012 (RPT-890453)
     const rptCheck = await db.query(`SELECT id FROM violation_reports WHERE id = 'RPT-890453';`);
     if (rptCheck.rows.length === 0) {

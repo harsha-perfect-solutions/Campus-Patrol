@@ -52,6 +52,46 @@ function SecurityCheckPage() {
   const [result, setResult] = useState<VerificationResultPayload | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
 
+  // PWA Offline & Install Prompt states
+  const [isOnline, setIsOnline] = useState(
+    typeof window !== "undefined" ? navigator.onLine : true,
+  );
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [earlyExitConfirmOpen, setEarlyExitConfirmOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+    };
+  }, []);
+
+  const triggerPwaInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") {
+      setShowInstallBanner(false);
+    }
+    setDeferredPrompt(null);
+  };
+
   // Update checkpoint if profile loads late
   useEffect(() => {
     if (profile?.department) {
@@ -63,6 +103,10 @@ function SecurityCheckPage() {
 
   const handleAllowEarlyExit = async () => {
     if (!result?.pass?.id) return;
+    if (!isOnline) {
+      toast.error("Offline Error: Live server connection required to authorize early exit.");
+      return;
+    }
     setEarlyExitLoading(true);
     try {
       const res = await authorizeEarlyExitApi({
@@ -73,6 +117,7 @@ function SecurityCheckPage() {
       });
       if (res.success) {
         setResult(res as VerificationResultPayload);
+        setEarlyExitConfirmOpen(false);
         toast.success("✅ EARLY EXIT AUTHORIZED", {
           description: `Early exit authorized by Security at ${checkpoint}.`,
         });
@@ -91,6 +136,10 @@ function SecurityCheckPage() {
 
   const handleVerify = async (e?: React.FormEvent, overrideInput?: string) => {
     if (e) e.preventDefault();
+    if (!isOnline) {
+      toast.error("Offline Error: Live server connection required for gate verification.");
+      return;
+    }
     const query = (overrideInput ?? passInput).trim();
 
     if (!query) {
@@ -146,7 +195,54 @@ function SecurityCheckPage() {
 
   return (
     <RoleGuard allowedRoles={["security"]}>
-      <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="space-y-6 max-w-4xl mx-auto pb-8">
+        {/* Offline Warning Banner */}
+        {!isOnline && (
+          <div className="p-4 rounded-2xl bg-red-600 text-white font-bold flex items-center justify-between shadow-lg animate-bounce">
+            <div className="flex items-center gap-3">
+              <ShieldAlert className="size-6 shrink-0" />
+              <div>
+                <p className="text-sm uppercase tracking-wider">⚠️ CONNECTION LOST</p>
+                <p className="text-xs font-normal opacity-90">
+                  Live server verification is unavailable. Gate check actions are temporarily disabled until internet connection is restored.
+                </p>
+              </div>
+            </div>
+            <span className="text-xs px-2.5 py-1 rounded-lg bg-black/30 shrink-0">OFFLINE</span>
+          </div>
+        )}
+
+        {/* PWA Install Banner */}
+        {showInstallBanner && isOnline && (
+          <div className="p-4 rounded-2xl bg-primary/10 border border-primary/30 text-foreground flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-3">
+              <Sparkles className="size-5 text-primary shrink-0" />
+              <p className="text-xs font-semibold">
+                Install <strong>CMADMS Security Gate</strong> app for faster mobile security verification.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              <Button
+                type="button"
+                size="sm"
+                onClick={triggerPwaInstall}
+                className="h-8 bg-primary text-primary-foreground font-bold text-xs rounded-lg px-3"
+              >
+                [ INSTALL APP ]
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowInstallBanner(false)}
+                className="h-8 text-xs rounded-lg px-2 text-muted-foreground hover:text-foreground"
+              >
+                Dismiss
+              </Button>
+            </div>
+          </div>
+        )}
+
         <PageHeader
           title="Gate Pass Verification"
           description="Verify whether a student is authorized to exit the campus."

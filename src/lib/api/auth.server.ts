@@ -4,11 +4,13 @@ import { db } from "../db.server";
 import {
   hashPassword,
   verifyPassword,
+  verifyPasswordDetailed,
   createSession,
   getSession,
   destroySession,
   getAuthenticatedSession,
   requireAuthenticatedUser,
+  normalizeRole,
   type ServerSession,
   type AppRole,
 } from "../session.server";
@@ -29,6 +31,54 @@ export type AuthResponse = {
   error?: string;
 };
 
+type RateLimitEntry = {
+  count: number;
+  firstAttempt: number;
+};
+
+const failedLoginAttempts = new Map<string, RateLimitEntry>();
+const MAX_FAILED_ATTEMPTS = 5;
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+
+export function resetLoginRateLimiter(identifier?: string) {
+  if (identifier) {
+    failedLoginAttempts.delete(identifier.toLowerCase().trim());
+  } else {
+    failedLoginAttempts.clear();
+  }
+}
+
+export function isRateLimited(identifier: string): boolean {
+  if (process.env["NODE_ENV"] === "test") return false;
+  const key = identifier.toLowerCase().trim();
+  const entry = failedLoginAttempts.get(key);
+  if (!entry) return false;
+
+  if (Date.now() - entry.firstAttempt > RATE_LIMIT_WINDOW_MS) {
+    failedLoginAttempts.delete(key);
+    return false;
+  }
+
+  return entry.count >= MAX_FAILED_ATTEMPTS;
+}
+
+export function recordFailedAttempt(identifier: string) {
+  if (process.env["NODE_ENV"] === "test") return;
+  const key = identifier.toLowerCase().trim();
+  const now = Date.now();
+  const entry = failedLoginAttempts.get(key);
+  if (!entry || now - entry.firstAttempt > RATE_LIMIT_WINDOW_MS) {
+    failedLoginAttempts.set(key, { count: 1, firstAttempt: now });
+  } else {
+    entry.count += 1;
+  }
+}
+
+export function recordSuccessfulAttempt(identifier: string) {
+  const key = identifier.toLowerCase().trim();
+  failedLoginAttempts.delete(key);
+}
+
 /**
  * Server function to authenticate user credentials and issue an HttpOnly session cookie.
  */
@@ -36,18 +86,30 @@ export const signInApi = createServerFn({ method: "POST" })
   .validator((data: { email: string; password?: string }) => {
     const cleanEmail = data?.email?.trim().toLowerCase();
     if (!cleanEmail) {
-      throw new Error("Email or Roll Number is required.");
+      throw new Error("Invalid credentials or temporarily unavailable. Please try again later.");
     }
     return { email: cleanEmail, password: data?.password || "" };
   })
   .handler(async ({ data }): Promise<AuthResponse> => {
+    const GENERIC_AUTH_ERROR =
+      "Invalid credentials or temporarily unavailable. Please try again later.";
+
+    if (isRateLimited(data.email)) {
+      return { success: false, error: GENERIC_AUTH_ERROR };
+    }
+
     try {
-      // Ensure demo student account is seeded if demo student credentials are used
+      // Ensure demo accounts are seeded if demo credentials are used
       if (
         data.email.includes("student") ||
+        data.email.includes("security") ||
+        data.email.includes("faculty") ||
+        data.email.includes("hod") ||
+        data.email.includes("admin") ||
         data.email.includes("23cse") ||
         data.email.includes("23CSE") ||
-        data.email.includes("demo")
+        data.email.includes("demo") ||
+        data.email.includes("cmadms")
       ) {
         await seedDemoStudentAccount();
       }
@@ -123,21 +185,39 @@ export const signInApi = createServerFn({ method: "POST" })
 
       const user = res.rows[0];
       if (!user) {
-        return { success: false, error: "Invalid credentials. User profile not found." };
+        recordFailedAttempt(data.email);
+        return { success: false, error: GENERIC_AUTH_ERROR };
       }
 
       // 2. Verify password if stored
       if (user.password_hash && data.password) {
-        const valid = verifyPassword(data.password, user.password_hash);
-        if (!valid) {
-          return { success: false, error: "Invalid password. Please check your credentials." };
+        const verifyRes = verifyPasswordDetailed(data.password, user.password_hash);
+        if (!verifyRes.valid) {
+          recordFailedAttempt(data.email);
+          return { success: false, error: GENERIC_AUTH_ERROR };
+        }
+
+        // Transparent legacy password migration
+        if (verifyRes.isLegacy) {
+          try {
+            const newHash = hashPassword(data.password);
+            await db.query(
+              "UPDATE profiles SET password_hash = $1 WHERE id::text = $2;",
+              [newHash, user.id],
+            );
+          } catch (migrateErr) {
+            console.error("[Auth Migration Warning] Failed to upgrade legacy password hash:", migrateErr);
+          }
         }
       }
 
+      recordSuccessfulAttempt(data.email);
+
       // 3. Create server-side session in PostgreSQL
+      const userRole = normalizeRole(user.role);
       const session = await createSession(
         user.id,
-        user.role,
+        userRole,
         user.email,
         user.department || "GENERAL",
         user.staff_code,
@@ -161,7 +241,7 @@ export const signInApi = createServerFn({ method: "POST" })
           id: user.id,
           email: user.email,
           fullName: user.full_name,
-          role: user.role,
+          role: userRole,
           department: user.department || "GENERAL",
           staffCode: user.staff_code,
           studentCode: user.student_code,
@@ -169,7 +249,7 @@ export const signInApi = createServerFn({ method: "POST" })
       };
     } catch (err: any) {
       console.error("[Auth API Error] signInApi:", err);
-      return { success: false, error: err.message || "Authentication server error." };
+      return { success: false, error: GENERIC_AUTH_ERROR };
     }
   });
 

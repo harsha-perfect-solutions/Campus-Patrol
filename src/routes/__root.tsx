@@ -88,10 +88,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "CMADMS portal for student verification, timetable checks and unauthorized movement reporting.",
       },
+      { name: "theme-color", content: "#0f172a" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "manifest", href: "/manifest.json" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -101,6 +105,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "apple-touch-icon", href: "/favicon.svg" },
     ],
   }),
   shellComponent: RootShell,
@@ -126,6 +131,14 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootContent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { session, role } = useAuth();
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch((err) => {
+        console.warn("ServiceWorker registration failed:", err);
+      });
+    }
+  }, []);
 
   const isPublicPage = pathname === "/" || pathname === "/auth" || pathname === "/reset-password";
 
