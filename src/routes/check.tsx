@@ -68,6 +68,7 @@ import {
   getStudentCurrentClassApi,
   verifyStudentForFacultyApi,
 } from "@/lib/api/faculty.server";
+import { RoleGuard } from "@/components/role-guard";
 import type { DBStudent } from "@/lib/db/students.server";
 
 export const Route = createFileRoute("/check")({
@@ -87,8 +88,16 @@ export const Route = createFileRoute("/check")({
       },
     ],
   }),
-  component: CheckStudentPage,
+  component: ProtectedCheckStudentPage,
 });
+
+function ProtectedCheckStudentPage() {
+  return (
+    <RoleGuard allowedRoles={["faculty", "hod", "security", "admin"]}>
+      <CheckStudentPage />
+    </RoleGuard>
+  );
+}
 
 type Result = {
   student: {

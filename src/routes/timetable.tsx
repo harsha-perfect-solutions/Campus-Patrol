@@ -7,6 +7,7 @@ import { ToneBadge } from "@/components/status-badge";
 import { useAuth } from "@/lib/auth";
 import { getAdminTimetableApi, getMyStudentTimetableApi } from "@/lib/api/timetable.server";
 import { cn } from "@/lib/utils";
+import { RoleGuard } from "@/components/role-guard";
 
 export const Route = createFileRoute("/timetable")({
   head: () => ({
@@ -21,8 +22,16 @@ export const Route = createFileRoute("/timetable")({
       { property: "og:description", content: "Weekly teaching schedule for CMADMS faculty." },
     ],
   }),
-  component: TimetablePage,
+  component: ProtectedTimetablePage,
 });
+
+function ProtectedTimetablePage() {
+  return (
+    <RoleGuard allowedRoles={["faculty", "hod", "student", "admin"]}>
+      <TimetablePage />
+    </RoleGuard>
+  );
+}
 
 type ProcessedSlot = {
   id: string;

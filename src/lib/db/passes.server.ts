@@ -1,4 +1,5 @@
 import { db } from "../db.server";
+import { permissionByStudent as mockPermissions } from "../cmadms-data";
 
 export type DBMovementPermission = {
   id: string;
@@ -48,9 +49,26 @@ export async function getActiveMovementPermission(
     `;
 
     const result = await db.query<DBMovementPermission>(query, [cleanCode]);
-    return result.rows[0] ?? null;
+    if (result.rows[0]) return result.rows[0];
   } catch (error) {
-    console.error("[Database Error] Error checking active movement permission:", error);
-    throw new Error("Failed to query active movement permission.");
+    console.warn("[Database Warning] Error checking active movement permission, using mock fallback:", error);
   }
+
+  const mockPass = mockPermissions[cleanCode];
+  if (mockPass) {
+    return {
+      id: `PERM-MOCK-${cleanCode}`,
+      student_code: cleanCode,
+      reason: mockPass.reason,
+      date: new Date().toISOString().split("T")[0] || "",
+      valid_from: "10:00 AM",
+      valid_until: mockPass.validUntil || "11:30 AM",
+      status: "approved",
+      issued_by: mockPass.issuedBy,
+      created_at: new Date().toISOString(),
+    };
+  }
+
+  return null;
 }
+

@@ -135,7 +135,7 @@ export function AppSidebar({
           })}
         </nav>
 
-        {/* Bottom Help & Logout Section */}
+        {/* Bottom Settings & Logout Section */}
         <div className="border-t border-border p-3 space-y-1">
           <button
             type="button"
@@ -145,8 +145,8 @@ export function AppSidebar({
               isCollapsed && "justify-center px-0",
             )}
           >
-            <HelpCircle className="size-4 text-muted-foreground shrink-0" />
-            {!isCollapsed && <span>Help</span>}
+            <Settings className="size-4 text-muted-foreground shrink-0" />
+            {!isCollapsed && <span>Settings</span>}
           </button>
 
           <button

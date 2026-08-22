@@ -20,14 +20,13 @@ export function RoleGuard({
   const isAllowed = userRole ? targetRoles.includes(userRole) : false;
 
   useEffect(() => {
-    if (!loading && !session) {
-      navigate({ to: "/auth" as any });
-      return;
-    }
-
-    if (!loading && session && userRole && !isAllowed) {
-      const target = getDefaultDashboardForRole(userRole);
-      navigate({ to: target as any });
+    if (!loading) {
+      if (!session) {
+        navigate({ to: "/auth" as any });
+      } else if (userRole && !isAllowed) {
+        const target = getDefaultDashboardForRole(userRole);
+        navigate({ to: target as any });
+      }
     }
   }, [loading, session, userRole, isAllowed, navigate]);
 

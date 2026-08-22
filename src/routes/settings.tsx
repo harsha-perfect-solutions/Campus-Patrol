@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { faculty } from "@/lib/cmadms-data";
 import { useCmadms } from "@/lib/cmadms-store";
 
+import { RoleGuard } from "@/components/role-guard";
+
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
@@ -21,8 +23,16 @@ export const Route = createFileRoute("/settings")({
       { property: "og:description", content: "Profile, appearance and notification preferences." },
     ],
   }),
-  component: SettingsPage,
+  component: ProtectedSettingsPage,
 });
+
+function ProtectedSettingsPage() {
+  return (
+    <RoleGuard allowedRoles={["faculty", "hod", "security", "student", "admin"]}>
+      <SettingsPage />
+    </RoleGuard>
+  );
+}
 
 function Card({
   title,

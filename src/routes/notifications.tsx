@@ -22,6 +22,8 @@ import {
 } from "@/lib/api/notifications.server";
 import type { DBNotification } from "@/lib/db/notifications.server";
 
+import { RoleGuard } from "@/components/role-guard";
+
 export const Route = createFileRoute("/notifications")({
   head: () => ({
     meta: [
@@ -32,8 +34,16 @@ export const Route = createFileRoute("/notifications")({
       },
     ],
   }),
-  component: NotificationsPage,
+  component: ProtectedNotificationsPage,
 });
+
+function ProtectedNotificationsPage() {
+  return (
+    <RoleGuard allowedRoles={["faculty", "hod", "security", "student", "admin"]}>
+      <NotificationsPage />
+    </RoleGuard>
+  );
+}
 
 // ─── Tone Config ─────────────────────────────────────────────────────────────
 

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ReportsTable } from "@/components/reports-table";
 import { useCmadms } from "@/lib/cmadms-store";
 
+import { RoleGuard } from "@/components/role-guard";
+
 export const Route = createFileRoute("/reports/")({
   head: () => ({
     meta: [
@@ -17,8 +19,16 @@ export const Route = createFileRoute("/reports/")({
       { property: "og:description", content: "Track the status of every violation you filed." },
     ],
   }),
-  component: ReportsPage,
+  component: ProtectedReportsPage,
 });
+
+function ProtectedReportsPage() {
+  return (
+    <RoleGuard allowedRoles={["faculty", "hod", "admin"]}>
+      <ReportsPage />
+    </RoleGuard>
+  );
+}
 
 function ReportsPage() {
   const { reports } = useCmadms();
