@@ -75,7 +75,7 @@ export const Route = createFileRoute("/hod/violations")({
   component: HODViolationsPage,
 });
 
-export default function HODViolationsPage() {
+function HODViolationsPage() {
   const { profile } = useAuth();
   const userDept = profile?.department || "CSE";
 

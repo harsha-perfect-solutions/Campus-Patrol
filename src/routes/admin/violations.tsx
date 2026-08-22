@@ -72,7 +72,7 @@ export const Route = createFileRoute("/admin/violations")({
   component: AdminViolationsPage,
 });
 
-export default function AdminViolationsPage() {
+function AdminViolationsPage() {
   const { profile } = useAuth();
 
   const [reports, setReports] = useState<DBViolationReport[]>([]);

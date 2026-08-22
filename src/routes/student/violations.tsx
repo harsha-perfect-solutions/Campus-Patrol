@@ -70,7 +70,7 @@ export const Route = createFileRoute("/student/violations")({
   component: StudentViolationsPage,
 });
 
-export default function StudentViolationsPage() {
+function StudentViolationsPage() {
   const { profile } = useAuth();
   const studentCode = profile?.student_code || profile?.email || "";
 
