@@ -8,15 +8,18 @@ import {
   Send,
   CheckCircle2,
   XCircle,
-  Activity,
   Calendar,
   Building2,
-  User,
   Search,
   SlidersHorizontal,
   Filter,
   X,
   RotateCcw,
+  Check,
+  AlertCircle,
+  Tag,
+  Layers,
+  HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
@@ -39,17 +42,153 @@ export const Route = createFileRoute("/student/passes")({
   component: StudentPassesPage,
 });
 
-function formatDateStr(d: any): string {
-  if (!d) return "Today";
-  if (typeof d === "string") return d;
-  if (d instanceof Date) return d.toISOString().split("T")[0]!;
-  return String(d);
+type PassState = "active" | "completed" | "expired" | "pending" | "rejected";
+
+function getWeekNumber(d: Date): number {
+  const target = new Date(d.valueOf());
+  const dayNr = (d.getDay() + 6) % 7;
+  target.setDate(target.getDate() - dayNr + 3);
+  const firstThursday = target.valueOf();
+  target.setMonth(0, 1);
+  if (target.getDay() !== 4) {
+    target.setMonth(0, 1 + ((4 - target.getDay() + 7) % 7));
+  }
+  return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
 }
 
-function formatTimeStr(t: any): string {
-  if (!t) return "";
-  if (typeof t === "string") return t;
-  return String(t);
+function formatPassDateWithWeek(dateStr: string): {
+  fullDate: string;
+  dayOfWeek: string;
+  weekStr: string;
+  relativeTag: string;
+} {
+  const todayObj = new Date();
+  const todayStr = todayObj.toISOString().split("T")[0]!;
+
+  const cleanDateStr = dateStr ? String(dateStr).split("T")[0]! : todayStr;
+  const d = new Date(`${cleanDateStr}T00:00:00`);
+
+  const dayOfWeek = d.toLocaleDateString("en-US", { weekday: "short" }); // e.g. "Sat"
+  const fullDate = d.toLocaleDateString("en-US", {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }); // e.g. "Saturday, 22 Aug 2026"
+  const weekNum = getWeekNumber(d);
+
+  let relativeTag = "Past Date";
+  if (cleanDateStr === todayStr) {
+    relativeTag = "Today";
+  } else {
+    const yesterday = new Date(todayObj);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (cleanDateStr === yesterday.toISOString().split("T")[0]) {
+      relativeTag = "Yesterday";
+    } else if (getWeekNumber(todayObj) === weekNum) {
+      relativeTag = "This Week";
+    }
+  }
+
+  return {
+    fullDate,
+    dayOfWeek,
+    weekStr: `Week ${weekNum}`,
+    relativeTag,
+  };
+}
+
+function getDerivedPassState(pass: DBPermission): {
+  state: PassState;
+  label: string;
+  badgeClass: string;
+  borderClass: string;
+  bgClass: string;
+} {
+  const rawStatus = String(pass.status || "pending").toLowerCase();
+  if (rawStatus === "pending") {
+    return {
+      state: "pending",
+      label: "PENDING HOD AUTHORIZATION",
+      badgeClass: "bg-amber-500/20 text-amber-800 dark:text-amber-200 border-amber-500/30",
+      borderClass: "border-amber-500/30",
+      bgClass: "bg-amber-500/5 dark:bg-amber-950/20",
+    };
+  }
+  if (rawStatus === "rejected") {
+    return {
+      state: "rejected",
+      label: "REJECTED PASS",
+      badgeClass: "bg-rose-500/20 text-rose-800 dark:text-rose-200 border-rose-500/30",
+      borderClass: "border-rose-500/30",
+      bgClass: "bg-rose-500/5 dark:bg-rose-950/20",
+    };
+  }
+
+  // If student checked in (entry_at exists) or completed flag is true => COMPLETED
+  if (pass.entry_at || pass.completed) {
+    return {
+      state: "completed",
+      label: "COMPLETED & RETURNED",
+      badgeClass: "bg-blue-500/20 text-blue-800 dark:text-blue-200 border-blue-500/30",
+      borderClass: "border-blue-500/30",
+      bgClass: "bg-blue-500/5 dark:bg-blue-950/20",
+    };
+  }
+
+  // Check date & time validity
+  const todayStr = new Date().toISOString().split("T")[0]!;
+  const passDateStr = pass.date ? String(pass.date).split("T")[0]! : todayStr;
+
+  if (passDateStr < todayStr) {
+    return {
+      state: "expired",
+      label: "EXPIRED (PAST DATE)",
+      badgeClass: "bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/30",
+      borderClass: "border-slate-500/30",
+      bgClass: "bg-slate-500/5 dark:bg-slate-950/20",
+    };
+  }
+
+  // If today's date, compare current time vs valid_until
+  if (passDateStr === todayStr && pass.valid_until) {
+    const now = new Date();
+    const currentHHMM = now.toTimeString().slice(0, 5);
+    let untilHHMM = String(pass.valid_until).trim();
+
+    if (untilHHMM.includes("PM") || untilHHMM.includes("AM")) {
+      const match = untilHHMM.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (match) {
+        let hrs = parseInt(match[1]!, 10);
+        const mins = match[2]!;
+        const ampm = match[3]!.toUpperCase();
+        if (ampm === "PM" && hrs < 12) hrs += 12;
+        if (ampm === "AM" && hrs === 12) hrs = 0;
+        untilHHMM = `${String(hrs).padStart(2, "0")}:${mins}`;
+      }
+    } else {
+      untilHHMM = untilHHMM.slice(0, 5);
+    }
+
+    if (currentHHMM > untilHHMM) {
+      return {
+        state: "expired",
+        label: "EXPIRED (TIME ELAPSED)",
+        badgeClass: "bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/30",
+        borderClass: "border-slate-500/30",
+        bgClass: "bg-slate-500/5 dark:bg-slate-950/20",
+      };
+    }
+  }
+
+  // Active
+  return {
+    state: "active",
+    label: "ACTIVE DIGITAL GATE PASS",
+    badgeClass: "bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 border-emerald-500/30",
+    borderClass: "border-emerald-500/30",
+    bgClass: "bg-emerald-500/5 dark:bg-emerald-950/20",
+  };
 }
 
 function StudentPassesPage() {
@@ -59,9 +198,12 @@ function StudentPassesPage() {
   const [loading, setLoading] = useState(true);
 
   // Filter & Search states
-  const [statusFilter, setStatusFilter] = useState<"all" | "approved" | "pending" | "rejected">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "completed" | "expired" | "pending" | "rejected"
+  >("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
+  const [groupByWeek, setGroupByWeek] = useState(false);
 
   // Apply new pass form state
   const [showApplyModal, setShowApplyModal] = useState(false);
@@ -142,18 +284,25 @@ function StudentPassesPage() {
     }
   };
 
-  // Filter calculation & counts
-  const counts = {
+  // Compute counts for status tabs based on derived state
+  const stateCounts = {
     all: passes.length,
-    approved: passes.filter((p) => String(p.status || "").toLowerCase() === "approved").length,
-    pending: passes.filter((p) => String(p.status || "").toLowerCase() === "pending").length,
-    rejected: passes.filter((p) => String(p.status || "").toLowerCase() === "rejected").length,
+    active: 0,
+    completed: 0,
+    expired: 0,
+    pending: 0,
+    rejected: 0,
   };
+
+  passes.forEach((p) => {
+    const derived = getDerivedPassState(p);
+    stateCounts[derived.state]++;
+  });
 
   const filteredPasses = passes
     .filter((pass) => {
-      const statusStr = String(pass.status || "pending").toLowerCase();
-      if (statusFilter !== "all" && statusStr !== statusFilter) {
+      const derived = getDerivedPassState(pass);
+      if (statusFilter !== "all" && derived.state !== statusFilter) {
         return false;
       }
       if (searchQuery.trim()) {
@@ -162,7 +311,8 @@ function StudentPassesPage() {
         const authorityMatch = String(pass.issued_by || "").toLowerCase().includes(q);
         const studentMatch = String(pass.student_code || "").toLowerCase().includes(q);
         const passIdMatch = String(pass.id || "").toLowerCase().includes(q);
-        if (!reasonMatch && !authorityMatch && !studentMatch && !passIdMatch) {
+        const dateMatch = String(pass.date || "").toLowerCase().includes(q);
+        if (!reasonMatch && !authorityMatch && !studentMatch && !passIdMatch && !dateMatch) {
           return false;
         }
       }
@@ -179,7 +329,7 @@ function StudentPassesPage() {
       <div className="space-y-6 w-full">
         <PageHeader
           title="My Movement Passes"
-          description="View active and past campus corridor and gate movement passes issued to you."
+          description="View active, completed, and historical campus movement clearance passes issued to you."
           breadcrumb={[
             { label: "Student", to: "/student/dashboard" },
             { label: "My Movement Passes" },
@@ -290,7 +440,7 @@ function StudentPassesPage() {
           </form>
         )}
 
-        {/* Interactive Full-Width Filter & Search Bar */}
+        {/* Interactive Filter & Search Bar */}
         {!loading && passes.length > 0 && (
           <div className="card-surface p-4 rounded-2xl border border-border shadow-xs space-y-3 w-full">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -299,7 +449,7 @@ function StudentPassesPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Filter by reason, authority, or pass ID..."
+                  placeholder="Filter by reason, authority, date (e.g. 2026-08-22)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9 h-9 text-xs rounded-xl w-full"
@@ -316,7 +466,7 @@ function StudentPassesPage() {
                 )}
               </div>
 
-              {/* Sort Dropdown */}
+              {/* Sort & Group Dropdowns */}
               <div className="flex items-center gap-2 shrink-0">
                 <SlidersHorizontal className="size-3.5 text-muted-foreground hidden sm:block" />
                 <select
@@ -333,10 +483,12 @@ function StudentPassesPage() {
             {/* Status Filter Badges */}
             <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-border/60">
               {[
-                { id: "all", label: "All Passes", count: counts.all, icon: Filter },
-                { id: "approved", label: "Approved", count: counts.approved, icon: CheckCircle2 },
-                { id: "pending", label: "Pending", count: counts.pending, icon: Clock },
-                { id: "rejected", label: "Rejected", count: counts.rejected, icon: XCircle },
+                { id: "all", label: "All Passes", count: stateCounts.all, icon: Filter },
+                { id: "active", label: "Active (Scan QR)", count: stateCounts.active, icon: CheckCircle2 },
+                { id: "completed", label: "Completed", count: stateCounts.completed, icon: Check },
+                { id: "expired", label: "Expired", count: stateCounts.expired, icon: Clock },
+                { id: "pending", label: "Pending HOD", count: stateCounts.pending, icon: Clock },
+                { id: "rejected", label: "Rejected", count: stateCounts.rejected, icon: XCircle },
               ].map((tab) => {
                 const isSelected = statusFilter === tab.id;
                 const TabIcon = tab.icon;
@@ -376,75 +528,84 @@ function StudentPassesPage() {
             Loading movement passes from database...
           </div>
         ) : filteredPasses.length > 0 ? (
-          /* Responsive Multi-Column Grid Layout for Pass Cards */
+          /* Multi-Column Grid Layout for Pass Cards */
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
             {filteredPasses.map((pass) => {
-              const statusStr = String(pass.status || "pending").toLowerCase();
-              const isApproved = statusStr === "approved";
-              const isPending = statusStr === "pending";
-              const isRejected = statusStr === "rejected";
+              const derived = getDerivedPassState(pass);
               const passIdStr = String(pass.id || "");
               const passCode = passIdStr.startsWith("CMADMS-PASS-")
                 ? passIdStr
                 : `CMADMS-PASS-${passIdStr.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 
-              const formattedDate = formatDateStr(pass.date);
-              const validFromStr = formatTimeStr(pass.valid_from);
-              const validUntilStr = formatTimeStr(pass.valid_until);
+              const dateInfo = formatPassDateWithWeek(pass.date);
 
               return (
                 <div
                   key={pass.id}
-                  className={`card-surface p-5 sm:p-6 rounded-2xl border space-y-4 flex flex-col justify-between ${
-                    isApproved
-                      ? "border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20"
-                      : isPending
-                        ? "border-amber-500/30 bg-amber-500/5 dark:bg-amber-950/20"
-                        : "border-rose-500/30 bg-rose-500/5 dark:bg-rose-950/20"
-                  }`}
+                  className={cn(
+                    "card-surface p-5 sm:p-6 rounded-2xl border space-y-4 flex flex-col justify-between transition-all duration-150",
+                    derived.borderClass,
+                    derived.bgClass,
+                    derived.state === "active" && "shadow-md ring-1 ring-emerald-500/30"
+                  )}
                 >
-                  <div className="flex items-center justify-between">
-                    <div
-                      className={`flex items-center gap-2 font-bold text-xs sm:text-sm ${
-                        isApproved
-                          ? "text-emerald-700 dark:text-emerald-300"
-                          : isPending
-                            ? "text-amber-700 dark:text-amber-300"
-                            : "text-rose-700 dark:text-rose-300"
-                      }`}
-                    >
-                      {isApproved ? (
-                        <CheckCircle2 className="size-4 sm:size-5 shrink-0" />
-                      ) : isPending ? (
-                        <Clock className="size-4 sm:size-5 shrink-0" />
-                      ) : (
-                        <XCircle className="size-4 sm:size-5 shrink-0" />
-                      )}
-                      <span className="truncate">
-                        {isApproved
-                          ? "APPROVED DIGITAL GATE PASS"
-                          : isPending
-                            ? "PENDING HOD AUTHORIZATION"
-                            : "REJECTED PASS"}
+                  {/* Card Header: Derived Status Badge & Date/Week info */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
+                        {derived.state === "active" ? (
+                          <CheckCircle2 className="size-4 sm:size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        ) : derived.state === "completed" ? (
+                          <Check className="size-4 sm:size-5 shrink-0 text-blue-600 dark:text-blue-400" />
+                        ) : derived.state === "expired" ? (
+                          <Clock className="size-4 sm:size-5 shrink-0 text-slate-500" />
+                        ) : derived.state === "pending" ? (
+                          <Clock className="size-4 sm:size-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                        ) : (
+                          <XCircle className="size-4 sm:size-5 shrink-0 text-rose-600 dark:text-rose-400" />
+                        )}
+                        <span className="truncate font-extrabold">{derived.label}</span>
+                      </div>
+
+                      <span
+                        className={cn(
+                          "text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase shrink-0 border",
+                          derived.badgeClass
+                        )}
+                      >
+                        {derived.state}
                       </span>
                     </div>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase shrink-0 ${
-                        isApproved
-                          ? "bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 border border-emerald-500/30"
-                          : isPending
-                            ? "bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/30"
-                            : "bg-rose-500/20 text-rose-800 dark:text-rose-200 border border-rose-500/30"
-                      }`}
-                    >
-                      {pass.status}
-                    </span>
+
+                    {/* Date & Week Metadata Pill */}
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground pt-1 border-t border-border/40">
+                      <span className="flex items-center gap-1 font-semibold text-foreground">
+                        <Calendar className="size-3.5 text-primary" />
+                        {dateInfo.fullDate}
+                      </span>
+                      <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground font-mono">
+                        {dateInfo.weekStr}
+                      </span>
+                      {dateInfo.relativeTag && (
+                        <span
+                          className={cn(
+                            "rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase",
+                            dateInfo.relativeTag === "Today"
+                              ? "bg-primary/15 text-primary"
+                              : "bg-muted/80 text-muted-foreground"
+                          )}
+                        >
+                          {dateInfo.relativeTag}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {isApproved && (
-                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 p-4 rounded-xl bg-card border border-emerald-500/20 flex-1">
+                  {/* ACTIVE PASS: Display Active QR Code */}
+                  {derived.state === "active" && (
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 p-4 rounded-xl bg-card border border-emerald-500/30 flex-1 shadow-xs">
                       <div className="flex flex-col items-center shrink-0">
-                        <QRCode value={passCode} size={120} />
+                        <QRCode value={passCode} size={125} />
                         <span className="mt-2 text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-400 text-center">
                           {passCode}
                         </span>
@@ -474,26 +635,80 @@ function StudentPassesPage() {
                         </div>
                         <div className="pt-1.5 border-t border-border flex items-center justify-between text-[11px]">
                           <span className="text-muted-foreground text-[10px]">Valid Window</span>
-                          <span className="font-bold text-emerald-700 dark:text-emerald-400 text-[10px] sm:text-[11px]">
-                            {validFromStr} – {validUntilStr} ({formattedDate})
+                          <span className="font-extrabold text-emerald-700 dark:text-emerald-400 text-[11px]">
+                            {pass.valid_from} – {pass.valid_until}
                           </span>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {!isApproved && (
-                    <div className="text-xs space-y-2 text-foreground flex-1 flex flex-col justify-center">
+                  {/* COMPLETED PASS: Display Completion Receipt & Gate Entry Timestamp */}
+                  {derived.state === "completed" && (
+                    <div className="p-4 rounded-xl bg-card border border-blue-500/20 flex-1 space-y-3">
+                      <div className="flex items-center justify-between text-xs border-b border-border pb-2">
+                        <span className="font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                          <Check className="size-4 text-blue-500" /> Pass Successfully Completed
+                        </span>
+                        <span className="text-[10px] font-mono text-muted-foreground">{passCode}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground block text-[10px]">Reason</span>
+                          <span className="font-semibold text-foreground">{pass.reason}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground block text-[10px]">Authorized By</span>
+                          <span className="font-semibold text-foreground">{pass.issued_by}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground block text-[10px]">Valid Time Window</span>
+                          <span className="font-semibold text-foreground">{pass.valid_from} – {pass.valid_until}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground block text-[10px]">Gate Return Entry</span>
+                          <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                            {pass.entry_at || "Returned & Checked In"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* EXPIRED PASS: Display Expiry Information */}
+                  {derived.state === "expired" && (
+                    <div className="p-4 rounded-xl bg-card/60 border border-slate-500/20 flex-1 space-y-2 text-xs">
+                      <div className="flex items-center justify-between border-b border-border pb-2">
+                        <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <Clock className="size-4 text-slate-500" /> Time Window Elapsed
+                        </span>
+                        <span className="text-[10px] font-mono text-muted-foreground">{passCode}</span>
+                      </div>
+                      <p className="text-muted-foreground">
+                        Reason: <strong className="text-foreground font-semibold">{pass.reason}</strong>
+                      </p>
+                      <p className="text-muted-foreground">
+                        Valid Time: <span className="font-medium text-foreground">{pass.valid_from} – {pass.valid_until}</span>
+                      </p>
+                      <p className="text-[10px] text-slate-500 italic pt-1">
+                        * Pass validity period has ended. If you need campus exit clearance, please apply for a new pass.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* PENDING / REJECTED PASS */}
+                  {(derived.state === "pending" || derived.state === "rejected") && (
+                    <div className="text-xs space-y-2 text-foreground flex-1 flex flex-col justify-center p-4 rounded-xl bg-card border border-border">
                       <p className="flex items-start gap-1.5">
                         <FileText className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
                         <span>Reason: <strong className="font-bold">{pass.reason}</strong></span>
                       </p>
                       <p className="flex items-center gap-1.5 text-muted-foreground">
                         <Clock className="size-3.5 shrink-0" />
-                        <span>Valid Time: {validFromStr} — {validUntilStr} ({formattedDate})</span>
+                        <span>Valid Window: {pass.valid_from} — {pass.valid_until}</span>
                       </p>
                       <p className="text-muted-foreground text-[11px]">
-                        Authority: <strong className="text-foreground">{pass.issued_by}</strong>
+                        Approving Authority: <strong className="text-foreground">{pass.issued_by || "HOD Office"}</strong>
                       </p>
                     </div>
                   )}
@@ -502,7 +717,7 @@ function StudentPassesPage() {
             })}
           </div>
         ) : passes.length > 0 ? (
-          /* Filter Return Empty State */
+          /* Filter Empty State */
           <div className="card-surface p-8 rounded-2xl border border-border text-center w-full max-w-2xl mx-auto text-xs text-muted-foreground space-y-3">
             <Filter className="size-8 text-muted-foreground/60 mx-auto" />
             <div>
@@ -529,11 +744,11 @@ function StudentPassesPage() {
             </Button>
           </div>
         ) : (
-          /* Zero Total Passes Empty State */
+          /* Zero Passes Found */
           <div className="card-surface p-8 rounded-2xl border border-border text-center w-full max-w-2xl mx-auto text-xs text-muted-foreground space-y-1">
             <p className="font-bold text-foreground">No Movement Passes Found</p>
             <p>
-              No active or historical movement passes found in database for Roll No:{" "}
+              No movement passes recorded in database for Roll No:{" "}
               <strong className="text-foreground">{rollNo}</strong>.
             </p>
           </div>
@@ -542,3 +757,4 @@ function StudentPassesPage() {
     </RoleGuard>
   );
 }
+

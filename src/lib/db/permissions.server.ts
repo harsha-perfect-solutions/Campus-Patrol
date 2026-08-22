@@ -14,6 +14,13 @@ export type DBPermission = {
   status: "pending" | "approved" | "rejected";
   issued_by: string;
   created_at: string;
+  exit_at?: string | null;
+  entry_at?: string | null;
+  checkpoint?: string | null;
+  verified_by?: string | null;
+  revoked_at?: string | null;
+  cancelled_at?: string | null;
+  completed?: boolean;
 };
 
 export type NewPermissionInput = {
