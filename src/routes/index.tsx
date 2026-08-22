@@ -92,21 +92,10 @@ function Landing() {
           <Button
             asChild
             size="lg"
-            className="h-11 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-6 font-semibold shadow-sm transition-all hover:scale-[1.02] active:scale-95"
+            className="h-11 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-7 font-bold shadow-md transition-all hover:scale-[1.02] active:scale-95"
           >
             <Link to="/auth">
-              Faculty Sign In <ArrowRight className="size-4 ml-1.5" />
-            </Link>
-          </Button>
-
-          <Button
-            asChild
-            size="lg"
-            variant="outline"
-            className="h-11 border-border bg-card text-foreground hover:bg-accent rounded-xl px-6 font-semibold shadow-2xs transition-all hover:scale-[1.02]"
-          >
-            <Link to="/check">
-              <UserSearch className="size-4 mr-2 text-primary" /> Verify Student ID
+              Sign In <ArrowRight className="size-4 ml-1.5" />
             </Link>
           </Button>
         </div>
