@@ -80,16 +80,6 @@ export function LandingNavbar() {
             {theme === "dark" ? <Sun className="size-4 text-amber-400" /> : <Moon className="size-4" />}
           </Button>
 
-          <Button
-            asChild
-            size="sm"
-            className="rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 px-4 shadow-2xs transition-all hover:scale-[1.02]"
-          >
-            <Link to={session ? ("/admin/dashboard" as any) : "/auth"}>
-              {session ? "Dashboard" : "Sign In"} <ArrowRight className="size-3.5 ml-1.5" />
-            </Link>
-          </Button>
-
           {/* Mobile Drawer Trigger */}
           <Button
             variant="ghost"
