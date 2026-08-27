@@ -698,3 +698,5 @@ export const cleanupExpiredSessionsApi = createServerFn({ method: "POST" }).hand
     }
   },
 );
+
+export default {};

@@ -395,7 +395,6 @@ function AdminViolationsPage() {
                   <tr>
                     <th className="py-3.5 px-4">Case ID & Student</th>
                     <th className="py-3.5 px-4">Department</th>
-                    <th className="py-3.5 px-4">Violation Category</th>
                     <th className="py-3.5 px-4">Severity</th>
                     <th className="py-3.5 px-4">Recorded Class / Location</th>
                     <th className="py-3.5 px-4">Faculty Reporter</th>
@@ -436,12 +435,6 @@ function AdminViolationsPage() {
                         <td className="py-3.5 px-4">
                           <span className="font-bold text-foreground px-2 py-0.5 rounded-md bg-accent text-[11px]">
                             {report.department}
-                          </span>
-                        </td>
-
-                        <td className="py-3.5 px-4">
-                          <span className="font-semibold text-foreground block">
-                            {report.violation_type}
                           </span>
                         </td>
 

@@ -29,6 +29,10 @@ import {
   User,
   Shield,
   Search,
+  Ticket,
+  Building,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -60,6 +64,26 @@ const facultyNavGroups = [
     ],
   },
   {
+    category: "Counseling",
+    items: [
+      { to: "/faculty/counselor", label: "Counselor Workspace", icon: ShieldAlert },
+    ],
+  },
+  {
+    category: "Club Management",
+    items: [
+      {
+        label: "My Club",
+        icon: Building,
+        subItems: [
+          { to: "/faculty/clubs", label: "Overview", icon: Building },
+          { to: "/faculty/clubs?tab=events", label: "Events", icon: Calendar },
+          { to: "/faculty/clubs?tab=permissions", label: "Give Permission", icon: Ticket },
+        ],
+      },
+    ],
+  },
+  {
     category: "Academics & Account",
     items: [
       { to: "/faculty/timetable", label: "My Timetable", icon: Calendar },
@@ -68,6 +92,104 @@ const facultyNavGroups = [
     ],
   },
 ];
+
+function FacultySidebarNavItem({
+  item,
+  pathname,
+  unreadCount,
+  onSelect,
+}: {
+  item: any;
+  pathname: string;
+  unreadCount: number;
+  onSelect?: () => void;
+}) {
+  const isClubRoute = pathname.startsWith("/faculty/clubs");
+  const [expanded, setExpanded] = useState(true);
+
+  if (item.subItems) {
+    return (
+      <div className="space-y-1">
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className={cn(
+            "flex w-full min-h-[38px] items-center justify-between rounded-xl px-3 text-xs font-semibold transition-colors",
+            isClubRoute
+              ? "bg-primary/10 text-primary font-bold shadow-2xs"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground",
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <item.icon className="size-4 shrink-0" />
+            <span className="truncate">{item.label}</span>
+          </div>
+          {expanded ? (
+            <ChevronDown className="size-3.5 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="size-3.5 text-muted-foreground" />
+          )}
+        </button>
+
+        {expanded && (
+          <div className="ml-4 pl-3 border-l-2 border-border/80 space-y-1 my-1">
+            {item.subItems.map((sub: any) => {
+              const fullPath =
+                pathname + (typeof window !== "undefined" ? window.location.search : "");
+              const active = sub.to.includes("?")
+                ? fullPath === sub.to
+                : pathname === sub.to && !fullPath.includes("?tab=");
+              return (
+                <Link
+                  key={sub.to}
+                  to={sub.to as any}
+                  onClick={onSelect}
+                  className={cn(
+                    "flex min-h-[34px] items-center gap-2.5 rounded-lg px-2.5 text-xs font-semibold transition-colors",
+                    active
+                      ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                  )}
+                >
+                  <sub.icon className="size-3.5 shrink-0" />
+                  <span className="truncate">{sub.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const fullPath = pathname + (typeof window !== "undefined" ? window.location.search : "");
+  const active =
+    item.to && item.to.includes("?")
+      ? fullPath === item.to
+      : pathname === item.to || (pathname.startsWith(`${item.to}/`) && !fullPath.includes("?tab="));
+  const badge = item.to && item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
+
+  return (
+    <Link
+      to={(item.to || "#") as any}
+      onClick={onSelect}
+      className={cn(
+        "flex min-h-[38px] items-center gap-3 rounded-xl px-3 text-xs font-semibold transition-colors",
+        active
+          ? "bg-primary/10 text-primary font-bold shadow-2xs"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground",
+      )}
+    >
+      <item.icon className="size-4 shrink-0" />
+      <span className="truncate">{item.label}</span>
+      {badge && (
+        <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">
+          {badge}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 export function FacultyShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -116,31 +238,15 @@ export function FacultyShell({ children }: { children: ReactNode }) {
               <p className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/70">
                 {group.category}
               </p>
-              {group.items.map((item) => {
-                const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
-                const badge = item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to as any}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      "flex min-h-[40px] items-center gap-3 rounded-xl px-3.5 text-xs font-semibold transition-colors",
-                      active
-                        ? "bg-primary/10 text-primary font-bold shadow-2xs"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                    )}
-                  >
-                    <item.icon className="size-4 shrink-0" />
-                    <span className="truncate">{item.label}</span>
-                    {badge && (
-                      <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">
-                        {badge}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
+              {group.items.map((item) => (
+                <FacultySidebarNavItem
+                  key={item.label}
+                  item={item}
+                  pathname={pathname}
+                  unreadCount={unreadCount}
+                  onSelect={() => setMobileOpen(false)}
+                />
+              ))}
             </div>
           ))}
         </nav>
@@ -174,30 +280,14 @@ export function FacultyShell({ children }: { children: ReactNode }) {
               <p className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/70">
                 {group.category}
               </p>
-              {group.items.map((item) => {
-                const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
-                const badge = item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to as any}
-                    className={cn(
-                      "flex min-h-[38px] items-center gap-3 rounded-xl px-3 text-xs font-semibold transition-colors",
-                      active
-                        ? "bg-primary/10 text-primary font-bold shadow-2xs"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                    )}
-                  >
-                    <item.icon className="size-4 shrink-0" />
-                    <span className="truncate">{item.label}</span>
-                    {badge && (
-                      <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">
-                        {badge}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
+              {group.items.map((item) => (
+                <FacultySidebarNavItem
+                  key={item.label}
+                  item={item}
+                  pathname={pathname}
+                  unreadCount={unreadCount}
+                />
+              ))}
             </div>
           ))}
         </nav>
@@ -483,6 +573,7 @@ const studentNavGroups = [
       { to: "/student/profile", label: "My Profile & ID", icon: User },
       { to: "/student/timetable", label: "My Timetable", icon: Calendar },
       { to: "/student/passes", label: "My Movement Passes", icon: CheckCircle2 },
+      { to: "/student/event-permissions", label: "Event Permissions", icon: CheckCircle2 },
     ],
   },
   {
@@ -710,6 +801,8 @@ const adminNavGroups = [
     category: "Institutional Masters",
     items: [
       { to: "/admin/users", label: "User Accounts", icon: Users },
+      { to: "/admin/counselors", label: "Counselor Management", icon: Users },
+      { to: "/admin/clubs", label: "Club Management", icon: Users },
       { to: "/admin/students", label: "Student Master", icon: GraduationCap },
       { to: "/admin/faculty", label: "Faculty Master", icon: UserCog },
       { to: "/admin/departments", label: "Departments", icon: Building2 },

@@ -6,10 +6,11 @@ import {
   createViolationReport,
   getFacultyReports,
   getViolationReportById,
+  getStudentViolationHistory,
   type DBViolationReport,
   type NewViolationReportInput,
 } from "../db/violations.server";
-import { getCurrentClassForStudent, type DBClassSlot, type CurrentClassResolution } from "../db/timetable.server";
+import { getCurrentClassForStudent, getDailyTimetableForStudent, type DBClassSlot, type CurrentClassResolution } from "../db/timetable.server";
 import { db } from "../db.server";
 
 export type StudentQueryResult = {
@@ -166,6 +167,28 @@ export const getStudentCurrentClassApi = createServerFn({ method: "GET" })
   );
 
 /**
+ * Server function to fetch complete daily timetable slots for a student today
+ */
+export const getStudentDailyTimetableApi = createServerFn({ method: "GET" })
+  .validator((data: { rollNo: string }) => {
+    const rollNo = typeof data?.rollNo === "string" ? data.rollNo.trim().toUpperCase() : "";
+    if (!rollNo) throw new Error("Student Roll Number is required.");
+    return { rollNo };
+  })
+  .handler(
+    async ({ data }): Promise<{ success: boolean; slots: DBClassSlot[]; error?: string }> => {
+      try {
+        await requireAnyRole(["faculty", "hod", "admin", "security"]);
+        const res = await getDailyTimetableForStudent(data.rollNo);
+        return { success: true, slots: res.slots };
+      } catch (err: any) {
+        console.error("[Faculty Server API Error] getStudentDailyTimetableApi error:", err);
+        return { success: false, slots: [], error: err.message || "Failed to fetch daily timetable." };
+      }
+    },
+  );
+
+/**
  * Server function to fetch complete violation report detail (including student explanation and HOD decision)
  * for authorized roles (Faculty, HOD, Student, Admin) with security checks.
  */
@@ -219,6 +242,36 @@ export const getViolationReportDetailApi = createServerFn({ method: "GET" })
       }
     },
   );
+
+/**
+ * Server function to fetch complete violation history for a specific student code.
+ */
+export const getStudentViolationHistoryApi = createServerFn({ method: "GET" })
+  .validator((data: { studentCode: string }) => {
+    const studentCode = typeof data?.studentCode === "string" ? data.studentCode.trim().toUpperCase() : "";
+    if (!studentCode) throw new Error("Student Code is required.");
+    return { studentCode };
+  })
+  .handler(
+    async ({
+      data,
+    }): Promise<{ success: boolean; reports: DBViolationReport[]; totalCount: number; error?: string }> => {
+      try {
+        await requireAnyRole(["faculty", "hod", "admin", "security"]);
+        const reports = await getStudentViolationHistory(data.studentCode);
+        return { success: true, reports, totalCount: reports.length };
+      } catch (err: any) {
+        console.error("[Faculty Server API Error] getStudentViolationHistoryApi error:", err);
+        return {
+          success: false,
+          reports: [],
+          totalCount: 0,
+          error: err.message || "Failed to fetch student violation history.",
+        };
+      }
+    },
+  );
+
 
 /**
  * Server function for Faculty to verify a student by Student ID QR Token or Roll Number.
@@ -535,5 +588,7 @@ export const deleteAdminFacultyApi = createServerFn({ method: "POST" })
       }
     },
   );
+
+export default {};
 
 

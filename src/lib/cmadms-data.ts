@@ -98,6 +98,14 @@ export type Report = {
   decisionAt?: string | undefined;
   timeline: TimelineEvent[];
   semester: number;
+  assignedCounselorId?: string | undefined;
+  counselorRemarks?: string | undefined;
+  counselorReviewedAt?: string | undefined;
+  escalationReason?: string | undefined;
+  escalatedAt?: string | undefined;
+  resolutionNote?: string | undefined;
+  resolvedBy?: string | undefined;
+  resolvedAt?: string | undefined;
 };
 
 export type NotificationTargetRole = "faculty" | "student" | "hod" | "admin" | "all";

@@ -855,7 +855,7 @@ export async function getEmergencyIncidentTimeline(
       timestamp: string;
     }>(auditQuery, [cleanId]);
 
-    return res.rows.map((row) => {
+    return res.rows.map((row: any) => {
       let description = row.action.replace(/_/g, " ");
       const act = row.action;
       if (act === "emergency_incident_created") {

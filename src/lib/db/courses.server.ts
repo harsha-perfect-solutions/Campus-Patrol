@@ -75,112 +75,56 @@ export async function ensureCoursesTable(): Promise<void> {
     const checkCount = await db.query<{ count: number }>("SELECT COUNT(*)::int AS count FROM courses;");
     if (checkCount.rows[0]?.count === 0) {
       const initialCourses = [
-        {
-          id: "CRS-01",
-          course_code: "CS501",
-          title: "Operating Systems",
-          department: "CSE",
-          semester: 5,
-          credits: 4,
-          course_type: "Theory",
-          assigned_faculty: "Prof. Ravi Kumar",
-          status: "Active",
-        },
-        {
-          id: "CRS-02",
-          course_code: "CS502",
-          title: "Database Management Systems",
-          department: "CSE",
-          semester: 5,
-          credits: 4,
-          course_type: "Theory",
-          assigned_faculty: "Prof. Anita Sen",
-          status: "Active",
-        },
-        {
-          id: "CRS-03",
-          course_code: "CS503L",
-          title: "Operating Systems & Networking Lab",
-          department: "CSE",
-          semester: 5,
-          credits: 2,
-          course_type: "Practical / Lab",
-          assigned_faculty: "Prof. Ravi Kumar",
-          status: "Active",
-        },
-        {
-          id: "CRS-04",
-          course_code: "EC401",
-          title: "Digital Signal Processing",
-          department: "ECE",
-          semester: 4,
-          credits: 4,
-          course_type: "Theory",
-          assigned_faculty: "Dr. K. Swaminathan",
-          status: "Active",
-        },
-        {
-          id: "CRS-05",
-          course_code: "EC402L",
-          title: "Microprocessors & Microcontrollers Lab",
-          department: "ECE",
-          semester: 4,
-          credits: 2,
-          course_type: "Practical / Lab",
-          assigned_faculty: "Prof. S. Nambiar",
-          status: "Active",
-        },
-        {
-          id: "CRS-06",
-          course_code: "EE601",
-          title: "Control Systems Engineering",
-          department: "EEE",
-          semester: 6,
-          credits: 4,
-          course_type: "Theory",
-          assigned_faculty: "Dr. H. Varma",
-          status: "Active",
-        },
-        {
-          id: "CRS-07",
-          course_code: "ME501",
-          title: "Thermodynamics & Heat Transfer",
-          department: "MECH",
-          semester: 5,
-          credits: 4,
-          course_type: "Theory",
-          assigned_faculty: "Prof. B. Mukherjee",
-          status: "Active",
-        },
-        {
-          id: "CRS-08",
-          course_code: "CE501",
-          title: "Structural Analysis & Design",
-          department: "CIVIL",
-          semester: 5,
-          credits: 4,
-          course_type: "Theory",
-          assigned_faculty: "Dr. P. Deshmukh",
-          status: "Active",
-        },
-        {
-          id: "CRS-09",
-          course_code: "CS701E",
-          title: "Artificial Intelligence & Deep Learning",
-          department: "CSE",
-          semester: 7,
-          credits: 3,
-          course_type: "Elective",
-          assigned_faculty: "Dr. M. Venkat",
-          status: "Active",
-        },
+        { id: "CRS-01", course_code: "CS501", title: "Operating Systems", department: "CSE", semester: 5, credits: 4, course_type: "Theory", assigned_faculty: "Prof. Ravi Kumar", status: "Active" },
+        { id: "CRS-02", course_code: "CS502", title: "Database Management Systems", department: "CSE", semester: 5, credits: 4, course_type: "Theory", assigned_faculty: "Prof. Anita Sen", status: "Active" },
+        { id: "CRS-03", course_code: "CS503L", title: "Operating Systems & Networking Lab", department: "CSE", semester: 5, credits: 2, course_type: "Practical / Lab", assigned_faculty: "Prof. Ravi Kumar", status: "Active" },
+        { id: "CRS-04", course_code: "EC401", title: "Digital Signal Processing", department: "ECE", semester: 4, credits: 4, course_type: "Theory", assigned_faculty: "Dr. K. Swaminathan", status: "Active" },
+        { id: "CRS-05", course_code: "EC402L", title: "Microprocessors & Microcontrollers Lab", department: "ECE", semester: 4, credits: 2, course_type: "Practical / Lab", assigned_faculty: "Prof. S. Nambiar", status: "Active" },
+        { id: "CRS-06", course_code: "EE601", title: "Control Systems Engineering", department: "EEE", semester: 6, credits: 4, course_type: "Theory", assigned_faculty: "Dr. H. Varma", status: "Active" },
+        { id: "CRS-07", course_code: "ME501", title: "Thermodynamics & Heat Transfer", department: "MECH", semester: 5, credits: 4, course_type: "Theory", assigned_faculty: "Prof. B. Mukherjee", status: "Active" },
+        { id: "CRS-08", course_code: "CE501", title: "Structural Analysis & Design", department: "CIVIL", semester: 5, credits: 4, course_type: "Theory", assigned_faculty: "Dr. P. Deshmukh", status: "Active" },
+        { id: "CRS-09", course_code: "CS701E", title: "Artificial Intelligence & Deep Learning", department: "CSE", semester: 7, credits: 3, course_type: "Elective", assigned_faculty: "Dr. M. Venkat", status: "Active" },
+        // 1st Year (Semester 1 & 2)
+        { id: "CRS-10", course_code: "MA101", title: "Mathematics-I", department: "CSE", semester: 1, credits: 4, course_type: "Theory", assigned_faculty: "Dr. S. Sharma", status: "Active" },
+        { id: "CRS-11", course_code: "PH101", title: "Engineering Physics", department: "CSE", semester: 1, credits: 4, course_type: "Theory", assigned_faculty: "Mr. Arjun V", status: "Active" },
+        { id: "CRS-12", course_code: "CS101", title: "Programming in C", department: "CSE", semester: 1, credits: 4, course_type: "Theory", assigned_faculty: "Dr. Ramesh B", status: "Active" },
+        { id: "CRS-13", course_code: "ME101", title: "Engineering Graphics", department: "CSE", semester: 1, credits: 3, course_type: "Theory", assigned_faculty: "Mrs. Priya N", status: "Active" },
+        { id: "CRS-14", course_code: "CS101L", title: "C Programming & Physics Lab", department: "CSE", semester: 1, credits: 2, course_type: "Practical / Lab", assigned_faculty: "Dr. Meena K", status: "Active" },
+        { id: "CRS-15", course_code: "MA102", title: "Mathematics-II", department: "CSE", semester: 2, credits: 4, course_type: "Theory", assigned_faculty: "Dr. S. Sharma", status: "Active" },
+        { id: "CRS-16", course_code: "CH102", title: "Engineering Chemistry", department: "CSE", semester: 2, credits: 4, course_type: "Theory", assigned_faculty: "Dr. A. Gupta", status: "Active" },
+        { id: "CRS-17", course_code: "EE102", title: "Basic Electrical Engineering", department: "CSE", semester: 2, credits: 4, course_type: "Theory", assigned_faculty: "Prof. K. Rao", status: "Active" },
+        { id: "CRS-18", course_code: "EE102L", title: "Chemistry & Electrical Lab", department: "CSE", semester: 2, credits: 2, course_type: "Practical / Lab", assigned_faculty: "Dr. A. Gupta", status: "Active" },
+        // 2nd Year (Semester 3 & 4)
+        { id: "CRS-19", course_code: "CS301", title: "Data Structures", department: "CSE", semester: 3, credits: 4, course_type: "Theory", assigned_faculty: "Dr. Ramesh B", status: "Active" },
+        { id: "CRS-20", course_code: "CS302", title: "Digital Logic Design", department: "CSE", semester: 3, credits: 4, course_type: "Theory", assigned_faculty: "Prof. V. Chary", status: "Active" },
+        { id: "CRS-21", course_code: "MA303", title: "Discrete Mathematics", department: "CSE", semester: 3, credits: 4, course_type: "Theory", assigned_faculty: "Dr. S. Sharma", status: "Active" },
+        { id: "CRS-22", course_code: "CS304", title: "Object Oriented Programming", department: "CSE", semester: 3, credits: 4, course_type: "Theory", assigned_faculty: "Mrs. Priya N", status: "Active" },
+        { id: "CRS-23", course_code: "CS301L", title: "Data Structures & OOP Lab", department: "CSE", semester: 3, credits: 2, course_type: "Practical / Lab", assigned_faculty: "Dr. Ramesh B", status: "Active" },
+        { id: "CRS-24", course_code: "CS401", title: "Database Management Systems", department: "CSE", semester: 4, credits: 4, course_type: "Theory", assigned_faculty: "Prof. Anita Sen", status: "Active" },
+        { id: "CRS-25", course_code: "CS402", title: "Computer Organization & Arch", department: "CSE", semester: 4, credits: 4, course_type: "Theory", assigned_faculty: "Prof. V. Chary", status: "Active" },
+        { id: "CRS-26", course_code: "CS403", title: "Theory of Computation", department: "CSE", semester: 4, credits: 4, course_type: "Theory", assigned_faculty: "Dr. M. Venkat", status: "Active" },
+        { id: "CRS-27", course_code: "CS401L", title: "DBMS & Systems Lab", department: "CSE", semester: 4, credits: 2, course_type: "Practical / Lab", assigned_faculty: "Prof. Anita Sen", status: "Active" },
+        // 3rd Year (Semester 6)
+        { id: "CRS-28", course_code: "CS601", title: "Compiler Design", department: "CSE", semester: 6, credits: 4, course_type: "Theory", assigned_faculty: "Dr. M. Venkat", status: "Active" },
+        { id: "CRS-29", course_code: "CS602", title: "Web Technologies", department: "CSE", semester: 6, credits: 4, course_type: "Theory", assigned_faculty: "Mrs. Priya N", status: "Active" },
+        { id: "CRS-30", course_code: "CS603", title: "Artificial Intelligence", department: "CSE", semester: 6, credits: 4, course_type: "Theory", assigned_faculty: "Dr. M. Venkat", status: "Active" },
+        { id: "CRS-31", course_code: "CS602L", title: "Web Technologies & AI Lab", department: "CSE", semester: 6, credits: 2, course_type: "Practical / Lab", assigned_faculty: "Mrs. Priya N", status: "Active" },
+        // 4th Year (Semester 7 & 8)
+        { id: "CRS-32", course_code: "CS701P", title: "Capstone Project & Seminar", department: "CSE", semester: 7, credits: 6, course_type: "Project", assigned_faculty: "Prof. Ravi Kumar", status: "Active" },
+        { id: "CRS-33", course_code: "CS703", title: "Cloud Computing & DevOps", department: "CSE", semester: 7, credits: 4, course_type: "Theory", assigned_faculty: "Prof. Anita Sen", status: "Active" },
+        { id: "CRS-34", course_code: "CS704E", title: "Department Elective-I", department: "CSE", semester: 7, credits: 3, course_type: "Elective", assigned_faculty: "Dr. M. Venkat", status: "Active" },
+        { id: "CRS-35", course_code: "CS701L", title: "Project & Cloud Lab", department: "CSE", semester: 7, credits: 2, course_type: "Practical / Lab", assigned_faculty: "Prof. Ravi Kumar", status: "Active" },
+        { id: "CRS-36", course_code: "CS801P", title: "Major Project & Viva Voce", department: "CSE", semester: 8, credits: 10, course_type: "Project", assigned_faculty: "Dr. Ramesh B", status: "Active" },
+        { id: "CRS-37", course_code: "CS802I", title: "Industry Internship", department: "CSE", semester: 8, credits: 6, course_type: "Project", assigned_faculty: "Prof. Ravi Kumar", status: "Active" },
+        { id: "CRS-38", course_code: "CS803", title: "Cyber Security & Blockchain", department: "CSE", semester: 8, credits: 4, course_type: "Theory", assigned_faculty: "Prof. V. Chary", status: "Active" },
+        { id: "CRS-39", course_code: "CS804E", title: "Department Elective-II", department: "CSE", semester: 8, credits: 3, course_type: "Elective", assigned_faculty: "Dr. M. Venkat", status: "Active" },
       ];
 
       for (const c of initialCourses) {
         await db.query(
           `INSERT INTO courses (id, course_code, title, department, semester, credits, course_type, assigned_faculty, status, created_at, updated_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
-           ON CONFLICT (id) DO NOTHING;`,
+           ON CONFLICT (course_code) DO NOTHING;`,
           [
             c.id,
             c.course_code,
@@ -447,4 +391,122 @@ export async function deleteCourse(
   );
 
   return true;
+}
+
+/**
+ * Dynamically resolves available active subjects for timetable creation/editing
+ * based on Department + Academic Year + Semester (+ optional Period Type filtering).
+ */
+export async function getAvailableSubjectsForTimetable(
+  department: string,
+  year: string,
+  semester?: number | string,
+  periodType?: string,
+): Promise<{ courseCode: string; title: string; courseType: string; assignedFaculty: string }[]> {
+  await ensureCoursesTable();
+  const cleanDept = (department || "CSE").trim().toUpperCase();
+  const cleanYear = (year || "3rd Year").trim().toUpperCase();
+
+  let targetSemesters: number[] = [];
+  if (semester && Number(semester) > 0) {
+    targetSemesters = [Number(semester)];
+  } else if (cleanYear.includes("1")) {
+    targetSemesters = [1, 2];
+  } else if (cleanYear.includes("2")) {
+    targetSemesters = [3, 4];
+  } else if (cleanYear.includes("3")) {
+    targetSemesters = [5, 6];
+  } else if (cleanYear.includes("4")) {
+    targetSemesters = [7, 8];
+  } else {
+    targetSemesters = [1, 2, 3, 4, 5, 6, 7, 8];
+  }
+
+  const query = `
+    SELECT course_code, title, course_type, assigned_faculty
+    FROM courses
+    WHERE UPPER(status) = 'ACTIVE'
+      AND (UPPER(department) = UPPER($1) OR $1 = 'ALL')
+      AND semester = ANY($2::int[])
+    ORDER BY course_code;
+  `;
+
+  try {
+    const res = await db.query(query, [cleanDept, targetSemesters]);
+    let courses = res.rows.map((r: any) => ({
+      courseCode: r.course_code,
+      title: r.title,
+      courseType: r.course_type,
+      assignedFaculty: r.assigned_faculty,
+    }));
+
+    if (periodType?.toUpperCase() === "LAB") {
+      courses = courses.filter(
+        (c: any) =>
+          c.courseType.toLowerCase().includes("lab") ||
+          c.courseType.toLowerCase().includes("practical") ||
+          c.title.toLowerCase().includes("lab") ||
+          c.title.toLowerCase().includes("practical"),
+      );
+    } else if (periodType?.toUpperCase() === "CLASS") {
+      const theoryOnly = courses.filter(
+        (c: any) =>
+          !c.courseType.toLowerCase().includes("lab") &&
+          !c.courseType.toLowerCase().includes("practical"),
+      );
+      if (theoryOnly.length > 0) courses = theoryOnly;
+    }
+
+    if (courses.length > 0) {
+      return courses;
+    }
+  } catch (err) {
+    console.warn("[DB] Error fetching subjects for timetable:", err);
+  }
+
+  // Fallback: Query distinct subjects directly from class_slots
+  try {
+    const slotQuery = `
+      SELECT DISTINCT subject AS title, code AS course_code, faculty_name AS assigned_faculty
+      FROM class_slots
+      WHERE UPPER(department) = UPPER($1) OR $1 = 'ALL'
+      ORDER BY code;
+    `;
+    const slotRes = await db.query(slotQuery, [cleanDept]);
+    let slotCourses = slotRes.rows.map((r: any) => ({
+      courseCode: r.course_code,
+      title: r.title,
+      courseType: r.title.toLowerCase().includes("lab") ? "Practical / Lab" : "Theory",
+      assignedFaculty: r.assigned_faculty,
+    }));
+
+    if (periodType?.toUpperCase() === "LAB") {
+      slotCourses = slotCourses.filter(
+        (c: any) =>
+          c.courseType.toLowerCase().includes("lab") ||
+          c.title.toLowerCase().includes("lab"),
+      );
+    }
+
+    if (slotCourses.length > 0) {
+      return slotCourses;
+    }
+  } catch {
+    // ignore
+  }
+
+  return [
+    {
+      courseCode: `${cleanDept}-301`,
+      title: `${cleanDept} Core Subject`,
+      courseType: "Theory",
+      assignedFaculty: "Prof. Faculty A",
+    },
+    {
+      courseCode: `${cleanDept}-302L`,
+      title: `${cleanDept} Practical Lab`,
+      courseType: "Practical / Lab",
+      assignedFaculty: "Prof. Faculty B",
+    },
+  ];
 }

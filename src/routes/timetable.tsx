@@ -47,6 +47,8 @@ type ProcessedSlot = {
   endTime: string;
   displayStart: string;
   displayEnd: string;
+  periodType: string;
+  semester?: number;
 };
 
 const DAY_KEYS = [
@@ -69,6 +71,61 @@ function formatTimeDisplay(t: string): string {
   if (h === 0) h = 12;
   const hh = String(h).padStart(2, "0");
   return `${hh}:${m} ${ampm}`;
+}
+
+function getPeriodBadge(periodType?: string) {
+  const clean = (periodType || "CLASS").toUpperCase();
+  switch (clean) {
+    case "LAB":
+      return {
+        label: "🧪 LAB",
+        className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800",
+        note: "Attendance Required • 2-Hour Practical Block",
+      };
+    case "LIBRARY":
+      return {
+        label: "📚 LIBRARY",
+        className: "bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800",
+        note: "Classroom Attendance: Not Required • Movement Monitoring: Disabled",
+      };
+    case "SPORTS":
+      return {
+        label: "⚽ SPORTS",
+        className: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800",
+        note: "Expected Location: Sports Ground • Classroom Attendance: Not Required",
+      };
+    case "ACTIVITY":
+      return {
+        label: "🎨 ACTIVITY",
+        className: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800",
+        note: "Co-Curricular Activity • Classroom Attendance: Not Required",
+      };
+    case "BREAK":
+      return {
+        label: "☕ BREAK",
+        className: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800",
+        note: "10-Minute Morning Break • Normal Movement Allowed",
+      };
+    case "LUNCH":
+      return {
+        label: "🍱 LUNCH",
+        className: "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-800",
+        note: "Lunch Break • Normal Movement Allowed",
+      };
+    case "NO_CLASS":
+      return {
+        label: "— NO CLASS —",
+        className: "bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-800",
+        note: "No Scheduled Academic Activity • Monitoring Disabled",
+      };
+    case "CLASS":
+    default:
+      return {
+        label: "📖 CLASS",
+        className: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-800",
+        note: "Standard Academic Class • Attendance & Movement Monitored",
+      };
+  }
 }
 
 export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } = {}) {
@@ -134,6 +191,8 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
             endTime: s.end_time || "10:00",
             displayStart: formatTimeDisplay(s.start_time),
             displayEnd: formatTimeDisplay(s.end_time),
+            periodType: s.period_type || s.periodType || "CLASS",
+            semester: s.semester || 1,
           }));
           setAllSlots(mapped);
         }
@@ -181,7 +240,7 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
       {!hideHeader && (
         <PageHeader
           title="My Timetable"
-          description="Your weekly academic teaching schedule, assigned classrooms, and live class status."
+          description="Your weekly academic schedule, assigned classrooms, and live class status."
           breadcrumb={[{ label: "Home", to: "/" }, { label: "Academic" }, { label: "Timetable" }]}
         />
       )}
@@ -244,9 +303,11 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
                 currentTimeStr >= s.startTime &&
                 currentTimeStr < s.endTime;
 
+              const badge = getPeriodBadge(s.periodType);
+
               return (
                 <li key={`${s.id}-${i}`} className="relative flex gap-4 pb-6 last:pb-0">
-                  {/* Perfectly Centered Vertical Timeline Connecting Line */}
+                  {/* Vertical Timeline Line */}
                   {i !== daySlots.length - 1 && (
                     <span
                       className="absolute left-[73px] top-6 h-full w-0.5 bg-border/80 sm:left-[89px]"
@@ -292,6 +353,9 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
                         <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-bold text-accent-foreground border border-border">
                           {s.code}
                         </span>
+                        <span className={cn("rounded-md px-2 py-0.5 text-xs font-bold border", badge.className)}>
+                          {badge.label}
+                        </span>
                       </div>
                       {isInSession && (
                         <ToneBadge tone="info" className="flex items-center gap-1 font-bold animate-pulse">
@@ -305,16 +369,22 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
                       {s.displayStart} — {s.displayEnd}
                     </p>
 
-                    <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-medium text-subtle-foreground border-t border-border/50 pt-3">
+                    <p className="mt-2 text-[11px] font-medium text-muted-foreground italic">
+                      {badge.note}
+                    </p>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-4 text-xs font-medium text-subtle-foreground border-t border-border/50 pt-3">
                       <span className="flex items-center gap-1.5 font-semibold text-foreground">
                         <Users className="size-4 text-primary/80" aria-hidden />
                         {s.department} {s.year} &bull; {s.section}
                       </span>
-                      <span className="flex items-center gap-1.5 font-semibold text-foreground">
-                        <DoorOpen className="size-4 text-primary/80" aria-hidden />
-                        {s.room}
-                      </span>
-                      {role !== "faculty" && (
+                      {s.room && (
+                        <span className="flex items-center gap-1.5 font-semibold text-foreground">
+                          <DoorOpen className="size-4 text-primary/80" aria-hidden />
+                          {s.room}
+                        </span>
+                      )}
+                      {role !== "faculty" && s.facultyName && (
                         <span className="flex items-center gap-1.5 text-muted-foreground">
                           <UserCheck className="size-4 text-muted-foreground" aria-hidden />
                           {s.facultyName}

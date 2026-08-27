@@ -384,13 +384,13 @@ export async function getSeverityStats(
   `;
 
   const res = await db.query<SeverityStat>(query, values);
-  const existing = new Map(res.rows.map((r) => [r.severity, r]));
+  const existing = new Map(res.rows.map((r: any) => [r.severity, r]));
   const order: ("Low" | "Medium" | "High" | "Critical")[] = ["Low", "Medium", "High", "Critical"];
 
   return order.map((sev) => {
     const found = existing.get(sev);
     return found || { severity: sev, count: 0, percentage: 0 };
-  });
+  }) as SeverityStat[];
 }
 
 // ─── 5. Department Comparison (Admin Only) ───────────────────────────────────

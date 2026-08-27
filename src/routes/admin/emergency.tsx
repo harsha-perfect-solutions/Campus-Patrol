@@ -77,6 +77,18 @@ function formatElapsed(createdStr: string, controlledStr?: string | null, resolv
   }
 }
 
+function formatReporterName(name: string): string {
+  if (!name) return "Campus Authority";
+  let clean = name.trim();
+  if (clean.toLowerCase().startsWith("prof. security")) {
+    return clean.substring(6).trim();
+  }
+  if (clean.toLowerCase().startsWith("prof. guard")) {
+    return clean.substring(6).trim();
+  }
+  return clean;
+}
+
 function EmergencyCommandContent() {
   const [incidents, setIncidents] = useState<DBEmergencyIncident[]>([]);
   const [stats, setStats] = useState<EmergencyStats>({
@@ -468,7 +480,7 @@ function EmergencyCommandContent() {
                         📚 <strong>Class:</strong> {inc.subject}
                       </span>
                       <span>
-                        👤 <strong>Reported By:</strong> {inc.faculty_reporter}
+                        👤 <strong>Reported By:</strong> {formatReporterName(inc.faculty_reporter)}
                       </span>
                     </div>
                   </div>

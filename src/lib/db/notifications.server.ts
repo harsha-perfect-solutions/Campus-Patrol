@@ -29,9 +29,11 @@ export type NotificationType =
   | "gate_entry_verified"
   | "gate_exit_denied"
   | "violation_decision_updated"
+  | "event_cancelled"
+  | "event_permission_granted"
   | "info";
 
-export type NotificationTone = "violation" | "pending" | "resolved" | "info";
+export type NotificationTone = "violation" | "pending" | "resolved" | "info" | "critical";
 
 export type DBNotification = {
   id: string;
@@ -193,12 +195,12 @@ export async function findAllAdminUserIds(): Promise<string[]> {
        WHERE ur.role = 'admin'`
     );
     if (res.rows.length > 0) {
-      return res.rows.map((r) => r.id);
+      return res.rows.map((r: any) => r.id);
     }
     const fallbackRes = await db.query<{ id: string }>(
       `SELECT id FROM profiles WHERE role = 'admin' OR staff_code = 'ADM-001'`
     );
-    return fallbackRes.rows.map((r) => r.id);
+    return fallbackRes.rows.map((r: any) => r.id);
   } catch (err) {
     console.error("[Notification] Error looking up Admin user IDs:", err);
     return [];
@@ -217,12 +219,12 @@ export async function findAllSecurityUserIds(): Promise<string[]> {
        WHERE ur.role = 'security'`
     );
     if (res.rows.length > 0) {
-      return res.rows.map((r) => r.id);
+      return res.rows.map((r: any) => r.id);
     }
     const fallbackRes = await db.query<{ id: string }>(
       `SELECT id FROM profiles WHERE role = 'security' OR staff_code LIKE 'SEC-%'`
     );
-    return fallbackRes.rows.map((r) => r.id);
+    return fallbackRes.rows.map((r: any) => r.id);
   } catch (err) {
     console.error("[Notification] Error looking up Security user IDs:", err);
     return [];

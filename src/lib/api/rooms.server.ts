@@ -136,3 +136,5 @@ export const deleteRoomApi = createServerFn({ method: "POST" })
       }
     },
   );
+
+export default {};

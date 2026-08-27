@@ -128,3 +128,5 @@ export const getGatePassVerificationHistoryApi = createServerFn({ method: "GET" 
   }
 });
 
+export default {};
+

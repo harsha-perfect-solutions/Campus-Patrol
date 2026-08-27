@@ -132,3 +132,5 @@ export const deleteDepartmentApi = createServerFn({ method: "POST" })
       }
     },
   );
+
+export default {};

@@ -192,3 +192,5 @@ export const getHodSafetyDrilldownApi = createServerFn({ method: "POST" })
       }
     },
   );
+
+export default {};

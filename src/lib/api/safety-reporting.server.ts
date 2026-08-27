@@ -255,3 +255,5 @@ export const logReportExportApi = createServerFn({ method: "POST" })
       }
     },
   );
+
+export default {};

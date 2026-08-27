@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Filter, GraduationCap, Plus, RotateCcw, Search, Users } from "lucide-react";
-import { toast } from "sonner";
+import { Filter, GraduationCap, RotateCcw, Search, Users } from "lucide-react";
 import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getAdminStudentsApi, createAdminStudentApi } from "@/lib/api/admin.server";
+import { getAdminStudentsApi } from "@/lib/api/admin.server";
 import type { DBStudent } from "@/lib/db/students.server";
 
 export const Route = createFileRoute("/admin/students")({
@@ -35,16 +34,6 @@ function AdminStudentsPage() {
   const [selectedYear, setSelectedYear] = useState<string>("ALL");
   const [selectedSection, setSelectedSection] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Add student form state
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [studentCode, setStudentCode] = useState("");
-  const [name, setName] = useState("");
-  const [department, setDepartment] = useState("CSE");
-  const [year, setYear] = useState("3rd Year");
-  const [section, setSection] = useState("Section A");
-  const [semester, setSemester] = useState(6);
-  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -91,42 +80,6 @@ function AdminStudentsPage() {
     setSearchQuery("");
   };
 
-  const handleCreateStudent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!studentCode.trim() || !name.trim()) return;
-
-    setSubmitting(true);
-    try {
-      const res = await createAdminStudentApi({
-        data: {
-          studentCode: studentCode.trim(),
-          name: name.trim(),
-          department,
-          year,
-          section,
-          semester,
-        },
-      });
-
-      if (res.success && res.student) {
-        toast.success("Student Enrolled Successfully!", {
-          description: `${res.student.name} (${res.student.student_code}) added to PostgreSQL database.`,
-        });
-        setStudents((prev) => [res.student!, ...prev]);
-        setShowAddModal(false);
-        setStudentCode("");
-        setName("");
-      } else {
-        toast.error(res.error || "Failed to create student.");
-      }
-    } catch (err) {
-      console.error("Failed to create student:", err);
-      toast.error("Error creating student record in database.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
     <RoleGuard allowedRoles={["admin"]}>
       <div className="space-y-6">
@@ -134,122 +87,7 @@ function AdminStudentsPage() {
           title="Student Master Database"
           description="Manage institutional student profiles, enrollments, and semester assignments across departments, years, and sections."
           breadcrumb={[{ label: "Admin", to: "/admin/dashboard" }, { label: "Students" }]}
-          actions={
-            <Button
-              onClick={() => setShowAddModal((prev) => !prev)}
-              size="sm"
-              className="rounded-xl font-semibold bg-primary text-primary-foreground"
-            >
-              <Plus className="size-4 mr-1.5" /> Enroll New Student
-            </Button>
-          }
         />
-
-        {showAddModal && (
-          <form
-            onSubmit={handleCreateStudent}
-            className="card-surface p-6 rounded-2xl border border-primary/30 shadow-xs max-w-xl space-y-4"
-          >
-            <h3 className="text-sm font-bold text-foreground">
-              Enroll New Student into Master Database
-            </h3>
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="space-y-1.5">
-                <Label htmlFor="stCode">Student Code / Roll No</Label>
-                <Input
-                  id="stCode"
-                  required
-                  value={studentCode}
-                  onChange={(e) => setStudentCode(e.target.value)}
-                  placeholder="e.g. 23CSE1099"
-                  className="h-9 text-xs rounded-xl"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="stName">Full Name</Label>
-                <Input
-                  id="stName"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Rajesh Verma"
-                  className="h-9 text-xs rounded-xl"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 text-xs">
-              <div className="space-y-1.5">
-                <Label>Department</Label>
-                <Select value={department} onValueChange={setDepartment}>
-                  <SelectTrigger className="h-9 text-xs rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DEPARTMENTS.filter((d) => d !== "ALL").map((d) => (
-                      <SelectItem key={d} value={d} className="text-xs">
-                        {d}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Year</Label>
-                <Select value={year} onValueChange={setYear}>
-                  <SelectTrigger className="h-9 text-xs rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {YEARS.filter((y) => y !== "ALL").map((y) => (
-                      <SelectItem key={y} value={y} className="text-xs">
-                        {y}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Section</Label>
-                <Select value={section} onValueChange={setSection}>
-                  <SelectTrigger className="h-9 text-xs rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SECTIONS.filter((s) => s !== "ALL").map((s) => (
-                      <SelectItem key={s} value={s} className="text-xs">
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAddModal(false)}
-                className="rounded-xl text-xs"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                loading={submitting}
-                disabled={!studentCode.trim() || !name.trim()}
-                size="sm"
-                className="rounded-xl text-xs font-semibold bg-primary text-primary-foreground"
-              >
-                Save Student Record
-              </Button>
-            </div>
-          </form>
-        )}
 
         {/* Dynamic Filters Control Toolbar */}
         <section className="card-surface p-5 rounded-2xl border border-border shadow-xs space-y-4">

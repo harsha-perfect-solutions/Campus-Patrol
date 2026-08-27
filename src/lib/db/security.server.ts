@@ -6,6 +6,12 @@ import {
   findStudentUserIdByCode,
   findAllAdminUserIds,
 } from "./notifications.server";
+import {
+  getActiveStudentEventPermission,
+  verifyEventPermissionByCode,
+  recordEventParticipantExit,
+  recordEventParticipantEntry,
+} from "./clubs.server";
 
 export async function requireSecuritySession(session: ServerSession | null): Promise<ServerSession> {
   if (!session) {
@@ -122,7 +128,7 @@ export async function checkStudentForSecurity(session: ServerSession, studentCod
     ]
   );
 
-  // Check active movement permission for today
+  // 1. Check active normal movement permission for today
   const passRes = await db.query(
     `SELECT id, reason, valid_from, valid_until, status, issued_by 
      FROM movement_permissions 
@@ -133,6 +139,14 @@ export async function checkStudentForSecurity(session: ServerSession, studentCod
   );
 
   const activePass = passRes.rows.length > 0 ? passRes.rows[0] : null;
+
+  // 2. Check active club event permission for today
+  let activeEventPermission: any = null;
+  try {
+    activeEventPermission = await getActiveStudentEventPermission(cleanCode);
+  } catch (e) {
+    // ignore
+  }
 
   // Expected timetable slot for right now
   let currentClass = {
@@ -168,7 +182,8 @@ export async function checkStudentForSecurity(session: ServerSession, studentCod
     // fallback default
   }
 
-  const isAuthorized = !!activePass;
+  const isAuthorized = !!activePass || !!activeEventPermission;
+  const authorizationSource = activePass ? "NORMAL_MOVEMENT" : activeEventPermission ? "CLUB_EVENT" : null;
 
   return {
     found: true,
@@ -196,8 +211,24 @@ export async function checkStudentForSecurity(session: ServerSession, studentCod
           issuedBy: activePass.issued_by,
         }
       : null,
+    activeEventPermission: activeEventPermission
+      ? {
+          permissionCode: activeEventPermission.permission_code,
+          eventName: activeEventPermission.event_name,
+          clubName: activeEventPermission.club_name,
+          coordinatorName: activeEventPermission.coordinator_name,
+          locationType: activeEventPermission.location_type,
+          location: activeEventPermission.location,
+          validTime: `${activeEventPermission.start_time} - ${activeEventPermission.end_time}`,
+        }
+      : null,
+    authorizationSource,
     isAuthorized,
-    resultStatus: isAuthorized ? "AUTHORIZED" : "UNAUTHORIZED MOVEMENT",
+    resultStatus: isAuthorized
+      ? authorizationSource === "CLUB_EVENT"
+        ? `AUTHORIZED (${activeEventPermission.club_name} EVENT)`
+        : "AUTHORIZED (GATE PASS)"
+      : "UNAUTHORIZED MOVEMENT",
   };
 }
 
@@ -348,7 +379,7 @@ export async function verifyGatePass(
   await requireSecuritySession(session);
   await ensureSecurityTableColumns();
 
-  const rawInput = payload.passIdOrRollNo.trim();
+  const rawInput = (payload.passIdOrRollNo || "").trim();
   const checkpoint = session.assignedPost || session.department || payload.checkpoint || "Main Gate";
   const timestamp = new Date().toISOString();
 
@@ -361,6 +392,86 @@ export async function verifyGatePass(
       message: "Student is NOT authorized to exit the campus.",
       timestamp,
     };
+  }
+
+  let cleanCode = rawInput;
+  try {
+    if (rawInput.startsWith("{")) {
+      const parsed = JSON.parse(rawInput);
+      if (parsed.permission_code) cleanCode = parsed.permission_code;
+      else if (parsed.student_code) cleanCode = parsed.student_code;
+    }
+  } catch (e) {}
+
+  // Check Event Permission code (EP-XXXXXX)
+  if (cleanCode.toUpperCase().startsWith("EP-")) {
+    try {
+      const eventPerm = await verifyEventPermissionByCode(cleanCode);
+
+      if (!eventPerm) {
+        return {
+          success: true,
+          authorized: false,
+          resultStatus: "EXIT NOT AUTHORIZED",
+          failureReason: `Event permission code "${cleanCode}" not found.`,
+          message: "Event permission record not found.",
+          timestamp,
+        };
+      }
+
+      if (eventPerm.permission_status !== "APPROVED") {
+        return {
+          success: true,
+          authorized: false,
+          resultStatus: "PERMISSION CANCELLED",
+          failureReason: `Event permission status is ${eventPerm.permission_status}.`,
+          message: "Event permission has been cancelled by the club coordinator.",
+          timestamp,
+        };
+      }
+
+      let isExit = true;
+      let updatedPerm = eventPerm;
+
+      if (eventPerm.location_type === "OUTSIDE_CAMPUS") {
+        if (!eventPerm.exit_at) {
+          updatedPerm = await recordEventParticipantExit(eventPerm.permission_code, session.fullName || session.email);
+          isExit = true;
+        } else if (!eventPerm.entry_at) {
+          updatedPerm = await recordEventParticipantEntry(eventPerm.permission_code, session.fullName || session.email);
+          isExit = false;
+        }
+      }
+
+      return {
+        success: true,
+        authorized: true,
+        resultStatus: `AUTHORIZED (${eventPerm.club_name} EVENT)`,
+        verificationType: isExit ? "EXIT" : "ENTRY",
+        message: `Verified event permission for ${eventPerm.student_name} (${eventPerm.event_name}).`,
+        timestamp,
+        student: {
+          name: eventPerm.student_name || "Student",
+          studentCode: eventPerm.student_code,
+          department: eventPerm.department || "GENERAL",
+          yearSection: `${eventPerm.year || ""} ${eventPerm.section || ""}`.trim(),
+        },
+        pass: {
+          id: eventPerm.permission_code,
+          passCode: eventPerm.permission_code,
+          reason: `Club Event: ${eventPerm.event_name} (${eventPerm.club_name})`,
+          validFrom: eventPerm.start_time || "10:00 AM",
+          validUntil: eventPerm.end_time || "05:00 PM",
+          date: eventPerm.event_date || "",
+          issuedBy: eventPerm.coordinator_name || "Club Coordinator",
+          status: "APPROVED",
+          exitAt: updatedPerm.exit_at,
+          entryAt: updatedPerm.entry_at,
+        },
+      };
+    } catch (e: any) {
+      console.warn("Event permission verification error:", e);
+    }
   }
 
   // 1. Try finding pass directly by pass ID (UUID or CMADMS-PASS-...)

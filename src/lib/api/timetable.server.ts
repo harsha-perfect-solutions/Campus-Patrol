@@ -12,6 +12,8 @@ import {
   type CurrentClassResolution,
 } from "../db/timetable.server";
 
+import { getAvailableSubjectsForTimetable } from "../db/courses.server";
+
 // ─── Query Master Timetable (Admin / HOD / Faculty) ─────────────────────────
 
 export const getAdminTimetableApi = createServerFn({ method: "GET" })
@@ -19,8 +21,10 @@ export const getAdminTimetableApi = createServerFn({ method: "GET" })
     (filters?: {
       department?: string;
       year?: string;
+      semester?: string | number;
       section?: string;
       dayOfWeek?: string | number;
+      periodType?: string;
       facultyName?: string;
       room?: string;
       search?: string;
@@ -49,19 +53,54 @@ export const getAdminTimetableApi = createServerFn({ method: "GET" })
     },
   );
 
+// ─── Query Dynamic Subjects for Timetable (Admin Only) ──────────────────────
+
+export const getDynamicSubjectsApi = createServerFn({ method: "GET" })
+  .validator((data?: { department?: string; year?: string; semester?: string | number; periodType?: string }) => ({
+    department: data?.department || "CSE",
+    year: data?.year || "3rd Year",
+    semester: data?.semester,
+    periodType: data?.periodType,
+  }))
+  .handler(
+    async ({ data }): Promise<{
+      success: boolean;
+      subjects: { courseCode: string; title: string; courseType: string; assignedFaculty: string }[];
+      error?: string;
+    }> => {
+      try {
+        await requireAnyRole(["admin", "hod"]);
+        const subjects = await getAvailableSubjectsForTimetable(
+          data.department,
+          data.year,
+          data.semester,
+          data.periodType,
+        );
+        return { success: true, subjects };
+      } catch (err: any) {
+        console.error("[Timetable Server API Error] getDynamicSubjectsApi error:", err);
+        return { success: false, subjects: [], error: err.message };
+      }
+    },
+  );
+
 // ─── Add Timetable Slot (Admin Only) ────────────────────────────────────────
 
 export const addTimetableSlotApi = createServerFn({ method: "POST" })
   .validator((data: TimetableSlotInput) => {
-    if (!data?.subject?.trim()) throw new Error("Subject is required.");
-    if (!data?.subjectCode?.trim()) throw new Error("Subject Code is required.");
+    const pType = (data?.periodType || "CLASS").toString().toUpperCase();
     if (!data?.department?.trim()) throw new Error("Department is required.");
     if (!data?.year?.trim()) throw new Error("Year is required.");
     if (!data?.section?.trim()) throw new Error("Section is required.");
-    if (!data?.facultyName?.trim()) throw new Error("Faculty Name is required.");
-    if (!data?.room?.trim()) throw new Error("Room is required.");
     if (!data?.startTime?.trim()) throw new Error("Start Time is required.");
     if (!data?.endTime?.trim()) throw new Error("End Time is required.");
+
+    if (pType === "CLASS" || pType === "LAB") {
+      if (!data?.subject?.trim()) throw new Error("Subject is required.");
+      if (!data?.subjectCode?.trim()) throw new Error("Subject Code is required.");
+      if (!data?.facultyName?.trim()) throw new Error("Faculty Name is required.");
+      if (!data?.room?.trim()) throw new Error("Room is required.");
+    }
     return data;
   })
   .handler(
@@ -93,15 +132,19 @@ export const updateTimetableSlotApi = createServerFn({ method: "POST" })
   .validator(
     (data: { id: string; input: TimetableSlotInput }) => {
       if (!data?.id?.trim()) throw new Error("Timetable Slot ID is required.");
-      if (!data?.input?.subject?.trim()) throw new Error("Subject is required.");
-      if (!data?.input?.subjectCode?.trim()) throw new Error("Subject Code is required.");
+      const pType = (data?.input?.periodType || "CLASS").toString().toUpperCase();
       if (!data?.input?.department?.trim()) throw new Error("Department is required.");
       if (!data?.input?.year?.trim()) throw new Error("Year is required.");
       if (!data?.input?.section?.trim()) throw new Error("Section is required.");
-      if (!data?.input?.facultyName?.trim()) throw new Error("Faculty Name is required.");
-      if (!data?.input?.room?.trim()) throw new Error("Room is required.");
       if (!data?.input?.startTime?.trim()) throw new Error("Start Time is required.");
       if (!data?.input?.endTime?.trim()) throw new Error("End Time is required.");
+
+      if (pType === "CLASS" || pType === "LAB") {
+        if (!data?.input?.subject?.trim()) throw new Error("Subject is required.");
+        if (!data?.input?.subjectCode?.trim()) throw new Error("Subject Code is required.");
+        if (!data?.input?.facultyName?.trim()) throw new Error("Faculty Name is required.");
+        if (!data?.input?.room?.trim()) throw new Error("Room is required.");
+      }
       return data;
     },
   )
@@ -217,3 +260,5 @@ export const getStudentCurrentClassDetailsApi = createServerFn({ method: "GET" }
       }
     },
   );
+
+export default {};

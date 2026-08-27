@@ -1,12 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireAuthenticatedUser } from "../session.server";
-import {
-  getNotificationsForUser,
-  getUnreadCountForUser,
-  markNotificationRead,
-  markAllNotificationsRead,
-  type DBNotification,
-} from "../db/notifications.server";
+
+// Re-export DBNotification type for client-side import type usage (type-only, erased at build time)
+export type { DBNotification } from "../db/notifications.server";
 
 // ─── Get My Notifications ────────────────────────────────────────────────
 
@@ -18,10 +13,12 @@ import {
 export const getMyNotificationsApi = createServerFn({ method: "GET" }).handler(
   async (): Promise<{
     success: boolean;
-    notifications: DBNotification[];
+    notifications: any[];
     error?: string;
   }> => {
     try {
+      const { requireAuthenticatedUser } = await import("../session.server");
+      const { getNotificationsForUser } = await import("../db/notifications.server");
       const identity = await requireAuthenticatedUser();
       const notifications = await getNotificationsForUser(
         identity.userId,
@@ -53,6 +50,8 @@ export const getUnreadNotificationCountApi = createServerFn({ method: "GET" }).h
     error?: string;
   }> => {
     try {
+      const { requireAuthenticatedUser } = await import("../session.server");
+      const { getUnreadCountForUser } = await import("../db/notifications.server");
       const identity = await requireAuthenticatedUser();
       const count = await getUnreadCountForUser(identity.userId, identity.studentCode);
       return { success: true, count };
@@ -79,6 +78,8 @@ export const markNotificationReadApi = createServerFn({ method: "POST" })
   .handler(
     async ({ data }): Promise<{ success: boolean; error?: string }> => {
       try {
+        const { requireAuthenticatedUser } = await import("../session.server");
+        const { markNotificationRead } = await import("../db/notifications.server");
         const identity = await requireAuthenticatedUser();
         const updated = await markNotificationRead(
           data.notifId,
@@ -108,6 +109,8 @@ export const markNotificationReadApi = createServerFn({ method: "POST" })
 export const markAllNotificationsReadApi = createServerFn({ method: "POST" }).handler(
   async (): Promise<{ success: boolean; count?: number; error?: string }> => {
     try {
+      const { requireAuthenticatedUser } = await import("../session.server");
+      const { markAllNotificationsRead } = await import("../db/notifications.server");
       const identity = await requireAuthenticatedUser();
       const count = await markAllNotificationsRead(identity.userId, identity.studentCode);
       return { success: true, count };
@@ -120,3 +123,12 @@ export const markAllNotificationsReadApi = createServerFn({ method: "POST" }).ha
     }
   },
 );
+
+const notificationsServerApi = {
+  getMyNotificationsApi,
+  getUnreadNotificationCountApi,
+  markNotificationReadApi,
+  markAllNotificationsReadApi,
+};
+export default notificationsServerApi;
+

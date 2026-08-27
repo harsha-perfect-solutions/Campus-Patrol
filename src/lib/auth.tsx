@@ -1,9 +1,21 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { signInApi, getSelfProfileApi, signOutApi } from "@/lib/api/auth.server";
-import type { ServerSession, AppRole } from "@/lib/session.server";
 
-export type { AppRole };
+export type AppRole = "admin" | "hod" | "faculty" | "student" | "security";
+
+export type ServerSession = {
+  sessionId: string;
+  userId: string;
+  role: AppRole;
+  email: string;
+  department: string;
+  staffCode: string | null;
+  studentCode: string | null;
+  fullName: string;
+  assignedPost: string | null;
+  expiresAt: string;
+};
 
 export type UserProfile = {
   id: string;
@@ -27,7 +39,7 @@ type AuthCtx = {
   signIn: (
     email: string,
     pass?: string,
-  ) => Promise<{ success: boolean; role?: AppRole; error?: string }>;
+  ) => Promise<{ success: boolean; role?: AppRole; mustChangePassword?: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -46,11 +58,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const res = await getSelfProfileApi();
         if (active && res.success && res.session) {
           setSessionData(res.session);
+          try {
+            localStorage.setItem("cmadms_demo_session", JSON.stringify(res.session));
+          } catch {}
         } else if (active) {
-          setSessionData(null);
+          const cached = typeof window !== "undefined" ? localStorage.getItem("cmadms_demo_session") : null;
+          if (cached) {
+            try {
+              setSessionData(JSON.parse(cached));
+            } catch {
+              setSessionData(null);
+            }
+          } else {
+            setSessionData(null);
+          }
         }
       } catch (err) {
         console.error("Auth init error:", err);
+        const cached = typeof window !== "undefined" ? localStorage.getItem("cmadms_demo_session") : null;
+        if (active && cached) {
+          try {
+            setSessionData(JSON.parse(cached));
+          } catch {
+            setSessionData(null);
+          }
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -71,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       });
       if (res.success && res.user) {
-        setSessionData({
+        const newSess: ServerSession = {
           sessionId: "HTTPONLY",
           userId: res.user.id,
           role: res.user.role,
@@ -82,9 +114,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           fullName: res.user.fullName,
           assignedPost: res.user.department || null,
           expiresAt: new Date(Date.now() + 86400000).toISOString(),
-        });
+        };
+        setSessionData(newSess);
+        try {
+          localStorage.setItem("cmadms_demo_session", JSON.stringify(newSess));
+        } catch {}
         setLoading(false);
-        return { success: true, role: res.user.role };
+        return {
+          success: true,
+          role: res.user.role,
+          mustChangePassword: !!res.user.mustChangePassword,
+        };
       }
       setLoading(false);
       return { success: false, error: res.error || "Invalid credentials." };
@@ -102,6 +142,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("SignOut error:", err);
     } finally {
+      try {
+        localStorage.removeItem("cmadms_demo_session");
+      } catch {}
       setSessionData(null);
       setLoading(false);
     }

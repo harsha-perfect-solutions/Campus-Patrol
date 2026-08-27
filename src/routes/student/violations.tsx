@@ -251,8 +251,8 @@ function StudentViolationsPage() {
             { label: "Total Incidents", value: stats?.totalIncidents ?? 0, color: "text-foreground", bg: "bg-muted/40" },
             { label: "Open Cases", value: stats?.openCases ?? 0, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50/60 dark:bg-blue-950/20" },
             { label: "Awaiting Response", value: stats?.awaitingMyResponse ?? 0, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50/60 dark:bg-amber-950/20" },
-            { label: "Under HOD Review", value: stats?.underHodReview ?? 0, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50/60 dark:bg-indigo-950/20" },
-            { label: "Escalated", value: stats?.escalated ?? 0, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50/60 dark:bg-purple-950/20" },
+            { label: "Under Counselor Review", value: stats?.underHodReview ?? 0, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50/60 dark:bg-indigo-950/20" },
+            { label: "Escalated to HOD", value: stats?.escalated ?? 0, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50/60 dark:bg-purple-950/20" },
             { label: "Resolved", value: stats?.resolved ?? 0, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50/60 dark:bg-emerald-950/20" },
             { label: "Dismissed", value: stats?.dismissed ?? 0, color: "text-muted-foreground", bg: "bg-muted/30" },
           ].map((kpi) => (
@@ -273,8 +273,8 @@ function StudentViolationsPage() {
               { id: "ALL", label: "All Incidents" },
               { id: "AWAITING_RESPONSE", label: `Awaiting My Response (${awaitingResponseCount})` },
               { id: "OPEN", label: "Open Cases" },
-              { id: "UNDER_REVIEW", label: "Under HOD Review" },
-              { id: "ESCALATED", label: "Escalated" },
+              { id: "UNDER_REVIEW", label: "Under Counselor Review" },
+              { id: "ESCALATED", label: "Escalated to HOD" },
               { id: "RESOLVED", label: "Resolved" },
               { id: "DISMISSED", label: "Dismissed" },
             ].map((q) => (
@@ -365,7 +365,6 @@ function StudentViolationsPage() {
                 <thead className="border-b border-divider bg-muted/40 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="py-3.5 px-4">Case ID / Date</th>
-                    <th className="py-3.5 px-4">Violation Category</th>
                     <th className="py-3.5 px-4">Severity</th>
                     <th className="py-3.5 px-4">Scheduled Class & Location</th>
                     <th className="py-3.5 px-4">Reported By</th>
@@ -399,12 +398,6 @@ function StudentViolationsPage() {
                               month: "short",
                               year: "numeric",
                             })}
-                          </span>
-                        </td>
-
-                        <td className="py-3.5 px-4">
-                          <span className="font-semibold text-foreground block">
-                            {report.violation_type}
                           </span>
                         </td>
 

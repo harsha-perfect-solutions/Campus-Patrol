@@ -30,7 +30,9 @@ const HOD_VIOLATION_COLUMNS = `
   subject_code, scheduled_time, room, scheduled_faculty, incident_time,
   observed_at::text, location, violation_type, severity, remarks, witness_notes,
   evidence, reported_by, status::text, explanation, explanation_submitted_at::text,
-  decision, decision_by, decision_at::text, semester, explanation_deadline::text, created_at::text
+  decision, decision_by, decision_at::text, semester, explanation_deadline::text, created_at::text,
+  assigned_counselor_id, counselor_assignment_status, counselor_remarks, counselor_reviewed_at::text,
+  escalation_reason, escalated_at::text, resolution_note, resolved_by, resolved_at::text, audit_trail
 `;
 
 /**

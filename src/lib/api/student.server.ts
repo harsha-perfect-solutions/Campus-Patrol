@@ -284,11 +284,13 @@ export const getMyStudentDashboardStatsApi = createServerFn({ method: "GET" }).h
       return { success: true, stats };
     } catch (err: any) {
       console.error("[Student Server API Error] getMyStudentDashboardStatsApi:", err);
-      return {
-        success: false,
-        stats: null,
-        error: err.message || "Failed to fetch student dashboard statistics.",
-      };
-    }
-  },
-);
+        return {
+          success: false,
+          stats: null,
+          error: err.message || "Failed to fetch student dashboard statistics.",
+        };
+      }
+    },
+  );
+
+export default {};

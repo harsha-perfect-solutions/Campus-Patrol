@@ -114,3 +114,5 @@ export const approveMovementPassApi = createServerFn({ method: "POST" })
     },
   );
 
+export default {};
+

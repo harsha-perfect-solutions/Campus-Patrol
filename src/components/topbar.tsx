@@ -31,9 +31,15 @@ export function Topbar({
   onOpenMobileNav: () => void;
 }) {
   const { unreadCount } = useCmadms();
-  const { profile, signOut } = useAuth();
+  const { profile, role, signOut } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+
+  const getProfilePath = () => {
+    if (role === "student") return "/student/profile";
+    if (role === "security") return "/security/profile";
+    return "/settings";
+  };
 
   const activeName = profile?.full_name || faculty.name;
   const activeRole = profile?.staff_code || faculty.role;
@@ -124,7 +130,7 @@ export function Topbar({
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => navigate({ to: "/settings" })}>
+              <DropdownMenuItem onSelect={() => navigate({ to: getProfilePath() as any })}>
                 <User className="mr-2 size-4" /> Profile
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => navigate({ to: "/settings" })}>

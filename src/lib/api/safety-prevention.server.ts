@@ -368,3 +368,5 @@ export const toggleSafetyAlertRuleApi = createServerFn({ method: "POST" })
       }
     },
   );
+
+export default {};

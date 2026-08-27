@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ShieldCheck,
@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Sparkles,
   ShieldAlert,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
@@ -43,8 +44,9 @@ const checkpointOptions = [
   "Parking Gate",
 ];
 
-function SecurityCheckPage() {
+export function SecurityCheckPage() {
   const { profile } = useAuth();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [passInput, setPassInput] = useState("");
   const [checkpoint, setCheckpoint] = useState(profile?.department || "Main Gate");
   const [loading, setLoading] = useState(false);
@@ -191,6 +193,19 @@ function SecurityCheckPage() {
   const handleReset = () => {
     setPassInput("");
     setResult(null);
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 50);
+  };
+
+  const handleRefresh = () => {
+    const query = result?.pass?.passCode || result?.student?.studentCode || passInput;
+    if (query) {
+      toast.info("Refreshing gate pass verification status...");
+      handleVerify(undefined, query);
+    } else {
+      handleReset();
+    }
   };
 
   return (
@@ -315,6 +330,7 @@ function SecurityCheckPage() {
               </label>
               <div className="flex gap-2">
                 <Input
+                  ref={inputRef}
                   placeholder="e.g. CMADMS-PASS-101 or 23CSE1012"
                   value={passInput}
                   onChange={(e) => setPassInput(e.target.value)}
@@ -379,7 +395,7 @@ function SecurityCheckPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     <Button
                       type="button"
                       onClick={handleAllowEarlyExit}
@@ -391,12 +407,25 @@ function SecurityCheckPage() {
                       <span>{earlyExitLoading ? "Authorizing Early Exit..." : "[ ALLOW EARLY EXIT ]"}</span>
                     </Button>
                     <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefresh}
+                      disabled={loading}
+                      className="rounded-xl text-xs font-semibold border-amber-500/40 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20"
+                      title="Re-query live server status"
+                    >
+                      <RotateCcw className={`size-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Refresh Status
+                    </Button>
+                    <Button
+                      type="button"
                       variant="outline"
                       size="sm"
                       onClick={handleReset}
                       className="rounded-xl text-xs font-semibold border-amber-500/40 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20"
+                      title="Clear and scan next student"
                     >
-                      <RotateCcw className="size-3.5 mr-1.5" /> Next
+                      <span>Next Student</span> <ArrowRight className="size-3.5 ml-1.5" />
                     </Button>
                   </div>
                 </div>
@@ -449,14 +478,29 @@ function SecurityCheckPage() {
                     </div>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleReset}
-                    className="rounded-xl text-xs font-semibold border-emerald-500/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-500/20"
-                  >
-                    <RotateCcw className="size-3.5 mr-1.5" /> Next Verification
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefresh}
+                      disabled={loading}
+                      className="rounded-xl text-xs font-semibold border-emerald-500/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-500/20"
+                      title="Re-query live server status"
+                    >
+                      <RotateCcw className={`size-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Refresh Status
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleReset}
+                      className="rounded-xl text-xs font-semibold border-emerald-500/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-500/20"
+                      title="Clear and scan next student"
+                    >
+                      <span>Next Student</span> <ArrowRight className="size-3.5 ml-1.5" />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
@@ -530,18 +574,37 @@ function SecurityCheckPage() {
                     </div>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleReset}
-                    className={`rounded-xl text-xs font-semibold ${
-                      result.verificationType === "ENTRY"
-                        ? "border-cyan-500/40 text-cyan-800 dark:text-cyan-200 hover:bg-cyan-500/20"
-                        : "border-emerald-500/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-500/20"
-                    }`}
-                  >
-                    <RotateCcw className="size-3.5 mr-1.5" /> Next Verification
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefresh}
+                      disabled={loading}
+                      className={`rounded-xl text-xs font-semibold ${
+                        result.verificationType === "ENTRY"
+                          ? "border-cyan-500/40 text-cyan-800 dark:text-cyan-200 hover:bg-cyan-500/20"
+                          : "border-emerald-500/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-500/20"
+                      }`}
+                      title="Re-query live server status"
+                    >
+                      <RotateCcw className={`size-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Refresh Status
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleReset}
+                      className={`rounded-xl text-xs font-semibold ${
+                        result.verificationType === "ENTRY"
+                          ? "border-cyan-500/40 text-cyan-800 dark:text-cyan-200 hover:bg-cyan-500/20"
+                          : "border-emerald-500/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-500/20"
+                      }`}
+                      title="Clear and scan next student"
+                    >
+                      <span>Next Student</span> <ArrowRight className="size-3.5 ml-1.5" />
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Details Table Grid */}
@@ -623,14 +686,29 @@ function SecurityCheckPage() {
                     </div>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleReset}
-                    className="rounded-xl text-xs font-semibold border-rose-500/40 text-rose-800 dark:text-rose-200 hover:bg-rose-500/20"
-                  >
-                    <RotateCcw className="size-3.5 mr-1.5" /> Try Again
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefresh}
+                      disabled={loading}
+                      className="rounded-xl text-xs font-semibold border-rose-500/40 text-rose-800 dark:text-rose-200 hover:bg-rose-500/20"
+                      title="Re-query live server status"
+                    >
+                      <RotateCcw className={`size-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Re-Check
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleReset}
+                      className="rounded-xl text-xs font-semibold border-rose-500/40 text-rose-800 dark:text-rose-200 hover:bg-rose-500/20"
+                      title="Clear and scan next student"
+                    >
+                      <span>Next Student</span> <ArrowRight className="size-3.5 ml-1.5" />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="p-4 rounded-xl bg-card/90 border border-rose-500/30 space-y-2 text-xs">

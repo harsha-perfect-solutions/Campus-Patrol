@@ -5,7 +5,7 @@ export interface CampusRoom {
   roomCode: string;
   buildingBlock: string;
   floor: string;
-  roomType: "Classroom" | "Laboratory" | "Seminar Hall" | "Auditorium";
+  roomType: "Classroom" | "Laboratory" | "Canteen / Cafeteria" | "Parking Zone" | "Sports Field / Ground" | "Library" | "Seminar Hall" | "Auditorium" | "Common Area" | string;
   capacity: number;
   facilities: string[];
   status: "Active" | "Maintenance";
@@ -17,7 +17,7 @@ export interface CreateRoomInput {
   roomCode: string;
   buildingBlock: string;
   floor: string;
-  roomType: "Classroom" | "Laboratory" | "Seminar Hall" | "Auditorium";
+  roomType: "Classroom" | "Laboratory" | "Canteen / Cafeteria" | "Parking Zone" | "Sports Field / Ground" | "Library" | "Seminar Hall" | "Auditorium" | "Common Area" | string;
   capacity: number;
   facilities?: string[] | undefined;
   status?: "Active" | "Maintenance" | undefined;
@@ -27,7 +27,7 @@ export interface UpdateRoomInput {
   roomCode?: string | undefined;
   buildingBlock?: string | undefined;
   floor?: string | undefined;
-  roomType?: "Classroom" | "Laboratory" | "Seminar Hall" | "Auditorium" | undefined;
+  roomType?: "Classroom" | "Laboratory" | "Canteen / Cafeteria" | "Parking Zone" | "Sports Field / Ground" | "Library" | "Seminar Hall" | "Auditorium" | "Common Area" | string | undefined;
   capacity?: number | undefined;
   facilities?: string[] | undefined;
   status?: "Active" | "Maintenance" | undefined;
@@ -188,6 +188,76 @@ export async function ensureRoomsTable(): Promise<void> {
           room_type: "Seminar Hall",
           capacity: 180,
           facilities: JSON.stringify(["Dual Projectors", "Surround Sound Audio", "Podium System", "Central AC"]),
+          status: "Active",
+        },
+        {
+          id: "RM-LOC-01",
+          room_code: "Canteen & Cafeteria",
+          building_block: "Common Roaming Area",
+          floor: "Ground Level",
+          room_type: "Common Area",
+          capacity: 250,
+          facilities: JSON.stringify(["Food & Dining", "Active Monitoring Zone"]),
+          status: "Active",
+        },
+        {
+          id: "RM-LOC-02",
+          room_code: "Campus Parking Area",
+          building_block: "Common Roaming Area",
+          floor: "Ground Level",
+          room_type: "Common Area",
+          capacity: 400,
+          facilities: JSON.stringify(["Parking Zone", "Vehicle Security"]),
+          status: "Active",
+        },
+        {
+          id: "RM-LOC-03",
+          room_code: "Sports & Athletics Ground",
+          building_block: "Common Roaming Area",
+          floor: "Ground Level",
+          room_type: "Common Area",
+          capacity: 500,
+          facilities: JSON.stringify(["Sports Field", "Outdoor Track"]),
+          status: "Active",
+        },
+        {
+          id: "RM-LOC-04",
+          room_code: "Library Corridor & Reading Foyer",
+          building_block: "Common Roaming Area",
+          floor: "1st Floor",
+          room_type: "Common Area",
+          capacity: 150,
+          facilities: JSON.stringify(["Reading Foyer", "Study Area"]),
+          status: "Active",
+        },
+        {
+          id: "RM-LOC-05",
+          room_code: "Main Entrance Gate",
+          building_block: "Common Roaming Area",
+          floor: "Ground Level",
+          room_type: "Common Area",
+          capacity: 100,
+          facilities: JSON.stringify(["Gate & Exit", "Security Turnstiles"]),
+          status: "Active",
+        },
+        {
+          id: "RM-LOC-06",
+          room_code: "Hostel Quadrangle & Gate",
+          building_block: "Common Roaming Area",
+          floor: "Ground Level",
+          room_type: "Common Area",
+          capacity: 200,
+          facilities: JSON.stringify(["Hostel Zone", "Residential Entrance"]),
+          status: "Active",
+        },
+        {
+          id: "RM-LOC-07",
+          room_code: "Administrative Block Corridor",
+          building_block: "Common Roaming Area",
+          floor: "1st Floor",
+          room_type: "Common Area",
+          capacity: 100,
+          facilities: JSON.stringify(["Admin Zone", "Office Corridor"]),
           status: "Active",
         },
       ];

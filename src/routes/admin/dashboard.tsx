@@ -4,6 +4,7 @@ import {
   Building2,
   Calendar,
   CheckCircle2,
+  DoorOpen,
   FolderGit2,
   GraduationCap,
   ShieldAlert,
@@ -248,6 +249,12 @@ function AdminDashboardContent() {
             desc: "Manage CSE, ECE, EEE, MECH & CIVIL structures",
             to: "/admin/departments",
             icon: Building2,
+          },
+          {
+            title: "Campus Areas & Facilities",
+            desc: "Manage campus buildings, canteens, parking zones & lab locations",
+            to: "/admin/rooms",
+            icon: DoorOpen,
           },
           {
             title: "Audit Logs",

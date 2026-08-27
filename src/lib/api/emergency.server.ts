@@ -218,3 +218,5 @@ export const getEmergencyIncidentTimelineApi = createServerFn({ method: "POST" }
     const timeline = await getEmergencyIncidentTimeline(data.incidentId);
     return { success: true, timeline };
   });
+
+export default {};

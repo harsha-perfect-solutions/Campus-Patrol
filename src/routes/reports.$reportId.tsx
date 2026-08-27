@@ -29,7 +29,29 @@ import { cn } from "@/lib/utils";
 import { getHodCaseByIdApi, submitHodDecisionApi } from "@/lib/api/hod.server";
 import { getViolationReportDetailApi } from "@/lib/api/faculty.server";
 import { submitStudentExplanationApi } from "@/lib/api/student.server";
+import {
+  resolveCounselorViolationApi,
+  escalateCounselorViolationApi,
+} from "@/lib/api/counselor.server";
 import type { Report, TimelineEvent } from "@/lib/cmadms-data";
+
+function formatTimelineTime(dateStr?: string | null): string {
+  if (!dateStr) return "Just now";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return dateStr;
+  }
+}
 
 export const Route = createFileRoute("/reports/$reportId")({
   head: ({ params }) => ({
@@ -107,8 +129,61 @@ export function ReportDetail() {
   const [submittingExplanation, setSubmittingExplanation] = useState(false);
   const [studentText, setStudentText] = useState("");
 
+  const [counselorActionType, setCounselorActionType] = useState<"resolve" | "escalate" | null>(null);
+  const [counselorResolutionNote, setCounselorResolutionNote] = useState("");
+  const [counselorEscalationReason, setCounselorEscalationReason] = useState("");
+  const [counselorRemarksText, setCounselorRemarksText] = useState("");
+  const [submittingCounselorAction, setSubmittingCounselorAction] = useState(false);
+
   const activeStoreReport = storeReports.find((r) => r.id === reportId);
   const report = dbReport || activeStoreReport;
+
+  const handleCounselorResolve = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!report) return;
+    setSubmittingCounselorAction(true);
+    try {
+      const payload: { violationId: string; resolutionNote?: string } = {
+        violationId: report.id,
+      };
+      if (counselorResolutionNote.trim()) {
+        payload.resolutionNote = counselorResolutionNote.trim();
+      }
+      await resolveCounselorViolationApi({ data: payload });
+      toast.success(`Violation #${report.id} resolved successfully!`);
+      setCounselorActionType(null);
+      window.location.reload();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to resolve violation");
+    } finally {
+      setSubmittingCounselorAction(false);
+    }
+  };
+
+  const handleCounselorEscalate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!report) return;
+    setSubmittingCounselorAction(true);
+    try {
+      const payload: { violationId: string; escalationReason?: string; counselorRemarks?: string } = {
+        violationId: report.id,
+      };
+      if (counselorEscalationReason.trim()) {
+        payload.escalationReason = counselorEscalationReason.trim();
+      }
+      if (counselorRemarksText.trim()) {
+        payload.counselorRemarks = counselorRemarksText.trim();
+      }
+      await escalateCounselorViolationApi({ data: payload });
+      toast.success(`Case #${report.id} passed/escalated to HOD successfully!`);
+      setCounselorActionType(null);
+      window.location.reload();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to escalate violation to HOD");
+    } finally {
+      setSubmittingCounselorAction(false);
+    }
+  };
 
   const triggerDownload = (url: string, filename: string) => {
     const link = document.createElement("a");
@@ -245,12 +320,21 @@ export function ReportDetail() {
                 : String(r.decision_at)
               : undefined,
             semester: r.semester,
+            assignedCounselorId: r.assigned_counselor_id ?? undefined,
+            counselorRemarks: r.counselor_remarks ?? undefined,
+            counselorReviewedAt: r.counselor_reviewed_at ? String(r.counselor_reviewed_at) : undefined,
+            escalationReason: r.escalation_reason ?? undefined,
+            escalatedAt: r.escalated_at ? String(r.escalated_at) : undefined,
+            resolutionNote: r.resolution_note ?? undefined,
+            resolvedBy: r.resolved_by ?? undefined,
+            resolvedAt: r.resolved_at ? String(r.resolved_at) : undefined,
             timeline: [
               {
-                time:
+                time: formatTimelineTime(
                   (r.created_at as unknown) instanceof Date
                     ? (r.created_at as unknown as Date).toISOString()
-                    : String(r.created_at),
+                    : String(r.created_at)
+                ),
                 title: "Violation Reported",
                 detail: `Reported by ${r.reported_by} at ${r.location}`,
                 tone: "violation",
@@ -260,31 +344,53 @@ export function ReportDetail() {
 
           if (r.explanation) {
             mapped.timeline.push({
-              time: r.explanation_submitted_at
-                ? (r.explanation_submitted_at as unknown) instanceof Date
-                  ? (r.explanation_submitted_at as unknown as Date).toISOString()
-                  : String(r.explanation_submitted_at)
-                : (r.created_at as unknown) instanceof Date
-                  ? (r.created_at as unknown as Date).toISOString()
-                  : String(r.created_at),
-              title: "Student explanation submitted",
-              detail: r.explanation,
+              time: formatTimelineTime(
+                r.explanation_submitted_at
+                  ? (r.explanation_submitted_at as unknown) instanceof Date
+                    ? (r.explanation_submitted_at as unknown as Date).toISOString()
+                    : String(r.explanation_submitted_at)
+                  : String(r.created_at)
+              ),
+              title: "Student Explanation Submitted",
+              detail: `Statement: "${r.explanation}"`,
               tone: "info",
             });
           }
 
-          if (r.decision) {
+          if (r.escalation_reason || r.counselor_remarks) {
             mapped.timeline.push({
-              time: r.decision_at
-                ? (r.decision_at as unknown) instanceof Date
-                  ? (r.decision_at as unknown as Date).toISOString()
-                  : String(r.decision_at)
-                : (r.created_at as unknown) instanceof Date
-                  ? (r.created_at as unknown as Date).toISOString()
-                  : String(r.created_at),
-              title: `HOD Decision: ${r.status}`,
-              detail: `${r.decision_by || "HOD"}: ${r.decision}`,
-              tone: r.status === "exonerated" ? "resolved" : "violation",
+              time: formatTimelineTime(
+                r.escalated_at
+                  ? String(r.escalated_at)
+                  : r.counselor_reviewed_at
+                  ? String(r.counselor_reviewed_at)
+                  : String(r.created_at)
+              ),
+              title: "Escalated to HOD by Counselor",
+              detail: `Reason: ${r.escalation_reason || "High severity violation passed to HOD"} ${r.counselor_remarks ? `(Remarks: ${r.counselor_remarks})` : ""}`,
+              tone: "violation",
+            });
+          }
+
+          if (r.decision === "RESOLVED_BY_COUNSELOR" || r.resolution_note || (r.status === "resolved" && r.decision !== "exonerated" && r.decision !== "warned" && r.decision !== "escalated")) {
+            mapped.timeline.push({
+              time: formatTimelineTime(r.resolved_at ? String(r.resolved_at) : String(r.created_at)),
+              title: "Case Resolved by Counselor",
+              detail: `Resolution Note: ${r.resolution_note || "Case reviewed and resolved by Class Counselor."}`,
+              tone: "resolved",
+            });
+          } else if (r.decision && r.decision !== "RESOLVED_BY_COUNSELOR") {
+            mapped.timeline.push({
+              time: formatTimelineTime(
+                r.decision_at
+                  ? (r.decision_at as unknown) instanceof Date
+                    ? (r.decision_at as unknown as Date).toISOString()
+                    : String(r.decision_at)
+                  : String(r.created_at)
+              ),
+              title: `HOD Final Decision: ${String(r.decision).toUpperCase()}`,
+              detail: `Decision recorded by HOD (${r.decision_by || "Department Head"})`,
+              tone: r.decision === "exonerated" ? "resolved" : "violation",
             });
           }
 
@@ -298,8 +404,13 @@ export function ReportDetail() {
     }
 
     loadReportDetail();
+    const interval = setInterval(() => {
+      loadReportDetail();
+    }, 5000);
+
     return () => {
       isMounted = false;
+      clearInterval(interval);
     };
   }, [reportId, profile?.full_name]);
 
@@ -479,7 +590,11 @@ export function ReportDetail() {
 
       <PageHeader
         title={report.id}
-        description="Unauthorized Movement — Case Review & HOD Decision View"
+        description={
+          role === "faculty"
+            ? "Unauthorized Movement — Counselor Case Review & Actions"
+            : "Unauthorized Movement — Case Review & HOD Decision View"
+        }
         breadcrumb={[
           { label: "Home", to: "/" },
           { label: "Reports", to: "/reports" },
@@ -487,7 +602,17 @@ export function ReportDetail() {
         ]}
         actions={
           <div className="flex items-center gap-2">
-            <StatusBadge status={report.status} />
+            <StatusBadge
+              status={
+                report.status === "resolved" && (report.decision === "RESOLVED_BY_COUNSELOR" || report.resolutionNote || report.resolvedBy) && (report.decision !== "exonerated" && report.decision !== "warned" && report.decision !== "escalated")
+                  ? "resolved_by_counselor"
+                  : report.status === "resolved"
+                  ? "resolved_by_hod"
+                  : (report.status as string) === "escalated" || (report.status as string) === "escalated_to_hod" || report.escalationReason
+                  ? "escalated_to_hod"
+                  : report.status
+              }
+            />
             <Button
               type="button"
               variant="default"
@@ -699,97 +824,211 @@ export function ReportDetail() {
             )}
           </Section>
 
-          {/* HOD Review & Decision Section */}
-          <Section title="HOD Case Decision & Actions" icon={ShieldCheck}>
-            {report.decision ? (
-              <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/60 dark:bg-emerald-950/20 p-4">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                  DECISION RECORDED BY HOD
+          {/* Counselor Review & Escalation Notes (Visible if escalated by Counselor) */}
+          {(report.escalationReason || report.counselorRemarks) && (
+            <Section title="Counselor Review & Escalation Notes" icon={ShieldCheck}>
+              <div className="p-4 rounded-xl border border-red-200/80 bg-red-50/40 dark:bg-red-950/20 space-y-2 text-xs">
+                <span className="font-bold text-red-800 dark:text-red-300 uppercase tracking-wider block border-b border-red-200/60 pb-1">
+                  🚨 ESCALATED TO HOD BY COUNSELOR
                 </span>
-                <p className="mt-1 text-xs font-semibold text-foreground leading-relaxed">
-                  {report.decision}
-                </p>
+                {report.escalationReason && (
+                  <p className="text-foreground font-semibold">
+                    <strong>Reason for Escalation:</strong> {report.escalationReason}
+                  </p>
+                )}
+                {report.counselorRemarks && (
+                  <p className="text-muted-foreground italic">
+                    <strong>Counselor Remarks:</strong> "{report.counselorRemarks}"
+                  </p>
+                )}
               </div>
-            ) : isHodUser ? (
-              <form onSubmit={handleHodSubmit} className="space-y-4">
-                <p className="text-xs text-muted-foreground font-medium">
-                  Select your HOD decision for case{" "}
-                  <strong className="text-foreground">{report.id}</strong>:
+            </Section>
+          )}
+
+          {/* Counselor Case Review & Actions (Visible for Faculty/Counselor when case is active) */}
+          {(role === "faculty" || role === "admin") && (report.status as string) !== "resolved" && (report.status as string) !== "escalated" && (report.status as string) !== "Escalated" && (
+            <Section title="Counselor Case Review & Actions" icon={ShieldCheck}>
+              <div className="space-y-4">
+                <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                  As the assigned Class Counselor, you have full authority to make the final decision to resolve this violation case. If you determine this is a high-severity violation or requires formal departmental action, pass/escalate this issue directly to the HOD.
                 </p>
 
-                <div className="grid gap-2.5 sm:grid-cols-3">
-                  <button
+                <div className="flex items-center gap-3">
+                  <Button
                     type="button"
-                    onClick={() => setHodAction("excuse")}
-                    className={cn(
-                      "flex flex-col items-center gap-1.5 p-3.5 rounded-xl border text-xs font-bold transition-all text-center",
-                      hodAction === "excuse"
-                        ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 shadow-xs"
-                        : "border-border hover:bg-accent text-muted-foreground",
-                    )}
+                    variant={counselorActionType === "resolve" ? "default" : "outline"}
+                    onClick={() => setCounselorActionType("resolve")}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs h-10 shadow-xs"
                   >
-                    <CheckCircle2 className="size-5 text-emerald-600" />
-                    <span>Excuse / Pass Valid</span>
-                  </button>
-
-                  <button
+                    <CheckCircle2 className="size-4 mr-1.5" /> COUNSELOR FINAL DECISION
+                  </Button>
+                  <Button
                     type="button"
-                    onClick={() => setHodAction("warning")}
-                    className={cn(
-                      "flex flex-col items-center gap-1.5 p-3.5 rounded-xl border text-xs font-bold transition-all text-center",
-                      hodAction === "warning"
-                        ? "border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 shadow-xs"
-                        : "border-border hover:bg-accent text-muted-foreground",
-                    )}
+                    variant={counselorActionType === "escalate" ? "default" : "outline"}
+                    onClick={() => setCounselorActionType("escalate")}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-10 shadow-xs"
                   >
-                    <AlertTriangle className="size-5 text-amber-600" />
-                    <span>Issue Warning</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setHodAction("violation")}
-                    className={cn(
-                      "flex flex-col items-center gap-1.5 p-3.5 rounded-xl border text-xs font-bold transition-all text-center",
-                      hodAction === "violation"
-                        ? "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 shadow-xs"
-                        : "border-border hover:bg-accent text-muted-foreground",
-                    )}
-                  >
-                    <ShieldCheck className="size-5 text-red-600" />
-                    <span>Confirm Penalty</span>
-                  </button>
+                    <AlertTriangle className="size-4 mr-1.5" /> ESCALATE HIGH-SEVERITY ISSUE TO HOD
+                  </Button>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="hodNotes" className="text-xs font-semibold">
-                    HOD Remarks / Decision Notes
-                  </Label>
-                  <Textarea
-                    id="hodNotes"
-                    value={hodNotes}
-                    onChange={(e) => setHodNotes(e.target.value)}
-                    placeholder="Enter reason or instructions for the student record..."
-                    className="text-xs rounded-xl"
-                    rows={3}
-                  />
-                </div>
+                {counselorActionType === "resolve" && (
+                  <form onSubmit={handleCounselorResolve} className="space-y-3 p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5">
+                    <Label className="text-xs font-bold text-foreground">Counselor Final Resolution & Decision Note (Optional)</Label>
+                    <Textarea
+                      value={counselorResolutionNote}
+                      onChange={(e) => setCounselorResolutionNote(e.target.value)}
+                      placeholder="Enter counselor final decision notes or guidance given to student (optional)..."
+                      className="h-20 text-xs rounded-xl"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button type="submit" disabled={submittingCounselorAction} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl">
+                        {submittingCounselorAction ? "Executing..." : "Confirm & Submit Counselor Final Decision"}
+                      </Button>
+                    </div>
+                  </form>
+                )}
 
-                <Button
-                  type="submit"
-                  loading={submittingDecision}
-                  disabled={submittingDecision}
-                  className="bg-primary text-primary-foreground font-semibold rounded-xl w-full h-10 shadow-xs"
-                >
-                  {submittingDecision ? "Submitting Decision..." : "Submit HOD Decision"}
-                </Button>
-              </form>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Awaiting review and final decision by Department Head.
-              </p>
-            )}
-          </Section>
+                {counselorActionType === "escalate" && (
+                  <form onSubmit={handleCounselorEscalate} className="space-y-3 p-4 rounded-xl border border-red-500/30 bg-red-500/5">
+                    <Label className="text-xs font-bold text-foreground">Reason for Escalating High-Severity Issue to HOD (Optional)</Label>
+                    <Textarea
+                      value={counselorEscalationReason}
+                      onChange={(e) => setCounselorEscalationReason(e.target.value)}
+                      placeholder="Specify why this high-severity case requires formal HOD intervention (optional)..."
+                      className="h-20 text-xs rounded-xl"
+                    />
+                    <Label className="text-xs font-semibold text-foreground">Counselor Remarks for HOD (Optional)</Label>
+                    <Textarea
+                      value={counselorRemarksText}
+                      onChange={(e) => setCounselorRemarksText(e.target.value)}
+                      placeholder="Additional remarks for HOD context..."
+                      className="h-16 text-xs rounded-xl"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button type="submit" disabled={submittingCounselorAction} className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl">
+                        {submittingCounselorAction ? "Escalating to HOD..." : "Confirm & Escalate to HOD"}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </Section>
+          )}
+
+          {/* Recorded Counselor Case Decision (Visible when case is resolved by counselor) */}
+          {((report.status as string) === "resolved" || report.decision === "RESOLVED_BY_COUNSELOR" || report.resolutionNote) && (report.decision !== "exonerated" && report.decision !== "warned" && report.decision !== "escalated") && (
+            <Section title="Counselor Case Resolution & Decision" icon={ShieldCheck}>
+              <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/60 dark:bg-emerald-950/20 p-4 space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                  <CheckCircle2 className="size-3.5 text-emerald-600" />
+                  DECISION RECORDED BY COUNSELOR
+                </span>
+                <p className="text-xs font-semibold text-foreground leading-relaxed">
+                  {report.resolutionNote || (report.decision && report.decision !== "RESOLVED_BY_COUNSELOR" ? report.decision : "Case reviewed and resolved by Class Counselor.")}
+                </p>
+                {report.resolvedBy && (
+                  <p className="text-[11px] text-muted-foreground pt-1.5 border-t border-emerald-200/50">
+                    <strong>Resolved By:</strong> {report.resolvedBy}
+                  </p>
+                )}
+              </div>
+            </Section>
+          )}
+
+          {/* HOD Review & Decision Section (Visible ONLY for escalated cases NOT resolved by counselor) */}
+          {(report.decision === "exonerated" || report.decision === "warned" || report.decision === "escalated" || ((report.status as string) !== "resolved" && report.decision !== "RESOLVED_BY_COUNSELOR" && !report.resolutionNote && ((report.status as string) === "escalated" || (report.status as string) === "escalated_to_hod" || report.escalationReason || (isHodUser && report.escalationReason)))) && (
+            <Section title="HOD Case Decision & Actions" icon={ShieldCheck}>
+              {report.decision && report.decision !== "RESOLVED_BY_COUNSELOR" ? (
+                <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/60 dark:bg-emerald-950/20 p-4">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                    DECISION RECORDED BY HOD
+                  </span>
+                  <p className="mt-1 text-xs font-semibold text-foreground leading-relaxed">
+                    {report.decision}
+                  </p>
+                </div>
+              ) : isHodUser ? (
+                <form onSubmit={handleHodSubmit} className="space-y-4">
+                  <p className="text-xs text-muted-foreground font-medium">
+                    Select your HOD decision for case{" "}
+                    <strong className="text-foreground">{report.id}</strong>:
+                  </p>
+
+                  <div className="grid gap-2.5 sm:grid-cols-3">
+                    <button
+                      type="button"
+                      onClick={() => setHodAction("excuse")}
+                      className={cn(
+                        "flex flex-col items-center gap-1.5 p-3.5 rounded-xl border text-xs font-bold transition-all text-center",
+                        hodAction === "excuse"
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 shadow-xs"
+                          : "border-border hover:bg-accent text-muted-foreground",
+                      )}
+                    >
+                      <CheckCircle2 className="size-5 text-emerald-600" />
+                      <span>Excuse / Pass Valid</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setHodAction("warning")}
+                      className={cn(
+                        "flex flex-col items-center gap-1.5 p-3.5 rounded-xl border text-xs font-bold transition-all text-center",
+                        hodAction === "warning"
+                          ? "border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 shadow-xs"
+                          : "border-border hover:bg-accent text-muted-foreground",
+                      )}
+                    >
+                      <AlertTriangle className="size-5 text-amber-600" />
+                      <span>Issue Warning</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setHodAction("violation")}
+                      className={cn(
+                        "flex flex-col items-center gap-1.5 p-3.5 rounded-xl border text-xs font-bold transition-all text-center",
+                        hodAction === "violation"
+                          ? "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 shadow-xs"
+                          : "border-border hover:bg-accent text-muted-foreground",
+                      )}
+                    >
+                      <ShieldCheck className="size-5 text-red-600" />
+                      <span>Confirm Penalty</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="hodNotes" className="text-xs font-semibold">
+                      HOD Remarks / Decision Notes
+                    </Label>
+                    <Textarea
+                      id="hodNotes"
+                      value={hodNotes}
+                      onChange={(e) => setHodNotes(e.target.value)}
+                      placeholder="Enter reason or instructions for the student record..."
+                      className="text-xs rounded-xl"
+                      rows={3}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    loading={submittingDecision}
+                    disabled={submittingDecision}
+                    className="bg-primary text-primary-foreground font-semibold rounded-xl w-full h-10 shadow-xs"
+                  >
+                    {submittingDecision ? "Submitting Decision..." : "Submit HOD Decision"}
+                  </Button>
+                </form>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Awaiting review and final decision by Department Head.
+                </p>
+              )}
+            </Section>
+          )}
         </div>
 
         {/* Right Sidebar: Timeline */}

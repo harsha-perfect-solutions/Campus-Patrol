@@ -59,38 +59,38 @@
   --color-sidebar-active: var(--sidebar-active);
   --color-sidebar-hover: var(--sidebar-hover);
   --color-sidebar-border: var(--sidebar-border);
-  --shadow-card: 0 2px 8px -2px oklch(0.2 0.05 292 / 0.08), 0 1px 3px 0 oklch(0.2 0.05 292 / 0.05);
-  --shadow-raised: 0 6px 20px -4px oklch(0.2 0.08 292 / 0.14);
-  --shadow-modal: 0 24px 48px -12px oklch(0.15 0.08 292 / 0.25);
+  --shadow-card: 0 2px 8px -2px oklch(0.2 0.03 255 / 0.08), 0 1px 3px 0 oklch(0.2 0.03 255 / 0.05);
+  --shadow-raised: 0 6px 20px -4px oklch(0.2 0.04 255 / 0.14);
+  --shadow-modal: 0 24px 48px -12px oklch(0.15 0.04 255 / 0.25);
 }
 
 :root {
   --radius: 14px;
 
-  /* Signature Royal Purple / Indigo Campus Light Palette */
-  --background: oklch(0.975 0.006 292);
-  --foreground: oklch(0.18 0.04 292);
-  --surface: oklch(0.985 0.005 292);
+  /* Executive Corporate Navy & Slate Campus Light Palette (No Neon) */
+  --background: oklch(0.982 0.004 255);
+  --foreground: oklch(0.18 0.03 255);
+  --surface: oklch(0.99 0.003 255);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.04 292);
+  --card-foreground: oklch(0.18 0.03 255);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.04 292);
+  --popover-foreground: oklch(0.18 0.03 255);
 
-  --primary: oklch(0.42 0.22 292);
-  --primary-foreground: oklch(0.99 0.002 290);
-  --primary-hover: oklch(0.36 0.23 292);
+  --primary: oklch(0.40 0.15 255);
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-hover: oklch(0.33 0.16 255);
 
-  --navy: oklch(0.28 0.16 292);
-  --navy-deep: oklch(0.16 0.08 292);
-  --navy-foreground: oklch(0.985 0.003 290);
+  --navy: oklch(0.24 0.10 255);
+  --navy-deep: oklch(0.15 0.06 255);
+  --navy-foreground: oklch(0.985 0.002 255);
 
-  --secondary: oklch(0.965 0.012 292);
-  --secondary-foreground: oklch(0.28 0.04 292);
-  --muted: oklch(0.965 0.012 292);
-  --muted-foreground: oklch(0.50 0.04 292);
-  --subtle-foreground: oklch(0.62 0.03 292);
-  --accent: oklch(0.955 0.025 292);
-  --accent-foreground: oklch(0.35 0.2 292);
+  --secondary: oklch(0.965 0.008 255);
+  --secondary-foreground: oklch(0.25 0.03 255);
+  --muted: oklch(0.965 0.008 255);
+  --muted-foreground: oklch(0.48 0.03 255);
+  --subtle-foreground: oklch(0.60 0.02 255);
+  --accent: oklch(0.955 0.015 255);
+  --accent-foreground: oklch(0.30 0.12 255);
 
   --destructive: oklch(0.577 0.223 27.3);
   --destructive-foreground: oklch(0.99 0.005 20);
@@ -104,60 +104,60 @@
   --warning-foreground: oklch(0.24 0.05 70);
   --warning-soft: oklch(0.981 0.03 90);
 
-  --info: oklch(0.50 0.20 292);
-  --info-foreground: oklch(0.99 0.002 290);
-  --info-soft: oklch(0.96 0.025 292);
+  --info: oklch(0.45 0.14 255);
+  --info-foreground: oklch(0.99 0.002 255);
+  --info-soft: oklch(0.96 0.015 255);
 
-  --border: oklch(0.915 0.018 292);
-  --divider: oklch(0.955 0.012 292);
-  --input: oklch(0.895 0.018 292);
-  --ring: oklch(0.42 0.22 292);
+  --border: oklch(0.915 0.012 255);
+  --divider: oklch(0.955 0.008 255);
+  --input: oklch(0.895 0.012 255);
+  --ring: oklch(0.40 0.15 255);
 
-  --sidebar: oklch(0.18 0.04 292);
-  --sidebar-foreground: oklch(0.95 0.012 290);
-  --sidebar-muted: oklch(0.65 0.028 292);
-  --sidebar-active: oklch(0.35 0.18 292);
-  --sidebar-hover: oklch(0.25 0.045 292);
-  --sidebar-border: oklch(0.28 0.038 292);
+  --sidebar: oklch(0.16 0.04 255);
+  --sidebar-foreground: oklch(0.95 0.008 255);
+  --sidebar-muted: oklch(0.60 0.02 255);
+  --sidebar-active: oklch(0.30 0.12 255);
+  --sidebar-hover: oklch(0.22 0.03 255);
+  --sidebar-border: oklch(0.25 0.03 255);
 }
 
 .dark {
-  /* Signature Royal Purple / Indigo Campus Dark Palette */
-  --background: oklch(0.15 0.028 292);
-  --surface: oklch(0.19 0.028 292);
-  --foreground: oklch(0.985 0.004 290);
-  --card: oklch(0.21 0.028 292);
-  --card-foreground: oklch(0.985 0.004 290);
-  --popover: oklch(0.21 0.028 292);
-  --popover-foreground: oklch(0.985 0.004 290);
+  /* Executive Corporate Navy & Slate Campus Dark Palette */
+  --background: oklch(0.14 0.025 255);
+  --surface: oklch(0.18 0.025 255);
+  --foreground: oklch(0.98 0.003 255);
+  --card: oklch(0.20 0.025 255);
+  --card-foreground: oklch(0.98 0.003 255);
+  --popover: oklch(0.20 0.025 255);
+  --popover-foreground: oklch(0.98 0.003 255);
 
-  --primary: oklch(0.64 0.22 292);
-  --primary-foreground: oklch(0.99 0.003 290);
-  --primary-hover: oklch(0.70 0.2 292);
+  --primary: oklch(0.58 0.14 255);
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-hover: oklch(0.64 0.14 255);
 
-  --navy: oklch(0.35 0.18 292);
-  --navy-deep: oklch(0.15 0.028 292);
-  --navy-foreground: oklch(0.985 0.003 290);
+  --navy: oklch(0.30 0.12 255);
+  --navy-deep: oklch(0.14 0.025 255);
+  --navy-foreground: oklch(0.98 0.003 255);
 
-  --secondary: oklch(0.25 0.03 292);
-  --secondary-foreground: oklch(0.95 0.005 290);
-  --muted: oklch(0.25 0.03 292);
-  --muted-foreground: oklch(0.72 0.033 292);
-  --subtle-foreground: oklch(0.62 0.03 292);
-  --accent: oklch(0.28 0.045 292);
-  --accent-foreground: oklch(0.95 0.02 292);
+  --secondary: oklch(0.24 0.02 255);
+  --secondary-foreground: oklch(0.95 0.003 255);
+  --muted: oklch(0.24 0.02 255);
+  --muted-foreground: oklch(0.70 0.025 255);
+  --subtle-foreground: oklch(0.60 0.02 255);
+  --accent: oklch(0.26 0.03 255);
+  --accent-foreground: oklch(0.95 0.01 255);
 
-  --border: oklch(0.28 0.028 292);
-  --divider: oklch(0.25 0.026 292);
-  --input: oklch(0.32 0.028 292);
-  --ring: oklch(0.64 0.22 292);
+  --border: oklch(0.26 0.02 255);
+  --divider: oklch(0.22 0.02 255);
+  --input: oklch(0.28 0.02 255);
+  --ring: oklch(0.58 0.14 255);
 
-  --sidebar: oklch(0.17 0.028 292);
-  --sidebar-foreground: oklch(0.95 0.006 290);
-  --sidebar-muted: oklch(0.66 0.03 292);
-  --sidebar-active: oklch(0.35 0.164 292);
-  --sidebar-hover: oklch(0.24 0.035 292);
-  --sidebar-border: oklch(0.28 0.03 292);
+  --sidebar: oklch(0.12 0.025 255);
+  --sidebar-foreground: oklch(0.95 0.003 255);
+  --sidebar-muted: oklch(0.60 0.02 255);
+  --sidebar-active: oklch(0.25 0.05 255);
+  --sidebar-hover: oklch(0.18 0.03 255);
+  --sidebar-border: oklch(0.22 0.02 255);
 }
 
 @layer base {

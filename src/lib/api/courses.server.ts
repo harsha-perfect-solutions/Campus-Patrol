@@ -140,3 +140,5 @@ export const deleteCourseApi = createServerFn({ method: "POST" })
       }
     },
   );
+
+export default {};

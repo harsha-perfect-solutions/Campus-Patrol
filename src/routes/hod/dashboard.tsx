@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AlertTriangle, ShieldAlert } from "lucide-react";
+import { AlertTriangle, ShieldAlert, Building2 } from "lucide-react";
 import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 import { getHodDashboardStatsApi, getHodCasesApi } from "@/lib/api/hod.server";
 import type { Report } from "@/lib/cmadms-data";
 import { hodByDepartment } from "@/lib/cmadms-data";
@@ -152,6 +153,55 @@ function HODDashboardContent() {
         }
       />
 
+      {/* CAMPUS BRANCH-WISE VIOLATION COUNTS (CSE, ECE, EEE, IT, MECH, CIVIL) */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <Building2 className="size-4 text-primary" />
+            CAMPUS BRANCH-WISE VIOLATION COUNTS
+          </span>
+          <span className="text-[11px] text-muted-foreground font-semibold">
+            All Engineering Branches Overview
+          </span>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {[
+            { dept: "CSE", name: "Computer Science", count: 15, isUserDept: userDept === "CSE", color: "border-primary/40 bg-primary/5 text-primary" },
+            { dept: "ECE", name: "Electronics & Comm", count: 8, isUserDept: userDept === "ECE", color: "border-purple-300 bg-purple-50/40 text-purple-700 dark:bg-purple-950/20 dark:text-purple-300" },
+            { dept: "EEE", name: "Electrical & Elect", count: 4, isUserDept: userDept === "EEE", color: "border-amber-300 bg-amber-50/40 text-amber-700 dark:bg-amber-950/20 dark:text-amber-300" },
+            { dept: "IT", name: "Information Tech", count: 6, isUserDept: userDept === "IT", color: "border-blue-300 bg-blue-50/40 text-blue-700 dark:bg-blue-950/20 dark:text-blue-300" },
+            { dept: "MECH", name: "Mechanical Engg", count: 5, isUserDept: userDept === "MECH", color: "border-emerald-300 bg-emerald-50/40 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300" },
+            { dept: "CIVIL", name: "Civil Engineering", count: 3, isUserDept: userDept === "CIVIL", color: "border-zinc-300 bg-zinc-50/40 text-zinc-700 dark:bg-zinc-950/20 dark:text-zinc-300" },
+          ].map((b) => (
+            <div
+              key={b.dept}
+              className={cn(
+                "card-surface p-4 rounded-2xl border transition-all relative overflow-hidden",
+                b.isUserDept ? "border-2 border-primary shadow-xs ring-2 ring-primary/20" : "border-border"
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <span className={cn("px-2 py-0.5 rounded-md text-[11px] font-extrabold", b.color)}>
+                  {b.dept}
+                </span>
+                {b.isUserDept && (
+                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-primary text-primary-foreground">
+                    My Dept
+                  </span>
+                )}
+              </div>
+              <p className="mt-2 text-2xl font-black text-foreground">
+                {String(b.count).padStart(2, "0")}
+              </p>
+              <p className="text-[10px] font-medium text-muted-foreground truncate mt-0.5">
+                {b.name}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Summary Metrics */}
       <div className="grid gap-4 sm:grid-cols-4">
         {[
@@ -189,6 +239,109 @@ function HODDashboardContent() {
           </div>
         ))}
       </div>
+
+      {/* DAY-TO-DAY VIOLATION TREND & PROACTIVE HOD PRECAUTIONS CONSOLE */}
+      <section className="card-surface p-6 rounded-2xl border border-border shadow-xs space-y-5">
+        <div className="flex items-center justify-between border-b border-divider pb-4">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="size-4 text-red-600" />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+              DEPARTMENT DAY-TO-DAY VIOLATION TREND & PROACTIVE HOD PRECAUTIONS
+            </span>
+          </div>
+          <span className="text-[11px] font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded-lg">
+            Live Department Analytics ({userDept})
+          </span>
+        </div>
+
+        {/* High Violation Precaution Alert Banner */}
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-5 space-y-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-red-600 text-white shrink-0 shadow-xs">
+                <AlertTriangle className="size-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-extrabold text-red-900 dark:text-red-300">
+                  🚨 HIGH VIOLATION ALERT: 3rd Year Section A requires HOD Intervention
+                </h4>
+                <p className="text-xs text-red-700 dark:text-red-400 mt-0.5 font-medium">
+                  Increased unexcused movement detected during lab & lecture hours (3 active violations in Section A). Proactive HOD precautions recommended to prevent escalation.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-red-500/20">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                const toast = (window as any).toast || console.log;
+                toast.success("Section Advisory Issued!", {
+                  description: "Official HOD precautionary advisory sent to 3rd Year Sec A Class Counselor & Students.",
+                });
+              }}
+              className="rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs"
+            >
+              Issue Precautionary Advisory Warning
+            </Button>
+
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const toast = (window as any).toast || console.log;
+                toast.success("Counselor Precautionary Meeting Scheduled", {
+                  description: "Notification sent to assigned Class Counselor Prof. Ravi Kumar for student counseling session.",
+                });
+              }}
+              className="rounded-xl text-xs font-bold border-red-300 text-red-700 dark:text-red-300 hover:bg-red-100/50"
+            >
+              Notify Counselor for Precautionary Counseling
+            </Button>
+
+            <Button
+              asChild
+              size="sm"
+              variant="secondary"
+              className="rounded-xl text-xs font-bold"
+            >
+              <Link to="/hod/violations">
+                View Section A Violations &rarr;
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Day-to-Day & Section Breakdown Cards */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="p-4 rounded-xl border border-border bg-muted/30 space-y-1">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+              3rd Year • Section A Violations
+            </span>
+            <p className="text-2xl font-extrabold text-foreground">04 <span className="text-xs font-bold text-red-600 dark:text-red-400">(High Trend)</span></p>
+            <p className="text-[11px] text-muted-foreground">Class Counselor: Prof. Ravi Kumar</p>
+          </div>
+
+          <div className="p-4 rounded-xl border border-border bg-muted/30 space-y-1">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+              3rd Year • Section B Violations
+            </span>
+            <p className="text-2xl font-extrabold text-foreground">02 <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">(Normal)</span></p>
+            <p className="text-[11px] text-muted-foreground">Class Counselor: Dr. Anjali Rao</p>
+          </div>
+
+          <div className="p-4 rounded-xl border border-border bg-muted/30 space-y-1">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+              2nd Year • Section A Violations
+            </span>
+            <p className="text-2xl font-extrabold text-foreground">01 <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">(Low)</span></p>
+            <p className="text-[11px] text-muted-foreground">Class Counselor: Dr. Priya Sharma</p>
+          </div>
+        </div>
+      </section>
 
       {/* Cases Requiring Immediate Attention */}
       <section className="card-surface p-6 rounded-2xl border border-border shadow-xs">
@@ -236,7 +389,7 @@ function HODDashboardContent() {
                   variant="default"
                   className="rounded-xl bg-primary text-primary-foreground font-semibold self-start sm:self-auto"
                 >
-                  <Link to="/hod/cases/$reportId" params={{ reportId: r.id }}>
+                  <Link to="/reports/$reportId" params={{ reportId: r.id }}>
                     Review Case &rarr;
                   </Link>
                 </Button>

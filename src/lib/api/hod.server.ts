@@ -465,3 +465,5 @@ export const approveHodMovementPassApi = createServerFn({ method: "POST" })
     },
   );
 
+export default {};
+

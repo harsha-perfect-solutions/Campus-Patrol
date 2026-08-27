@@ -37,6 +37,16 @@ export type DBViolationReport = {
   semester: number;
   explanation_deadline: string;
   created_at: string;
+  assigned_counselor_id?: string | null;
+  counselor_assignment_status?: string | null;
+  counselor_remarks?: string | null;
+  counselor_reviewed_at?: string | null;
+  escalation_reason?: string | null;
+  escalated_at?: string | null;
+  resolution_note?: string | null;
+  resolved_by?: string | null;
+  resolved_at?: string | null;
+  audit_trail?: any;
 };
 
 export type NewViolationReportInput = {
@@ -85,7 +95,39 @@ export async function createViolationReport(
   const resolvedStudentName = student.name || input.studentName;
   const resolvedYearSection = `${student.year || ""} • ${student.section || ""}`.trim() || input.yearSection;
 
-  // 2. Re-check movement pass server-side: if student has approved active movement pass, prevent unauthorized movement violation
+  // 2. Server-authoritative timetable check: verify current timetable period_type
+  const currentClassRes = await getCurrentClassForStudent(cleanCode);
+  const activePeriodType = (
+    currentClassRes.currentClass?.periodType ||
+    currentClassRes.period_type ||
+    "CLASS"
+  )
+    .toString()
+    .toUpperCase();
+
+  const isNonClassroomPeriod = [
+    "LIBRARY",
+    "SPORTS",
+    "ACTIVITY",
+    "BREAK",
+    "LUNCH",
+    "NO_CLASS",
+  ].includes(activePeriodType);
+
+  if (
+    isNonClassroomPeriod &&
+    (violationType === "Unauthorized Class Movement" ||
+      violationType === "Corridor Presence During Class" ||
+      violationType === "Unexcused Absence" ||
+      violationType.toLowerCase().includes("absence") ||
+      violationType.toLowerCase().includes("movement"))
+  ) {
+    throw new Error(
+      `Cannot report classroom violation: Student's current scheduled period type is '${activePeriodType}' where classroom attendance and movement monitoring are disabled.`,
+    );
+  }
+
+  // 3. Re-check movement pass server-side: if student has approved active movement pass, prevent unauthorized movement violation
   if (violationType === "Unauthorized Class Movement" || violationType === "Corridor Presence During Class") {
     const activePass = await getActiveMovementPermission(cleanCode);
     if (activePass) {
@@ -114,6 +156,12 @@ export async function createViolationReport(
   try {
     await db.query("BEGIN");
 
+    // Find student's active Counselor
+    const { findActiveCounselorForStudent, ensureCounselorSchema } = await import("./counselor.server");
+    await ensureCounselorSchema();
+    const assignedCounselorId = await findActiveCounselorForStudent(cleanCode);
+    const counselorAssignmentStatus = assignedCounselorId ? "ASSIGNED" : "NO_COUNSELOR";
+
     const insertQuery = `
       INSERT INTO violation_reports (
         id,
@@ -138,9 +186,12 @@ export async function createViolationReport(
         status,
         semester,
         explanation_deadline,
-        created_at
+        created_at,
+        assigned_counselor_id,
+        counselor_assignment_status,
+        audit_trail
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now(), $12, $13, $14, $15, $16, $17, $18, 'reported', $19, (now() + INTERVAL '24 hours'), now()
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now(), $12, $13, $14, $15, $16, $17, $18, 'reported', $19, (now() + INTERVAL '24 hours'), now(), $20, $21, $22::jsonb
       )
       RETURNING
         id, student_code, student_name, department, year_section, class_name,
@@ -149,6 +200,16 @@ export async function createViolationReport(
         evidence, reported_by, status::text, explanation, explanation_submitted_at::text,
         decision, decision_by, decision_at::text, semester, explanation_deadline::text, created_at::text;
     `;
+
+    const initialAuditTrail = JSON.stringify([
+      {
+        action: "VIOLATION_REPORTED",
+        actor_id: input.reportedBy,
+        assigned_counselor_id: assignedCounselorId,
+        counselor_assignment_status: counselorAssignmentStatus,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
 
     const values = [
       reportId,
@@ -170,6 +231,9 @@ export async function createViolationReport(
       input.evidence ?? null,
       input.reportedBy,
       student.semester ?? input.semester ?? 6,
+      assignedCounselorId,
+      counselorAssignmentStatus,
+      initialAuditTrail,
     ];
 
     const result = await db.query<DBViolationReport>(insertQuery, values);
@@ -202,7 +266,9 @@ export async function createViolationReport(
     `;
 
     const metadata = JSON.stringify({
-      event_message: "Incident reported by Faculty and submitted to HOD.",
+      event_message: assignedCounselorId
+        ? "Incident reported by Faculty and routed to assigned Counselor."
+        : "Incident reported by Faculty (No Counselor assigned -> Fallback Queue).",
       student_code: cleanCode,
       student_name: resolvedStudentName,
       location: input.location,
@@ -212,25 +278,58 @@ export async function createViolationReport(
       subject: input.className,
       room: input.room,
       witness_notes: input.witnessNotes || null,
+      assigned_counselor_id: assignedCounselorId,
       timestamp: new Date().toISOString(),
     });
 
     await db.query(auditQuery, [input.reportedBy, auditAction, reportId, metadata]);
 
-    // 5. Notify HOD of student's actual department
-    const hodUserId = await findHodUserIdForStudentCode(cleanCode);
-    if (hodUserId) {
+    // 5. Notifications:
+    // Notify Student
+    const studentUserId = await findStudentUserIdByCode(cleanCode);
+    if (studentUserId) {
       await createNotificationServer({
-        recipientUserId: hodUserId,
-        recipientRole: "hod",
+        recipientUserId: studentUserId,
+        recipientRole: "student",
         department: resolvedDepartment,
         type: "violation_report_created",
-        title: isCritical ? "Critical Student Incident 🚨" : "Student Movement Violation Reported ⚠️",
-        detail: `${resolvedStudentName} (${cleanCode}) was reported for ${violationType} by Faculty (${input.reportedBy}) at ${input.location}.`,
-        tone: isCritical ? "violation" : "pending",
+        title: "Violation Report Created ⚠️",
+        detail: `You were reported for ${violationType} by Faculty. Please submit your explanation within 24 hours.`,
+        tone: "violation",
         relatedId: reportId,
         relatedType: "violation_report",
       });
+    }
+
+    // If Counselor assigned: Notify Counselor
+    if (assignedCounselorId) {
+      await createNotificationServer({
+        recipientUserId: assignedCounselorId,
+        recipientRole: "faculty",
+        department: resolvedDepartment,
+        type: "violation_report_created",
+        title: "New Student Violation Case Assigned 📋",
+        detail: `New violation report (${reportId}) for your counseling student ${resolvedStudentName} (${cleanCode}).`,
+        tone: "pending",
+        relatedId: reportId,
+        relatedType: "violation_report",
+      });
+    } else {
+      // Fallback: Notify HOD
+      const hodUserId = await findHodUserIdForStudentCode(cleanCode);
+      if (hodUserId) {
+        await createNotificationServer({
+          recipientUserId: hodUserId,
+          recipientRole: "hod",
+          department: resolvedDepartment,
+          type: "violation_report_created",
+          title: "Student Violation Reported (No Counselor Assigned) ⚠️",
+          detail: `${resolvedStudentName} (${cleanCode}) reported for ${violationType} by Faculty (${input.reportedBy}) [NO_COUNSELOR Fallback Queue].`,
+          tone: "violation",
+          relatedId: reportId,
+          relatedType: "violation_report",
+        });
+      }
     }
 
     // 6. Notify Admin for High/Critical incidents or Violence
@@ -277,23 +376,6 @@ export async function createViolationReport(
           console.error("[Violation Server] Failed to auto-create emergency incident record:", emgErr);
         }
       }
-    }
-
-    // 7. Notify the student
-    const studentUserId = await findStudentUserIdByCode(cleanCode);
-    if (studentUserId) {
-      await createNotificationServer({
-        recipientUserId: studentUserId,
-        recipientRole: "student",
-        recipientId: cleanCode,
-        department: resolvedDepartment,
-        type: "violation_report_created",
-        title: "Violation Report Filed",
-        detail: `A violation report has been filed for ${input.className}. Please submit your explanation within 24 hours.`,
-        tone: "violation",
-        relatedId: reportId,
-        relatedType: "violation_report",
-      });
     }
 
     await db.query("COMMIT");
@@ -482,6 +564,20 @@ export async function submitStudentExplanation(
   try {
     await db.query("BEGIN");
 
+    // 24-Hour Expiration Check: If report was created > 24h ago, lock online submission and direct student to HOD Cabin
+    const checkQuery = `
+      SELECT created_at, (NOW() > created_at + INTERVAL '24 hours') AS is_expired
+      FROM violation_reports
+      WHERE UPPER(id) = UPPER($1)
+      LIMIT 1;
+    `;
+    const checkRes = await db.query<{ created_at: string; is_expired: boolean }>(checkQuery, [cleanId]);
+    const row = checkRes.rows[0];
+    if (row && row.is_expired) {
+      await db.query("ROLLBACK");
+      throw new Error("24 Hours Exceeded: The explanation window for this case has expired. Please meet the HOD at Cabin directly.");
+    }
+
     const updateQuery = `
       UPDATE violation_reports
       SET
@@ -526,3 +622,27 @@ export async function submitStudentExplanation(
     throw new Error("Failed to save student explanation in database.");
   }
 }
+
+/**
+ * Retrieves all violation reports for a specific student code from PostgreSQL.
+ */
+export async function getStudentViolationHistory(studentCode: string): Promise<DBViolationReport[]> {
+  const cleanCode = studentCode.trim().toUpperCase();
+  if (!cleanCode) return [];
+
+  try {
+    const query = `
+      SELECT ${VIOLATION_COLUMNS}
+      FROM violation_reports
+      WHERE UPPER(student_code) = UPPER($1)
+      ORDER BY created_at DESC;
+    `;
+
+    const result = await db.query<DBViolationReport>(query, [cleanCode]);
+    return result.rows;
+  } catch (error) {
+    console.error("[Database Error] Error fetching student violation history:", error);
+    throw new Error("Failed to query student violation history.");
+  }
+}
+

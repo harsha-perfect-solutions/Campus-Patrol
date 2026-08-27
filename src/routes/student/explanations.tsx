@@ -32,13 +32,20 @@ export const Route = createFileRoute("/student/explanations")({
   component: StudentExplanationsPage,
 });
 
-function getDeadlineStatus(deadlineIso: string) {
+function getDeadlineStatus(deadlineIso?: string, createdAtIso?: string) {
   const now = new Date().getTime();
-  const deadline = new Date(deadlineIso).getTime();
+  let deadline = deadlineIso ? new Date(deadlineIso).getTime() : 0;
+  if (!deadline && createdAtIso) {
+    deadline = new Date(createdAtIso).getTime() + 24 * 60 * 60 * 1000;
+  }
+  if (!deadline) {
+    return { expired: false, text: "24 hours remaining" };
+  }
+
   const diffMs = deadline - now;
 
   if (diffMs <= 0) {
-    return { expired: true, text: "Deadline Passed" };
+    return { expired: true, text: "MEET THE HOD AT CABIN (24 Hours Exceeded)" };
   }
 
   const hours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -106,7 +113,7 @@ function StudentExplanationsPage() {
     targetReport?.status === "under_review";
 
   const deadlineStatus = targetReport
-    ? getDeadlineStatus(targetReport.explanation_deadline || targetReport.created_at)
+    ? getDeadlineStatus(targetReport.explanation_deadline, targetReport.created_at)
     : null;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,7 +179,7 @@ function StudentExplanationsPage() {
 
       if (res.success && res.report) {
         toast.success("Explanation Submitted Successfully!", {
-          description: `Your official statement for Case #${targetReport.id} has been recorded in PostgreSQL for HOD review.`,
+          description: `Your official statement for Case #${targetReport.id} has been recorded in PostgreSQL for Counselor review.`,
         });
         setDbReports((prev) => prev.map((r) => (r.id === res.report!.id ? res.report! : r)));
       } else {
@@ -277,11 +284,11 @@ function StudentExplanationsPage() {
                   <CheckCircle2 className="size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wider">
-                      EXPLANATION SUBMITTED & UNDER HOD REVIEW
+                      EXPLANATION SUBMITTED & UNDER COUNSELOR REVIEW
                     </p>
                     <p className="text-xs mt-0.5 opacity-90">
                       Your official statement for Case <strong>#{targetReport.id}</strong> has been
-                      saved to the database and routed to your Department HOD.
+                      saved to the database and routed to your assigned Class Counselor.
                     </p>
                   </div>
                 </div>
@@ -329,12 +336,16 @@ function StudentExplanationsPage() {
                 </div>
 
                 {deadlineStatus?.expired && (
-                  <div className="rounded-2xl border border-red-200 bg-red-50/80 p-3.5 text-xs text-red-800 flex items-start gap-2.5">
-                    <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                    <p>
-                      <strong>Submission Window Closed:</strong> The 24-hour response deadline for this
-                      violation has passed. The HOD will proceed with case evaluation based on available faculty records.
-                    </p>
+                  <div className="rounded-2xl border border-red-300 bg-red-50 dark:bg-red-950/40 p-4 text-xs text-red-900 dark:text-red-200 flex items-start gap-3 shadow-2xs">
+                    <AlertCircle className="size-5 shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
+                    <div>
+                      <p className="font-extrabold text-sm uppercase tracking-wide text-red-700 dark:text-red-300">
+                        🚨 24 Hours Exceeded — Meet HOD at Cabin!
+                      </p>
+                      <p className="mt-1 font-medium leading-relaxed">
+                        You did not submit an explanation within the 24-hour response window for Case <strong>#{targetReport.id}</strong>. Online submission is now locked. Please report directly to the <strong>HOD Cabin</strong> to present your explanation in person.
+                      </p>
+                    </div>
                   </div>
                 )}
 
@@ -453,7 +464,11 @@ function StudentExplanationsPage() {
                   disabled={submitting || deadlineStatus?.expired || text.trim().length < 10}
                   className="w-full h-11 rounded-xl font-bold bg-primary text-primary-foreground text-xs shadow-xs"
                 >
-                  {submitting ? "Submitting Explanation..." : "Submit Official Explanation to HOD"}
+                  {submitting
+                    ? "Submitting Explanation..."
+                    : deadlineStatus?.expired
+                    ? "🚪 Meet HOD at Cabin (24 Hours Exceeded)"
+                    : "Submit Official Explanation to HOD"}
                 </Button>
               </form>
             )}

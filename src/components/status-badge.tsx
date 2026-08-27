@@ -16,14 +16,17 @@ const map: Record<string, Meta> = {
   pending: { label: "Pending", tone: "warning", Icon: Clock },
   review: { label: "Under Review", tone: "info", Icon: Eye },
   resolved: { label: "Resolved", tone: "success", Icon: CheckCircle2 },
-  escalated: { label: "Escalated", tone: "danger", Icon: ShieldAlert },
+  resolved_by_counselor: { label: "Solved by Counselor", tone: "success", Icon: CheckCircle2 },
+  resolved_by_hod: { label: "Resolved by HOD", tone: "success", Icon: CheckCircle2 },
+  escalated: { label: "Escalated to HOD", tone: "danger", Icon: ShieldAlert },
+  escalated_to_hod: { label: "Escalated to HOD", tone: "danger", Icon: ShieldAlert },
   reported: { label: "Reported", tone: "warning", Icon: AlertTriangle },
   notified: { label: "Student Notified", tone: "info", Icon: Eye },
   awaiting_explanation: { label: "Awaiting Explanation", tone: "warning", Icon: Clock },
   explanation_submitted: { label: "Explanation Submitted", tone: "info", Icon: Eye },
   under_review: { label: "Under Review", tone: "info", Icon: Gavel },
-  exonerated: { label: "Exonerated", tone: "success", Icon: CheckCircle2 },
-  warned: { label: "Warning Issued", tone: "success", Icon: CheckCircle2 },
+  exonerated: { label: "Exonerated (HOD)", tone: "success", Icon: CheckCircle2 },
+  warned: { label: "Warning Issued (HOD)", tone: "success", Icon: CheckCircle2 },
 };
 
 export function StatusBadge({ status, className }: { status: string; className?: string }) {

@@ -187,7 +187,7 @@ export async function detectSafetyHotspots(
   values.push(limit);
   const res = await db.query<any>(query, values);
 
-  return res.rows.map((row, i) => {
+  return res.rows.map((row: any, i: number) => {
     // Derive building block heuristics
     const room = row.room_code || "";
     let building = "Academic Main Block";
@@ -334,7 +334,7 @@ export async function getLocationSafetyBreakdown(
   values.push(limit);
   const res = await db.query<any>(query, values);
 
-  return res.rows.map((r) => ({
+  return res.rows.map((r: any) => ({
     locationName: r.location_name,
     room: r.room,
     totalIncidents: r.total_incidents,

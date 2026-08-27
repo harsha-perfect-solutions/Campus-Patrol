@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import { getCookie } from "@tanstack/react-start/server";
 import { db } from "./db.server";
 
 const INSECURE_DEFAULT_SECRETS = new Set([
@@ -169,25 +168,8 @@ export async function ensureUserSessionsSchema(): Promise<void> {
   }
 }
 
-/**
- * Idempotently cleans up expired user sessions from user_sessions table in PostgreSQL.
- * Preserves all active sessions (expires_at > NOW()).
- */
-export async function cleanupExpiredSessions(): Promise<{ deletedCount: number }> {
-  await ensureUserSessionsSchema();
-  try {
-    const query = `
-      DELETE FROM user_sessions
-      WHERE expires_at <= NOW()
-      RETURNING session_id;
-    `;
-    const res = await db.query(query);
-    return { deletedCount: res.rows.length };
-  } catch (error) {
-    console.error("[Session Cleanup Error] Failed to delete expired sessions:", error);
-    return { deletedCount: 0 };
-  }
-}
+import { cleanupExpiredSessions } from "./db/session-maintenance.server";
+export { cleanupExpiredSessions };
 
 /**
  * Creates a server-side session in user_sessions table in PostgreSQL.
@@ -311,9 +293,11 @@ export async function destroySession(sessionId: string): Promise<boolean> {
 /**
  * Server-side authorization helper: Reads HttpOnly session cookie and resolves user session.
  */
+import { getCookieServer } from "./server-cookies";
+
 export async function getAuthenticatedSession(): Promise<ServerSession | null> {
   try {
-    const token = getCookie("cmadms_session_token");
+    const token = await getCookieServer("cmadms_session_token");
     if (!token) return null;
     return await getSession(token);
   } catch (err) {
@@ -353,13 +337,13 @@ export async function requireRole(allowedRole: AppRole): Promise<ServerSession> 
     const targetRole = normalizeRole(allowedRole);
     return {
       sessionId: "DEMO_SESSION_TOKEN",
-      userId: `demo-${targetRole}-001`,
+      userId: targetRole === "faculty" ? "0f0f43ec-1677-4f27-adf4-e259be1e0beb" : `demo-${targetRole}-001`,
       role: targetRole,
-      email: `${targetRole}@cmadms.edu`,
+      email: targetRole === "faculty" ? "ravi.kumar@cmadms.edu" : `${targetRole}@cmadms.edu`,
       department: "CSE",
-      staffCode: `${targetRole.toUpperCase()}001`,
+      staffCode: targetRole === "faculty" ? "FAC-RAVI" : `${targetRole.toUpperCase()}001`,
       studentCode: targetRole === "student" ? "23CSE1012" : null,
-      fullName: targetRole === "hod" ? "Dr. Anjali Rao" : targetRole === "faculty" ? "Dr. Rajesh Sharma" : `Demo ${targetRole.toUpperCase()}`,
+      fullName: targetRole === "faculty" ? "Prof. Ravi Kumar" : targetRole === "hod" ? "Dr. Anjali Rao" : `Demo ${targetRole.toUpperCase()}`,
       assignedPost: "CSE",
       expiresAt: new Date(Date.now() + 86400000).toISOString(),
     };

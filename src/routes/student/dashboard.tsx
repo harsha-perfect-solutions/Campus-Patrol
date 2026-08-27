@@ -89,33 +89,53 @@ function StudentDashboardContent() {
       />
 
       {/* Pending Explanation Alert Banner */}
-      {pendingExplanation && (
-        <section className="rounded-2xl border border-l-4 border-l-amber-500 border-amber-200/80 bg-amber-50/50 dark:bg-amber-950/20 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
-          <div className="flex items-start gap-3.5">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-amber-500 text-white mt-0.5 shadow-xs">
-              <AlertTriangle className="size-5" />
-            </span>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
-                PENDING 24-HOUR EXPLANATION REQUIRED
+      {pendingExplanation && (() => {
+        const createdAtMs = (pendingExplanation.created_at as unknown) instanceof Date
+          ? (pendingExplanation.created_at as unknown as Date).getTime()
+          : new Date(String(pendingExplanation.created_at || "")).getTime();
+        const is24hExpired = !isNaN(createdAtMs) && (Date.now() - createdAtMs >= 24 * 60 * 60 * 1000);
+
+        return (
+          <section className={`rounded-2xl border border-l-4 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs ${
+            is24hExpired
+              ? "border-l-red-600 border-red-200/80 bg-red-50/50 dark:bg-red-950/20"
+              : "border-l-amber-500 border-amber-200/80 bg-amber-50/50 dark:bg-amber-950/20"
+          }`}>
+            <div className="flex items-start gap-3.5">
+              <span className={`grid size-10 shrink-0 place-items-center rounded-full text-white mt-0.5 shadow-xs ${
+                is24hExpired ? "bg-red-600" : "bg-amber-500"
+              }`}>
+                <AlertTriangle className="size-5" />
               </span>
-              <h3 className="text-sm font-bold text-foreground mt-0.5">
-                Violation Case {pendingExplanation.id} — {pendingExplanation.class_name}
-              </h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                A violation report was logged for {pendingExplanation.class_name} at{" "}
-                {pendingExplanation.incident_time}. Submit your explanation before HOD review.
-              </p>
+              <div>
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                  is24hExpired ? "text-red-700 dark:text-red-300" : "text-amber-700 dark:text-amber-300"
+                }`}>
+                  {is24hExpired ? "🚨 24 HOURS EXCEEDED — MEET HOD AT CABIN DIRECTLY" : "PENDING 24-HOUR EXPLANATION REQUIRED"}
+                </span>
+                <h3 className="text-sm font-bold text-foreground mt-0.5">
+                  Violation Case #{pendingExplanation.id} — {pendingExplanation.class_name}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {is24hExpired
+                    ? `The 24-hour explanation window for Case #${pendingExplanation.id} has expired. Online submission is locked. Please meet the HOD at Cabin directly.`
+                    : `A violation report was logged for ${pendingExplanation.class_name} at ${pendingExplanation.incident_time}. Submit your explanation within 24 hours.`}
+                </p>
+              </div>
             </div>
-          </div>
-          <Button
-            asChild
-            className="rounded-xl font-bold bg-amber-600 hover:bg-amber-700 text-white shrink-0 h-10 px-5 shadow-xs"
-          >
-            <Link to="/student/explanations">Submit Explanation &rarr;</Link>
-          </Button>
-        </section>
-      )}
+            <Button
+              asChild
+              className={`rounded-xl font-bold text-white shrink-0 h-10 px-5 shadow-xs ${
+                is24hExpired ? "bg-red-600 hover:bg-red-700" : "bg-amber-600 hover:bg-amber-700"
+              }`}
+            >
+              <Link to="/student/explanations">
+                {is24hExpired ? "Meet HOD at Cabin →" : "Submit Explanation →"}
+              </Link>
+            </Button>
+          </section>
+        );
+      })()}
 
       {/* Top 3 Metric Cards */}
       <div className="grid gap-4 sm:grid-cols-3">

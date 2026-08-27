@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { faculty } from "@/lib/cmadms-data";
 import { useCmadms } from "@/lib/cmadms-store";
-
+import { useAuth } from "@/lib/auth";
 import { RoleGuard } from "@/components/role-guard";
 
 export const Route = createFileRoute("/settings")({
@@ -63,33 +63,39 @@ function Card({
 
 export function SettingsPage() {
   const { theme, setTheme } = useCmadms();
+  const { profile, role } = useAuth();
+
+  const fullName = profile?.full_name || faculty.name;
+  const staffCode = profile?.staff_code || faculty.id;
+  const dept = profile?.department || faculty.department;
+  const roleTitle = (role || "faculty").toUpperCase();
 
   return (
     <>
       <PageHeader
-        title="Settings"
-        description="Manage your profile, appearance and notification preferences."
+        title="Account Profile & Settings"
+        description="Manage your staff profile, appearance and notification preferences."
         breadcrumb={[{ label: "Home", to: "/" }, { label: "System" }, { label: "Settings" }]}
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="Faculty Profile" icon={UserRound} description="Your CMADMS identity">
+        <Card title={`${roleTitle} Profile`} icon={UserRound} description="Your CMADMS official identity">
           <div>
             <Label htmlFor="name">Full name</Label>
-            <Input id="name" defaultValue={faculty.name} className="mt-1.5 h-11" />
+            <Input id="name" defaultValue={fullName} className="mt-1.5 h-11 font-semibold" />
           </div>
           <div>
-            <Label htmlFor="fid">Faculty ID</Label>
-            <Input id="fid" defaultValue={faculty.id} readOnly className="mt-1.5 h-11" />
+            <Label htmlFor="fid">Staff / User Code</Label>
+            <Input id="fid" defaultValue={staffCode} readOnly className="mt-1.5 h-11 font-mono font-bold" />
             <p className="mt-1 text-xs text-subtle-foreground">
-              Faculty IDs are issued by the administration.
+              Official staff credentials are issued by Administration.
             </p>
           </div>
           <div>
             <Label htmlFor="dept">Department</Label>
-            <Input id="dept" defaultValue={faculty.department} className="mt-1.5 h-11" />
+            <Input id="dept" defaultValue={dept} className="mt-1.5 h-11 font-semibold" />
           </div>
-          <Button onClick={() => toast.success("Profile updated")}>Save changes</Button>
+          <Button onClick={() => toast.success("Profile preferences updated successfully.")}>Save Profile Changes</Button>
         </Card>
 
         <div className="space-y-6">

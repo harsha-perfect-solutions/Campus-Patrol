@@ -1,23 +1,32 @@
+// CMADMS Student Verification Route
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import {
+  AlertCircle,
   AlertTriangle,
+  Award,
   BookOpen,
   Building2,
   Calendar,
   Camera,
   CheckCircle2,
   Clock,
+  DoorOpen,
+  FileCheck,
+  FileText,
   HelpCircle,
+  History,
   Home,
   Info,
   MapPin,
+  MessageSquare,
   RotateCcw,
   Search,
   ShieldAlert,
   ShieldCheck,
   Upload,
   User,
+  UserCheck,
   UserRound,
   Users,
   X,
@@ -66,8 +75,12 @@ import {
   getStudentMovementStatus,
   submitViolationReportApi,
   getStudentCurrentClassApi,
+  getStudentDailyTimetableApi,
   verifyStudentForFacultyApi,
+  getStudentViolationHistoryApi,
 } from "@/lib/api/faculty.server";
+import { getCampusRoomsApi } from "@/lib/api/rooms.server";
+import { getStudentCounselorApi } from "@/lib/api/counselor.server";
 import { RoleGuard } from "@/components/role-guard";
 import type { DBStudent } from "@/lib/db/students.server";
 
@@ -188,10 +201,29 @@ function ClassroomVectorIllustration() {
   );
 }
 
+function formatDateSafe(dateVal?: string | null, fallback = "N/A"): string {
+  if (!dateVal) return fallback;
+  try {
+    const parsed = new Date(dateVal);
+    if (isNaN(parsed.getTime())) {
+      return dateVal;
+    }
+    return parsed.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return dateVal || fallback;
+  }
+}
+
 export function CheckStudentPage() {
   const search = useSearch({ strict: false }) as { student?: string };
   const navigate = useNavigate();
-  const { addReport, checkActivePermission } = useCmadms();
+  const { addReport, checkActivePermission, reports: storeReports } = useCmadms();
   const { profile } = useAuth();
 
   const [query, setQuery] = useState(search?.student ?? "23CSE1012");
@@ -208,7 +240,112 @@ export function CheckStudentPage() {
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
+  // Student Daily Timetable Timeline State
+  const [dailySlots, setDailySlots] = useState<any[]>([]);
+  const [verifiedTimeStr, setVerifiedTimeStr] = useState<string>("");
+  const [sessionTab, setSessionTab] = useState<"MORNING" | "AFTERNOON">(() => {
+    const currentHour = new Date().getHours();
+    const currentMinute = new Date().getMinutes();
+    const currentMins = currentHour * 60 + currentMinute;
+    // Morning session: 09:00 AM (540 mins) to 01:10 PM (790 mins)
+    return currentMins >= 790 ? "AFTERNOON" : "MORNING";
+  });
+
+  // Student Violation History State
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyList, setHistoryList] = useState<any[]>([]);
+  const [historyFilter, setHistoryFilter] = useState<"ALL" | "EXCUSED" | "WARNED" | "PENDING">("ALL");
+  const [counselorName, setCounselorName] = useState<string>("Prof. Ravi Kumar");
+
   const activeFacultyName = profile?.full_name || faculty.name;
+
+  // Admin-Configured Master Locations State
+  const defaultRoaming = [
+    "Canteen & Cafeteria",
+    "Campus Parking Area",
+    "Sports & Athletics Ground",
+    "Library Corridor & Reading Foyer",
+    "Main Entrance Gate",
+    "Hostel Quadrangle & Gate",
+    "Administrative Block Corridor",
+  ];
+  const [roamingLocations, setRoamingLocations] = useState<string[]>(defaultRoaming);
+  const [buildingRooms, setBuildingRooms] = useState<string[]>([]);
+
+  useEffect(() => {
+    const loadMasterLocations = async () => {
+      try {
+        const res = await getCampusRoomsApi({ data: {} });
+        if (res.success && res.rooms && res.rooms.length > 0) {
+          const dbRoaming = res.rooms
+            .filter((r) => r.roomType === "Common Area" || r.buildingBlock === "Common Roaming Area")
+            .map((r) => r.roomCode);
+
+          const dbRooms = res.rooms
+            .filter((r) => r.roomType !== "Common Area" && r.buildingBlock !== "Common Roaming Area")
+            .map((r) => `${r.roomCode} (${r.buildingBlock})`);
+
+          setRoamingLocations(Array.from(new Set([...defaultRoaming, ...dbRoaming])));
+          setBuildingRooms(dbRooms);
+        }
+      } catch {
+        // fallback
+      }
+    };
+    loadMasterLocations();
+  }, []);
+
+  const fetchViolationHistory = async (studentCode: string) => {
+    if (!studentCode) return;
+    setHistoryLoading(true);
+    try {
+      const apiRes = await getStudentViolationHistoryApi({ data: { studentCode } });
+      let dbReports: any[] = apiRes.success && apiRes.reports ? apiRes.reports : [];
+
+      const matchedStore = (storeReports || []).filter(
+        (r) =>
+          r.studentId?.toUpperCase() === studentCode.toUpperCase() ||
+          (r as any).studentCode?.toUpperCase() === studentCode.toUpperCase(),
+      );
+
+      const combined = [...dbReports];
+      matchedStore.forEach((sr) => {
+        if (!combined.some((c) => c.id === sr.id)) {
+          combined.push({
+            id: sr.id,
+            student_code: sr.studentId,
+            student_name: sr.studentName,
+            department: sr.department,
+            year_section: sr.yearSection,
+            class_name: sr.className,
+            scheduled_time: sr.scheduledTime,
+            room: sr.room,
+            incident_time: sr.incidentTime,
+            location: sr.location,
+            violation_type: (sr as any).violationType || "Unauthorized Class Movement",
+            severity: (sr as any).severity || "Medium",
+            remarks: sr.remarks,
+            evidence: sr.evidence || null,
+            reported_by: sr.reportedBy,
+            status: sr.status,
+            explanation: sr.explanation || null,
+            explanation_submitted_at: sr.explanationSubmittedAt || null,
+            decision: sr.decision || null,
+            decision_by: sr.decisionBy || (sr as any).departmentHod || null,
+            decision_at: (sr as any).decisionAt || null,
+            created_at: sr.createdAt,
+          });
+        }
+      });
+
+      setHistoryList(combined);
+    } catch (err) {
+      console.error("Failed to load violation history:", err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   const runCheck = async (raw: string) => {
     const id = raw.trim();
@@ -264,6 +401,51 @@ export function CheckStudentPage() {
         slot: slotObj as any,
         permission: permissionObj as any,
       });
+
+      // Fetch Assigned Counselor details for student
+      try {
+        const cRes = await getStudentCounselorApi({
+          data: {
+            studentCode: dbStudent.id,
+            department: dbStudent.department,
+            year: dbStudent.year,
+            section: dbStudent.section,
+          },
+        });
+        if (cRes?.counselorName) {
+          setCounselorName(cRes.counselorName);
+        } else {
+          setCounselorName("Prof. Ravi Kumar");
+        }
+      } catch {
+        setCounselorName("Prof. Ravi Kumar");
+      }
+
+      // Real-Time Clock Resolution for Verification
+      const now = new Date();
+      const currentMins = now.getHours() * 60 + now.getMinutes();
+      setSessionTab(currentMins >= 790 ? "AFTERNOON" : "MORNING");
+      setVerifiedTimeStr(
+        now.toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        })
+      );
+
+      // Query complete daily timetable slots for student
+      try {
+        const ttRes = await getStudentDailyTimetableApi({ data: { rollNo: dbStudent.id } });
+        if (ttRes.success && ttRes.slots) {
+          setDailySlots(ttRes.slots);
+        } else {
+          setDailySlots([]);
+        }
+      } catch {
+        setDailySlots([]);
+      }
+
+      fetchViolationHistory(dbStudent.id);
     } catch (err: any) {
       console.error("Failed to verify student:", err);
       toast.error("Error querying student status.");
@@ -302,6 +484,21 @@ export function CheckStudentPage() {
   const [witnessNotes, setWitnessNotes] = useState("");
   const [incidentTime, setIncidentTime] = useState("");
 
+  useEffect(() => {
+    if (!formOpen) return;
+    const updateRealTime = () => {
+      const nowStr = new Date().toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+      setIncidentTime(nowStr);
+    };
+    updateRealTime();
+    const interval = setInterval(updateRealTime, 1000);
+    return () => clearInterval(interval);
+  }, [formOpen]);
+
   const handleOpenReportForm = () => {
     const nowStr = new Date().toLocaleTimeString("en-IN", {
       hour: "2-digit",
@@ -318,10 +515,6 @@ export function CheckStudentPage() {
 
   const submitReport = async () => {
     if (!result?.student) return;
-    if (remarks.trim().length < 10) {
-      toast.error("Observation description must be at least 10 characters.");
-      return;
-    }
     setSubmitting(true);
     const now = new Date();
     const time = incidentTime || now.toLocaleTimeString("en-IN", {
@@ -347,7 +540,7 @@ export function CheckStudentPage() {
           location: location || "Corridor",
           violationType,
           severity,
-          remarks: remarks.trim(),
+          remarks: remarks.trim() || "No additional observation description provided.",
           witnessNotes: witnessNotes || undefined,
           evidence: photoPreview || evidence || null,
           semester: result.student.semester || 6,
@@ -365,8 +558,8 @@ export function CheckStudentPage() {
       setFormOpen(false);
 
       toast.success("Incident Reported Successfully", {
-        description: `Case #${dbRes.report?.id} has been submitted to the Department HOD.`,
-        duration: 6000,
+        description: `Case #${dbRes.report?.id} has been submitted to assigned Counselor (${counselorName}).`,
+        duration: 4000,
       });
       navigate({ to: "/faculty/reports" as any });
     } catch (err: any) {
@@ -566,7 +759,9 @@ export function CheckStudentPage() {
                 <Clock className="size-3.5 text-muted-foreground" />
                 <div>
                   <span className="block text-[10px] text-muted-foreground">Verified at</span>
-                  <span className="font-semibold text-foreground">10:42 AM</span>
+                  <span className="font-semibold text-foreground">
+                    {verifiedTimeStr || new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                  </span>
                 </div>
               </div>
               <span className="text-border">|</span>
@@ -612,7 +807,7 @@ export function CheckStudentPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 grid grid-cols-3 gap-3 border-t border-b border-divider py-5 text-xs">
+                <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-b border-divider py-5 text-xs">
                   <div>
                     <span className="flex items-center gap-1 text-muted-foreground">
                       <Building2 className="size-3.5" /> Department
@@ -637,74 +832,87 @@ export function CheckStudentPage() {
                       Semester {result.student.semester}
                     </p>
                   </div>
+                  <div>
+                    <span className="flex items-center gap-1 text-muted-foreground font-medium">
+                      <UserCheck className="size-3.5 text-primary shrink-0" /> Counselor
+                    </span>
+                    <p className="mt-1 font-bold text-primary text-sm truncate" title={counselorName}>
+                      {counselorName}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Status:</span>
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Active
-                </span>
+              <div className="mt-4 flex items-center justify-between pt-3 border-t border-divider flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Status:</span>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Active
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (result?.student) {
+                      fetchViolationHistory(result.student.id);
+                      setHistoryOpen(true);
+                    }
+                  }}
+                  className="h-7 text-xs font-bold text-amber-700 hover:text-amber-800 hover:bg-amber-100/60 dark:text-amber-400 dark:hover:bg-amber-950/50 gap-1.5 px-2.5 rounded-lg"
+                >
+                  <FileText className="size-3.5" />
+                  <span>View {historyList.length} Violation Record{historyList.length === 1 ? "" : "s"}</span>
+                </Button>
               </div>
             </section>
 
-            {/* Right Card: CURRENT CLASS */}
-            <section className="card-surface p-6 rounded-2xl border border-border shadow-xs flex flex-col justify-between">
+            {/* Right Card: STRICT HALF-DAY TIMETABLE SCHEDULE */}
+            <section className="card-surface p-5 sm:p-6 rounded-2xl border border-border shadow-xs flex flex-col justify-between space-y-4">
               <div>
-                <div className="flex items-center justify-between border-b border-divider pb-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-divider pb-3.5 gap-2">
                   <div className="flex items-center gap-2">
                     <BookOpen className="size-4 text-primary" />
                     <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                      CURRENT CLASS
+                      STUDENT TIMETABLE SCHEDULE
                     </span>
+                  </div>
+
+                  {/* Active Half-Day Session Badge */}
+                  <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/30 px-3 py-1 rounded-xl text-primary font-black text-xs">
+                    {sessionTab === "AFTERNOON" ? (
+                      <>
+                        <span>🌇 Afternoon Session (01:10 PM — 04:10 PM)</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>🌅 Morning Session (09:00 AM — 01:10 PM)</span>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                {slot ? (
-                  <div className="flex items-start justify-between mt-4">
-                    <div>
-                      <span className="inline-block rounded-full bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300 px-2.5 py-0.5 text-[11px] font-bold">
-                        Currently in session
-                      </span>
-                      <h3 className="mt-2 text-xl font-bold text-foreground">{slot.subject}</h3>
-
-                      <div className="mt-4 space-y-2 text-xs sm:text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <Clock className="size-4 text-muted-foreground shrink-0" />
-                          <span className="font-semibold text-foreground">
-                            {slot.start} — {slot.end}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="size-4 text-muted-foreground shrink-0" />
-                          <span className="font-semibold text-foreground">{slot.room}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <User className="size-4 text-muted-foreground shrink-0" />
-                          <span className="font-semibold text-foreground">{slot.faculty}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Vector Classroom Graphic */}
-                    <ClassroomVectorIllustration />
-                  </div>
-                ) : (
-                  <div className="mt-6 py-4 text-center">
-                    <CheckCircle2 className="size-8 text-emerald-500 mx-auto" />
-                    <p className="mt-2 font-bold text-foreground">No Class Scheduled</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Student has no ongoing class right now.
-                    </p>
-                  </div>
-                )}
+                {/* TIMETABLE SLOTS TIMELINE */}
+                <div className="mt-4 space-y-2.5">
+                  {getFilteredSlots(dailySlots, sessionTab, slot).map((s: any, idx: number) => (
+                    <TimetableSlotRow key={s.id || idx} slot={s} />
+                  ))}
+                </div>
               </div>
 
-              {slot && (
-                <div className="mt-5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 px-3.5 py-2.5 text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+              {slot ? (
+                <div className="mt-4 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 px-3.5 py-2.5 text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
                   <Info className="size-4 shrink-0 text-blue-600 dark:text-blue-400" />
-                  <span className="font-medium">Student should be attending this class.</span>
+                  <span className="font-medium">
+                    Student is scheduled for <strong>{slot.subject}</strong> in {slot.room}.
+                  </span>
+                </div>
+              ) : (
+                <div className="mt-4 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-900/40 px-3.5 py-2.5 text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                  <CheckCircle2 className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <span className="font-medium">No active class scheduled at this exact minute.</span>
                 </div>
               )}
             </section>
@@ -803,6 +1011,7 @@ export function CheckStudentPage() {
                       ["Student ID / Roll Number", result.student.id],
                       ["Department", result.student.department],
                       ["Year / Section", `${result.student.year} • ${result.student.section}`],
+                      ["Assigned Counselor", counselorName],
                       ["Current Class Status", slot ? `${slot.subject} (${slot.start} — ${slot.end})` : "No Class Scheduled"],
                       ["Incident Time", incidentTime || "10:42 AM"],
                       ["Reported By", activeFacultyName],
@@ -818,43 +1027,6 @@ export function CheckStudentPage() {
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">Incident Details</h3>
                   <div className="mt-4 space-y-4">
-                    <div>
-                      <Label htmlFor="vtype" className="text-xs font-medium">
-                        Violation Category *
-                      </Label>
-                      <Select value={violationType} onValueChange={setViolationType}>
-                        <SelectTrigger id="vtype" className="mt-1.5 h-11 rounded-xl">
-                          <SelectValue placeholder="Select violation category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Suspected Violence / Physical Altercation">
-                            ⚠️ Suspected Violence / Physical Altercation
-                          </SelectItem>
-                          <SelectItem value="Disruptive Behavior">
-                            Disruptive Behavior
-                          </SelectItem>
-                          <SelectItem value="Unauthorized Campus Activity">
-                            Unauthorized Campus Activity
-                          </SelectItem>
-                          <SelectItem value="Unauthorized Class Movement">
-                            Unauthorized Class Movement
-                          </SelectItem>
-                          <SelectItem value="Misconduct">
-                            Misconduct
-                          </SelectItem>
-                          <SelectItem value="Property Damage">
-                            Property Damage
-                          </SelectItem>
-                          <SelectItem value="Harassment / Intimidation">
-                            Harassment / Intimidation
-                          </SelectItem>
-                          <SelectItem value="Other">
-                            Other Institutional Violation
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label htmlFor="sev" className="text-xs font-medium">
@@ -884,56 +1056,65 @@ export function CheckStudentPage() {
                           <SelectTrigger id="loc" className="mt-1.5 h-11 rounded-xl">
                             <SelectValue placeholder="Select location" />
                           </SelectTrigger>
-                          <SelectContent>
-                            {["Classroom", "Laboratory", "Corridor", "Library", "Canteen", "Playground", "Parking Area", "Campus Entrance", "Other"].map((l) => (
+                          <SelectContent className="max-h-80">
+                            <div className="px-2 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-primary bg-primary/5 rounded-md my-1">
+                              📍 Campus Roaming & Common Locations (Students Roaming)
+                            </div>
+                            {roamingLocations.map((l) => (
                               <SelectItem key={l} value={l}>
-                                <span className="flex items-center gap-2">
-                                  <MapPin className="size-4" aria-hidden /> {l}
+                                <span className="flex items-center gap-2 font-semibold">
+                                  <MapPin className="size-4 text-primary shrink-0" aria-hidden /> {l}
                                 </span>
                               </SelectItem>
                             ))}
+
+                            {buildingRooms.length > 0 && (
+                              <>
+                                <div className="px-2 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground bg-muted/60 rounded-md my-1.5 mt-3">
+                                  🏫 Building Classrooms & Laboratories
+                                </div>
+                                {buildingRooms.map((r) => (
+                                  <SelectItem key={r} value={r}>
+                                    <span className="flex items-center gap-2 text-xs font-medium">
+                                      <DoorOpen className="size-4 text-muted-foreground shrink-0" aria-hidden /> {r}
+                                    </span>
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
 
                     <div>
-                      <Label htmlFor="incident-time" className="text-xs font-medium">
-                        Incident Time *
-                      </Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="incident-time" className="text-xs font-medium">
+                          Incident Time *
+                        </Label>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                          <Clock className="size-3 animate-pulse" /> Auto-detected (Real-time)
+                        </span>
+                      </div>
                       <Input
                         id="incident-time"
                         value={incidentTime}
-                        onChange={(e) => setIncidentTime(e.target.value)}
-                        placeholder="10:42 AM"
-                        className="mt-1.5 h-10 text-xs rounded-xl"
+                        readOnly
+                        className="mt-1.5 h-10 text-xs font-semibold rounded-xl bg-muted/40 cursor-not-allowed select-none border-muted"
                       />
                     </div>
 
                     <div>
                       <Label htmlFor="remarks" className="text-xs font-medium">
-                        Observation Description * (min 10 characters)
+                        Observation Description (optional)
                       </Label>
                       <Textarea
                         id="remarks"
                         rows={3}
                         value={remarks}
                         onChange={(e) => setRemarks(e.target.value)}
-                        placeholder="Describe exactly what you observed, including what the student was doing, where it occurred, and any relevant circumstances."
+                        placeholder="Describe what you observed, including what the student was doing, where it occurred, and any relevant circumstances."
                         className="mt-1.5 text-xs rounded-xl"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="witness" className="text-xs font-medium">
-                        Witness / Additional Notes (optional)
-                      </Label>
-                      <Input
-                        id="witness"
-                        value={witnessNotes}
-                        onChange={(e) => setWitnessNotes(e.target.value)}
-                        placeholder="e.g. Observed alongside Lab Assistant Sharma"
-                        className="mt-1.5 text-xs h-10 rounded-xl"
                       />
                     </div>
 
@@ -1009,8 +1190,30 @@ export function CheckStudentPage() {
                                   const reader = new FileReader();
                                   reader.onload = (ev) => {
                                     const dataUrl = ev.target?.result as string;
-                                    setPhotoPreview(dataUrl);
-                                    setEvidence(dataUrl);
+                                    const img = new Image();
+                                    img.onload = () => {
+                                      const canvas = document.createElement("canvas");
+                                      const maxDim = 800;
+                                      let width = img.width;
+                                      let height = img.height;
+                                      if (width > maxDim || height > maxDim) {
+                                        if (width > height) {
+                                          height = Math.round((height * maxDim) / width);
+                                          width = maxDim;
+                                        } else {
+                                          width = Math.round((width * maxDim) / height);
+                                          height = maxDim;
+                                        }
+                                      }
+                                      canvas.width = width;
+                                      canvas.height = height;
+                                      const ctx = canvas.getContext("2d");
+                                      ctx?.drawImage(img, 0, 0, width, height);
+                                      const compressed = canvas.toDataURL("image/jpeg", 0.7);
+                                      setPhotoPreview(compressed);
+                                      setEvidence(compressed);
+                                    };
+                                    img.src = dataUrl;
                                   };
                                   reader.readAsDataURL(file);
                                 }
@@ -1041,19 +1244,15 @@ export function CheckStudentPage() {
                   variant="destructive"
                   className="bg-red-600 hover:bg-red-700 rounded-xl font-bold px-6"
                   onClick={() => {
-                    if (remarks.trim().length < 10) {
-                      toast.error("Observation description must be at least 10 characters.");
-                      return;
-                    }
                     if (!location) {
                       toast.error("Please select or specify observed location.");
                       return;
                     }
                     setConfirmOpen(true);
                   }}
-                  disabled={remarks.trim().length < 10 || !location}
+                  disabled={!location}
                 >
-                  <AlertTriangle className="size-4 mr-2" /> [ SUBMIT INCIDENT TO HOD ]
+                  <AlertTriangle className="size-4 mr-2" /> [ SUBMIT INCIDENT TO COUNSELOR ]
                 </Button>
               </div>
             </section>
@@ -1070,7 +1269,7 @@ export function CheckStudentPage() {
               Submit Incident Report?
             </DialogTitle>
             <DialogDescription>
-              Submit this incident report to the Department HOD?
+              Submit this incident report to assigned Counselor ({counselorName})?
             </DialogDescription>
           </DialogHeader>
 
@@ -1078,8 +1277,8 @@ export function CheckStudentPage() {
             {[
               ["Student", `${result?.student?.name} (${result?.student?.id})`],
               ["Department", result?.student?.department ?? "—"],
+              ["Assigned Counselor", counselorName],
               ["Class Status", slot ? `${slot.subject} (${slot.start} – ${slot.end})` : "No Class Scheduled"],
-              ["Violation Category", violationType],
               ["Severity Level", severity],
               ["Observed Location", location || "Corridor"],
               ["Incident Time", incidentTime || "10:42 AM"],
@@ -1117,6 +1316,321 @@ export function CheckStudentPage() {
         title="Scan Student ID QR (Faculty Verification)"
         loading={loading}
       />
+
+      {/* Student Violation History Dialog */}
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-4xl max-h-[92vh] overflow-hidden flex flex-col p-0 rounded-3xl gap-0 border-border shadow-2xl">
+          <DialogHeader className="p-6 pb-4 border-b border-divider bg-muted/30">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid size-12 place-items-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20 shrink-0 shadow-2xs">
+                  <History className="size-6" />
+                </span>
+                <div>
+                  <DialogTitle className="text-xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+                    Student Violation & Discipline History
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                    Infractions, faculty reports, student explanations & HOD decisions for{" "}
+                    <strong className="text-foreground">{result?.student?.name}</strong> ({result?.student?.id})
+                  </DialogDescription>
+                </div>
+              </div>
+              <span className="rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-extrabold px-3.5 py-1.5 shadow-2xs">
+                {historyList.length} Total Incident{historyList.length === 1 ? "" : "s"}
+              </span>
+            </div>
+
+            {/* Filter Tabs Bar */}
+            <div className="mt-5 flex items-center gap-2 border-b border-divider pb-1 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setHistoryFilter("ALL")}
+                className={cn(
+                  "px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5",
+                  historyFilter === "ALL"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                )}
+              >
+                <span>All Violations</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-background/20 font-extrabold">
+                  {historyList.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHistoryFilter("EXCUSED")}
+                className={cn(
+                  "px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5",
+                  historyFilter === "EXCUSED"
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : "text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                )}
+              >
+                <ShieldCheck className="size-3.5" />
+                <span>Excused by HOD</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-background/20 font-extrabold">
+                  {historyList.filter((r) => r.status === "exonerated" || r.status === "dismissed" || r.decision === "exonerate").length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHistoryFilter("WARNED")}
+                className={cn(
+                  "px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5",
+                  historyFilter === "WARNED"
+                    ? "bg-amber-600 text-white shadow-xs"
+                    : "text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+                )}
+              >
+                <AlertCircle className="size-3.5" />
+                <span>Warned / Action Taken</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-background/20 font-extrabold">
+                  {historyList.filter((r) => r.status === "warned" || r.decision === "warning" || r.status === "escalated").length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHistoryFilter("PENDING")}
+                className={cn(
+                  "px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5",
+                  historyFilter === "PENDING"
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                )}
+              >
+                <Clock className="size-3.5" />
+                <span>Pending Review</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-background/20 font-extrabold">
+                  {historyList.filter((r) => r.status !== "exonerated" && r.status !== "dismissed" && r.decision !== "exonerate" && r.status !== "warned" && r.decision !== "warning" && r.status !== "escalated").length}
+                </span>
+              </button>
+            </div>
+          </DialogHeader>
+
+          <div className="p-6 overflow-y-auto max-h-[62vh] space-y-6 bg-slate-50/60 dark:bg-slate-950/40">
+            {historyLoading ? (
+              <div className="space-y-4 py-6">
+                <Skeleton className="h-32 w-full rounded-2xl" />
+                <Skeleton className="h-32 w-full rounded-2xl" />
+              </div>
+            ) : historyList.length === 0 ? (
+              <div className="py-14 text-center rounded-3xl border border-dashed border-border bg-card p-8 shadow-xs">
+                <ShieldCheck className="size-14 text-emerald-500 mx-auto" />
+                <h3 className="mt-3 text-lg font-bold text-foreground">Clean Disciplinary Record</h3>
+                <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
+                  No violation reports or disciplinary incidents found for {result?.student?.name} ({result?.student?.id}).
+                </p>
+              </div>
+            ) : (
+              historyList
+                .filter((item) => {
+                  const isExcused = item.status === "exonerated" || item.status === "dismissed" || item.decision === "exonerate";
+                  const isWarned = item.status === "warned" || item.decision === "warning" || item.status === "escalated";
+                  const isPending = !isExcused && !isWarned;
+                  if (historyFilter === "EXCUSED") return isExcused;
+                  if (historyFilter === "WARNED") return isWarned;
+                  if (historyFilter === "PENDING") return isPending;
+                  return true;
+                })
+                .map((item, idx) => {
+                  const isExcused = item.status === "exonerated" || item.status === "dismissed" || item.decision === "exonerate";
+                  const isWarned = item.status === "warned" || item.decision === "warning";
+                  const isEscalated = item.status === "escalated" || item.decision === "escalate";
+                  const hasExplanation = Boolean(item.explanation && item.explanation.trim().length > 0);
+                  const incidentNum = historyList.length - idx;
+
+                  return (
+                    <div
+                      key={item.id || idx}
+                      className={cn(
+                        "rounded-2xl border bg-card p-5 sm:p-6 shadow-md space-y-5 transition-all relative overflow-hidden",
+                        isExcused && "border-l-8 border-l-emerald-500 border-emerald-200/80 dark:border-emerald-900/60",
+                        isWarned && "border-l-8 border-l-amber-500 border-amber-200/80 dark:border-amber-900/60",
+                        isEscalated && "border-l-8 border-l-red-600 border-red-200/80 dark:border-red-900/60",
+                        !isExcused && !isWarned && !isEscalated && "border-l-8 border-l-blue-500 border-blue-200/80 dark:border-blue-900/60"
+                      )}
+                    >
+                      {/* Top Bar: Incident Sequence Badge, Case ID & Severity */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-divider pb-3.5">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          <span className="rounded-lg bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-black px-3 py-1 uppercase tracking-wider shadow-2xs">
+                            VIOLATION #{incidentNum} {idx === 0 ? "(LATEST)" : ""}
+                          </span>
+                          <span className="font-mono text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg">
+                            CASE #{item.id}
+                          </span>
+                          <span className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
+                            <Clock className="size-3.5 text-muted-foreground" />
+                            {formatDateSafe(item.created_at || item.incident_time, "Time Unspecified")}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={cn(
+                              "px-3 py-1 text-[11px] font-extrabold rounded-full border shadow-2xs uppercase tracking-wider",
+                              item.severity === "Critical" && "bg-red-100 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-300 dark:border-red-800",
+                              item.severity === "High" && "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800",
+                              item.severity === "Medium" && "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800",
+                              (!item.severity || item.severity === "Low") && "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800"
+                            )}
+                          >
+                            {item.severity || "Medium"} Severity
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* SECTION 1: Faculty Incident Report (Who & Why) */}
+                      <div className="space-y-3">
+                        <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                          1. Faculty Incident Report (What & Why Reported)
+                        </span>
+
+                        <div className="grid gap-3 sm:grid-cols-2 text-xs">
+                          {/* Faculty Reporter Box */}
+                          <div className="rounded-xl bg-slate-100/70 dark:bg-slate-900/60 p-3.5 border border-slate-200/80 dark:border-slate-800">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                              <User className="size-3.5 text-primary" /> Faculty Reporter (Who Reported)
+                            </span>
+                            <p className="mt-1.5 font-bold text-foreground text-sm">
+                              {item.reported_by || "Faculty Member"}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground mt-1">
+                              Class: <strong className="text-foreground">{item.class_name || "N/A"}</strong> ({item.room || "Room N/A"})
+                            </p>
+                          </div>
+
+                          {/* Reported Violation Box */}
+                          <div className="rounded-xl bg-red-50/80 dark:bg-red-950/40 p-3.5 border border-red-200/80 dark:border-red-900/50">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-red-700 dark:text-red-400 flex items-center gap-1.5">
+                              <AlertTriangle className="size-3.5" /> Reported Infraction (Why Reported)
+                            </span>
+                            <p className="mt-1.5 font-extrabold text-red-700 dark:text-red-400 text-sm">
+                              {item.violation_type || "Unauthorized Class Movement"}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground mt-1">
+                              Location: <strong className="text-foreground">{item.location || "Campus Corridor"}</strong>
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Faculty Observation Statement */}
+                        {item.remarks && (
+                          <div className="text-xs bg-muted/40 p-3.5 rounded-xl border border-border/60">
+                            <span className="font-bold text-foreground text-[11px] block mb-1">
+                              Faculty Observation Details:
+                            </span>
+                            <p className="text-foreground/90 font-mono text-[11px] italic bg-background/60 p-2.5 rounded-lg border border-border/40">
+                              "{item.remarks}"
+                            </p>
+                            {item.witness_notes && (
+                              <p className="text-muted-foreground text-[11px] mt-2">
+                                <strong>Witness Notes:</strong> {item.witness_notes}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* SECTION 2: Student Explanation Statement */}
+                      <div className="space-y-2 border-t border-divider pt-4 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                            2. Student Explanation Statement
+                          </span>
+                          {hasExplanation ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 text-[10px] font-bold">
+                              <CheckCircle2 className="size-3" /> Explanation Submitted
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 px-2.5 py-0.5 text-[10px] font-bold">
+                              <XCircle className="size-3" /> Explanation Not Submitted
+                            </span>
+                          )}
+                        </div>
+
+                        {hasExplanation ? (
+                          <div className="bg-muted/40 p-3.5 rounded-xl border border-border/60">
+                            <p className="text-[10px] text-muted-foreground font-semibold mb-1">
+                              Student Submitted Explanation:
+                            </p>
+                            <p className="text-foreground font-mono text-[11px] leading-relaxed bg-background/60 p-2.5 rounded-lg border border-border/40">
+                              "{item.explanation}"
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/50 text-[11px] text-amber-800 dark:text-amber-300 italic">
+                            Student has not submitted an official explanation statement for this incident.
+                          </div>
+                        )}
+                      </div>
+
+                      {/* SECTION 3: HOD Decision & Excuse Status (Is Student Excused?) */}
+                      <div className="space-y-2 border-t border-divider pt-4 text-xs">
+                        <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                          3. HOD Decision & Excuse Status (Did HOD Excuse Student?)
+                        </span>
+
+                        <div
+                          className={cn(
+                            "rounded-xl p-4 border text-xs space-y-2",
+                            isExcused && "bg-emerald-50/80 border-emerald-200 text-emerald-950 dark:bg-emerald-950/40 dark:border-emerald-900/60 dark:text-emerald-200",
+                            isWarned && "bg-amber-50/80 border-amber-200 text-amber-950 dark:bg-amber-950/40 dark:border-amber-900/60 dark:text-amber-200",
+                            isEscalated && "bg-red-50/80 border-red-200 text-red-950 dark:bg-red-950/40 dark:border-red-900/60 dark:text-red-200",
+                            !isExcused && !isWarned && !isEscalated && "bg-blue-50/80 border-blue-200 text-blue-950 dark:bg-blue-950/40 dark:border-blue-900/60 dark:text-blue-200"
+                          )}
+                        >
+                          <div className="flex flex-wrap items-center justify-between font-bold gap-2">
+                            <span className="flex items-center gap-2 text-sm font-extrabold">
+                              {isExcused && <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />}
+                              {isWarned && <AlertCircle className="size-4 text-amber-600 dark:text-amber-400" />}
+                              {isEscalated && <ShieldAlert className="size-4 text-red-600 dark:text-red-400" />}
+                              {!isExcused && !isWarned && !isEscalated && <Clock className="size-4 text-blue-600 dark:text-blue-400" />}
+                              
+                              {isExcused && "HOD EXCUSED: YES — Student Exonerated"}
+                              {isWarned && "HOD EXCUSED: NO — Official Warning Issued"}
+                              {isEscalated && "HOD EXCUSED: NO — Escalated to Admin"}
+                              {!isExcused && !isWarned && !isEscalated && "HOD EXCUSED: PENDING DECISION"}
+                            </span>
+
+                            {item.decision_by && (
+                              <span className="text-[11px] font-extrabold opacity-90 bg-background/40 px-2.5 py-0.5 rounded-md border border-border/40">
+                                Decision By: HOD {item.decision_by}
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs leading-relaxed font-medium">
+                            {isExcused && (item.decision ? `HOD Ruling: "${item.decision}"` : "The Department HOD reviewed the case and granted an official excuse, exonerating the student.")}
+                            {isWarned && (item.decision ? `HOD Ruling: "${item.decision}"` : "The Department HOD did not excuse the student and issued an official disciplinary warning.")}
+                            {isEscalated && (item.decision ? `HOD Ruling: "${item.decision}"` : "The Department HOD did not excuse the student and escalated the case to Institutional Administration.")}
+                            {!isExcused && !isWarned && !isEscalated && "Department HOD has received the report. Case review and excuse determination are currently pending."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+            )}
+          </div>
+
+          <DialogFooter className="p-4 border-t border-divider bg-muted/30">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setHistoryOpen(false)}
+              className="h-10 font-bold text-xs rounded-xl px-6"
+            >
+              Close History Record
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1138,6 +1652,167 @@ function VerificationSkeleton() {
           <Skeleton className="h-4 w-36" />
           <Skeleton className="h-4 w-28" />
           <Skeleton className="h-10 w-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function parseTimeToMins(tStr?: string): number {
+  if (!tStr) return 0;
+  const clean = tStr.trim();
+  const isPM = clean.toUpperCase().includes("PM");
+  const isAM = clean.toUpperCase().includes("AM");
+  const parts = clean.replace(/(AM|PM)/gi, "").trim().split(":");
+  let hours = parseInt(parts[0] || "0", 10);
+  const minutes = parseInt(parts[1] || "0", 10);
+  if (isPM && hours < 12) hours += 12;
+  if (isAM && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+}
+
+function getFilteredSlots(allSlots: any[], session: "MORNING" | "AFTERNOON", currentSlot: any) {
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+
+  if (session === "MORNING") {
+    const mSlots = allSlots.filter((s) => {
+      const startH = parseInt((s.start_time || s.start || "09:00").split(":")[0], 10);
+      return startH >= 9 && startH < 13;
+    });
+
+    if (mSlots.length === 0) {
+      return [
+        { id: "m1", time: "09:00 — 10:00", name: "Period 1: Programming in C (CS101)", room: "Room C-204", faculty: "Prof. S. Sharma", type: "CLASS", isCurrent: nowMins >= 540 && nowMins < 600 },
+        { id: "m2", time: "10:00 — 11:00", name: "Period 2: Data Structures (CS301)", room: "Room C-205", faculty: "Dr. K. Rao", type: "CLASS", isCurrent: nowMins >= 600 && nowMins < 660 },
+        { id: "mb", time: "11:00 — 11:10", name: "☕ Morning Tea Break", room: "Campus Foyer", faculty: "N/A", type: "BREAK", isCurrent: nowMins >= 660 && nowMins < 670 },
+        { id: "m3", time: "11:10 — 12:10", name: "Period 3: C Programming & Physics Lab", room: "Computer Lab 3", faculty: "Prof. R. Varma", type: "LAB", isCurrent: nowMins >= 670 && nowMins < 730 },
+        { id: "m4", time: "12:10 — 13:10", name: "Period 4: Engineering Physics (PH101)", room: "Room E-102", faculty: "Dr. A. Verma", type: "CLASS", isCurrent: nowMins >= 730 && nowMins < 790 },
+      ];
+    }
+
+    const result: any[] = [];
+    mSlots.forEach((s) => {
+      const stM = parseTimeToMins(s.start_time || s.start || "09:00");
+      const etM = parseTimeToMins(s.end_time || s.end || "10:00");
+      const isCur = (nowMins >= stM && nowMins < etM) || (currentSlot && (s.id === currentSlot.id || s.start_time === currentSlot.start));
+      result.push({
+        id: s.id,
+        time: `${s.start_time} — ${s.end_time}`,
+        name: `${s.subject}${s.subject_code ? ` (${s.subject_code})` : ""}`,
+        room: s.room || "Room C-204",
+        faculty: s.faculty_name || "Faculty",
+        type: s.period_type || "CLASS",
+        isCurrent: isCur,
+      });
+
+      if (s.end_time === "11:00") {
+        result.push({
+          id: "mb",
+          time: "11:00 — 11:10",
+          name: "☕ Morning Tea Break",
+          room: "Campus Foyer",
+          faculty: "N/A",
+          type: "BREAK",
+          isCurrent: nowMins >= 660 && nowMins < 670,
+        });
+      }
+    });
+
+    return result;
+  } else {
+    const aSlots = allSlots.filter((s) => {
+      const startH = parseInt((s.start_time || s.start || "14:00").split(":")[0], 10);
+      return startH >= 13;
+    });
+
+    if (aSlots.length === 0) {
+      return [
+        { id: "lb", time: "13:10 — 14:10", name: "🍱 Lunch Break", room: "Canteen & Cafeteria", faculty: "N/A", type: "BREAK", isCurrent: nowMins >= 790 && nowMins < 850 },
+        { id: "a5", time: "14:10 — 15:10", name: "Period 5: Operating Systems (CS403)", room: "Room C-204", faculty: "Prof. N. Patel", type: "CLASS", isCurrent: nowMins >= 850 && nowMins < 910 },
+        { id: "a6", time: "15:10 — 16:10", name: "Period 6: Database Management Systems (CS401)", room: "Room C-205", faculty: "Dr. P. Roy", type: "CLASS", isCurrent: nowMins >= 910 && nowMins < 970 },
+      ];
+    }
+
+    const result: any[] = [
+      { id: "lb", time: "13:10 — 14:10", name: "🍱 Lunch Break", room: "Canteen & Cafeteria", faculty: "N/A", type: "BREAK", isCurrent: nowMins >= 790 && nowMins < 850 }
+    ];
+
+    aSlots.forEach((s) => {
+      const stM = parseTimeToMins(s.start_time || s.start || "14:10");
+      const etM = parseTimeToMins(s.end_time || s.end || "15:10");
+      const isCur = (nowMins >= stM && nowMins < etM) || (currentSlot && (s.id === currentSlot.id || s.start_time === currentSlot.start));
+      result.push({
+        id: s.id,
+        time: `${s.start_time} — ${s.end_time}`,
+        name: `${s.subject}${s.subject_code ? ` (${s.subject_code})` : ""}`,
+        room: s.room || "Room C-204",
+        faculty: s.faculty_name || "Faculty",
+        type: s.period_type || "CLASS",
+        isCurrent: isCur,
+      });
+    });
+
+    return result;
+  }
+}
+
+function TimetableSlotRow({ slot }: { slot: any }) {
+  if (slot.type === "BREAK") {
+    return (
+      <div className="bg-amber-500/10 border border-amber-300/40 dark:border-amber-900/40 rounded-xl p-2.5 flex items-center justify-between text-xs text-amber-900 dark:text-amber-200">
+        <span className="font-bold flex items-center gap-1.5">{slot.name}</span>
+        <span className="font-extrabold text-[11px] bg-amber-500/20 px-2 py-0.5 rounded-md">
+          {slot.time}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`rounded-xl p-3 border transition-all ${
+        slot.isCurrent
+          ? "bg-primary/10 border-primary ring-2 ring-primary/30 shadow-xs"
+          : "bg-card border-border/70 hover:border-border"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-black text-foreground truncate">{slot.name}</span>
+            {slot.isCurrent && (
+              <span className="bg-primary text-primary-foreground text-[10px] font-black uppercase px-2 py-0.5 rounded-full animate-pulse shrink-0">
+                NOW IN SESSION
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 font-medium">
+            <span className="flex items-center gap-1">
+              <MapPin className="size-3 text-primary shrink-0" /> {slot.room}
+            </span>
+            <span className="flex items-center gap-1">
+              <User className="size-3 text-muted-foreground shrink-0" /> {slot.faculty}
+            </span>
+          </div>
+        </div>
+
+        <div className="text-right shrink-0">
+          <span className="text-xs font-extrabold text-foreground block">{slot.time}</span>
+          <span
+            className={`inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-md mt-1 ${
+              slot.type === "LAB"
+                ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200"
+                : slot.type === "SPORTS"
+                ? "bg-purple-500/15 text-purple-800 dark:text-purple-200"
+                : slot.type === "LIBRARY"
+                ? "bg-blue-500/15 text-blue-800 dark:text-blue-200"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {slot.type}
+          </span>
         </div>
       </div>
     </div>

@@ -84,7 +84,7 @@ function HODViolationsPage() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [selectedQueue, setSelectedQueue] = useState<"ALL" | "NEW" | "UNDER_REVIEW" | "CRITICAL" | "VIOLENCE" | "RESOLVED" | "DISMISSED">("NEW");
+  const [selectedQueue, setSelectedQueue] = useState<"ALL" | "NEW" | "UNDER_REVIEW" | "CRITICAL" | "VIOLENCE" | "RESOLVED" | "DISMISSED">("ALL");
   const [severityFilter, setSeverityFilter] = useState("ALL");
   const [violationTypeFilter, setViolationTypeFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
@@ -473,7 +473,6 @@ function HODViolationsPage() {
                 <thead className="bg-muted/40 border-b border-border text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   <tr>
                     <th className="py-3.5 px-4">Case / Student</th>
-                    <th className="py-3.5 px-4">Violation Category</th>
                     <th className="py-3.5 px-4">Severity</th>
                     <th className="py-3.5 px-4">Recorded Class & Location</th>
                     <th className="py-3.5 px-4">Reporter</th>
@@ -505,17 +504,10 @@ function HODViolationsPage() {
                                 {report.student_name}
                               </span>
                               <span className="text-[11px] font-semibold text-muted-foreground">
-                                {report.student_code} • {report.year_section}
+                                #{report.id} • {report.student_code} • {report.year_section}
                               </span>
                             </div>
                           </div>
-                        </td>
-
-                        <td className="py-3.5 px-4">
-                          <span className="font-semibold text-foreground block">
-                            {report.violation_type}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">ID: #{report.id}</span>
                         </td>
 
                         <td className="py-3.5 px-4">
@@ -557,17 +549,61 @@ function HODViolationsPage() {
                         </td>
 
                         <td className="py-3.5 px-4">
-                          <span
-                            className={cn(
-                              "inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider",
-                              report.status === "resolved" && "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-                              report.status === "dismissed" && "bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300",
-                              report.status === "under_review" && "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
-                              report.status === "reported" && "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-                            )}
-                          >
-                            {report.status === "reported" ? "REPORTED" : report.status.replace("_", " ")}
-                          </span>
+                          {(() => {
+                            const isCounselorResolved =
+                              report.status === "resolved" &&
+                              (report.decision === "RESOLVED_BY_COUNSELOR" ||
+                                (report as any).resolution_note ||
+                                (report as any).counselor_remarks ||
+                                !(report.decision === "exonerated" || report.decision === "warned" || report.decision === "escalated"));
+
+                            const isHodResolved =
+                              report.status === "resolved" &&
+                              (report.decision === "exonerated" || report.decision === "warned" || report.decision === "escalated");
+
+                            const isEscalatedToHod =
+                              report.status === "escalated" ||
+                              report.status === "escalated_to_hod" ||
+                              Boolean((report as any).escalation_reason);
+
+                            if (isCounselorResolved) {
+                              return (
+                                <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
+                                  SOLVED BY COUNSELOR
+                                </span>
+                              );
+                            }
+
+                            if (isHodResolved) {
+                              return (
+                                <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
+                                  RESOLVED BY HOD
+                                </span>
+                              );
+                            }
+
+                            if (isEscalatedToHod) {
+                              return (
+                                <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-300">
+                                  ESCALATED TO HOD
+                                </span>
+                              );
+                            }
+
+                            if (report.status === "explanation_submitted") {
+                              return (
+                                <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300">
+                                  EXPLANATION SUBMITTED
+                                </span>
+                              );
+                            }
+
+                            return (
+                              <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300">
+                                {report.status === "reported" ? "REPORTED" : report.status.replace("_", " ")}
+                              </span>
+                            );
+                          })()}
                         </td>
 
                         <td className="py-3.5 px-4 text-right">

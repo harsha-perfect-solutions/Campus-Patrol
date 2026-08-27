@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
@@ -7,12 +8,20 @@ import {
   FileText,
   Search,
   UserSearch,
+  Building,
+  Users,
+  Calendar,
+  Ticket,
+  RefreshCw,
 } from "lucide-react";
 import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { ToneBadge } from "@/components/status-badge";
 import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
+import { getMyCoordinatedClubsApi } from "@/lib/api/clubs.server";
+import type { DBClub } from "@/lib/db/clubs.server";
 
 export const Route = createFileRoute("/faculty/dashboard")({
   head: () => ({ meta: [{ title: "Faculty Dashboard — CMADMS" }] }),
@@ -30,6 +39,16 @@ function FacultyDashboardPage() {
 function FacultyDashboardContent() {
   const { reports } = useCmadms();
   const { profile } = useAuth();
+
+  const [myClubs, setMyClubs] = useState<DBClub[]>([]);
+  const [loadingClubs, setLoadingClubs] = useState(true);
+
+  useEffect(() => {
+    getMyCoordinatedClubsApi()
+      .then(setMyClubs)
+      .catch(() => {})
+      .finally(() => setLoadingClubs(false));
+  }, []);
 
   const myReports = reports.filter((r) => r.reportedBy.includes("Ravi") || true);
   const pendingCount = myReports.filter((r) => r.status === "pending").length;
@@ -88,6 +107,67 @@ function FacultyDashboardContent() {
           </div>
         ))}
       </div>
+
+      {/* MY COORDINATED CLUBS SECTION */}
+      <section className="card-surface p-6 rounded-2xl border border-border shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-border pb-3">
+          <div className="flex items-center gap-2">
+            <Building className="size-4 text-primary" />
+            <span className="text-xs font-bold uppercase tracking-wider text-primary">
+              MY COORDINATED CLUBS
+            </span>
+          </div>
+          <Button variant="outline" size="sm" asChild className="rounded-xl text-xs font-semibold">
+            <Link to="/faculty/clubs" search={{ tab: "members" }}>Open Club Workspace &rarr;</Link>
+          </Button>
+        </div>
+
+        {loadingClubs ? (
+          <div className="py-6 text-center text-muted-foreground text-xs">
+            <RefreshCw className="size-4 animate-spin mx-auto mb-1 text-primary" />
+            Loading assigned clubs...
+          </div>
+        ) : myClubs.length === 0 ? (
+          <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200 text-xs">
+            No club assignment found for your faculty profile.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {myClubs.map((c) => (
+              <div key={c.club_id} className="p-4 rounded-xl border border-border bg-card space-y-3 shadow-2xs">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider mb-1">
+                      {c.club_type}
+                    </span>
+                    <h4 className="text-sm font-bold text-foreground">{c.name}</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{c.description}</p>
+                  </div>
+                  <ToneBadge tone="info">Coordinator</ToneBadge>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2 border-t border-border">
+                  <Button size="sm" variant="outline" asChild className="font-semibold text-xs h-7">
+                    <Link to="/faculty/clubs" search={{ tab: "members" }}>
+                      <Users className="size-3 mr-1" /> Roster
+                    </Link>
+                  </Button>
+                  <Button size="sm" variant="outline" asChild className="font-semibold text-xs h-7">
+                    <Link to="/faculty/clubs" search={{ tab: "events" }}>
+                      <Calendar className="size-3 mr-1" /> Events
+                    </Link>
+                  </Button>
+                  <Button size="sm" asChild className="font-bold text-xs h-7 bg-emerald-600 hover:bg-emerald-700 text-white ml-auto">
+                    <Link to="/faculty/clubs" search={{ tab: "permissions" }}>
+                      <Ticket className="size-3 mr-1" /> Give Permission
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Main Two Column Section */}
       <div className="grid gap-6 lg:grid-cols-2">

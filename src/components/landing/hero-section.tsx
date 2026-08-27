@@ -43,7 +43,7 @@ export function LandingHeroSection() {
               {/* Main Headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.08]">
                 Campus Movement, <br />
-                <span className="bg-gradient-to-r from-primary via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-primary via-blue-700 to-slate-800 dark:from-blue-400 dark:via-blue-300 dark:to-slate-100 bg-clip-text text-transparent">
                   Simplified.
                 </span>
               </h1>

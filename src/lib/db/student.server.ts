@@ -460,7 +460,7 @@ export async function getMyViolationTimeline(
     }>(auditQuery, [cleanId]);
 
     // Map into student-safe timeline events
-    return res.rows.map((row) => {
+    return res.rows.map((row: any) => {
       let description = "Event recorded";
       const act = row.action;
 
@@ -571,8 +571,13 @@ export async function submitViolationExplanation(
       throw new Error(`Cannot submit explanation: Case #${cleanId} is already finalized as ${report.status.toUpperCase()} (409).`);
     }
 
-    if (report.explanation_deadline && new Date(report.explanation_deadline) < new Date()) {
-      throw new Error(`The 24-hour deadline to submit an explanation for incident #${cleanId} has expired (409).`);
+    const createdAtTime = (report.created_at as unknown) instanceof Date
+      ? (report.created_at as unknown as Date).getTime()
+      : new Date(String(report.created_at)).getTime();
+    const is24hPassed = !isNaN(createdAtTime) && (Date.now() - createdAtTime) >= 24 * 60 * 60 * 1000;
+
+    if (is24hPassed || (report.explanation_deadline && new Date(report.explanation_deadline) < new Date())) {
+      throw new Error(`24 Hours Exceeded: The 24-hour deadline for case #${cleanId} has expired. Please meet the HOD at Cabin directly.`);
     }
 
     // 2. Update explanation and status to explanation_submitted
@@ -612,20 +617,35 @@ export async function submitViolationExplanation(
       ],
     );
 
-    // 4. Notify HOD of student's department
-    const hodUserId = await findHodUserIdForStudentCode(cleanCode);
-    if (hodUserId) {
+    // 4. Notify assigned Counselor or HOD
+    const counselorId = (report as any).assigned_counselor_id;
+    if (counselorId) {
       await createNotificationServer({
-        recipientUserId: hodUserId,
-        recipientRole: "hod",
+        recipientUserId: counselorId,
+        recipientRole: "faculty",
         department: report.department,
         type: "student_explanation_submitted",
-        title: "Student Explanation Submitted",
+        title: "Student Explanation Submitted 📝",
         detail: `${report.student_name} (${cleanCode}) has submitted an explanation for incident #${cleanId}.`,
         tone: "info",
         relatedId: cleanId,
         relatedType: "violation_report",
       });
+    } else {
+      const hodUserId = await findHodUserIdForStudentCode(cleanCode);
+      if (hodUserId) {
+        await createNotificationServer({
+          recipientUserId: hodUserId,
+          recipientRole: "hod",
+          department: report.department,
+          type: "student_explanation_submitted",
+          title: "Student Explanation Submitted (Fallback Queue)",
+          detail: `${report.student_name} (${cleanCode}) has submitted an explanation for incident #${cleanId}.`,
+          tone: "info",
+          relatedId: cleanId,
+          relatedType: "violation_report",
+        });
+      }
     }
 
     await db.query("COMMIT");

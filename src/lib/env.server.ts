@@ -83,4 +83,16 @@ function parseEnv() {
   };
 }
 
-export const env = parseEnv();
+export const env = {
+  ...parseEnv(),
+  COLLEGE_EMAIL_DOMAIN: (process.env["COLLEGE_EMAIL_DOMAIN"] || "college.edu.in").trim().toLowerCase(),
+  INITIAL_PASSWORD: (process.env["INITIAL_PASSWORD"] || "CmadmsInitial@2026").trim(),
+};
+
+export function getCollegeEmailDomain(): string {
+  return env.COLLEGE_EMAIL_DOMAIN;
+}
+
+export function getInitialDefaultPassword(): string {
+  return env.INITIAL_PASSWORD;
+}

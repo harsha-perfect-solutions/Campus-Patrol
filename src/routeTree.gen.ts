@@ -18,6 +18,8 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TimetableRouteImport } from './routes/timetable'
 import { Route as ViolationsRouteImport } from './routes/violations'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin/audit-logs'
+import { Route as AdminClubsRouteImport } from './routes/admin/clubs'
+import { Route as AdminCounselorsRouteImport } from './routes/admin/counselors'
 import { Route as AdminCoursesRouteImport } from './routes/admin/courses'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminDepartmentsRouteImport } from './routes/admin/departments'
@@ -36,6 +38,8 @@ import { Route as AdminTimetableRouteImport } from './routes/admin/timetable'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminViolationsRouteImport } from './routes/admin/violations'
 import { Route as FacultyCheckRouteImport } from './routes/faculty/check'
+import { Route as FacultyClubsRouteImport } from './routes/faculty/clubs'
+import { Route as FacultyCounselorRouteImport } from './routes/faculty/counselor'
 import { Route as FacultyDashboardRouteImport } from './routes/faculty/dashboard'
 import { Route as FacultyNotificationsRouteImport } from './routes/faculty/notifications'
 import { Route as FacultyPassesRouteImport } from './routes/faculty/passes'
@@ -66,6 +70,7 @@ import { Route as SecurityReportsRouteImport } from './routes/security/reports'
 import { Route as SecuritySettingsRouteImport } from './routes/security/settings'
 import { Route as SecurityTimetableRouteImport } from './routes/security/timetable'
 import { Route as StudentDashboardRouteImport } from './routes/student/dashboard'
+import { Route as StudentEventPermissionsRouteImport } from './routes/student/event-permissions'
 import { Route as StudentExplanationsRouteImport } from './routes/student/explanations'
 import { Route as StudentNotificationsRouteImport } from './routes/student/notifications'
 import { Route as StudentPassesRouteImport } from './routes/student/passes'
@@ -119,6 +124,16 @@ const ViolationsRoute = ViolationsRouteImport.update({
 const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
   id: '/admin/audit-logs',
   path: '/admin/audit-logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminClubsRoute = AdminClubsRouteImport.update({
+  id: '/admin/clubs',
+  path: '/admin/clubs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCounselorsRoute = AdminCounselorsRouteImport.update({
+  id: '/admin/counselors',
+  path: '/admin/counselors',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminCoursesRoute = AdminCoursesRouteImport.update({
@@ -209,6 +224,16 @@ const AdminViolationsRoute = AdminViolationsRouteImport.update({
 const FacultyCheckRoute = FacultyCheckRouteImport.update({
   id: '/faculty/check',
   path: '/faculty/check',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FacultyClubsRoute = FacultyClubsRouteImport.update({
+  id: '/faculty/clubs',
+  path: '/faculty/clubs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FacultyCounselorRoute = FacultyCounselorRouteImport.update({
+  id: '/faculty/counselor',
+  path: '/faculty/counselor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FacultyDashboardRoute = FacultyDashboardRouteImport.update({
@@ -361,6 +386,11 @@ const StudentDashboardRoute = StudentDashboardRouteImport.update({
   path: '/student/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentEventPermissionsRoute = StudentEventPermissionsRouteImport.update({
+  id: '/student/event-permissions',
+  path: '/student/event-permissions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudentExplanationsRoute = StudentExplanationsRouteImport.update({
   id: '/student/explanations',
   path: '/student/explanations',
@@ -417,6 +447,8 @@ export interface FileRoutesByFullPath {
   '/timetable': typeof TimetableRoute
   '/violations': typeof ViolationsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/clubs': typeof AdminClubsRoute
+  '/admin/counselors': typeof AdminCounselorsRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/departments': typeof AdminDepartmentsRoute
@@ -435,6 +467,8 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/admin/violations': typeof AdminViolationsRoute
   '/faculty/check': typeof FacultyCheckRoute
+  '/faculty/clubs': typeof FacultyClubsRoute
+  '/faculty/counselor': typeof FacultyCounselorRoute
   '/faculty/dashboard': typeof FacultyDashboardRoute
   '/faculty/notifications': typeof FacultyNotificationsRoute
   '/faculty/passes': typeof FacultyPassesRoute
@@ -463,6 +497,7 @@ export interface FileRoutesByFullPath {
   '/security/settings': typeof SecuritySettingsRoute
   '/security/timetable': typeof SecurityTimetableRoute
   '/student/dashboard': typeof StudentDashboardRoute
+  '/student/event-permissions': typeof StudentEventPermissionsRoute
   '/student/explanations': typeof StudentExplanationsRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/passes': typeof StudentPassesRoute
@@ -485,6 +520,8 @@ export interface FileRoutesByTo {
   '/timetable': typeof TimetableRoute
   '/violations': typeof ViolationsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/clubs': typeof AdminClubsRoute
+  '/admin/counselors': typeof AdminCounselorsRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/departments': typeof AdminDepartmentsRoute
@@ -503,6 +540,8 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/admin/violations': typeof AdminViolationsRoute
   '/faculty/check': typeof FacultyCheckRoute
+  '/faculty/clubs': typeof FacultyClubsRoute
+  '/faculty/counselor': typeof FacultyCounselorRoute
   '/faculty/dashboard': typeof FacultyDashboardRoute
   '/faculty/notifications': typeof FacultyNotificationsRoute
   '/faculty/passes': typeof FacultyPassesRoute
@@ -531,6 +570,7 @@ export interface FileRoutesByTo {
   '/security/settings': typeof SecuritySettingsRoute
   '/security/timetable': typeof SecurityTimetableRoute
   '/student/dashboard': typeof StudentDashboardRoute
+  '/student/event-permissions': typeof StudentEventPermissionsRoute
   '/student/explanations': typeof StudentExplanationsRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/passes': typeof StudentPassesRoute
@@ -554,6 +594,8 @@ export interface FileRoutesById {
   '/timetable': typeof TimetableRoute
   '/violations': typeof ViolationsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/clubs': typeof AdminClubsRoute
+  '/admin/counselors': typeof AdminCounselorsRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/departments': typeof AdminDepartmentsRoute
@@ -572,6 +614,8 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/admin/violations': typeof AdminViolationsRoute
   '/faculty/check': typeof FacultyCheckRoute
+  '/faculty/clubs': typeof FacultyClubsRoute
+  '/faculty/counselor': typeof FacultyCounselorRoute
   '/faculty/dashboard': typeof FacultyDashboardRoute
   '/faculty/notifications': typeof FacultyNotificationsRoute
   '/faculty/passes': typeof FacultyPassesRoute
@@ -600,6 +644,7 @@ export interface FileRoutesById {
   '/security/settings': typeof SecuritySettingsRoute
   '/security/timetable': typeof SecurityTimetableRoute
   '/student/dashboard': typeof StudentDashboardRoute
+  '/student/event-permissions': typeof StudentEventPermissionsRoute
   '/student/explanations': typeof StudentExplanationsRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/passes': typeof StudentPassesRoute
@@ -624,6 +669,8 @@ export interface FileRouteTypes {
     | '/timetable'
     | '/violations'
     | '/admin/audit-logs'
+    | '/admin/clubs'
+    | '/admin/counselors'
     | '/admin/courses'
     | '/admin/dashboard'
     | '/admin/departments'
@@ -642,6 +689,8 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/violations'
     | '/faculty/check'
+    | '/faculty/clubs'
+    | '/faculty/counselor'
     | '/faculty/dashboard'
     | '/faculty/notifications'
     | '/faculty/passes'
@@ -670,6 +719,7 @@ export interface FileRouteTypes {
     | '/security/settings'
     | '/security/timetable'
     | '/student/dashboard'
+    | '/student/event-permissions'
     | '/student/explanations'
     | '/student/notifications'
     | '/student/passes'
@@ -692,6 +742,8 @@ export interface FileRouteTypes {
     | '/timetable'
     | '/violations'
     | '/admin/audit-logs'
+    | '/admin/clubs'
+    | '/admin/counselors'
     | '/admin/courses'
     | '/admin/dashboard'
     | '/admin/departments'
@@ -710,6 +762,8 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/violations'
     | '/faculty/check'
+    | '/faculty/clubs'
+    | '/faculty/counselor'
     | '/faculty/dashboard'
     | '/faculty/notifications'
     | '/faculty/passes'
@@ -738,6 +792,7 @@ export interface FileRouteTypes {
     | '/security/settings'
     | '/security/timetable'
     | '/student/dashboard'
+    | '/student/event-permissions'
     | '/student/explanations'
     | '/student/notifications'
     | '/student/passes'
@@ -760,6 +815,8 @@ export interface FileRouteTypes {
     | '/timetable'
     | '/violations'
     | '/admin/audit-logs'
+    | '/admin/clubs'
+    | '/admin/counselors'
     | '/admin/courses'
     | '/admin/dashboard'
     | '/admin/departments'
@@ -778,6 +835,8 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/violations'
     | '/faculty/check'
+    | '/faculty/clubs'
+    | '/faculty/counselor'
     | '/faculty/dashboard'
     | '/faculty/notifications'
     | '/faculty/passes'
@@ -806,6 +865,7 @@ export interface FileRouteTypes {
     | '/security/settings'
     | '/security/timetable'
     | '/student/dashboard'
+    | '/student/event-permissions'
     | '/student/explanations'
     | '/student/notifications'
     | '/student/passes'
@@ -829,6 +889,8 @@ export interface RootRouteChildren {
   TimetableRoute: typeof TimetableRoute
   ViolationsRoute: typeof ViolationsRoute
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
+  AdminClubsRoute: typeof AdminClubsRoute
+  AdminCounselorsRoute: typeof AdminCounselorsRoute
   AdminCoursesRoute: typeof AdminCoursesRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDepartmentsRoute: typeof AdminDepartmentsRoute
@@ -847,6 +909,8 @@ export interface RootRouteChildren {
   AdminUsersRoute: typeof AdminUsersRoute
   AdminViolationsRoute: typeof AdminViolationsRoute
   FacultyCheckRoute: typeof FacultyCheckRoute
+  FacultyClubsRoute: typeof FacultyClubsRoute
+  FacultyCounselorRoute: typeof FacultyCounselorRoute
   FacultyDashboardRoute: typeof FacultyDashboardRoute
   FacultyNotificationsRoute: typeof FacultyNotificationsRoute
   FacultyPassesRoute: typeof FacultyPassesRoute
@@ -875,6 +939,7 @@ export interface RootRouteChildren {
   SecuritySettingsRoute: typeof SecuritySettingsRoute
   SecurityTimetableRoute: typeof SecurityTimetableRoute
   StudentDashboardRoute: typeof StudentDashboardRoute
+  StudentEventPermissionsRoute: typeof StudentEventPermissionsRoute
   StudentExplanationsRoute: typeof StudentExplanationsRoute
   StudentNotificationsRoute: typeof StudentNotificationsRoute
   StudentPassesRoute: typeof StudentPassesRoute
@@ -949,6 +1014,20 @@ declare module '@tanstack/react-router' {
       path: '/admin/audit-logs'
       fullPath: '/admin/audit-logs'
       preLoaderRoute: typeof AdminAuditLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/clubs': {
+      id: '/admin/clubs'
+      path: '/admin/clubs'
+      fullPath: '/admin/clubs'
+      preLoaderRoute: typeof AdminClubsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/counselors': {
+      id: '/admin/counselors'
+      path: '/admin/counselors'
+      fullPath: '/admin/counselors'
+      preLoaderRoute: typeof AdminCounselorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/courses': {
@@ -1075,6 +1154,20 @@ declare module '@tanstack/react-router' {
       path: '/faculty/check'
       fullPath: '/faculty/check'
       preLoaderRoute: typeof FacultyCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faculty/clubs': {
+      id: '/faculty/clubs'
+      path: '/faculty/clubs'
+      fullPath: '/faculty/clubs'
+      preLoaderRoute: typeof FacultyClubsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faculty/counselor': {
+      id: '/faculty/counselor'
+      path: '/faculty/counselor'
+      fullPath: '/faculty/counselor'
+      preLoaderRoute: typeof FacultyCounselorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faculty/dashboard': {
@@ -1287,6 +1380,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/event-permissions': {
+      id: '/student/event-permissions'
+      path: '/student/event-permissions'
+      fullPath: '/student/event-permissions'
+      preLoaderRoute: typeof StudentEventPermissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/student/explanations': {
       id: '/student/explanations'
       path: '/student/explanations'
@@ -1387,6 +1487,8 @@ const rootRouteChildren: RootRouteChildren = {
   TimetableRoute: TimetableRoute,
   ViolationsRoute: ViolationsRoute,
   AdminAuditLogsRoute: AdminAuditLogsRoute,
+  AdminClubsRoute: AdminClubsRoute,
+  AdminCounselorsRoute: AdminCounselorsRoute,
   AdminCoursesRoute: AdminCoursesRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDepartmentsRoute: AdminDepartmentsRoute,
@@ -1405,6 +1507,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminUsersRoute: AdminUsersRoute,
   AdminViolationsRoute: AdminViolationsRoute,
   FacultyCheckRoute: FacultyCheckRoute,
+  FacultyClubsRoute: FacultyClubsRoute,
+  FacultyCounselorRoute: FacultyCounselorRoute,
   FacultyDashboardRoute: FacultyDashboardRoute,
   FacultyNotificationsRoute: FacultyNotificationsRoute,
   FacultyPassesRoute: FacultyPassesRoute,
@@ -1433,6 +1537,7 @@ const rootRouteChildren: RootRouteChildren = {
   SecuritySettingsRoute: SecuritySettingsRoute,
   SecurityTimetableRoute: SecurityTimetableRoute,
   StudentDashboardRoute: StudentDashboardRoute,
+  StudentEventPermissionsRoute: StudentEventPermissionsRoute,
   StudentExplanationsRoute: StudentExplanationsRoute,
   StudentNotificationsRoute: StudentNotificationsRoute,
   StudentPassesRoute: StudentPassesRoute,
