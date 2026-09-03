@@ -165,7 +165,7 @@ function HODDashboardContent() {
           </span>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           {[
             { dept: "CSE", name: "Computer Science", count: 15, isUserDept: userDept === "CSE", color: "border-primary/40 bg-primary/5 text-primary" },
             { dept: "ECE", name: "Electronics & Comm", count: 8, isUserDept: userDept === "ECE", color: "border-purple-300 bg-purple-50/40 text-purple-700 dark:bg-purple-950/20 dark:text-purple-300" },
@@ -203,7 +203,7 @@ function HODDashboardContent() {
       </div>
 
       {/* Summary Metrics */}
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
         {[
           {
             label: "New Cases",
@@ -316,7 +316,7 @@ function HODDashboardContent() {
         </div>
 
         {/* Day-to-Day & Section Breakdown Cards */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
           <div className="p-4 rounded-xl border border-border bg-muted/30 space-y-1">
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
               3rd Year • Section A Violations

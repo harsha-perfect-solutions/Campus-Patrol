@@ -83,9 +83,9 @@ function StudentProfilePage() {
             Loading student digital ID from database...
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
             {/* Left 2 Columns: Premium Digital Student ID Card */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="md:col-span-2 lg:col-span-2 space-y-6">
               <div className="relative overflow-hidden rounded-3xl border-2 border-primary/40 bg-gradient-to-br from-card via-card to-primary/10 p-6 sm:p-8 shadow-md space-y-6">
                 {/* Background Ambient Glow */}
                 <div className="absolute -top-16 -right-16 size-48 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
