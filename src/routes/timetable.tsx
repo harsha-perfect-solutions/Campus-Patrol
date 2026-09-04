@@ -295,107 +295,175 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
             description={`No academic periods scheduled for ${selectedDay === "Today" ? "today" : selectedDay}.`}
           />
         ) : (
-          <ol className="relative space-y-2">
-            {daySlots.map((s, i) => {
-              const isTodaySelected = selectedDay === "Today" || targetDow === todayDow;
-              const isInSession =
-                isTodaySelected &&
-                currentTimeStr >= s.startTime &&
-                currentTimeStr < s.endTime;
+          <div>
+            {/* Mobile View (< 640px): Stacked Vertical Schedule Cards */}
+            <div className="block sm:hidden space-y-3">
+              {daySlots.map((s, i) => {
+                const isTodaySelected = selectedDay === "Today" || targetDow === todayDow;
+                const isInSession =
+                  isTodaySelected &&
+                  currentTimeStr >= s.startTime &&
+                  currentTimeStr < s.endTime;
+                const badge = getPeriodBadge(s.periodType);
 
-              const badge = getPeriodBadge(s.periodType);
-
-              return (
-                <li key={`${s.id}-${i}`} className="relative flex gap-4 pb-6 last:pb-0">
-                  {/* Vertical Timeline Line */}
-                  {i !== daySlots.length - 1 && (
-                    <span
-                      className="absolute left-[73px] top-6 h-full w-0.5 bg-border/80 sm:left-[89px]"
-                      aria-hidden
-                    />
-                  )}
-
-                  {/* Time Label Column */}
-                  <div className="w-[56px] shrink-0 pt-2 text-right sm:w-[72px]">
-                    <span className="block text-xs font-bold text-foreground sm:text-sm">
-                      {s.displayStart.split(" ")[0]}
-                    </span>
-                    <span className="block text-[10px] font-semibold text-muted-foreground">
-                      {s.displayStart.split(" ")[1]}
-                    </span>
-                  </div>
-
-                  {/* Timeline Circle Node */}
-                  <span
-                    className={cn(
-                      "z-10 mt-3.5 size-3.5 shrink-0 rounded-full border-2 bg-card transition-all shadow-2xs",
-                      isInSession
-                        ? "border-primary bg-primary ring-4 ring-primary/20"
-                        : "border-muted-foreground/40",
-                    )}
-                    aria-hidden
-                  />
-
-                  {/* Period Card Content */}
+                return (
                   <div
+                    key={`mobile-${s.id}-${i}`}
                     className={cn(
-                      "min-w-0 flex-1 rounded-2xl border p-4 sm:p-5 transition-all shadow-2xs",
+                      "rounded-2xl border p-4 transition-all shadow-2xs space-y-3",
                       isInSession
                         ? "border-primary/50 bg-primary/5 ring-1 ring-primary/30"
-                        : "border-border bg-card hover:border-primary/30 hover:shadow-xs",
+                        : "border-border bg-card"
                     )}
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-2.5">
-                        <h3 className="text-base font-bold tracking-tight text-foreground">
-                          {s.subject}
-                        </h3>
-                        <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-bold text-accent-foreground border border-border">
-                          {s.code}
-                        </span>
-                        <span className={cn("rounded-md px-2 py-0.5 text-xs font-bold border", badge.className)}>
-                          {badge.label}
-                        </span>
+                    <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-2.5">
+                      <div className="flex items-center gap-1.5 font-bold text-xs text-primary">
+                        <Clock className="size-4 shrink-0" />
+                        <span>{s.displayStart} — {s.displayEnd}</span>
                       </div>
-                      {isInSession && (
-                        <ToneBadge tone="info" className="flex items-center gap-1 font-bold animate-pulse">
-                          <Sparkles className="size-3" /> In session
-                        </ToneBadge>
-                      )}
+                      <span className={cn("rounded-md px-2 py-0.5 text-[10px] font-bold border", badge.className)}>
+                        {badge.label}
+                      </span>
                     </div>
 
-                    <p className="mt-1 text-xs font-medium text-muted-foreground">
-                      <Clock className="inline size-3.5 mr-1 text-primary/70" />
-                      {s.displayStart} — {s.displayEnd}
-                    </p>
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-base font-extrabold text-foreground leading-snug break-words">
+                          {s.subject}
+                        </h3>
+                        {isInSession && (
+                          <ToneBadge tone="info" className="flex items-center gap-1 font-bold animate-pulse shrink-0">
+                            <Sparkles className="size-3" /> In session
+                          </ToneBadge>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs font-mono font-bold text-muted-foreground">{s.code}</p>
+                    </div>
 
-                    <p className="mt-2 text-[11px] font-medium text-muted-foreground italic">
+                    <p className="text-[11px] font-medium text-muted-foreground italic">
                       {badge.note}
                     </p>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-4 text-xs font-medium text-subtle-foreground border-t border-border/50 pt-3">
-                      <span className="flex items-center gap-1.5 font-semibold text-foreground">
-                        <Users className="size-4 text-primary/80" aria-hidden />
-                        {s.department} {s.year} &bull; {s.section}
-                      </span>
+                    <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-foreground pt-2.5 border-t border-border/50">
+                      <div className="flex items-center gap-1.5">
+                        <Users className="size-3.5 text-primary shrink-0" />
+                        <span className="truncate">{s.department} {s.year} • {s.section}</span>
+                      </div>
                       {s.room && (
-                        <span className="flex items-center gap-1.5 font-semibold text-foreground">
-                          <DoorOpen className="size-4 text-primary/80" aria-hidden />
-                          {s.room}
-                        </span>
-                      )}
-                      {role !== "faculty" && s.facultyName && (
-                        <span className="flex items-center gap-1.5 text-muted-foreground">
-                          <UserCheck className="size-4 text-muted-foreground" aria-hidden />
-                          {s.facultyName}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <DoorOpen className="size-3.5 text-primary shrink-0" />
+                          <span className="truncate">{s.room}</span>
+                        </div>
                       )}
                     </div>
                   </div>
-                </li>
-              );
-            })}
-          </ol>
+                );
+              })}
+            </div>
+
+            {/* Desktop View (>= 640px): Interactive Timeline Layout */}
+            <ol className="hidden sm:block relative space-y-2">
+              {daySlots.map((s, i) => {
+                const isTodaySelected = selectedDay === "Today" || targetDow === todayDow;
+                const isInSession =
+                  isTodaySelected &&
+                  currentTimeStr >= s.startTime &&
+                  currentTimeStr < s.endTime;
+
+                const badge = getPeriodBadge(s.periodType);
+
+                return (
+                  <li key={`desktop-${s.id}-${i}`} className="relative flex gap-4 pb-6 last:pb-0">
+                    {/* Vertical Timeline Line */}
+                    {i !== daySlots.length - 1 && (
+                      <span
+                        className="absolute left-[73px] top-6 h-full w-0.5 bg-border/80 sm:left-[89px]"
+                        aria-hidden
+                      />
+                    )}
+
+                    {/* Time Label Column */}
+                    <div className="w-[56px] shrink-0 pt-2 text-right sm:w-[72px]">
+                      <span className="block text-xs font-bold text-foreground sm:text-sm">
+                        {s.displayStart.split(" ")[0]}
+                      </span>
+                      <span className="block text-[10px] font-semibold text-muted-foreground">
+                        {s.displayStart.split(" ")[1]}
+                      </span>
+                    </div>
+
+                    {/* Timeline Circle Node */}
+                    <span
+                      className={cn(
+                        "z-10 mt-3.5 size-3.5 shrink-0 rounded-full border-2 bg-card transition-all shadow-2xs",
+                        isInSession
+                          ? "border-primary bg-primary ring-4 ring-primary/20"
+                          : "border-muted-foreground/40",
+                      )}
+                      aria-hidden
+                    />
+
+                    {/* Period Card Content */}
+                    <div
+                      className={cn(
+                        "min-w-0 flex-1 rounded-2xl border p-4 sm:p-5 transition-all shadow-2xs",
+                        isInSession
+                          ? "border-primary/50 bg-primary/5 ring-1 ring-primary/30"
+                          : "border-border bg-card hover:border-primary/30 hover:shadow-xs",
+                      )}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          <h3 className="text-base font-bold tracking-tight text-foreground">
+                            {s.subject}
+                          </h3>
+                          <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-bold text-accent-foreground border border-border">
+                            {s.code}
+                          </span>
+                          <span className={cn("rounded-md px-2 py-0.5 text-xs font-bold border", badge.className)}>
+                            {badge.label}
+                          </span>
+                        </div>
+                        {isInSession && (
+                          <ToneBadge tone="info" className="flex items-center gap-1 font-bold animate-pulse">
+                            <Sparkles className="size-3" /> In session
+                          </ToneBadge>
+                        )}
+                      </div>
+
+                      <p className="mt-1 text-xs font-medium text-muted-foreground">
+                        <Clock className="inline size-3.5 mr-1 text-primary/70" />
+                        {s.displayStart} — {s.displayEnd}
+                      </p>
+
+                      <p className="mt-2 text-[11px] font-medium text-muted-foreground italic">
+                        {badge.note}
+                      </p>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-4 text-xs font-medium text-subtle-foreground border-t border-border/50 pt-3">
+                        <span className="flex items-center gap-1.5 font-semibold text-foreground">
+                          <Users className="size-4 text-primary/80" aria-hidden />
+                          {s.department} {s.year} &bull; {s.section}
+                        </span>
+                        {s.room && (
+                          <span className="flex items-center gap-1.5 font-semibold text-foreground">
+                            <DoorOpen className="size-4 text-primary/80" aria-hidden />
+                            {s.room}
+                          </span>
+                        )}
+                        {role !== "faculty" && s.facultyName && (
+                          <span className="flex items-center gap-1.5 text-muted-foreground">
+                            <UserCheck className="size-4 text-muted-foreground" aria-hidden />
+                            {s.facultyName}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
         )}
       </section>
     </div>

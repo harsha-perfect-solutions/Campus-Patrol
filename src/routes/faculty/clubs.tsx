@@ -1087,7 +1087,53 @@ function FacultyClubsPage() {
                             </div>
                           </div>
 
-                          <div className="rounded-xl border border-border bg-card overflow-hidden shadow-2xs">
+                          {/* Mobile View (< 640px): Granted Participants Cards */}
+                          <div className="block sm:hidden space-y-3">
+                            {loadingParticipants ? (
+                              <div className="p-6 text-center text-xs text-muted-foreground bg-card rounded-2xl border border-border">
+                                <RefreshCw className="size-4 animate-spin mx-auto mb-1 text-primary" />
+                                Loading pass records...
+                              </div>
+                            ) : grantedParticipants.length === 0 ? (
+                              <div className="p-6 text-center text-xs text-muted-foreground italic bg-card rounded-2xl border border-border">
+                                No permissions have been granted for this event yet.
+                              </div>
+                            ) : (
+                              grantedParticipants.map((p) => (
+                                <div key={`mob-part-${p.id}`} className="p-4 rounded-2xl border border-border bg-card shadow-2xs space-y-2 text-xs">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                      <span className="font-mono font-bold text-primary block">{p.permission_code}</span>
+                                      <h4 className="font-bold text-foreground text-sm leading-snug">{p.student_name}</h4>
+                                      <span className="font-mono font-bold text-muted-foreground">{p.student_code}</span>
+                                    </div>
+                                    <ToneBadge tone={p.permission_status === "APPROVED" ? "success" : "neutral"}>
+                                      {p.permission_status}
+                                    </ToneBadge>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60 text-muted-foreground">
+                                    <div>
+                                      <span className="text-[10px] font-semibold block uppercase">Department & Year</span>
+                                      <span className="font-semibold text-foreground">{p.department} • {p.year} {p.section}</span>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className="text-[10px] font-semibold block uppercase">Gate Status</span>
+                                      {p.exit_at ? (
+                                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                                          Exited ({new Date(p.exit_at).toLocaleTimeString()})
+                                        </span>
+                                      ) : (
+                                        <span className="italic">Not Used</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+
+                          {/* Desktop View (>= 640px): Table */}
+                          <div className="hidden sm:block rounded-xl border border-border bg-card overflow-x-auto min-w-0 w-full shadow-2xs">
                             <table className="w-full text-left text-xs">
                               <thead className="bg-muted/60 text-muted-foreground font-bold uppercase tracking-wider border-b border-border">
                                 <tr>

@@ -375,7 +375,7 @@ function StudentPassesPage() {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <Label htmlFor="passDate" className="text-xs font-semibold">
                   Date
@@ -386,7 +386,7 @@ function StudentPassesPage() {
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="text-xs rounded-xl h-9"
+                  className="text-xs rounded-xl h-11 sm:h-9"
                 />
               </div>
               <div>
@@ -399,7 +399,7 @@ function StudentPassesPage() {
                   required
                   value={validFrom}
                   onChange={(e) => setValidFrom(e.target.value)}
-                  className="text-xs rounded-xl h-9"
+                  className="text-xs rounded-xl h-11 sm:h-9"
                 />
               </div>
               <div>
@@ -412,7 +412,7 @@ function StudentPassesPage() {
                   required
                   value={validUntil}
                   onChange={(e) => setValidUntil(e.target.value)}
-                  className="text-xs rounded-xl h-9"
+                  className="text-xs rounded-xl h-11 sm:h-9"
                 />
               </div>
             </div>

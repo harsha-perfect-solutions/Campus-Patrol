@@ -165,7 +165,7 @@ function HODDashboardContent() {
           </span>
         </div>
 
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           {[
             { dept: "CSE", name: "Computer Science", count: 15, isUserDept: userDept === "CSE", color: "border-primary/40 bg-primary/5 text-primary" },
             { dept: "ECE", name: "Electronics & Comm", count: 8, isUserDept: userDept === "ECE", color: "border-purple-300 bg-purple-50/40 text-purple-700 dark:bg-purple-950/20 dark:text-purple-300" },
@@ -203,7 +203,7 @@ function HODDashboardContent() {
       </div>
 
       {/* Summary Metrics */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
             label: "New Cases",
@@ -241,28 +241,28 @@ function HODDashboardContent() {
       </div>
 
       {/* DAY-TO-DAY VIOLATION TREND & PROACTIVE HOD PRECAUTIONS CONSOLE */}
-      <section className="card-surface p-6 rounded-2xl border border-border shadow-xs space-y-5">
-        <div className="flex items-center justify-between border-b border-divider pb-4">
+      <section className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-divider pb-4 gap-2">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="size-4 text-red-600" />
-            <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+            <ShieldAlert className="size-4 text-red-600 shrink-0" />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground break-words">
               DEPARTMENT DAY-TO-DAY VIOLATION TREND & PROACTIVE HOD PRECAUTIONS
             </span>
           </div>
-          <span className="text-[11px] font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded-lg">
+          <span className="text-[11px] font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded-lg self-start sm:self-auto shrink-0">
             Live Department Analytics ({userDept})
           </span>
         </div>
 
         {/* High Violation Precaution Alert Banner */}
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-5 space-y-3">
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 sm:p-5 space-y-3">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-start sm:items-center gap-2.5">
               <div className="p-2 rounded-xl bg-red-600 text-white shrink-0 shadow-xs">
                 <AlertTriangle className="size-5" />
               </div>
               <div>
-                <h4 className="text-sm font-extrabold text-red-900 dark:text-red-300">
+                <h4 className="text-sm font-extrabold text-red-900 dark:text-red-300 break-words">
                   🚨 HIGH VIOLATION ALERT: 3rd Year Section A requires HOD Intervention
                 </h4>
                 <p className="text-xs text-red-700 dark:text-red-400 mt-0.5 font-medium">
@@ -272,7 +272,7 @@ function HODDashboardContent() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-red-500/20">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 pt-2 border-t border-red-500/20">
             <Button
               type="button"
               size="sm"
@@ -282,7 +282,7 @@ function HODDashboardContent() {
                   description: "Official HOD precautionary advisory sent to 3rd Year Sec A Class Counselor & Students.",
                 });
               }}
-              className="rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs"
+              className="rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs min-h-[44px] sm:min-h-0 w-full sm:w-auto"
             >
               Issue Precautionary Advisory Warning
             </Button>
@@ -297,7 +297,7 @@ function HODDashboardContent() {
                   description: "Notification sent to assigned Class Counselor Prof. Ravi Kumar for student counseling session.",
                 });
               }}
-              className="rounded-xl text-xs font-bold border-red-300 text-red-700 dark:text-red-300 hover:bg-red-100/50"
+              className="rounded-xl text-xs font-bold border-red-300 text-red-700 dark:text-red-300 hover:bg-red-100/50 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
             >
               Notify Counselor for Precautionary Counseling
             </Button>

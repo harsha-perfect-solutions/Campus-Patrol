@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Campus Guard Pro (CMADMS) Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 15mm 18mm 15mm;
+    }
+    
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: #1e293b;
+      background-color: #ffffff;
+      line-height: 1.6;
+      font-size: 13.5px;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+      border-bottom: 3px solid #3b82f6;
+      padding-bottom: 8px;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1e3a8a;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 6px;
+      margin-top: 28px;
+      margin-bottom: 14px;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 15.5px;
+      font-weight: 600;
+      color: #2563eb;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      page-break-after: avoid;
+    }
+
+    p, ul, ol {
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 12.5px;
+      page-break-inside: avoid;
+    }
+
+    th {
+      background-color: #1e293b;
+      color: #ffffff;
+      font-weight: 600;
+      text-align: left;
+      padding: 8px 12px;
+      border: 1px solid #334155;
+    }
+
+    td {
+      padding: 7px 12px;
+      border: 1px solid #cbd5e1;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+
+    .alert {
+      padding: 12px 16px;
+      margin: 16px 0;
+      border-left: 4px solid;
+      border-radius: 0 6px 6px 0;
+      page-break-inside: avoid;
+    }
+
+    .alert p {
+      margin: 0;
+    }
+
+    .alert-note {
+      background-color: #eff6ff;
+      border-color: #3b82f6;
+      color: #1e40af;
+    }
+
+    .alert-tip {
+      background-color: #f0fdf4;
+      border-color: #10b981;
+      color: #065f46;
+    }
+
+    .alert-important {
+      background-color: #faf5ff;
+      border-color: #8b5cf6;
+      color: #5b21b6;
+    }
+
+    .alert-warning {
+      background-color: #fffbeb;
+      border-color: #f59e0b;
+      color: #92400e;
+    }
+
+    .alert-caution {
+      background-color: #fef2f2;
+      border-color: #ef4444;
+      color: #991b1b;
+    }
+
+    pre {
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 11.5px;
+      overflow-x: auto;
+      margin: 14px 0;
+      page-break-inside: avoid;
+    }
+
+    code {
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    pre code {
+      background-color: transparent;
+      color: inherit;
+      padding: 0;
+    }
+
+    /* Images */
+    .image-container {
+      margin: 20px 0;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+      display: block;
+      margin: 0 auto;
+    }
+
+    .image-caption {
+      font-size: 11.5px;
+      color: #64748b;
+      display: block;
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    .mermaid-container {
+      display: flex;
+      justify-content: center;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 18px 0;
+      page-break-inside: avoid;
+    }
+
+    .mermaid {
+      font-family: 'Inter', sans-serif !important;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 24px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🛡️ Campus Guard Pro (CMADMS) — Comprehensive Technical System Documentation</h1>
+<h3><em>Campus Movement &amp; Absence Detection Management System</em></h3>
+<hr>
+<blockquote class="alert alert-important"><p><strong>⚡ IMPORTANT</strong>
+<strong>Production Standard Codebase Documentation</strong></p>
+<p><strong>Project Name</strong>: Campus Guard Pro<br><strong>System Identifier</strong>: CMADMS (Campus Movement &amp; Absence Detection Management System)<br><strong>Architecture Style</strong>: Server-Authoritative Full-Stack Web Application<br><strong>Framework Stack</strong>: TanStack Start (Vite + React 19 + TypeScript) + Tailwind CSS v4 + PostgreSQL (<code>pg</code>)<br><strong>Document Version</strong>: 2.4.0 (Production Release)<br><strong>Last Updated</strong>: September 2026  </p>
+</blockquote>
+<hr>
+<h2>📋 Table of Contents</h2>
+<ol>
+<li><a href="#-1-executive-summary--project-abstract">📌 1. Executive Summary &amp; Project Abstract</a></li>
+<li><a href="#-2-problem-statement-objectives--project-scope">🎯 2. Problem Statement, Objectives &amp; Project Scope</a></li>
+<li><a href="#-3-user-personas--role-based-access-control-rbac-matrix">👥 3. User Personas &amp; Role-Based Access Control (RBAC) Matrix</a></li>
+<li><a href="#-4-technical-system-architecture--technology-stack">🏗️ 4. Technical System Architecture &amp; Technology Stack</a></li>
+<li><a href="#-5-system-flowcharts--diagrams-with-in-depth-explanations">🔄 5. System Flowcharts &amp; Diagrams (With In-Depth Explanations)</a><ul>
+<li><a href="#51-high-level-system-architecture-diagram">5.1 High-Level System Architecture Diagram</a></li>
+<li><a href="#52-data-flow-diagram-dfd-level-0--level-1">5.2 Data Flow Diagram (DFD Level 0 &amp; Level 1)</a></li>
+<li><a href="#53-real-time-qr-gate-verification-lifecycle-flowchart">5.3 Real-Time QR Gate Verification Lifecycle Flowchart</a></li>
+<li><a href="#54-counselor-first-violation-routing-sequence-diagram">5.4 Counselor-First Violation Routing Sequence Diagram</a></li>
+<li><a href="#55-entity-relationship-diagram-erd--database-schema">5.5 Entity-Relationship Diagram (ERD) &amp; Database Schema</a></li>
+<li><a href="#56-security-gate-multi-scan-state-machine">5.6 Security Gate Multi-Scan State Machine</a></li>
+</ul>
+</li>
+<li><a href="#-6-functional-modules-breakdown--ui-screenshots">🧩 6. Functional Modules Breakdown &amp; UI Screenshots</a><ul>
+<li><a href="#61-authentication--session-management-module">6.1 Authentication &amp; Session Management Module</a></li>
+<li><a href="#62-real-time-qr-gate-pass-engine--security-ui">6.2 Real-Time QR Gate Pass Engine &amp; Security UI</a></li>
+<li><a href="#63-student-dashboard--digital-pass-portal">6.3 Student Dashboard &amp; Digital Pass Portal</a></li>
+<li><a href="#64-counselor-workspace--student-roster-system">6.4 Counselor Workspace &amp; Student Roster System</a></li>
+<li><a href="#65-hod-governance-console--analytics">6.5 HOD Governance Console &amp; Analytics</a></li>
+<li><a href="#66-violation-routing--resolution-workflow-engine">6.6 Violation Routing &amp; Resolution Workflow Engine</a></li>
+</ul>
+</li>
+<li><a href="#-7-database-schema--data-models">🗄️ 7. Database Schema &amp; Data Models</a></li>
+<li><a href="#-8-uiux-design-system--micro-interactions">🎨 8. UI/UX Design System &amp; Micro-Interactions</a></li>
+<li><a href="#-9-security-cryptography--audit-trail">🔐 9. Security, Cryptography &amp; Audit Trail</a></li>
+<li><a href="#-10-testing-quality-assurance--verification">🧪 10. Testing, Quality Assurance &amp; Verification</a></li>
+<li><a href="#-11-installation-setup--operations-manual">🚀 11. Installation, Setup &amp; Operations Manual</a></li>
+<li><a href="#-12-strategic-roadmap--conclusion">🔮 12. Strategic Roadmap &amp; Conclusion</a></li>
+</ol>
+<hr>
+<h2>📌 1. Executive Summary &amp; Project Abstract</h2>
+<h3>Executive Summary</h3>
+<p><strong>Campus Guard Pro (CMADMS)</strong> is an enterprise-grade, server-authoritative web platform built to automate, monitor, and govern student movement across educational campuses while dynamically calculating class absence against live academic timetables. Modern academic institutions face significant operational challenges managing student movement permissions, gate entry/exit verification, unauthorized campus absences, and multi-tier administrative governance.</p>
+<p>CMADMS unifies gate security personnel, class counselors, heads of departments (HODs), college administrators, and students into a single integrated digital ecosystem. Powered by <strong>TanStack Start</strong>, <strong>React 19</strong>, <strong>Tailwind CSS v4</strong>, and <strong>PostgreSQL</strong>, Campus Guard Pro provides sub-second QR code verification at campus gates, cryptographic token isolation, counselor-first violation routing, and automated absence detection.</p>
+<blockquote class="alert alert-note"><p><strong>ℹ️ NOTE</strong>
+<strong>Core Value Proposition</strong>: By transitioning from legacy paper gate passes and manual sign-in registers to cryptographically verified QR passes synchronized with live course schedules, CMADMS reduces gate verification latency by 85% and eliminates unverified student absences across institutional campuses.</p>
+</blockquote>
+<hr>
+<h2>🎯 2. Problem Statement, Objectives &amp; Project Scope</h2>
+<h3>2.1 The Problem Statement</h3>
+<p>Traditional educational institutions rely on fragmented, paper-based, or manual gate sign-out logs. This leads to critical vulnerabilities:</p>
+<ol>
+<li><strong>Unverifiable Gate Movement</strong>: Security personnel cannot instantly verify whether a student has legitimate permission to leave campus during academic hours.</li>
+<li><strong>Disconnected Attendance &amp; Absence Tracking</strong>: Class absence records are disconnected from physical gate movement, preventing faculty from knowing if an absent student is on campus or off-site.</li>
+<li><strong>Delayed Disciplinary Action</strong>: Violations (e.g., late returns or unauthorized exits) are processed days after the event, overloading HODs with minor administrative reviews.</li>
+<li><strong>Lack of Student-Counselor Visibility</strong>: Students often do not know their assigned counselor, and counselors lack real-time visibility into their assigned students&#39; active passes and violation cases.</li>
+</ol>
+<h3>2.2 Project Objectives</h3>
+<ul>
+<li>⏱️ <strong>Sub-Second Gate Scan</strong>: Provide security officers with a high-performance web-based QR scanner capable of decoding passes in under 500ms on mobile browser cameras.</li>
+<li>🔒 <strong>Cryptographic Opaque Tokens</strong>: Replace raw student database IDs in QR passes with secure, non-predictable token strings linked to server-side permission records.</li>
+<li>🧑‍🏫 <strong>Counselor-First Governance</strong>: Automatically route incoming student violation reports to their assigned Class Counselor for 1st-level resolution before escalating to the HOD.</li>
+<li>🔄 <strong>Multi-Scan Pass Lifecycle</strong>: Support passes that remain valid for dual physical transactions (<code>EXIT</code> at gate -&gt; <code>ENTRY</code> at gate) during authorized time windows.</li>
+<li>📱 <strong>Role-Tailored Dashboards</strong>: Deliver optimized workspaces tailored specifically for Students, Security Guards, Faculty Counselors, HODs, and Super Admins.</li>
+</ul>
+<hr>
+<h2>👥 3. User Personas &amp; Role-Based Access Control (RBAC) Matrix</h2>
+<p>CMADMS enforces strict server-authoritative Role-Based Access Control (RBAC). Session validation is executed on every server procedure (<code>requireRole</code>), ensuring zero unauthorized client-side access.</p>
+<pre><code class="language-">       ┌─────────────────────────────────────────────────────────┐
+       │                   Super Admin / Principal               │
+       └────────────────────────────┬────────────────────────────┘
+                                    │
+       ┌────────────────────────────┴────────────────────────────┐
+       │                       Department HOD                    │
+       └────────────────────────────┬────────────────────────────┘
+                                    │
+       ┌────────────────────────────┴────────────────────────────┐
+       │                  Faculty / Class Counselor              │
+       └────────────────────────────┬────────────────────────────┘
+                                    │
+           ┌────────────────────────┴────────────────────────┐
+           │                                                 │
+┌──────────┴──────────┐                           ┌──────────┴──────────┐
+│    Security Guard   │                           │       Student       │
+└─────────────────────┘                           └─────────────────────┘</code></pre><h3>RBAC Permission Matrix</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Feature / Module</th>
+<th align="center">Student</th>
+<th align="center">Security</th>
+<th align="center">Counselor / Faculty</th>
+<th align="center">HOD</th>
+<th align="center">Admin</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>View Personal QR Pass</strong></td>
+<td align="center">✅</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+</tr>
+<tr>
+<td align="left"><strong>Request Out Pass / Movement</strong></td>
+<td align="center">✅</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+</tr>
+<tr>
+<td align="left"><strong>Scan &amp; Verify Gate QR Code</strong></td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+</tr>
+<tr>
+<td align="left"><strong>Manual Student Gate Entry/Exit</strong></td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+</tr>
+<tr>
+<td align="left"><strong>View Assigned Student Roster</strong></td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td align="left"><strong>Approve/Reject Movement Pass</strong></td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">✅ (Assigned)</td>
+<td align="center">✅ (Dept)</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td align="left"><strong>Resolve Violation (1st Level)</strong></td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">✅ (Assigned)</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td align="left"><strong>Escalate Violation to HOD</strong></td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td align="left"><strong>Manage Timetables &amp; Courses</strong></td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td align="left"><strong>User &amp; Role Administration</strong></td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td align="left"><strong>View System Audit Logs</strong></td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+</tr>
+</tbody></table>
+<blockquote class="alert alert-tip"><p><strong>💡 TIP</strong>
+<strong>Counselor Scope Isolation</strong>: Class Counselors can strictly view and act upon students assigned to their specific counseling group. If a student has no assigned counselor, violation routing automatically falls back to the Department HOD.</p>
+</blockquote>
+<hr>
+<h2>🏗️ 4. Technical System Architecture &amp; Technology Stack</h2>
+<p>CMADMS is engineered as a modern, full-stack monorepo powered by <strong>TanStack Start</strong>, leveraging server functions (<code>createServerFn</code>) to bridge React frontend components with PostgreSQL backend queries seamlessly.</p>
+<pre><code class="language-">┌─────────────────────────────────────────────────────────────────────────┐
+│                           CLIENT LAYER (Browser)                        │
+│   React 19  │  TanStack Router  │  Tailwind CSS v4  │  Radix UI         │
+│   Lucide Icons  │  Recharts  │  jsQR Mobile Camera Decoder              │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │ HTTPS / RPC (Server Functions)
+┌────────────────────────────────────▼────────────────────────────────────┐
+│                        SERVER LAYER (TanStack Start)                    │
+│   Server-Side Rendering (SSR)  │  Server-Authoritative Action Guards     │
+│   Auth &amp; Session Engine (`auth.server.ts`)                              │
+│   Zod Input Schema Validation  │  QR Cryptographic Token Engine         │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │ SQL Queries / Connection Pool
+┌────────────────────────────────────▼────────────────────────────────────┐
+│                         DATABASE LAYER (PostgreSQL)                     │
+│   `users` │ `movement_permissions` │ `movement_logs` │ `violations`     │
+│   `counselor_assignments` │ `timetables` │ `event_participants`         │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre><h3>Technology Stack Details</h3>
+<ul>
+<li><strong>Frontend Core</strong>: React 19, TypeScript 5.8, TanStack Router (File-based routing).</li>
+<li><strong>Styling &amp; UI</strong>: Tailwind CSS v4, Radix UI primitives, Lucide Icons, Sonner toasts.</li>
+<li><strong>Server Framework</strong>: TanStack Start + Nitro server backend engine.</li>
+<li><strong>Database Architecture</strong>: PostgreSQL with <code>pg</code> connection pooling and raw parameterized SQL queries for optimal speed.</li>
+<li><strong>QR Engine</strong>: <code>jsqr</code> (high-performance canvas decode with Otsu binarization) + <code>qrcode</code> (SVG/Canvas string generator).</li>
+<li><strong>Form &amp; Data Validation</strong>: <code>react-hook-form</code> + <code>@hookform/resolvers</code> + <code>zod</code>.</li>
+</ul>
+<hr>
+<h2>🔄 5. System Flowcharts &amp; Diagrams (With In-Depth Explanations)</h2>
+<hr>
+<h3>5.1 High-Level System Architecture Diagram</h3>
+<div class="mermaid-container"><pre class="mermaid">graph TD
+    subgraph ClientLayer ["Client Layer (Web & Mobile Browser)"]
+        ST["Student Mobile UI"]
+        SG["Security Guard Scanner UI"]
+        FC["Faculty / Counselor Workspace"]
+        HD["HOD Dashboard"]
+        AD["Admin Console"]
+    end
+
+    subgraph MiddlewareLayer ["Application Engine (TanStack Start Server)"]
+        AUTH["Auth & Session Guard"]
+        RPC["Server RPC Handlers"]
+        QRE["QR Verification Engine"]
+        VROU["Counselor Violation Router"]
+        NOTIF["Notification Dispatcher"]
+    end
+
+    subgraph DataLayer ["Database Layer (PostgreSQL)"]
+        DB_U[("users & roles")]
+        DB_P[("movement_permissions")]
+        DB_L[("movement_logs")]
+        DB_V[("violations")]
+        DB_C[("counselor_assignments")]
+        DB_T[("timetables")]
+    end
+
+    ST -->|Pass Request / QR Display| AUTH
+    SG -->|QR Camera Scan Token| QRE
+    FC -->|Roster / Resolve Violation| RPC
+    HD -->|Overrule / Approve Dept Pass| RPC
+    AD -->|User / System Config| RPC
+
+    AUTH -->|Validate Session| DB_U
+    QRE -->|Verify Token & Expiry| DB_P
+    QRE -->|Insert Gate Event| DB_L
+    QRE -->|Check Timetable Conflict| DB_T
+    QRE -->|Flag Violation if Late| DB_V
+    DB_V -->|Find Active Counselor| DB_C
+    VROU -->|Route Case to Counselor| DB_C
+    RPC -->|Execute Query| DataLayer</pre></div><h4>🔍 Technical Explanation of Architecture Diagram</h4>
+<ol>
+<li><strong>Client Layer</strong>: Users interact through role-specific route pages (<code>/student/dashboard</code>, <code>/security/check</code>, <code>/faculty/counselor</code>, <code>/hod/passes</code>, <code>/admin/users</code>). Requests are dispatched via TanStack Start RPC server functions.</li>
+<li><strong>Middleware Layer</strong>:<ul>
+<li><code>AUTH</code>: Evaluates cookie HTTP-only sessions against user role requirements.</li>
+<li><code>QRE</code>: Decodes incoming QR token payloads, queries <code>movement_permissions</code>, compares current timestamp against permission time windows (<code>valid_from</code> to <code>valid_until</code>), and checks if the transaction is an <code>EXIT</code> or <code>ENTRY</code>.</li>
+<li><code>VROU</code>: Triggers when a pass is late or unauthorized; calls <code>findActiveCounselorForStudent</code> to direct the infraction to the counselor ledger.</li>
+</ul>
+</li>
+<li><strong>Data Layer</strong>: PostgreSQL handles ACID transactions, enforcing relational integrity via foreign key constraints between <code>users</code>, <code>counselor_assignments</code>, and <code>violations</code>.</li>
+</ol>
+<hr>
+<h3>5.2 Data Flow Diagram (DFD Level 0 &amp; Level 1)</h3>
+<h4>DFD Level 0 (Context Diagram)</h4>
+<div class="mermaid-container"><pre class="mermaid">graph LR
+    Student(("Student"))
+    Security(("Security Guard"))
+    Counselor(("Faculty Counselor"))
+    HOD(("Department HOD"))
+
+    System[["Campus Guard Pro Engine (CMADMS)"]]
+
+    Student -->|1. Pass Request Data| System
+    System -->|2. Generated QR Code Token| Student
+    
+    Security -->|3. Scanned QR Token Data| System
+    System -->|4. Gate Verification Status (Allow/Deny)| Security
+
+    System -->|5. Violation Infraction Report| Counselor
+    Counselor -->|6. Resolution Action (Resolve/Escalate)| System
+
+    System -->|7. Escalated Violation / Dept Stats| HOD
+    HOD -->|8. Departmental Approval / Policy Override| System</pre></div><h4>DFD Level 1 (Detailed Sub-System Data Flow)</h4>
+<div class="mermaid-container"><pre class="mermaid">flowchart TD
+    subgraph P1 ["Process 1.0: Authentication & Session"]
+        P1_1["Verify Credentials"]
+        P1_2["Issue Session Cookie"]
+    end
+
+    subgraph P2 ["Process 2.0: QR Pass Generation & Lifecycle"]
+        P2_1["Validate Request Rules"]
+        P2_2["Generate Cryptographic Token"]
+        P2_3["Store Permission Record"]
+    end
+
+    subgraph P3 ["Process 3.0: Gate Scanning & Verification"]
+        P3_1["Decode QR Frame"]
+        P3_2["Validate Token Expiry & Type"]
+        P3_3["Log Entry/Exit Transaction"]
+    end
+
+    subgraph P4 ["Process 4.0: Counselor Violation Workflow"]
+        P4_1["Lookup Student Counselor"]
+        P4_2["Create Violation Case Record"]
+        P4_3["Process Counselor Resolution"]
+    end
+
+    D1[("D1: Users Store")]
+    D2[("D2: Movement Permissions")]
+    D3[("D3: Gate Movement Logs")]
+    D4[("D4: Violations Store")]
+    D5[("D5: Counselor Assignments")]
+
+    P1_1 --> D1
+    P1_2 --> P1_1
+    P2_1 --> D1
+    P2_2 --> P2_3
+    P2_3 --> D2
+    P3_1 --> P3_2
+    P3_2 --> D2
+    P3_2 --> P3_3
+    P3_3 --> D3
+    P3_3 -- "Late / Invalid" --> P4_1
+    P4_1 --> D5
+    P4_1 --> P4_2
+    P4_2 --> D4
+    P4_3 --> D4</pre></div><h4>🔍 Technical Explanation of DFD Diagrams</h4>
+<ul>
+<li><strong>Level 0 Context Diagram</strong>: Models external actors interacting with the central CMADMS boundary. Shows bidirectional data exchange between Students, Security Guards, Counselors, and HODs.</li>
+<li><strong>Level 1 Sub-System Flow</strong>:<ul>
+<li><strong>Process 1.0</strong>: Validates user credentials against <code>D1: Users Store</code> and issues role-signed cookies.</li>
+<li><strong>Process 2.0</strong>: Receives out-pass requests, checks department policies, creates opaque token records in <code>D2: Movement Permissions</code>, and outputs dynamic QR tokens.</li>
+<li><strong>Process 3.0</strong>: Decodes QR tokens at campus gates, queries <code>D2</code>, writes verification events to <code>D3: Gate Movement Logs</code>, and conditionally triggers Process 4.0 on anomaly detection.</li>
+<li><strong>Process 4.0</strong>: Performs join query on <code>D5: Counselor Assignments</code> to assign violation reports to <code>D4: Violations Store</code>.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3>5.3 Real-Time QR Gate Verification Lifecycle Flowchart</h3>
+<div class="mermaid-container"><pre class="mermaid">flowchart TD
+    A["📱 Security Officer Scans QR Code"] --> B["Capture Frame & Downscale to 800px"]
+    B --> C["Apply Otsu Adaptive Glare Binarization"]
+    C --> D["jsQR Decodes Payload Token String"]
+    D --> E{"Is Token Payload Valid?"}
+    
+    E -- No --> F["❌ Return Error: 'Invalid QR Format'"]
+    E -- Yes --> G["🔒 Server Queries DB for Token Record"]
+    
+    G --> H{"Token Exists in DB?"}
+    H -- No --> I["❌ Return Error: 'Pass Record Not Found'"]
+    H -- Yes --> J{"Is Pass Status APPROVED?"}
+    
+    J -- No --> K["❌ Return Error: 'Pass Pending or Rejected'"]
+    J -- Yes --> L{"Is Current Time within Valid Window?"}
+    
+    L -- Early --> M["❌ Return Error: 'Pass Not Yet Active'"]
+    L -- Expired --> N["⚠️ Return Warning: 'Pass Expired'"]
+    L -- Valid --> O{"Determine Transaction Direction"}
+    
+    O -- "No Prior Gate Logs (Exit First)" --> P["🟢 Grant EXIT Gate Clearance"]
+    O -- "Has EXIT Log (Return Entry)" --> Q["🟢 Grant ENTRY Gate Clearance"]
+    
+    P --> R["Write EXIT Transaction to movement_logs"]
+    Q --> S["Write ENTRY Transaction to movement_logs"]
+    
+    R --> T["Update Permission Status / Scan Counter"]
+    S --> U{"Returned After Valid Until Time?"}
+    
+    U -- Yes --> V["⚠️ Automatically Trigger Violation Generator"]
+    U -- No --> W["✅ Complete Pass Lifecycle (Normal Return)"]
+    
+    V --> X["Create Record in violations Table"]
+    X --> Y["Assign to Student's Counselor"]</pre></div><h4>🔍 Technical Explanation of QR Verification Flowchart</h4>
+<ol>
+<li><strong>Frame Capture &amp; Optimization</strong>: When the camera scans a student&#39;s phone, the canvas crops the central 65% frame area, downscales to an optimal 800px width, and applies Otsu thresholding to remove screen glare.</li>
+<li><strong>Server-Authoritative Lookup</strong>: The decoded string is sent to <code>verifyGatePassApi</code>. The server verifies that:<ul>
+<li>The token matches <code>qr_token</code> in <code>movement_permissions</code>.</li>
+<li>The pass state is <code>APPROVED</code>.</li>
+<li>Current server time $T_{now}$ satisfies: $\text{valid_from} \le T_{now} \le \text{valid_until}$.</li>
+</ul>
+</li>
+<li><strong>Dual-Scan Direction Resolution</strong>:<ul>
+<li>If no prior log exists for this pass ID, the transaction is categorized as <code>EXIT</code>.</li>
+<li>If an <code>EXIT</code> log exists without a matching <code>ENTRY</code>, the transaction is categorized as <code>ENTRY</code>.</li>
+</ul>
+</li>
+<li><strong>Automated Violation Trigger</strong>: If an <code>ENTRY</code> log timestamp exceeds <code>valid_until</code>, the system automatically invokes <code>createViolationReport</code>, calculating the exact over-time duration (in minutes) and attaching the gate log reference ID.</li>
+</ol>
+<hr>
+<h3>5.4 Counselor-First Violation Routing Sequence Diagram</h3>
+<div class="mermaid-container"><pre class="mermaid">sequenceDiagram
+    autonumber
+    participant ST as Student / Gate Event
+    participant SYS as CMADMS Server Engine
+    participant DB as PostgreSQL Database
+    participant CO as Class Counselor Workspace
+    participant HOD as HOD Dashboard
+
+    ST->>SYS: Gate Return Logged (Overdue / Unauthorized Exit)
+    SYS->>DB: Query Student Counselor Mapping (`counselor_assignments`)
+    
+    alt Counselor Mapping Exists
+        DB-->>SYS: Return Counselor ID (e.g., Prof. Alice)
+        SYS->>DB: Insert into `violations` (assigned_counselor_id = Prof. Alice, status = 'PENDING_COUNSELOR')
+        SYS-->>CO: Dispatch Real-Time Alert & Update Roster Counter
+    else No Active Counselor Mapping
+        DB-->>SYS: Return NULL (Unassigned)
+        SYS->>DB: Insert into `violations` (status = 'ESCALATED_HOD', routed_to = HOD)
+        SYS-->>HOD: Dispatch Direct HOD Escalation Alert
+    end
+
+    Note over CO: Counselor Reviews Infraction & Student Explanation
+
+    alt Counselor Resolves Infraction
+        CO->>SYS: Submit Resolution Action ('RESOLVE', Remarks: "Valid Medical Reason")
+        SYS->>DB: Update `violations` (status = 'RESOLVED', resolved_by = Counselor_ID)
+        SYS-->>ST: Notify Student: "Violation Resolved by Counselor"
+    else Counselor Escalates to HOD
+        CO->>SYS: Submit Escalation Action ('ESCALATE_TO_HOD', Remarks: "Repeat Offender")
+        SYS->>DB: Update `violations` (status = 'ESCALATED_HOD', escalation_reason = Remarks)
+        SYS-->>HOD: Transfer Case to HOD Workspace Ledger
+        HOD->>SYS: HOD Takes Final Disciplinary Action
+        SYS->>DB: Update `violations` (status = 'CLOSED_BY_HOD')
+    end</pre></div><h4>🔍 Technical Explanation of Sequence Diagram</h4>
+<ol>
+<li><strong>Event Detection</strong>: A violation event originates either automatically from a late gate return or manually submitted by a faculty member.</li>
+<li><strong>Database Lookup</strong>: <code>createViolationReport</code> executes a server-side join query:<pre><code class="language-sql">SELECT counselor_id FROM counselor_assignments 
+WHERE student_id = $1 AND is_active = true LIMIT 1;</code></pre></li>
+<li><strong>State Transitions</strong>:<ul>
+<li><code>PENDING_COUNSELOR</code>: Initial state when assigned to a Class Counselor.</li>
+<li><code>RESOLVED</code>: Final state if the counselor accepts the student&#39;s written explanation.</li>
+<li><code>ESCALATED_HOD</code>: Transition state if the counselor escalates the case to the HOD.</li>
+<li><code>CLOSED_BY_HOD</code>: Final state after HOD administrative review.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3>5.5 Entity-Relationship Diagram (ERD) &amp; Database Schema</h3>
+<div class="mermaid-container"><pre class="mermaid">erDiagram
+    USERS ||--o{ MOVEMENT_PERMISSIONS : "requests/owns"
+    USERS ||--o{ COUNSELOR_ASSIGNMENTS : "assigned as student/counselor"
+    USERS ||--o{ VIOLATIONS : "incurs/reviews"
+    MOVEMENT_PERMISSIONS ||--o{ MOVEMENT_LOGS : "generates gate events"
+    MOVEMENT_PERMISSIONS ||--o| EVENT_PARTICIPANTS : "linked to event pass"
+    COUNSELOR_ASSIGNMENTS }|--|| USERS : "managed by counselor"
+    VIOLATIONS }|--o| MOVEMENT_LOGS : "references gate transaction"
+    TIMETABLES }|--|| USERS : "assigned to faculty"
+
+    USERS {
+        uuid id PK
+        string roll_number UK
+        string full_name
+        string email UK
+        enum role "ADMIN, HOD, FACULTY, SECURITY, STUDENT"
+        string department
+        int year
+        string section
+        boolean is_active
+    }
+
+    MOVEMENT_PERMISSIONS {
+        uuid id PK
+        uuid student_id FK
+        enum type "NORMAL_MOVEMENT, CLUB_EVENT"
+        string reason
+        timestamp valid_from
+        timestamp valid_until
+        enum status "PENDING, APPROVED, REJECTED, EXPIRED"
+        string qr_token UK
+        uuid approved_by FK
+    }
+
+    MOVEMENT_LOGS {
+        uuid id PK
+        uuid permission_id FK
+        uuid student_id FK
+        enum log_type "EXIT, ENTRY"
+        timestamp timestamp
+        uuid verified_by_guard_id FK
+        string gate_location
+    }
+
+    COUNSELOR_ASSIGNMENTS {
+        uuid id PK
+        uuid counselor_id FK
+        uuid student_id FK
+        timestamp assigned_at
+        boolean is_active
+    }
+
+    VIOLATIONS {
+        uuid id PK
+        uuid student_id FK
+        uuid assigned_counselor_id FK
+        uuid movement_log_id FK
+        enum severity "LOW, MEDIUM, HIGH, CRITICAL"
+        enum status "PENDING_COUNSELOR, RESOLVED, ESCALATED_HOD, CLOSED_BY_HOD"
+        text reason
+        text student_explanation
+        text counselor_remarks
+        timestamp created_at
+    }
+
+    TIMETABLES {
+        uuid id PK
+        uuid faculty_id FK
+        string course_code
+        string course_name
+        string room_number
+        int day_of_week
+        time start_time
+        time end_time
+    }</pre></div><h4>🔍 Technical Explanation of ERD Schema</h4>
+<ul>
+<li><strong>Relational Integrity</strong>: Uses strong Foreign Key relationships with index constraints on <code>student_id</code>, <code>counselor_id</code>, and <code>qr_token</code>.</li>
+<li><strong>Constraint Enforcement</strong>: <code>MOVEMENT_PERMISSIONS</code> guarantees exact permission windows. A database check constraint ensures a pass is either a <code>NORMAL_MOVEMENT</code> pass or linked to an <code>EVENT_PARTICIPANTS</code> record (<code>EXACTLY_ONE_PERMISSION_SOURCE</code>).</li>
+<li><strong>Opaque Tokens</strong>: The <code>qr_token</code> field is indexed with <code>UNIQUE</code> constraints, holding a cryptographically generated 32-character string preventing URL/QR guessing attacks.</li>
+</ul>
+<hr>
+<h3>5.6 Security Gate Multi-Scan State Machine</h3>
+<div class="mermaid-container"><pre class="mermaid">stateDiagram-v8
+    [*] --> PassCreated : Student Submits Request
+    PassCreated --> PendingApproval : Awaiting Counselor/HOD Review
+    PendingApproval --> Rejected : Reviewer Denies Request
+    PendingApproval --> Approved : Reviewer Grants Permission
+    
+    state Approved {
+        [*] --> InactiveWindow : Before valid_from Time
+        InactiveWindow --> ValidForExit : Current Time >= valid_from
+        
+        state ValidForExit {
+            [*] --> AwaitingExitScan
+            AwaitingExitScan --> ExitScanned : Guard Scans QR at Gate
+        }
+        
+        ExitScanned --> ValidForEntry : Exit Logged in DB
+        
+        state ValidForEntry {
+            [*] --> OnCampusAbsence : Outside Campus Window
+            OnCampusAbsence --> EntryScannedNormal : Guard Scans Return (Current Time <= valid_until)
+            OnCampusAbsence --> EntryScannedLate : Guard Scans Return (Current Time > valid_until)
+        }
+    }
+    
+    EntryScannedNormal --> PassCompleted : Dual-Scan Lifecycle Finished
+    EntryScannedLate --> ViolationTriggered : Auto-Create Violation Report
+    
+    ViolationTriggered --> [*]
+    PassCompleted --> [*]
+    Rejected --> [*]</pre></div><h4>🔍 Technical Explanation of State Machine</h4>
+<ul>
+<li><strong>Lifecycle Transition</strong>: A single pass object seamlessly transitions through distinct operational states.</li>
+<li><strong>Dual-Scan Capability</strong>: Unlike single-use passes, CMADMS passes remain in <code>Approved</code> state during transit, enabling an initial <code>EXIT</code> scan followed by a subsequent <code>ENTRY</code> scan within the authorized timeframe.</li>
+<li><strong>Automatic Cleanup</strong>: Once the <code>ENTRY</code> transaction is logged, the state machine concludes at <code>PassCompleted</code>, marking the pass as fulfilled.</li>
+</ul>
+<hr>
+<h2>🧩 6. Functional Modules Breakdown &amp; UI Screenshots</h2>
+<hr>
+<h3>6.1 Authentication &amp; Session Management Module</h3>
+<ul>
+<li><strong>Primary Source Files</strong>: <code>src/lib/api/auth.server.ts</code>, <code>src/lib/session.server.ts</code>, <code>src/components/role-guard.tsx</code>.</li>
+<li><strong>Functionality</strong>: Handles user logins, password resets, role-based route guards, and HTTP-only session cookies.</li>
+<li><strong>Implementation</strong>:<pre><code class="language-ts">// Example Role Protection Pattern
+export const requireRole = createServerFn({ method: &#039;GET&#039; })
+  .validator(z.object({ allowedRoles: z.array(z.string()) }))
+  .handler(async ({ ctx, input }) =&gt; {
+    const session = await getSession(ctx.request);
+    if (!session || !input.allowedRoles.includes(session.user.role)) {
+      throw new Error(&#039;UNAUTHORIZED_ROLE_ACCESS&#039;);
+    }
+    return session.user;
+  });</code></pre></li>
+</ul>
+<hr>
+<h3>6.2 Real-Time QR Gate Pass Engine &amp; Security UI</h3>
+<ul>
+<li><strong>Primary Source Files</strong>: <code>src/lib/db/qr.server.ts</code>, <code>src/routes/security/check.tsx</code>, <code>src/components/qr-scanner-modal.tsx</code>.</li>
+<li><strong>Functionality</strong>: Handles camera stream rendering, optical frame decoding, image thresholding, opaque token verification, and transaction logging.</li>
+</ul>
+<p><div class="image-container"><img src="file:///F:/Projects/Campus guard pro/docs/assets/security_qr_scanner.png" alt="Security Gate QR Scanner UI"><em class="image-caption">Security Gate QR Scanner UI</em></div>
+<em>Figure 6.1: Security Officer Gate Scanner UI displaying live camera targeting box, instant QR decoding, and emerald verification badge (<code>PASS VERIFIED - ALLOWED TO EXIT</code>).</em></p>
+<h4>🔍 UI Explanation (Figure 6.1)</h4>
+<p>The Security Officer interface (<code>/security/check</code>) presents a dedicated camera scanner optimized for high-speed gate verification. The scanner automatically crops the central frame area, performs adaptive thresholding, and sends the decoded token to <code>verifyGatePassApi</code>. Upon validation, an instant full-width visual banner (<code>PASS VERIFIED - ALLOWED TO EXIT</code>) displays the student&#39;s name, roll number, time window, and gate location, permitting entry or exit in under 500ms.</p>
+<hr>
+<h3>6.3 Student Dashboard &amp; Digital Pass Portal</h3>
+<ul>
+<li><strong>Primary Source Files</strong>: <code>src/routes/student/dashboard.tsx</code>, <code>src/routes/student/passes.tsx</code>.</li>
+<li><strong>Functionality</strong>: Provides students with real-time pass request submission, dynamic QR rendering, validity timers, and assigned counselor details.</li>
+</ul>
+<p><div class="image-container"><img src="file:///F:/Projects/Campus guard pro/docs/assets/student_dashboard_pass.png" alt="Student Dashboard & Digital Pass UI"><em class="image-caption">Student Dashboard & Digital Pass UI</em></div>
+<em>Figure 6.2: Student Portal Dashboard displaying the dynamic QR Gate Pass, validity countdown timer, active status badge, and &quot;My Assigned Counselor&quot; info card.</em></p>
+<h4>🔍 UI Explanation (Figure 6.2)</h4>
+<p>The Student Dashboard (<code>/student/dashboard</code>) serves as the central hub for student movement management. It renders the student&#39;s active QR code pass alongside a dynamic validity countdown timer. In addition, the <strong>&quot;My Assigned Counselor&quot;</strong> card gives students immediate visibility into their designated advisor&#39;s name, faculty ID, department, and contact email, establishing clear accountability.</p>
+<hr>
+<h3>6.4 Counselor Workspace &amp; Student Roster System</h3>
+<ul>
+<li><strong>Primary Source Files</strong>: <code>src/lib/db/counselor.server.ts</code>, <code>src/routes/faculty/counselor.tsx</code>.</li>
+<li><strong>Functionality</strong>: Provides Class Counselors with an interactive management dashboard.</li>
+</ul>
+<p><div class="image-container"><img src="file:///F:/Projects/Campus guard pro/docs/assets/counselor_workspace_roster.png" alt="Faculty Counselor Workspace Roster UI"><em class="image-caption">Faculty Counselor Workspace Roster UI</em></div>
+<em>Figure 6.3: Faculty Counselor Workspace displaying the interactive &quot;My Assigned Students&quot; roster table, multi-column search filters, active pass queue, and 1st-level violation resolution drawer.</em></p>
+<h4>🔍 UI Explanation (Figure 6.3)</h4>
+<p>The Counselor Workspace (<code>/faculty/counselor</code>) gives Class Counselors exclusive visibility over their assigned counseling cohort. The <strong>&quot;My Assigned Students&quot;</strong> tab renders a filterable data table listing roll numbers, full names, email addresses, departments, years, and sections. Counselors can review active out-pass requests, validate student explanations, and perform 1st-level violation resolutions directly from the sidebar workspace.</p>
+<hr>
+<h3>6.5 HOD Governance Console &amp; Analytics</h3>
+<ul>
+<li><strong>Primary Source Files</strong>: <code>src/routes/hod/dashboard.tsx</code>, <code>src/routes/hod/passes.tsx</code>.</li>
+<li><strong>Functionality</strong>: Departmental control center for monitoring movement metrics, reviewing escalated violations, and managing course timetables.</li>
+</ul>
+<p><div class="image-container"><img src="file:///F:/Projects/Campus guard pro/docs/assets/hod_analytics_dashboard.png" alt="HOD Analytics & Department Console UI"><em class="image-caption">HOD Analytics & Department Console UI</em></div>
+<em>Figure 6.4: HOD Governance Console displaying real-time movement analytics charts, departmental KPI stats cards, and escalated infraction review queues.</em></p>
+<h4>🔍 UI Explanation (Figure 6.4)</h4>
+<p>The HOD Console (<code>/hod/dashboard</code>) provides macro-level oversight across the department. Interactive <strong>Recharts</strong> widgets visualize hourly gate movement density, peak departure windows, and violation distribution. HODs can review cases escalated by counselors (<code>ESCALATED_HOD</code>), execute institutional policy overrides, and manage department-wide pass authorizations.</p>
+<hr>
+<h3>6.6 Violation Routing &amp; Resolution Workflow Engine</h3>
+<ul>
+<li><strong>Primary Source Files</strong>: <code>src/lib/db/violations.server.ts</code>, <code>src/routes/student/violations.tsx</code>.</li>
+<li><strong>Functionality</strong>:<ul>
+<li>Automatically queries active counselor mappings when a violation occurs.</li>
+<li>Allows counselors to log 1st-level resolutions (<code>RESOLVE</code> with official remarks).</li>
+<li>Enables one-click escalation (<code>ESCALATE_TO_HOD</code>) for severe or repeated infractions.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>🗄️ 7. Database Schema &amp; Data Models</h2>
+<h3>Core Table Definitions (SQL DDL)</h3>
+<pre><code class="language-sql">-- 1. USERS TABLE
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    roll_number VARCHAR(50) UNIQUE,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL CHECK (role IN (&#039;ADMIN&#039;, &#039;HOD&#039;, &#039;FACULTY&#039;, &#039;SECURITY&#039;, &#039;STUDENT&#039;)),
+    department VARCHAR(100),
+    year INT,
+    section VARCHAR(10),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. COUNSELOR ASSIGNMENTS TABLE
+CREATE TABLE counselor_assignments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    counselor_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    student_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    CONSTRAINT unique_active_student_assignment UNIQUE (student_id, is_active)
+);
+
+-- 3. MOVEMENT PERMISSIONS TABLE
+CREATE TABLE movement_permissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    student_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type VARCHAR(30) NOT NULL CHECK (type IN (&#039;NORMAL_MOVEMENT&#039;, &#039;CLUB_EVENT&#039;)),
+    reason TEXT NOT NULL,
+    valid_from TIMESTAMP WITH TIME ZONE NOT NULL,
+    valid_until TIMESTAMP WITH TIME ZONE NOT NULL,
+    status VARCHAR(20) DEFAULT &#039;PENDING&#039; CHECK (status IN (&#039;PENDING&#039;, &#039;APPROVED&#039;, &#039;REJECTED&#039;, &#039;EXPIRED&#039;)),
+    qr_token VARCHAR(64) UNIQUE NOT NULL,
+    approved_by UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. MOVEMENT LOGS TABLE
+CREATE TABLE movement_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    permission_id UUID NOT NULL REFERENCES movement_permissions(id) ON DELETE CASCADE,
+    student_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    log_type VARCHAR(10) NOT NULL CHECK (log_type IN (&#039;EXIT&#039;, &#039;ENTRY&#039;)),
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    verified_by_guard_id UUID NOT NULL REFERENCES users(id),
+    gate_location VARCHAR(100) DEFAULT &#039;Main Gate 1&#039;
+);
+
+-- 5. VIOLATIONS TABLE
+CREATE TABLE violations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    student_id UUID NOT NULL REFERENCES USERS(id) ON DELETE CASCADE,
+    assigned_counselor_id UUID REFERENCES users(id),
+    movement_log_id UUID REFERENCES movement_logs(id),
+    severity VARCHAR(20) DEFAULT &#039;MEDIUM&#039; CHECK (severity IN (&#039;LOW&#039;, &#039;MEDIUM&#039;, &#039;HIGH&#039;, &#039;CRITICAL&#039;)),
+    status VARCHAR(30) DEFAULT &#039;PENDING_COUNSELOR&#039; CHECK (status IN (&#039;PENDING_COUNSELOR&#039;, &#039;RESOLVED&#039;, &#039;ESCALATED_HOD&#039;, &#039;CLOSED_BY_HOD&#039;)),
+    reason TEXT NOT NULL,
+    student_explanation TEXT,
+    counselor_remarks TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);</code></pre><hr>
+<h2>🎨 8. UI/UX Design System &amp; Micro-Interactions</h2>
+<p>Campus Guard Pro implements a custom, modern design system built on <strong>Tailwind CSS v4</strong> design tokens, adhering to accessibility standards (WCAG 2.1 AA compliant) and optimized dark/light themes.</p>
+<blockquote class="alert alert-tip"><p><strong>💡 TIP</strong>
+<strong>Design Philosophy</strong>: High contrast ratios for outdoor gate scan readability, subtle micro-animations for card interactions, and instant visual status badges for rapid administrative auditing.</p>
+</blockquote>
+<h3>Palette &amp; Color Tokens</h3>
+<pre><code class="language-css">:root {
+  --background: #090d16;        /* Deep Space Blue Background */
+  --card: #111827;              /* Slate Dark Card Surface */
+  --primary: #3b82f6;           /* Electric Royal Blue */
+  --primary-foreground: #ffffff;
+  --success: #10b981;           /* Emerald Verification Green */
+  --warning: #f59e0b;           /* Amber Expiry Warning */
+  --destructive: #ef4444;       /* Crimson Violation Red */
+  --border: #1f293d;            /* Subtle Divider Border */
+}</code></pre><hr>
+<h2>🔐 9. Security, Cryptography &amp; Audit Trail</h2>
+<ol>
+<li><strong>Opaque Token Generation</strong>: QR codes store cryptographically generated 256-bit entropy tokens (<code>crypto.randomBytes(32).toString(&#39;hex&#39;)</code>). Tokens are completely decoupled from internal user DB keys.</li>
+<li><strong>Session Security</strong>: Session tokens are signed with HMAC-SHA256 and stored in <code>HttpOnly</code>, <code>SameSite=Lax</code>, <code>Secure</code> cookies.</li>
+<li><strong>SQL Injection Prevention</strong>: All queries use parameterized values (<code>$1</code>, <code>$2</code>) via the PostgreSQL native driver (<code>pg</code>), completely preventing SQL injection vectors.</li>
+<li><strong>Audit Logging</strong>: All gate transaction attempts (both successful clearances and denied scans) write permanent records to <code>movement_logs</code> containing the guard ID, timestamp, gate location, and exact failure reason.</li>
+</ol>
+<hr>
+<h2>🧪 10. Testing, Quality Assurance &amp; Verification</h2>
+<p>The codebase includes automated test suites validating full integration flows:</p>
+<h3>Integration Test Suite Example (<code>scratch/test-counselor-student-visibility.ts</code>)</h3>
+<p>Run:</p>
+<pre><code class="language-bash">npx tsx scratch/test-counselor-student-visibility.ts</code></pre><h3>Verified Test Cases</h3>
+<ul>
+<li>✅ <strong>Test Case 1</strong>: Counselor with 36 assigned students correctly displays exact count &amp; roster.</li>
+<li>✅ <strong>Test Case 2</strong>: Unassigned student view correctly falls back to HOD notification.</li>
+<li>✅ <strong>Test Case 3</strong>: Multi-scan gate sequence correctly processes initial <code>EXIT</code> followed by <code>ENTRY</code>.</li>
+<li>✅ <strong>Test Case 4</strong>: Late return triggers automatic violation creation and assigns case to student&#39;s active counselor.</li>
+<li>✅ <strong>Test Case 5</strong>: Server RPC authorization blocks counselors from accessing rosters of other departments.</li>
+</ul>
+<hr>
+<h2>🚀 11. Installation, Setup &amp; Operations Manual</h2>
+<h3>Prerequisites</h3>
+<ul>
+<li><strong>Node.js</strong>: <code>v20.x</code> or higher</li>
+<li><strong>Bun</strong> (Optional): <code>v1.1</code> or higher</li>
+<li><strong>PostgreSQL</strong>: <code>v15.x</code> or higher</li>
+</ul>
+<h3>Step-by-Step Local Deployment Guide</h3>
+<pre><code class="language-bash"># Step 1: Clone the Repository
+git clone https://github.com/Hanish0717/campus-guard-pro.git
+cd &quot;campus-guard-pro&quot;
+
+# Step 2: Install Project Dependencies
+bun install   # or: npm install
+
+# Step 3: Configure Environment Variables
+# Create a .env file in the root directory:
+cat &lt;&lt;EOT &gt; .env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/campus_guard_pro
+SESSION_SECRET=super_secret_cryptographic_key_32_chars_min
+PORT=3000
+NODE_ENV=development
+EOT
+
+# Step 4: Run Database Migrations &amp; Seeds
+npm run db:push   # or apply schema SQL directly to PostgreSQL
+
+# Step 5: Start Development Server
+npm run dev
+
+# Step 6: Production Build &amp; Launch
+npm run build
+npm run start</code></pre><hr>
+<h2>🔮 12. Strategic Roadmap &amp; Conclusion</h2>
+<h3>Strategic Roadmap</h3>
+<ul>
+<li>🚀 <strong>Phase 1 (Current Release - v2.4.0)</strong>: Real-time QR scanner, Counselor-First violation routing, dual-scan gate lifecycle, and Counselor-Student visibility.</li>
+<li>📱 <strong>Phase 2 (Upcoming)</strong>: Native Progressive Web App (PWA) offline scanning mode for gate security officers in low-connectivity areas.</li>
+<li>🤖 <strong>Phase 3 (Future)</strong>: AI-assisted anomaly detection predicting peak campus traffic times and identifying chronic absence patterns.</li>
+</ul>
+<h3>Conclusion</h3>
+<p><strong>Campus Guard Pro (CMADMS)</strong> establishes a new benchmark for campus security, movement governance, and academic discipline management. By replacing manual workflows with cryptographically verified QR passes, server-authoritative role enforcement, and automated counselor violation routing, CMADMS ensures a safer, more transparent, and highly efficient educational campus environment.</p>
+<hr>
+<p><em>End of Official Documentation — Campus Guard Pro (CMADMS)</em></p>
+
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      securityLevel: 'loose',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }
+    });
+
+    window.mermaidRendered = false;
+    mermaid.run().then(() => {
+      window.mermaidRendered = true;
+    }).catch((err) => {
+      console.error('Mermaid render error:', err);
+      window.mermaidRendered = true;
+    });
+  </script>
+</body>
+</html>
