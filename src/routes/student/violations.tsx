@@ -176,7 +176,7 @@ function StudentViolationsPage() {
       });
       if (res.success && res.report) {
         toast.success("Explanation Submitted", {
-          description: `Your explanation for Incident #${selectedReport.id} has been submitted to your Department HOD.`,
+          description: `Your explanation for Incident #${selectedReport.id} has been submitted to your Counselor for review.`,
         });
         setConfirmSubmitOpen(false);
         setSelectedReport(res.report);
@@ -685,18 +685,18 @@ function StudentViolationsPage() {
                       onClick={() => setConfirmSubmitOpen(true)}
                       disabled={explanationText.trim().length < 10}
                     >
-                      <Send className="size-3.5 mr-1.5" /> Submit Explanation to HOD
+                      <Send className="size-3.5 mr-1.5" /> Submit Explanation to Counselor
                     </Button>
                   </div>
                 )}
 
-                {/* Section E: Case Outcome / HOD Decision Display */}
+                {/* Section E: Case Outcome / Decision Display */}
                 {selectedReport.decision && (
                   <div className="p-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-2">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="size-4 text-emerald-600" />
                       <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase">
-                        CASE OUTCOME & HOD DECISION ({selectedReport.decision_by})
+                        CASE OUTCOME ({selectedReport.decision_by})
                       </span>
                     </div>
                     <p className="text-xs text-foreground font-medium leading-relaxed">{selectedReport.decision}</p>
@@ -749,7 +749,7 @@ function StudentViolationsPage() {
                 <FileCheck className="size-5" /> Confirm Explanation Submission
               </DialogTitle>
               <DialogDescription>
-                Once submitted, your explanation statement cannot be edited or overwritten. It will be sent directly to your Department HOD for disciplinary review.
+                Once submitted, your explanation statement cannot be edited or overwritten. It will be sent directly to your assigned Counselor for review.
               </DialogDescription>
             </DialogHeader>
             <div className="p-3 bg-muted/30 rounded-xl border border-border text-xs text-foreground font-medium">

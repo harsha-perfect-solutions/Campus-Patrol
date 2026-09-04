@@ -66,7 +66,15 @@ const facultyNavGroups = [
   {
     category: "Counseling",
     items: [
-      { to: "/faculty/counselor", label: "Counselor Workspace", icon: ShieldAlert },
+      {
+        label: "Counselor Workspace",
+        icon: ShieldAlert,
+        subItems: [
+          { to: "/faculty/counselor", label: "Violation Cases", icon: ShieldAlert },
+          { to: "/faculty/counselor?tab=passes", label: "Pass Approvals", icon: CheckCircle2 },
+          { to: "/faculty/counselor?tab=students", label: "Assigned Students", icon: Users },
+        ],
+      },
     ],
   },
   {
@@ -104,7 +112,9 @@ function FacultySidebarNavItem({
   unreadCount: number;
   onSelect?: () => void;
 }) {
-  const isClubRoute = pathname.startsWith("/faculty/clubs");
+  const isGroupActive = item.subItems
+    ? item.subItems.some((sub: any) => pathname.startsWith(sub.to.split("?")[0]))
+    : pathname === item.to;
   const [expanded, setExpanded] = useState(true);
 
   if (item.subItems) {
@@ -115,7 +125,7 @@ function FacultySidebarNavItem({
           onClick={() => setExpanded(!expanded)}
           className={cn(
             "flex w-full min-h-[38px] items-center justify-between rounded-xl px-3 text-xs font-semibold transition-colors",
-            isClubRoute
+            isGroupActive
               ? "bg-primary/10 text-primary font-bold shadow-2xs"
               : "text-muted-foreground hover:bg-accent hover:text-foreground",
           )}
@@ -199,6 +209,13 @@ export function FacultyShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   const activeName = profile?.full_name || "Prof. Ravi Kumar";
+  const initials = activeName
+    .split(" ")
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
@@ -305,35 +322,44 @@ export function FacultyShell({ children }: { children: ReactNode }) {
 
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-4 lg:px-6">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
+          <div className="flex items-center gap-2 min-w-0">
             <Button
               variant="ghost"
               size="icon-sm"
-              className="lg:hidden"
+              className="lg:hidden shrink-0"
               onClick={() => setMobileOpen(true)}
             >
               <Menu className="size-5" />
             </Button>
-            <span className="text-xs font-bold text-foreground">
-              Faculty Portal &bull; Academic Oversight
+            <span className="text-xs font-bold text-foreground leading-snug">
+              <span className="sm:hidden">Faculty Portal</span>
+              <span className="hidden sm:inline">Faculty Portal &bull; Academic Oversight</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <LiveClock />
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="hidden sm:block">
+              <LiveClock />
+            </div>
             <NotificationBell role="faculty" />
-            <span className="grid size-8 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-              RK
-            </span>
-            <span className="hidden text-xs font-semibold text-foreground sm:inline">
-              {activeName}
-            </span>
+            <Link
+              to="/faculty/settings"
+              title="View Profile & Settings"
+              className="flex items-center gap-2 rounded-full p-0.5 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              <span className="grid size-7 sm:size-8 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary shrink-0">
+                {initials}
+              </span>
+              <span className="hidden text-xs font-semibold text-foreground sm:inline hover:underline">
+                {activeName}
+              </span>
+            </Link>
           </div>
         </header>
 
-        <main className="flex-1 px-4 pt-6 pb-16 lg:px-8 lg:pt-8 lg:pb-16">
-          <div className="mx-auto w-full max-w-[1240px] space-y-6">{children}</div>
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
     </div>
@@ -526,35 +552,44 @@ export function HODShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-4 lg:px-6">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
+          <div className="flex items-center gap-2 min-w-0">
             <Button
               variant="ghost"
               size="icon-sm"
-              className="lg:hidden"
+              className="lg:hidden shrink-0"
               onClick={() => setMobileOpen(true)}
             >
               <Menu className="size-5" />
             </Button>
-            <span className="text-xs font-bold text-foreground">
-              HOD Office &bull; {activeDept} Department
+            <span className="text-xs font-bold text-foreground leading-snug">
+              <span className="sm:hidden">HOD Office &bull; {activeDept}</span>
+              <span className="hidden sm:inline">HOD Office &bull; {activeDept} Department</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <LiveClock />
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="hidden sm:block">
+              <LiveClock />
+            </div>
             <NotificationBell role="hod" />
-            <span className="grid size-8 place-items-center rounded-full bg-primary/10 text-primary text-xs font-bold">
-              {initials}
-            </span>
-            <span className="hidden text-xs font-semibold text-foreground sm:inline">
-              {activeName}
-            </span>
+            <Link
+              to="/hod/settings"
+              title="View Profile & Settings"
+              className="flex items-center gap-2 rounded-full p-0.5 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              <span className="grid size-7 sm:size-8 place-items-center rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
+                {initials}
+              </span>
+              <span className="hidden text-xs font-semibold text-foreground sm:inline hover:underline">
+                {activeName}
+              </span>
+            </Link>
           </div>
         </header>
 
-        <main className="flex-1 px-4 pt-6 pb-16 lg:px-8 lg:pt-8 lg:pb-16">
-          <div className="mx-auto w-full max-w-[1240px] space-y-6">{children}</div>
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
     </div>
@@ -745,35 +780,44 @@ export function StudentShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-4 lg:px-6">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
+          <div className="flex items-center gap-2 min-w-0">
             <Button
               variant="ghost"
               size="icon-sm"
-              className="lg:hidden"
+              className="lg:hidden shrink-0"
               onClick={() => setMobileOpen(true)}
             >
               <Menu className="size-5" />
             </Button>
-            <span className="text-xs font-bold text-foreground">
-              Student Portal {studentCode ? `• Roll No: ${studentCode}` : ""}
+            <span className="text-xs font-bold text-foreground leading-snug">
+              <span className="sm:hidden">Student Portal</span>
+              <span className="hidden sm:inline">Student Portal {studentCode ? `• ${studentCode}` : ""}</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <LiveClock />
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="hidden sm:block">
+              <LiveClock />
+            </div>
             <NotificationBell role="student" />
-            <span className="grid size-8 place-items-center rounded-full bg-primary/10 text-primary text-xs font-bold">
-              {initials}
-            </span>
-            <span className="hidden text-xs font-semibold text-foreground sm:inline">
-              {activeName}
-            </span>
+            <Link
+              to="/student/profile"
+              title="View Profile & ID"
+              className="flex items-center gap-2 rounded-full p-0.5 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              <span className="grid size-7 sm:size-8 place-items-center rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
+                {initials}
+              </span>
+              <span className="hidden text-xs font-semibold text-foreground sm:inline hover:underline">
+                {activeName}
+              </span>
+            </Link>
           </div>
         </header>
 
-        <main className="flex-1 px-4 pt-6 pb-16 lg:px-8 lg:pt-8 lg:pb-16">
-          <div className="mx-auto w-full max-w-[1240px] space-y-6">{children}</div>
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
     </div>
@@ -968,35 +1012,44 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
       {/* Main Content */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-4 lg:px-6">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
+          <div className="flex items-center gap-2 min-w-0">
             <Button
               variant="ghost"
               size="icon-sm"
-              className="lg:hidden"
+              className="lg:hidden shrink-0"
               onClick={() => setMobileOpen(true)}
             >
               <Menu className="size-5" />
             </Button>
-            <span className="text-xs font-bold text-foreground">
-              System Administration &bull; Master Control
+            <span className="text-xs font-bold text-foreground leading-snug">
+              <span className="sm:hidden">Admin Console</span>
+              <span className="hidden sm:inline">System Administration</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <LiveClock />
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="hidden sm:block">
+              <LiveClock />
+            </div>
             <NotificationBell role="admin" />
-            <span className="grid size-8 place-items-center rounded-full bg-primary/10 text-primary text-xs font-bold">
-              AD
-            </span>
-            <span className="hidden text-xs font-semibold text-foreground sm:inline">
-              {activeName}
-            </span>
+            <Link
+              to="/admin/settings"
+              title="View Profile & System Settings"
+              className="flex items-center gap-2 rounded-full p-0.5 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              <span className="grid size-7 sm:size-8 place-items-center rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
+                AD
+              </span>
+              <span className="hidden text-xs font-semibold text-foreground sm:inline hover:underline">
+                {activeName}
+              </span>
+            </Link>
           </div>
         </header>
 
-        <main className="flex-1 px-4 pt-6 pb-16 lg:px-8 lg:pt-8 lg:pb-16">
-          <div className="mx-auto w-full max-w-[1240px] space-y-6">{children}</div>
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
     </div>
@@ -1177,35 +1230,44 @@ export function SecurityShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-4 lg:px-6">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
+          <div className="flex items-center gap-2 min-w-0">
             <Button
               variant="ghost"
               size="icon-sm"
-              className="lg:hidden"
+              className="lg:hidden shrink-0"
               onClick={() => setMobileOpen(true)}
             >
               <Menu className="size-5" />
             </Button>
-            <span className="text-xs font-bold text-foreground">
-              CMADMS &bull; Security Portal &bull; Campus Security Officer ({staffCode})
+            <span className="text-xs font-bold text-foreground leading-snug">
+              <span className="sm:hidden">Security Portal</span>
+              <span className="hidden sm:inline">Security Portal ({staffCode})</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <LiveClock />
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="hidden sm:block">
+              <LiveClock />
+            </div>
             <NotificationBell role="security" />
-            <span className="grid size-8 place-items-center rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-bold">
-              {initials}
-            </span>
-            <span className="hidden text-xs font-semibold text-foreground sm:inline">
-              {activeName}
-            </span>
+            <Link
+              to="/security/profile"
+              title="View Security Officer Profile"
+              className="flex items-center gap-2 rounded-full p-0.5 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              <span className="grid size-7 sm:size-8 place-items-center rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-bold shrink-0">
+                {initials}
+              </span>
+              <span className="hidden text-xs font-semibold text-foreground sm:inline hover:underline">
+                {activeName}
+              </span>
+            </Link>
           </div>
         </header>
 
-        <main className="flex-1 px-4 pt-6 pb-16 lg:px-8 lg:pt-8 lg:pb-16">
-          <div className="mx-auto w-full max-w-[1240px] space-y-6">{children}</div>
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
     </div>

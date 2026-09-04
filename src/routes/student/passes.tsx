@@ -20,6 +20,7 @@ import {
   Tag,
   Layers,
   HelpCircle,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
@@ -443,82 +444,149 @@ function StudentPassesPage() {
         {/* Interactive Filter & Search Bar */}
         {!loading && passes.length > 0 && (
           <div className="card-surface p-4 rounded-2xl border border-border shadow-xs space-y-3 w-full">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              {/* Live Search Input */}
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Filter by reason, authority, date (e.g. 2026-08-22)..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 text-xs rounded-xl w-full"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    aria-label="Clear search query"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground p-0.5"
+            {/* Mobile Filter Dropdown (< 640px) */}
+            <div className="block sm:hidden space-y-3 w-full">
+              <div>
+                <label htmlFor="mobile-status-filter" className="block text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1">
+                  Filter Passes
+                </label>
+                <div className="relative w-full">
+                  <select
+                    id="mobile-status-filter"
+                    aria-label="Filter passes by status"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value as any)}
+                    className="w-full h-10 px-3.5 pr-9 rounded-xl bg-background border border-border text-xs font-bold text-foreground appearance-none outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer shadow-xs"
                   >
-                    <X className="size-3.5" />
-                  </button>
-                )}
+                    {[
+                      { id: "all", label: "All Passes", count: stateCounts.all },
+                      { id: "active", label: "Active (Scan QR)", count: stateCounts.active },
+                      { id: "completed", label: "Completed", count: stateCounts.completed },
+                      { id: "expired", label: "Expired", count: stateCounts.expired },
+                      { id: "pending", label: "Pending HOD", count: stateCounts.pending },
+                      { id: "rejected", label: "Rejected", count: stateCounts.rejected },
+                    ].map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label} ({opt.count})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <ChevronDown className="size-4" />
+                  </div>
+                </div>
               </div>
 
-              {/* Sort & Group Dropdowns */}
-              <div className="flex items-center gap-2 shrink-0">
-                <SlidersHorizontal className="size-3.5 text-muted-foreground hidden sm:block" />
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search by reason, authority..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-9 text-xs rounded-xl w-full"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      aria-label="Clear search query"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground p-0.5"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as "newest" | "oldest")}
-                  className="h-9 px-3 rounded-xl bg-background border border-border text-xs font-medium text-foreground outline-none focus:ring-1 focus:ring-primary"
+                  className="h-9 px-2.5 rounded-xl bg-background border border-border text-xs font-medium text-foreground outline-none focus:ring-1 focus:ring-primary shrink-0"
                 >
-                  <option value="newest">Sort: Newest First</option>
-                  <option value="oldest">Sort: Oldest First</option>
+                  <option value="newest">Newest</option>
+                  <option value="oldest">Oldest</option>
                 </select>
               </div>
             </div>
 
-            {/* Status Filter Badges */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-border/60">
-              {[
-                { id: "all", label: "All Passes", count: stateCounts.all, icon: Filter },
-                { id: "active", label: "Active (Scan QR)", count: stateCounts.active, icon: CheckCircle2 },
-                { id: "completed", label: "Completed", count: stateCounts.completed, icon: Check },
-                { id: "expired", label: "Expired", count: stateCounts.expired, icon: Clock },
-                { id: "pending", label: "Pending HOD", count: stateCounts.pending, icon: Clock },
-                { id: "rejected", label: "Rejected", count: stateCounts.rejected, icon: XCircle },
-              ].map((tab) => {
-                const isSelected = statusFilter === tab.id;
-                const TabIcon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setStatusFilter(tab.id as any)}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 outline-none cursor-pointer",
-                      isSelected
-                        ? "bg-primary text-primary-foreground shadow-xs"
-                        : "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50"
-                    )}
+            {/* Desktop Filter & Search Bar (>= 640px) */}
+            <div className="hidden sm:block space-y-3 w-full">
+              <div className="flex items-center justify-between gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Filter by reason, authority, date (e.g. 2026-08-22)..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-9 text-xs rounded-xl w-full"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      aria-label="Clear search query"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground p-0.5"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <SlidersHorizontal className="size-3.5 text-muted-foreground" />
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as "newest" | "oldest")}
+                    className="h-9 px-3 rounded-xl bg-background border border-border text-xs font-medium text-foreground outline-none focus:ring-1 focus:ring-primary"
                   >
-                    <TabIcon className="size-3.5" />
-                    <span>{tab.label}</span>
-                    <span
+                    <option value="newest">Sort: Newest First</option>
+                    <option value="oldest">Sort: Oldest First</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Status Filter Badges */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-border/60">
+                {[
+                  { id: "all", label: "All Passes", count: stateCounts.all, icon: Filter },
+                  { id: "active", label: "Active (Scan QR)", count: stateCounts.active, icon: CheckCircle2 },
+                  { id: "completed", label: "Completed", count: stateCounts.completed, icon: Check },
+                  { id: "expired", label: "Expired", count: stateCounts.expired, icon: Clock },
+                  { id: "pending", label: "Pending HOD", count: stateCounts.pending, icon: Clock },
+                  { id: "rejected", label: "Rejected", count: stateCounts.rejected, icon: XCircle },
+                ].map((tab) => {
+                  const isSelected = statusFilter === tab.id;
+                  const TabIcon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setStatusFilter(tab.id as any)}
                       className={cn(
-                        "px-1.5 py-0.2 rounded-full text-[10px] font-bold ml-0.5",
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 outline-none cursor-pointer",
                         isSelected
-                          ? "bg-white/20 text-white"
-                          : "bg-background text-muted-foreground border border-border"
+                          ? "bg-primary text-primary-foreground shadow-xs"
+                          : "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50"
                       )}
                     >
-                      {tab.count}
-                    </span>
-                  </button>
-                );
-              })}
+                      <TabIcon className="size-3.5" />
+                      <span>{tab.label}</span>
+                      <span
+                        className={cn(
+                          "px-1.5 py-0.2 rounded-full text-[10px] font-bold ml-0.5",
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : "bg-background text-muted-foreground border border-border"
+                        )}
+                      >
+                        {tab.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}

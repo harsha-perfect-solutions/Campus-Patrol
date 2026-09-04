@@ -547,12 +547,12 @@ function FacultyClubsPage() {
                     </div>
 
                     {/* Quick Section Shortcuts */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                       <Button
                         onClick={() => { setActiveTab("members"); setShowAddMemberForm(true); }}
                         variant="outline"
                         size="sm"
-                        className="gap-2 font-bold"
+                        className="gap-2 font-bold flex-1 sm:flex-initial"
                       >
                         <UserPlus className="size-4" />
                         Add Member
@@ -560,7 +560,7 @@ function FacultyClubsPage() {
                       <Button
                         onClick={() => setCreateEventModalOpen(true)}
                         size="sm"
-                        className="gap-2 font-bold shadow-xs"
+                        className="gap-2 font-bold shadow-xs flex-1 sm:flex-initial"
                       >
                         <Plus className="size-4" />
                         Create Event
@@ -629,19 +629,19 @@ function FacultyClubsPage() {
                     )}
 
                     {/* Member Filters & Search */}
-                    <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-card p-3 rounded-2xl border border-border shadow-2xs">
+                    <div className="flex flex-col sm:flex-row gap-2.5 items-center justify-between bg-card p-3 rounded-2xl border border-border shadow-2xs">
                       <div className="relative flex-1 w-full">
                         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                           placeholder="Search member by roll number or name..."
                           value={memberSearch}
                           onChange={(e) => setMemberSearch(e.target.value)}
-                          className="pl-9 bg-background h-9 text-xs"
+                          className="pl-9 bg-background h-9 text-xs w-full"
                         />
                       </div>
-                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <div className="grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto">
                         <Select value={yearFilter} onValueChange={setYearFilter}>
-                          <SelectTrigger className="w-32 bg-background h-9 text-xs">
+                          <SelectTrigger className="w-full sm:w-32 bg-background h-9 text-xs">
                             <SelectValue placeholder="Year" />
                           </SelectTrigger>
                           <SelectContent>
@@ -654,7 +654,7 @@ function FacultyClubsPage() {
                         </Select>
 
                         <Select value={sectionFilter} onValueChange={setSectionFilter}>
-                          <SelectTrigger className="w-28 bg-background h-9 text-xs">
+                          <SelectTrigger className="w-full sm:w-28 bg-background h-9 text-xs">
                             <SelectValue placeholder="Section" />
                           </SelectTrigger>
                           <SelectContent>
@@ -667,8 +667,52 @@ function FacultyClubsPage() {
                       </div>
                     </div>
 
-                    {/* Roster Table */}
-                    <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
+                    {/* Roster — Mobile Card List (< 640px) */}
+                    <div className="block sm:hidden space-y-3">
+                      {filteredMembers.length === 0 ? (
+                        <div className="p-6 text-center text-xs text-muted-foreground bg-card rounded-2xl border border-border">
+                          No club members match the selected criteria.
+                        </div>
+                      ) : (
+                        filteredMembers.map((m) => (
+                          <div key={m.id} className="p-4 rounded-2xl border border-border bg-card shadow-2xs space-y-2.5">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <span className="font-mono font-bold text-xs text-primary block break-all">{m.student_id}</span>
+                                <h4 className="font-bold text-foreground text-sm leading-snug break-words">{m.student_name}</h4>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => handleRemoveMember(m.student_id, m.student_name)}
+                                className="text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0"
+                                title="Remove Member"
+                              >
+                                <UserMinus className="size-4" />
+                              </Button>
+                            </div>
+                            
+                            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/60 text-xs">
+                              <div>
+                                <span className="text-[10px] font-semibold text-muted-foreground block uppercase">Department</span>
+                                <span className="font-semibold text-foreground break-words">{m.department}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] font-semibold text-muted-foreground block uppercase">Year</span>
+                                <span className="font-semibold text-foreground">{m.year}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] font-semibold text-muted-foreground block uppercase">Section</span>
+                                <span className="font-semibold text-foreground">Sec {m.section}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Roster Table — Desktop (>= 640px) */}
+                    <div className="hidden sm:block rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
                       <table className="w-full text-left text-xs">
                         <thead className="bg-muted/60 text-muted-foreground font-bold uppercase tracking-wider border-b border-border">
                           <tr>
@@ -1115,13 +1159,13 @@ function FacultyClubsPage() {
               <DialogTitle>Create Event — {selectedClub?.name}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreateEvent} className="space-y-4 py-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2 col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+                <div className="space-y-2 col-span-1 sm:col-span-2">
                   <Label>Event Name *</Label>
                   <Input
                     value={eventName}
                     onChange={(e) => setEventName(e.target.value)}
-                    placeholder="e.g. NSS Blood Donation Camp"
+                    placeholder="e.g. AI & Robotics Hackathon 2026"
                     required
                   />
                 </div>
@@ -1155,7 +1199,7 @@ function FacultyClubsPage() {
                   </Select>
                 </div>
 
-                <div className="space-y-2 col-span-2">
+                <div className="space-y-2 col-span-1 sm:col-span-2">
                   <Label>Exact Venue / Location *</Label>
                   <Input
                     value={location}
@@ -1185,7 +1229,7 @@ function FacultyClubsPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 col-span-1 sm:col-span-2">
                   <Label>End Time *</Label>
                   <Input
                     type="time"
@@ -1195,7 +1239,7 @@ function FacultyClubsPage() {
                   />
                 </div>
 
-                <div className="space-y-2 col-span-2">
+                <div className="space-y-2 col-span-1 sm:col-span-2">
                   <Label>Description</Label>
                   <Textarea
                     value={eventDesc}
@@ -1206,11 +1250,11 @@ function FacultyClubsPage() {
                 </div>
               </div>
 
-              <DialogFooter className="mt-4">
-                <Button type="button" variant="outline" onClick={() => setCreateEventModalOpen(false)}>
+              <DialogFooter className="mt-4 flex flex-col-reverse sm:flex-row gap-2">
+                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setCreateEventModalOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={submitting} className="font-bold">
+                <Button type="submit" disabled={submitting} className="w-full sm:w-auto font-bold">
                   {submitting ? "Creating..." : "Create Event"}
                 </Button>
               </DialogFooter>

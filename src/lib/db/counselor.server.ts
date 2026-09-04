@@ -28,6 +28,7 @@ export type DBCounselorStudent = {
   counselor_assignment_id: string;
   student_code: string;
   student_name?: string;
+  email?: string;
   department?: string;
   year?: string;
   section?: string;
@@ -449,11 +450,12 @@ export async function getCounselorStudents(facultyId: string): Promise<DBCounsel
       cs.id,
       cs.counselor_assignment_id,
       cs.student_code,
-      s.name as student_name,
-      s.department,
-      s.year,
-      s.section,
-      s.semester,
+      COALESCE(s.name, sp.full_name, 'Student') as student_name,
+      COALESCE(sp.email, s.student_code || '@campus.edu') as email,
+      COALESCE(s.department, ca.department) as department,
+      COALESCE(s.year, ca.year) as year,
+      COALESCE(s.section, ca.section) as section,
+      COALESCE(s.semester, ca.semester) as semester,
       cs.assigned_at::text,
       cs.status,
       ca.faculty_id as counselor_faculty_id,
@@ -462,13 +464,146 @@ export async function getCounselorStudents(facultyId: string): Promise<DBCounsel
     JOIN counselor_assignments ca ON ca.id = cs.counselor_assignment_id
     JOIN profiles p ON p.id = ca.faculty_id
     LEFT JOIN students s ON UPPER(s.student_code) = UPPER(cs.student_code)
+    LEFT JOIN profiles sp ON UPPER(sp.student_code) = UPPER(cs.student_code)
     WHERE ca.faculty_id = $1 AND ca.status = 'ACTIVE' AND cs.status = 'ACTIVE'
-    ORDER BY s.year ASC, s.section ASC, s.student_code ASC;
+    ORDER BY s.year ASC, s.section ASC, cs.student_code ASC;
   `;
 
   const res = await db.query<DBCounselorStudent>(query, [facultyId]);
   return res.rows;
 }
+
+export type DBStudentCounselorInfo = {
+  assigned: boolean;
+  counselorName?: string;
+  counselorId?: string;
+  facultyId?: string;
+  staffCode?: string | null;
+  email?: string | null;
+  department?: string | null;
+  role?: string;
+  message?: string;
+};
+
+/**
+ * Server-authoritative query: Fetches assigned counselor details for a student user.
+ * Enforces server authorization and DB lookup based on counselor assignment.
+ */
+export async function getStudentCounselorDetailsForUser(
+  userId: string,
+  providedStudentCode?: string,
+  providedDepartment?: string
+): Promise<DBStudentCounselorInfo> {
+  await ensureCounselorSchema();
+
+  try {
+    let studentCode = providedStudentCode?.trim().toUpperCase();
+    let dept = providedDepartment?.trim().toUpperCase();
+    let year: string | undefined;
+    let section: string | undefined;
+
+    const profRes = await db.query(
+      `SELECT student_code, department FROM profiles WHERE id::text = $1;`,
+      [userId]
+    );
+
+    if (profRes.rows[0]) {
+      studentCode = studentCode || profRes.rows[0].student_code?.trim().toUpperCase();
+      dept = dept || profRes.rows[0].department?.trim().toUpperCase();
+    }
+
+    if (studentCode) {
+      const stRes = await db.query(
+        `SELECT department, year, section FROM students WHERE UPPER(student_code) = $1;`,
+        [studentCode]
+      );
+      if (stRes.rows[0]) {
+        dept = dept || stRes.rows[0].department?.trim().toUpperCase();
+        year = stRes.rows[0].year;
+        section = stRes.rows[0].section;
+      }
+    }
+
+    if (!studentCode) {
+      return {
+        assigned: false,
+        message: "Counselor not assigned. Please contact Admin/HOD.",
+      };
+    }
+
+    // 1. Direct student-to-counselor assignment lookup
+    const directQuery = `
+      SELECT 
+        p.id as counselor_id, 
+        p.full_name as counselor_name,
+        p.email as counselor_email,
+        p.staff_code as counselor_staff_code,
+        p.department as counselor_dept
+      FROM counselor_students cs
+      JOIN counselor_assignments ca ON ca.id = cs.counselor_assignment_id
+      JOIN profiles p ON p.id = ca.faculty_id
+      WHERE UPPER(cs.student_code) = $1
+        AND cs.status = 'ACTIVE'
+        AND ca.status = 'ACTIVE'
+      LIMIT 1;
+    `;
+    const directRes = await db.query(directQuery, [studentCode]);
+    if (directRes.rows[0]?.counselor_name) {
+      const row = directRes.rows[0];
+      return {
+        assigned: true,
+        counselorName: row.counselor_name,
+        counselorId: row.counselor_id,
+        facultyId: row.counselor_staff_code || row.counselor_id,
+        staffCode: row.counselor_staff_code || null,
+        email: row.counselor_email || null,
+        department: row.counselor_dept || dept || null,
+        role: "Class Counselor",
+      };
+    }
+
+    // 2. Class-level assignment lookup fallback
+    if (dept && year && section) {
+      const classQuery = `
+        SELECT 
+          p.id as counselor_id, 
+          p.full_name as counselor_name,
+          p.email as counselor_email,
+          p.staff_code as counselor_staff_code,
+          p.department as counselor_dept
+        FROM counselor_assignments ca
+        JOIN profiles p ON p.id = ca.faculty_id
+        WHERE UPPER(ca.department) = UPPER($1)
+          AND UPPER(ca.year) = UPPER($2)
+          AND UPPER(ca.section) = UPPER($3)
+          AND ca.status = 'ACTIVE'
+        LIMIT 1;
+      `;
+      const classRes = await db.query(classQuery, [dept, year, section]);
+      if (classRes.rows[0]?.counselor_name) {
+        const row = classRes.rows[0];
+        return {
+          assigned: true,
+          counselorName: row.counselor_name,
+          counselorId: row.counselor_id,
+          facultyId: row.counselor_staff_code || row.counselor_id,
+          staffCode: row.counselor_staff_code || null,
+          email: row.counselor_email || null,
+          department: row.counselor_dept || dept || null,
+          role: "Class Counselor",
+        };
+      }
+    }
+  } catch (error) {
+    console.warn("[Counselor Lookup Warning] Error querying student counselor details:", error);
+  }
+
+  return {
+    assigned: false,
+    message: "Counselor not assigned. Please contact Admin/HOD.",
+  };
+}
+
 
 /**
   * Counselor Dashboard Statistics (server-authoritative for logged in faculty).
@@ -746,3 +881,67 @@ export async function escalateViolationToHod(
 
   return updatedReport;
 }
+
+export type DBCounselorPass = {
+  id: string;
+  student_code: string;
+  student_name?: string;
+  department?: string;
+  year_section?: string;
+  reason: string;
+  date: string;
+  valid_from: string;
+  valid_until: string;
+  status: string;
+  issued_by?: string | null;
+  created_at: string;
+};
+
+/**
+ * Server-authoritative query: Fetches movement passes for students assigned to a specific Counselor.
+ */
+export async function getCounselorPasses(
+  facultyId: string,
+  statusFilter: string = "ALL"
+): Promise<DBCounselorPass[]> {
+  await ensureCounselorSchema();
+
+  const conditions: string[] = [
+    `UPPER(mp.student_code) IN (
+      SELECT UPPER(cs.student_code)
+      FROM counselor_students cs
+      JOIN counselor_assignments ca ON ca.id = cs.counselor_assignment_id
+      WHERE ca.faculty_id = $1 AND ca.status = 'ACTIVE' AND cs.status = 'ACTIVE'
+    )`,
+  ];
+  const params: any[] = [facultyId];
+
+  if (statusFilter && statusFilter !== "ALL") {
+    params.push(statusFilter.toLowerCase());
+    conditions.push(`LOWER(mp.status) = $${params.length}`);
+  }
+
+  const query = `
+    SELECT 
+      mp.id::text,
+      mp.student_code,
+      s.name as student_name,
+      s.department,
+      (s.year || ' • Section ' || s.section) as year_section,
+      mp.reason,
+      to_char(mp.date, 'YYYY-MM-DD') AS date,
+      mp.valid_from::text,
+      mp.valid_until::text,
+      mp.status,
+      mp.issued_by,
+      mp.created_at::text
+    FROM movement_permissions mp
+    LEFT JOIN students s ON UPPER(s.student_code) = UPPER(mp.student_code)
+    WHERE ${conditions.join(" AND ")}
+    ORDER BY mp.created_at DESC;
+  `;
+
+  const res = await db.query<DBCounselorPass>(query, params);
+  return res.rows;
+}
+

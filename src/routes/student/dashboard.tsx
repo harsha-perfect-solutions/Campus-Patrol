@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AlertTriangle, BookOpen, User } from "lucide-react";
+import { AlertTriangle, BookOpen, User, UserCheck } from "lucide-react";
 import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,13 @@ import {
   getMyViolationReportsApi,
   getMyStudentProfileApi,
 } from "@/lib/api/student.server";
+import { getMyCounselorApi } from "@/lib/api/counselor.server";
+import type { DBStudentCounselorInfo } from "@/lib/db/counselor.server";
 import type { DBViolationReport } from "@/lib/db/violations.server";
 import type { StudentDashboardStats } from "@/lib/db/student.server";
 
 export const Route = createFileRoute("/student/dashboard")({
-  head: () => ({ meta: [{ title: "Student Dashboard — CMADMS" }] }),
+  head: () => ({ meta: [{ title: "Student Dashboard — Campus Guard Pro" }] }),
   component: StudentDashboardPage,
 });
 
@@ -41,15 +43,17 @@ function StudentDashboardContent() {
     rejectedPermissionsCount: 0,
   });
   const [pendingExplanation, setPendingExplanation] = useState<DBViolationReport | null>(null);
+  const [counselorInfo, setCounselorInfo] = useState<DBStudentCounselorInfo | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     async function loadDashboardData() {
       try {
-        const [statsRes, violRes, profileRes] = await Promise.all([
+        const [statsRes, violRes, profileRes, counselorRes] = await Promise.all([
           getMyStudentDashboardStatsApi(),
           getMyViolationReportsApi(),
           getMyStudentProfileApi(),
+          getMyCounselorApi(),
         ]);
 
         if (isMounted && statsRes.success && statsRes.stats) {
@@ -58,6 +62,10 @@ function StudentDashboardContent() {
 
         if (isMounted && profileRes.success && profileRes.student?.name) {
           setStudentName(profileRes.student.name);
+        }
+
+        if (isMounted && counselorRes) {
+          setCounselorInfo(counselorRes);
         }
 
         if (isMounted && violRes.success && violRes.reports.length > 0) {
@@ -88,57 +96,31 @@ function StudentDashboardContent() {
         breadcrumb={[{ label: "Student", to: "/student/dashboard" }, { label: "Dashboard" }]}
       />
 
-      {/* Pending Explanation Alert Banner */}
-      {pendingExplanation && (() => {
-        const createdAtMs = (pendingExplanation.created_at as unknown) instanceof Date
-          ? (pendingExplanation.created_at as unknown as Date).getTime()
-          : new Date(String(pendingExplanation.created_at || "")).getTime();
-        const is24hExpired = !isNaN(createdAtMs) && (Date.now() - createdAtMs >= 24 * 60 * 60 * 1000);
-
-        return (
-          <section className={`rounded-2xl border border-l-4 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs ${
-            is24hExpired
-              ? "border-l-red-600 border-red-200/80 bg-red-50/50 dark:bg-red-950/20"
-              : "border-l-amber-500 border-amber-200/80 bg-amber-50/50 dark:bg-amber-950/20"
-          }`}>
-            <div className="flex items-start gap-3.5">
-              <span className={`grid size-10 shrink-0 place-items-center rounded-full text-white mt-0.5 shadow-xs ${
-                is24hExpired ? "bg-red-600" : "bg-amber-500"
-              }`}>
-                <AlertTriangle className="size-5" />
-              </span>
-              <div>
-                <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                  is24hExpired ? "text-red-700 dark:text-red-300" : "text-amber-700 dark:text-amber-300"
-                }`}>
-                  {is24hExpired ? "🚨 24 HOURS EXCEEDED — MEET HOD AT CABIN DIRECTLY" : "PENDING 24-HOUR EXPLANATION REQUIRED"}
-                </span>
-                <h3 className="text-sm font-bold text-foreground mt-0.5">
-                  Violation Case #{pendingExplanation.id} — {pendingExplanation.class_name}
-                </h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {is24hExpired
-                    ? `The 24-hour explanation window for Case #${pendingExplanation.id} has expired. Online submission is locked. Please meet the HOD at Cabin directly.`
-                    : `A violation report was logged for ${pendingExplanation.class_name} at ${pendingExplanation.incident_time}. Submit your explanation within 24 hours.`}
-                </p>
-              </div>
+      {/* Top 4 Metric Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="card-surface p-5 rounded-2xl border border-border shadow-2xs">
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <UserCheck className="size-3.5 text-primary" /> My Assigned Counselor
+          </span>
+          {counselorInfo?.assigned ? (
+            <div className="mt-2">
+              <p className="text-base font-extrabold text-foreground">{counselorInfo.counselorName}</p>
+              <p className="text-xs font-semibold text-primary mt-0.5">{counselorInfo.role || "Class Counselor"}</p>
+              <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+                {counselorInfo.staffCode ? `ID: ${counselorInfo.staffCode} • ` : ""}
+                {counselorInfo.department || "Faculty"}
+              </p>
+              {counselorInfo.email && (
+                <p className="text-[11px] text-muted-foreground truncate mt-0.5">{counselorInfo.email}</p>
+              )}
             </div>
-            <Button
-              asChild
-              className={`rounded-xl font-bold text-white shrink-0 h-10 px-5 shadow-xs ${
-                is24hExpired ? "bg-red-600 hover:bg-red-700" : "bg-amber-600 hover:bg-amber-700"
-              }`}
-            >
-              <Link to="/student/explanations">
-                {is24hExpired ? "Meet HOD at Cabin →" : "Submit Explanation →"}
-              </Link>
-            </Button>
-          </section>
-        );
-      })()}
+          ) : (
+            <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mt-2">
+              Counselor not assigned. Please contact Admin/HOD.
+            </p>
+          )}
+        </div>
 
-      {/* Top 3 Metric Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
         <div className="card-surface p-5 rounded-2xl border border-border shadow-2xs">
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
             Active Gate Pass

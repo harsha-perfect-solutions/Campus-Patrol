@@ -610,16 +610,23 @@ export async function cancelClubEvent(coordinatorFacultyId: string, eventId: str
   );
 
   // Update all participant permissions to CANCELLED
-  await db.query(
-    `UPDATE event_participants SET permission_status = 'CANCELLED' WHERE event_id = $1;`,
+  const partsRes = await db.query<{ id: string; student_code: string }>(
+    `UPDATE event_participants SET permission_status = 'CANCELLED' WHERE event_id = $1 RETURNING id::text, student_code;`,
     [eventId]
   );
 
+  try {
+    const { revokeQRPassByPermission } = await import("./qr.server");
+    for (const pRow of partsRes.rows) {
+      await revokeQRPassByPermission("CLUB_EVENT", pRow.id);
+    }
+  } catch (qrErr) {
+    console.warn("[QR Notice] Failed to revoke event QR passes:", qrErr);
+  }
+
   // Notify participants
-  const participantsRes = await db.query<{ student_code: string }>(
-    `SELECT student_code FROM event_participants WHERE event_id = $1;`,
-    [eventId]
-  );
+  const participantsRes = partsRes;
+
 
   for (const part of participantsRes.rows) {
     await createNotificationServer({
@@ -757,6 +764,16 @@ export async function grantEventPermissionsAtomic(
 
       const pRow = res.rows[0];
       if (pRow) {
+        // Auto-generate active Club/Event QR pass
+        try {
+          const { getOrCreateQRPassForEventParticipant } = await import("./qr.server");
+          const vFrom = `${event.event_date}T${event.start_time || "00:00:00"}`;
+          const vUntil = `${event.event_date}T${event.end_time || "23:59:59"}`;
+          await getOrCreateQRPassForEventParticipant(pRow.id, vFrom, vUntil);
+        } catch (qrErr) {
+          console.warn("[QR Notice] Failed to generate Club/Event QR pass:", qrErr);
+        }
+
         createdPermissions.push({
           ...pRow,
           student_name: student.name,
@@ -772,6 +789,7 @@ export async function grantEventPermissionsAtomic(
           club_name: event.club_name || "",
           coordinator_name: event.coordinator_name || "",
         });
+
 
         // Notify student automatically (no student confirmation step)
         await createNotificationServer({

@@ -84,17 +84,17 @@ function AdminDashboardContent() {
         description="Master Management Console for Users, Academic Structures, Timetables, and System Policies."
         breadcrumb={[{ label: "Admin", to: "/admin/dashboard" }, { label: "Dashboard" }]}
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" asChild className="rounded-xl text-xs font-semibold h-9">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <Button size="sm" variant="outline" asChild className="rounded-xl text-xs font-semibold h-9 flex-1 sm:flex-initial">
               <Link to="/admin/violations">Incidents</Link>
             </Button>
-            <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-9" asChild>
+            <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-9 w-full sm:w-auto" asChild>
               <Link to="/admin/emergency">Emergency Center</Link>
             </Button>
-            <Button size="sm" variant="outline" asChild className="rounded-xl text-xs font-semibold h-9">
+            <Button size="sm" variant="outline" asChild className="rounded-xl text-xs font-semibold h-9 flex-1 sm:flex-initial">
               <Link to="/admin/timetable">Timetable</Link>
             </Button>
-            <Button size="sm" variant="outline" asChild className="rounded-xl text-xs font-semibold h-9">
+            <Button size="sm" variant="outline" asChild className="rounded-xl text-xs font-semibold h-9 flex-1 sm:flex-initial">
               <Link to="/notifications">Notifications</Link>
             </Button>
           </div>
@@ -103,14 +103,14 @@ function AdminDashboardContent() {
 
       {/* Critical Incidents Banner */}
       {criticalReports.length > 0 && (
-        <section className="rounded-2xl border-2 border-red-500/80 bg-red-50/90 dark:bg-red-950/40 p-5 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
+        <section className="rounded-2xl border-2 border-red-500/80 bg-red-50/90 dark:bg-red-950/40 p-4 sm:p-5 shadow-sm space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="grid size-9 place-items-center rounded-xl bg-red-600 text-white shadow-xs animate-pulse">
+              <span className="grid size-9 place-items-center rounded-xl bg-red-600 text-white shadow-xs animate-pulse shrink-0">
                 <AlertTriangle className="size-5" />
               </span>
               <div>
-                <h3 className="text-sm font-bold text-red-900 dark:text-red-200 uppercase tracking-wide">
+                <h3 className="text-sm font-bold text-red-900 dark:text-red-200 uppercase tracking-wide break-words">
                   🚨 CRITICAL INCIDENT ALERT — {criticalReports.length} Active Case(s)
                 </h3>
                 <p className="text-xs text-red-700 dark:text-red-400">
@@ -118,10 +118,10 @@ function AdminDashboardContent() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <Button
                 size="sm"
-                className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-9"
+                className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-9 w-full sm:w-auto"
                 asChild
               >
                 <Link to="/admin/emergency">Emergency Command Center &rarr;</Link>
@@ -129,7 +129,7 @@ function AdminDashboardContent() {
               <Button
                 size="sm"
                 variant="outline"
-                className="font-bold rounded-xl text-xs h-9"
+                className="font-bold rounded-xl text-xs h-9 w-full sm:w-auto"
                 asChild
               >
                 <Link to="/admin/violations">Disciplinary Console</Link>
@@ -137,21 +137,21 @@ function AdminDashboardContent() {
             </div>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-3 pt-1">
+          <div className="grid gap-2 grid-cols-1 sm:grid-cols-3 pt-1">
             {criticalReports.map((r) => (
               <div
                 key={r.id}
                 className="p-3 bg-white/80 dark:bg-card/80 rounded-xl border border-red-200 dark:border-red-900/60 flex items-center justify-between text-xs"
               >
-                <div>
-                  <span className="font-bold text-foreground block">
+                <div className="min-w-0 pr-2">
+                  <span className="font-bold text-foreground block truncate">
                     {r.student_name} ({r.student_code})
                   </span>
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-[11px] text-muted-foreground block truncate">
                     {r.department} • {r.violation_type}
                   </span>
                 </div>
-                <Button size="sm" variant="ghost" asChild className="h-7 text-xs font-semibold px-2">
+                <Button size="sm" variant="ghost" asChild className="h-7 text-xs font-semibold px-2 shrink-0">
                   <Link to="/admin/violations">View &rarr;</Link>
                 </Button>
               </div>
@@ -161,7 +161,7 @@ function AdminDashboardContent() {
       )}
 
       {/* Global System Stats */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
             label: "Total Students",

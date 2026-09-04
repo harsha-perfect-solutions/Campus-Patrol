@@ -246,7 +246,7 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
       )}
 
       {/* Day Selector Tabs */}
-      <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Select day">
+      <div className="flex flex-nowrap overflow-x-auto pb-1.5 pt-0.5 gap-2 min-w-0 w-full no-scrollbar" role="tablist" aria-label="Select day">
         {DAY_KEYS.map((d) => {
           const count = slotCounts[d.key] || 0;
           const isSelected = selectedDay === d.key;
@@ -257,7 +257,7 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
               aria-selected={isSelected}
               onClick={() => setSelectedDay(d.key)}
               className={cn(
-                "flex min-h-[42px] items-center gap-2 rounded-xl border px-4 text-xs font-semibold transition-all duration-150 shadow-2xs",
+                "flex min-h-[40px] items-center gap-2 rounded-xl border px-3.5 text-xs font-semibold transition-all duration-150 shadow-2xs shrink-0",
                 isSelected
                   ? "border-primary bg-primary text-primary-foreground shadow-sm"
                   : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground",

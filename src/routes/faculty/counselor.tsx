@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Users,
@@ -25,17 +25,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToneBadge } from "@/components/status-badge";
 import { useAuth } from "@/lib/auth";
 import {
   getCounselorDashboardStatsApi,
   getCounselorStudentsApi,
   getCounselorViolationsApi,
+  getCounselorPassesApi,
+  approveCounselorPassApi,
   resolveCounselorViolationApi,
   escalateCounselorViolationApi,
   isFacultyCounselorApi,
 } from "@/lib/api/counselor.server";
-import type { DBCounselorStudent, CounselorDashboardStats } from "@/lib/db/counselor.server";
+import type { DBCounselorStudent, CounselorDashboardStats, DBCounselorPass } from "@/lib/db/counselor.server";
 import type { DBViolationReport } from "@/lib/db/violations.server";
 
 export const Route = createFileRoute("/faculty/counselor")({
@@ -54,12 +57,20 @@ function FacultyCounselorPage() {
 function FacultyCounselorContent() {
   const { profile } = useAuth();
   const [isCounselor, setIsCounselor] = useState<boolean | null>(null);
-  const [activeTab, setActiveTab] = useState<"cases" | "students">("cases");
+  const [activeTab, setActiveTab] = useState<"cases" | "students" | "passes">("cases");
+  const [passStatusFilter, setPassStatusFilter] = useState<string>("ALL");
+  const [studentSearch, setStudentSearch] = useState("");
+  const [studentDeptFilter, setStudentDeptFilter] = useState("ALL");
+  const [studentYearFilter, setStudentYearFilter] = useState("ALL");
+  const [studentSecFilter, setStudentSecFilter] = useState("ALL");
 
   const [stats, setStats] = useState<CounselorDashboardStats | null>(null);
   const [students, setStudents] = useState<DBCounselorStudent[]>([]);
   const [violations, setViolations] = useState<DBViolationReport[]>([]);
+  const [passes, setPasses] = useState<DBCounselorPass[]>([]);
   const [loading, setLoading] = useState(true);
+
+
 
   const loadData = async () => {
     setLoading(true);
@@ -68,14 +79,16 @@ function FacultyCounselorContent() {
       setIsCounselor(cCheck.isCounselor);
 
       if (cCheck.isCounselor) {
-        const [sRes, stRes, vRes] = await Promise.all([
+        const [sRes, stRes, vRes, pRes] = await Promise.all([
           getCounselorDashboardStatsApi(),
           getCounselorStudentsApi(),
           getCounselorViolationsApi({ data: { status: "ALL" } }),
+          getCounselorPassesApi({ data: { status: "ALL" } }),
         ]);
         setStats(sRes);
         setStudents(stRes);
         setViolations(vRes);
+        setPasses(pRes);
       }
     } catch (err: any) {
       console.error("Error loading counselor data:", err);
@@ -85,9 +98,59 @@ function FacultyCounselorContent() {
     }
   };
 
+  const handleApprovePass = async (passId: string, status: "approved" | "rejected") => {
+    try {
+      const res = await approveCounselorPassApi({ data: { passId, status } });
+      if (res.success) {
+        toast.success(`Movement Pass ${status === "approved" ? "Approved" : "Rejected"} Successfully`);
+        loadData();
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update pass status");
+    }
+  };
+
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchTab = new URLSearchParams(window.location.search).get("tab");
+      if (searchTab === "passes" || searchTab === "students" || searchTab === "cases") {
+        setActiveTab(searchTab);
+      }
+    }
     loadData();
   }, []);
+
+
+  const filteredPasses = useMemo(() => {
+    if (passStatusFilter === "ALL") return passes;
+    return passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === passStatusFilter.toLowerCase());
+  }, [passes, passStatusFilter]);
+
+  const pendingPassesCount = useMemo(() => {
+    return passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === "pending").length;
+  }, [passes]);
+
+  const filteredStudents = useMemo(() => {
+    return students.filter((st: DBCounselorStudent) => {
+      if (studentDeptFilter !== "ALL" && st.department?.toUpperCase() !== studentDeptFilter.toUpperCase()) {
+        return false;
+      }
+      if (studentYearFilter !== "ALL" && st.year?.toUpperCase() !== studentYearFilter.toUpperCase()) {
+        return false;
+      }
+      if (studentSecFilter !== "ALL" && st.section?.toUpperCase() !== studentSecFilter.toUpperCase()) {
+        return false;
+      }
+      if (studentSearch.trim()) {
+        const q = studentSearch.trim().toLowerCase();
+        const matchCode = st.student_code.toLowerCase().includes(q);
+        const matchName = (st.student_name || "").toLowerCase().includes(q);
+        const matchEmail = (st.email || "").toLowerCase().includes(q);
+        if (!matchCode && !matchName && !matchEmail) return false;
+      }
+      return true;
+    });
+  }, [students, studentDeptFilter, studentYearFilter, studentSecFilter, studentSearch]);
 
   if (loading) {
     return (
@@ -122,73 +185,56 @@ function FacultyCounselorContent() {
 
       {/* Dashboard Stats */}
       {stats && (
-        <div className="grid gap-4 sm:grid-cols-6">
-          <div className="card-surface p-4 rounded-2xl border border-border shadow-2xs">
-            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-2xs">
+            <span className="text-[10px] sm:text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
               MY STUDENTS
             </span>
-            <p className="mt-2 text-2xl font-extrabold text-foreground">{stats.totalStudents}</p>
+            <p className="mt-1.5 text-xl sm:text-2xl font-extrabold text-foreground">{stats.totalStudents}</p>
           </div>
 
-          <div className="card-surface p-4 rounded-2xl border border-border shadow-2xs">
-            <span className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">
+          <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-2xs">
+            <span className="text-[10px] sm:text-[11px] font-bold text-amber-600 uppercase tracking-wider block">
               PENDING CASES
             </span>
-            <p className="mt-2 text-2xl font-extrabold text-amber-600">{stats.pendingViolations}</p>
+            <p className="mt-1.5 text-xl sm:text-2xl font-extrabold text-amber-600">{stats.pendingViolations}</p>
           </div>
 
-          <div className="card-surface p-4 rounded-2xl border border-border shadow-2xs">
-            <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">
+          <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-2xs">
+            <span className="text-[10px] sm:text-[11px] font-bold text-blue-600 uppercase tracking-wider block">
               AWAITING EXP.
             </span>
-            <p className="mt-2 text-2xl font-extrabold text-blue-600">{stats.explanationsWaiting}</p>
+            <p className="mt-1.5 text-xl sm:text-2xl font-extrabold text-blue-600">{stats.explanationsWaiting}</p>
           </div>
 
-          <div className="card-surface p-4 rounded-2xl border border-border shadow-2xs">
-            <span className="text-[11px] font-bold text-purple-600 uppercase tracking-wider">
+          <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-2xs">
+            <span className="text-[10px] sm:text-[11px] font-bold text-purple-600 uppercase tracking-wider block">
               UNDER REVIEW
             </span>
-            <p className="mt-2 text-2xl font-extrabold text-purple-600">{stats.underReview}</p>
+            <p className="mt-1.5 text-xl sm:text-2xl font-extrabold text-purple-600">{stats.underReview}</p>
           </div>
 
-          <div className="card-surface p-4 rounded-2xl border border-border shadow-2xs">
-            <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
+          <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-2xs">
+            <span className="text-[10px] sm:text-[11px] font-bold text-emerald-600 uppercase tracking-wider block">
               RESOLVED
             </span>
-            <p className="mt-2 text-2xl font-extrabold text-emerald-600">{stats.resolved}</p>
+            <p className="mt-1.5 text-xl sm:text-2xl font-extrabold text-emerald-600">{stats.resolved}</p>
           </div>
 
-          <div className="card-surface p-4 rounded-2xl border border-border shadow-2xs">
-            <span className="text-[11px] font-bold text-red-600 uppercase tracking-wider">
+          <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-2xs">
+            <span className="text-[10px] sm:text-[11px] font-bold text-red-600 uppercase tracking-wider block">
               ESCALATED (HOD)
             </span>
-            <p className="mt-2 text-2xl font-extrabold text-red-600">{stats.escalated}</p>
+            <p className="mt-1.5 text-xl sm:text-2xl font-extrabold text-red-600">{stats.escalated}</p>
           </div>
         </div>
       )}
 
-      {/* Tabs Selector */}
-      <div className="flex items-center gap-2 border-b border-border pb-2">
-        <Button
-          variant={activeTab === "cases" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setActiveTab("cases")}
-          className="rounded-xl text-xs font-bold gap-2"
-        >
-          <ShieldAlert className="size-3.5" /> Violation Cases ({violations.length})
-        </Button>
-        <Button
-          variant={activeTab === "students" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setActiveTab("students")}
-          className="rounded-xl text-xs font-bold gap-2"
-        >
-          <Users className="size-3.5" /> Assigned Students ({students.length})
-        </Button>
-      </div>
+
 
       {/* CASES TAB */}
       {activeTab === "cases" && (
+
         <div className="card-surface rounded-2xl border border-border shadow-2xs overflow-hidden">
           <div className="p-4 border-b border-border bg-muted/30 flex items-center justify-between">
             <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
@@ -276,14 +322,183 @@ function FacultyCounselorContent() {
         </div>
       )}
 
+      {/* PASSES TAB */}
+      {activeTab === "passes" && (
+        <div className="card-surface rounded-2xl border border-border shadow-2xs overflow-hidden">
+          <div className="p-4 border-b border-border bg-muted/30 flex flex-wrap items-center justify-between gap-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+              COUNSELING STUDENT MOVEMENT PASSES & APPROVALS
+            </h4>
+            <div className="flex items-center gap-2">
+              <Select value={passStatusFilter} onValueChange={setPassStatusFilter}>
+                <SelectTrigger className="w-[160px] h-8 rounded-xl text-xs font-semibold bg-card border-border shadow-2xs">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border">
+                  <SelectItem value="ALL">All Passes ({passes.length})</SelectItem>
+                  <SelectItem value="pending">⏳ Pending ({passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === "pending").length})</SelectItem>
+                  <SelectItem value="approved">✅ Approved ({passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === "approved").length})</SelectItem>
+                  <SelectItem value="rejected">❌ Rejected ({passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === "rejected").length})</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="ghost" size="sm" onClick={loadData} className="text-xs">
+                <RefreshCw className="size-3 mr-1" /> Refresh
+              </Button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-muted/60 text-muted-foreground font-bold uppercase tracking-wider border-b border-border">
+                <tr>
+                  <th className="px-4 py-3">Pass ID</th>
+                  <th className="px-4 py-3">Student Name</th>
+                  <th className="px-4 py-3">Reason</th>
+                  <th className="px-4 py-3">Date & Time Window</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Issued / Approved By</th>
+                  <th className="px-4 py-3 text-right">Acceptance Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filteredPasses.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground italic">
+                      No movement pass requests found for your counseling students matching status filter "{passStatusFilter}".
+                    </td>
+                  </tr>
+                ) : (
+                  filteredPasses.map((p) => (
+                    <tr key={p.id} className="hover:bg-muted/40 transition-colors">
+                      <td className="px-4 py-3 font-mono font-bold text-primary">#{p.id.slice(0, 8)}</td>
+                      <td className="px-4 py-3">
+                        <strong className="text-foreground">{p.student_name || p.student_code}</strong>
+                        <p className="text-[11px] text-muted-foreground font-mono">{p.student_code} &bull; {p.department}</p>
+                      </td>
+                      <td className="px-4 py-3 font-medium text-foreground max-w-xs truncate">{p.reason}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        <div>{p.date}</div>
+                        <div className="text-[11px] font-mono text-primary">{p.valid_from} - {p.valid_until}</div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <ToneBadge
+                          tone={
+                            p.status === "approved"
+                              ? "success"
+                              : p.status === "rejected"
+                              ? "danger"
+                              : "warning"
+                          }
+                        >
+                          {p.status.toUpperCase()}
+                        </ToneBadge>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.issued_by || "—"}</td>
+                      <td className="px-4 py-3 text-right">
+                        {p.status === "pending" ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              size="sm"
+                              onClick={() => handleApprovePass(p.id, "approved")}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold px-3 h-8 shadow-xs"
+                            >
+                              <CheckCircle2 className="size-3.5 mr-1" /> Approve Pass
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleApprovePass(p.id, "rejected")}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-xs font-bold px-3 h-8"
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground italic">
+                            Pass {p.status}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* STUDENTS TAB */}
       {activeTab === "students" && (
         <div className="card-surface rounded-2xl border border-border shadow-2xs overflow-hidden">
-          <div className="p-4 border-b border-border bg-muted/30 flex items-center justify-between">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
-              MY ASSIGNED COUNSELING STUDENTS
-            </h4>
-            <span className="text-xs text-muted-foreground">Total: {students.length} Students</span>
+          <div className="p-4 border-b border-border bg-muted/30 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                MY ASSIGNED COUNSELING STUDENTS
+              </h4>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Showing {filteredStudents.length} of {students.length} assigned active students
+              </p>
+            </div>
+
+            {/* Filters Bar */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search student..."
+                  value={studentSearch}
+                  onChange={(e) => setStudentSearch(e.target.value)}
+                  className="pl-8 h-8 w-[160px] text-xs rounded-xl bg-card border-border"
+                />
+              </div>
+
+              <Select value={studentDeptFilter} onValueChange={setStudentDeptFilter}>
+                <SelectTrigger className="h-8 w-[120px] text-xs rounded-xl bg-card border-border">
+                  <SelectValue placeholder="Dept" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border">
+                  <SelectItem value="ALL">All Depts</SelectItem>
+                  <SelectItem value="CSE">CSE</SelectItem>
+                  <SelectItem value="ECE">ECE</SelectItem>
+                  <SelectItem value="MECH">MECH</SelectItem>
+                  <SelectItem value="EEE">EEE</SelectItem>
+                  <SelectItem value="CIVIL">CIVIL</SelectItem>
+                  <SelectItem value="IT">IT</SelectItem>
+                  <SelectItem value="AIML">AIML</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={studentYearFilter} onValueChange={setStudentYearFilter}>
+                <SelectTrigger className="h-8 w-[110px] text-xs rounded-xl bg-card border-border">
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border">
+                  <SelectItem value="ALL">All Years</SelectItem>
+                  <SelectItem value="1">1st Year</SelectItem>
+                  <SelectItem value="2">2nd Year</SelectItem>
+                  <SelectItem value="3">3rd Year</SelectItem>
+                  <SelectItem value="4">4th Year</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={studentSecFilter} onValueChange={setStudentSecFilter}>
+                <SelectTrigger className="h-8 w-[100px] text-xs rounded-xl bg-card border-border">
+                  <SelectValue placeholder="Sec" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border">
+                  <SelectItem value="ALL">All Secs</SelectItem>
+                  <SelectItem value="A">Sec A</SelectItem>
+                  <SelectItem value="B">Sec B</SelectItem>
+                  <SelectItem value="C">Sec C</SelectItem>
+                  <SelectItem value="D">Sec D</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button variant="ghost" size="sm" onClick={loadData} className="h-8 text-xs px-2">
+                <RefreshCw className="size-3 mr-1" /> Refresh
+              </Button>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
@@ -292,21 +507,35 @@ function FacultyCounselorContent() {
                 <tr>
                   <th className="px-4 py-3">Roll Number</th>
                   <th className="px-4 py-3">Student Name</th>
+                  <th className="px-4 py-3">Email Address</th>
                   <th className="px-4 py-3">Department</th>
                   <th className="px-4 py-3">Year & Section</th>
                   <th className="px-4 py-3">Assigned Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {students.map((st) => (
-                  <tr key={st.id} className="hover:bg-muted/40 transition-colors">
-                    <td className="px-4 py-3 font-mono font-bold text-primary">{st.student_code}</td>
-                    <td className="px-4 py-3 font-bold text-foreground">{st.student_name || "Student"}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{st.department}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{st.year} {st.section}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{new Date(st.assigned_at).toLocaleDateString()}</td>
+                {filteredStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground italic">
+                      {students.length === 0
+                        ? "You currently have no active assigned counseling students. Contact Admin to assign class sections."
+                        : "No assigned students match the selected search/filter criteria."}
+                    </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredStudents.map((st) => (
+                    <tr key={st.id} className="hover:bg-muted/40 transition-colors">
+                      <td className="px-4 py-3 font-mono font-bold text-primary">{st.student_code}</td>
+                      <td className="px-4 py-3 font-bold text-foreground">{st.student_name || "Student"}</td>
+                      <td className="px-4 py-3 text-muted-foreground font-mono text-[11px]">{st.email || "—"}</td>
+                      <td className="px-4 py-3 font-semibold text-foreground">{st.department || "CSE"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {st.year || "3rd Year"} &bull; Section {st.section || "A"}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{new Date(st.assigned_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -315,3 +544,4 @@ function FacultyCounselorContent() {
     </div>
   );
 }
+

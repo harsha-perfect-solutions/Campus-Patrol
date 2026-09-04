@@ -27,6 +27,7 @@ import { QRScannerModal } from "@/components/qr-scanner-modal";
 import {
   verifyGatePassApi,
   authorizeEarlyExitApi,
+  getSecurityAssignedGateApi,
   type VerificationResultPayload,
 } from "@/lib/api/security.server";
 
@@ -34,15 +35,6 @@ export const Route = createFileRoute("/security/check")({
   head: () => ({ meta: [{ title: "Gate Pass Verification — Security Portal" }] }),
   component: SecurityCheckPage,
 });
-
-const checkpointOptions = [
-  "Main Gate",
-  "Boys Hostel Gate",
-  "Girls Hostel Gate",
-  "Back Gate",
-  "Library Gate",
-  "Parking Gate",
-];
 
 export function SecurityCheckPage() {
   const { profile } = useAuth();
@@ -53,6 +45,19 @@ export function SecurityCheckPage() {
   const [earlyExitLoading, setEarlyExitLoading] = useState(false);
   const [result, setResult] = useState<VerificationResultPayload | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [gateInfo, setGateInfo] = useState<{
+    loading: boolean;
+    assigned: boolean;
+    gateName: string | null;
+    officerName: string;
+    staffCode: string | null;
+  }>({
+    loading: true,
+    assigned: false,
+    gateName: null,
+    officerName: (profile as any)?.full_name || (profile as any)?.fullName || "Security Officer",
+    staffCode: (profile as any)?.staff_code || (profile as any)?.staffCode || null,
+  });
 
   // PWA Offline & Install Prompt states
   const [isOnline, setIsOnline] = useState(
@@ -94,13 +99,41 @@ export function SecurityCheckPage() {
     setDeferredPrompt(null);
   };
 
-  // Update checkpoint if profile loads late
+  // Fetch server-authoritative assigned gate for Security Officer
   useEffect(() => {
-    if (profile?.department) {
-      if (checkpointOptions.includes(profile.department)) {
-        setCheckpoint(profile.department);
+    async function fetchGate() {
+      const prof = profile as any;
+      try {
+        const res = await getSecurityAssignedGateApi();
+        if (res.success && res.assigned && res.gateName) {
+          setGateInfo({
+            loading: false,
+            assigned: true,
+            gateName: res.gateName,
+            officerName: res.officerName || prof?.full_name || prof?.fullName || "Security Officer",
+            staffCode: res.staffCode || prof?.staff_code || prof?.staffCode || null,
+          });
+          setCheckpoint(res.gateName);
+        } else {
+          setGateInfo({
+            loading: false,
+            assigned: false,
+            gateName: null,
+            officerName: prof?.full_name || prof?.fullName || "Security Officer",
+            staffCode: prof?.staff_code || prof?.staffCode || null,
+          });
+        }
+      } catch (err) {
+        setGateInfo({
+          loading: false,
+          assigned: false,
+          gateName: null,
+          officerName: prof?.full_name || prof?.fullName || "Security Officer",
+          staffCode: prof?.staff_code || prof?.staffCode || null,
+        });
       }
     }
+    fetchGate();
   }, [profile]);
 
   const handleAllowEarlyExit = async () => {
@@ -153,6 +186,7 @@ export function SecurityCheckPage() {
     setResult(null);
 
     try {
+      console.log(`[Gate Verification] API called with input: "${query}", checkpoint: "${checkpoint}"`);
       const res = await verifyGatePassApi({
         data: {
           passIdOrRollNo: query,
@@ -160,7 +194,17 @@ export function SecurityCheckPage() {
         },
       });
 
+      console.log(`[Gate Verification] API response received:`, {
+        success: res.success,
+        authorized: res.authorized,
+        resultStatus: res.resultStatus,
+        verificationType: (res as any).verificationType,
+        failureReason: res.failureReason,
+      });
+
+
       if (res.success) {
+
         setResult(res as VerificationResultPayload);
         if (res.authorized) {
           toast.success("✅ EXIT AUTHORIZED", {
@@ -182,13 +226,18 @@ export function SecurityCheckPage() {
     }
   };
 
-  const handleCameraCapture = (imageDataUrl: string) => {
+  const handleCameraCapture = (scannedToken: string) => {
     setCameraOpen(false);
-    toast.info("QR Code captured from camera scanner.");
-    // In demo/scanner mode, simulate scanning an active pass or use current input
-    const simulatedPassId = passInput.trim() || "23CSE1012";
-    handleVerify(undefined, simulatedPassId);
+    const token = (scannedToken || "").trim();
+    if (token) {
+      setPassInput(token);
+      toast.info("QR Code captured from scanner.");
+      handleVerify(undefined, token);
+    } else {
+      toast.error("No valid QR token detected.");
+    }
   };
+
 
   const handleReset = () => {
     setPassInput("");
@@ -259,42 +308,54 @@ export function SecurityCheckPage() {
         )}
 
         <PageHeader
-          title="Gate Pass Verification"
-          description="Verify whether a student is authorized to exit the campus."
+          title={
+            gateInfo.assigned && gateInfo.gateName
+              ? `Security Dashboard — ${gateInfo.gateName}`
+              : "Security Dashboard — No Gate Assigned"
+          }
+          description={
+            gateInfo.assigned && gateInfo.gateName
+              ? `Assigned Gate: ${gateInfo.gateName} | Security Officer: ${gateInfo.officerName}${gateInfo.staffCode ? ` (${gateInfo.staffCode})` : ""}`
+              : "⚠️ No Gate Assigned — Please contact system Admin."
+          }
           breadcrumb={[
             { label: "Security Portal", to: "/security/check" },
-            { label: "Gate Pass Verification" },
+            { label: gateInfo.assigned && gateInfo.gateName ? `Gate Pass Verification (${gateInfo.gateName})` : "No Gate Assigned" },
           ]}
         />
 
         {/* Checkpoint Banner */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-card border border-border shadow-xs gap-3">
           <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold">
+            <span className="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">
               <MapPin className="size-5" />
             </span>
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Current Checkpoint Location
+                Assigned Gate Location
               </p>
-              <p className="text-sm font-bold text-foreground">{checkpoint}</p>
+              <p className="text-sm font-bold text-foreground">
+                {gateInfo.assigned ? gateInfo.gateName : "No Gate Assigned"}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground">Select Post:</span>
-            <select
-              value={checkpoint}
-              onChange={(e) => setCheckpoint(e.target.value)}
-              className="h-9 px-3 rounded-xl border border-input bg-card text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {checkpointOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-500/20">
+              <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
+              {gateInfo.assigned ? `📍 Assigned Gate: ${gateInfo.gateName} (Server Enforced)` : "⚠️ Unassigned Security Account"}
+            </span>
           </div>
         </div>
+
+        {!gateInfo.assigned && !gateInfo.loading && (
+          <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 space-y-2 text-center">
+            <ShieldAlert className="size-10 text-amber-600 dark:text-amber-400 mx-auto" />
+            <h3 className="text-base font-bold">⚠️ No Gate Assigned</h3>
+            <p className="text-xs max-w-md mx-auto">
+              Your Security Officer account currently has no assigned college gate. All gate transactions, QR scans, and verifications are disabled until system Admin assigns a gate to your profile.
+            </p>
+          </div>
+        )}
 
         {/* Verification Options Card */}
         <div className="card-surface p-6 rounded-2xl border border-border shadow-xs space-y-4">
@@ -328,19 +389,19 @@ export function SecurityCheckPage() {
               <label className="text-xs font-semibold text-muted-foreground block">
                 Or Paste/Type Scanned Pass Code / Student Roll No:
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   ref={inputRef}
                   placeholder="e.g. CMADMS-PASS-101 or 23CSE1012"
                   value={passInput}
                   onChange={(e) => setPassInput(e.target.value)}
-                  className="h-11 rounded-xl text-xs font-mono"
+                  className="h-11 rounded-xl text-xs font-mono w-full"
                 />
                 <Button
                   type="submit"
                   loading={loading}
                   disabled={loading}
-                  className="h-11 px-6 rounded-xl font-bold bg-primary text-primary-foreground"
+                  className="h-11 px-6 rounded-xl font-bold bg-primary text-primary-foreground w-full sm:w-auto shrink-0"
                 >
                   {loading ? "Verifying..." : "Verify"}
                 </Button>

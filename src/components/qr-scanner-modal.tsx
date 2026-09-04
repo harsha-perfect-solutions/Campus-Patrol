@@ -51,6 +51,14 @@ export function parseQRPayload(rawInput: string): string {
   let cleaned = rawInput.trim();
   if (!cleaned) return "";
 
+  // 0. Real-Time QR System token extraction
+  if (cleaned.toUpperCase().includes("CMADMS:QR:")) {
+    const match = cleaned.match(/CMADMS:QR:[a-f0-9-]+/i);
+    if (match) return match[0];
+    return cleaned;
+  }
+
+
   // 1. URL extraction
   try {
     if (cleaned.startsWith("http://") || cleaned.startsWith("https://")) {
@@ -310,9 +318,8 @@ export function QRScannerModal({
         newStream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: mode },
-            width: { ideal: 1920, min: 1280 },
-            height: { ideal: 1080, min: 720 },
-            frameRate: { ideal: 60, min: 30 },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
           },
         });
       } catch {
@@ -324,6 +331,8 @@ export function QRScannerModal({
 
       const track = newStream.getVideoTracks()[0];
       if (track) {
+        const settings = track.getSettings ? track.getSettings() : {};
+        console.log(`[QR Camera] Camera started successfully (${mode} mode). Stream dimensions: ${settings.width || "ideal"}x${settings.height || "ideal"}`);
         const capabilities: any = track.getCapabilities ? track.getCapabilities() : {};
         if (capabilities.torch) {
           setHasTorch(true);
@@ -338,7 +347,7 @@ export function QRScannerModal({
         }
       }
     } catch (err: any) {
-      console.error("QR Camera access error:", err);
+      console.error("[QR Camera] Camera access error:", err);
       let titleErr = "Camera Access Failed";
       let detailErr = "Unable to open live video stream on this device.";
 
@@ -394,6 +403,7 @@ export function QRScannerModal({
       const parsed = parseQRPayload(rawCode);
       if (!parsed) return;
 
+      console.log(`[QR Scanner] QR Code detected & decoded! Payload: "${parsed}"`);
       playScanBeep();
       if (typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate([40, 30, 40]);
@@ -422,13 +432,20 @@ export function QRScannerModal({
       try {
         detector = new (window as any).BarcodeDetector({ formats: ["qr_code"] });
         setScanEngine("Hardware GPU");
+        console.log("[QR Scanner] Decoder initialized: Hardware BarcodeDetector API active.");
       } catch {
         detector = null;
         setScanEngine("jsQR Dual-Invert");
+        console.log("[QR Scanner] Decoder initialized: jsQR Multi-Pass Engine active.");
       }
     } else {
       setScanEngine("jsQR Dual-Invert");
+      console.log("[QR Scanner] Decoder initialized: jsQR Multi-Pass Engine active.");
     }
+
+    console.log(`[QR Scanner] Frame scanning loop started. Video element size: ${video.videoWidth}x${video.videoHeight}`);
+
+    let lastScanTime = 0;
 
     const scanFrame = async () => {
       if (!isScanning || !videoRef.current || video.readyState !== video.HAVE_ENOUGH_DATA) {
@@ -438,6 +455,17 @@ export function QRScannerModal({
         return;
       }
 
+      const now = performance.now();
+      // Throttle scan passes to ~15fps (every 65ms) for optimal battery and mobile CPU responsiveness
+      if (now - lastScanTime < 65) {
+        if (isScanning) {
+          animFrameRef.current = requestAnimationFrame(scanFrame);
+        }
+        return;
+      }
+      lastScanTime = now;
+
+      // Pass 1: Hardware BarcodeDetector directly on live video element
       if (detector) {
         try {
           const barcodes = await detector.detect(video);
@@ -447,19 +475,79 @@ export function QRScannerModal({
             return;
           }
         } catch {
-          // Fall back to canvas jsQR
+          // Fall through to downscaled canvas multi-pass
         }
       }
 
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const decoded = decodeQRFromCanvas(ctx, canvas.width, canvas.height);
-        if (decoded) {
+      // Pass 2: Multi-Pass Canvas Downscaling & Binarization
+      const vW = video.videoWidth || 1280;
+      const vH = video.videoHeight || 720;
+      const scale = Math.min(1, 800 / Math.max(vW, vH));
+      const targetW = Math.round(vW * scale);
+      const targetH = Math.round(vH * scale);
+
+      canvas.width = targetW;
+      canvas.height = targetH;
+
+      if (ctx && targetW > 0 && targetH > 0) {
+        ctx.drawImage(video, 0, 0, targetW, targetH);
+        const imgData = ctx.getImageData(0, 0, targetW, targetH);
+
+        // Sub-Pass A: Full Frame jsQR (Normal + Inverted)
+        let qr = jsQR(imgData.data, targetW, targetH, { inversionAttempts: "attemptBoth" });
+        if (qr && qr.data && qr.data.trim()) {
           isScanning = false;
-          handleScanSuccess(decoded);
+          handleScanSuccess(qr.data.trim());
           return;
+        }
+
+        // Sub-Pass B: Center Viewfinder Crop (65% center area)
+        const cropSize = Math.min(targetW, targetH) * 0.65;
+        const startX = Math.max(0, (targetW - cropSize) / 2);
+        const startY = Math.max(0, (targetH - cropSize) / 2);
+        const cropData = ctx.getImageData(startX, startY, cropSize, cropSize);
+        qr = jsQR(cropData.data, cropData.width, cropData.height, { inversionAttempts: "attemptBoth" });
+        if (qr && qr.data && qr.data.trim()) {
+          isScanning = false;
+          handleScanSuccess(qr.data.trim());
+          return;
+        }
+
+        // Sub-Pass C: Adaptive Threshold Binarization for Mobile Glare
+        const data = imgData.data;
+        let sumBrightness = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          sumBrightness += (data[i]! + data[i + 1]! + data[i + 2]!) / 3;
+        }
+        const avgBrightness = sumBrightness / (data.length / 4);
+
+        for (let i = 0; i < data.length; i += 4) {
+          const pxAvg = (data[i]! + data[i + 1]! + data[i + 2]!) / 3;
+          const v = pxAvg > avgBrightness ? 255 : 0;
+          data[i] = v;
+          data[i + 1] = v;
+          data[i + 2] = v;
+        }
+
+        qr = jsQR(data, targetW, targetH, { inversionAttempts: "attemptBoth" });
+        if (qr && qr.data && qr.data.trim()) {
+          isScanning = false;
+          handleScanSuccess(qr.data.trim());
+          return;
+        }
+
+        // Sub-Pass D: Hardware BarcodeDetector on downscaled canvas
+        if (detector) {
+          try {
+            const canvasBarcodes = await detector.detect(canvas);
+            if (canvasBarcodes && canvasBarcodes.length > 0 && canvasBarcodes[0].rawValue) {
+              isScanning = false;
+              handleScanSuccess(canvasBarcodes[0].rawValue);
+              return;
+            }
+          } catch {
+            // Continue scan loop
+          }
         }
       }
 
@@ -482,6 +570,7 @@ export function QRScannerModal({
       }
     };
   }, [stream, detectedCode, loading, handleScanSuccess]);
+
 
   const handleToggleCamera = () => {
     const nextMode = facingMode === "environment" ? "user" : "environment";
@@ -557,25 +646,25 @@ export function QRScannerModal({
 
   return (
     <Dialog open={open} onOpenChange={(val) => !val && !loading && onClose()}>
-      <DialogContent className="sm:max-w-md rounded-3xl p-6 overflow-hidden space-y-4 border-2 border-primary/20 bg-background/95 backdrop-blur-xl shadow-2xl">
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-3xl p-4 sm:p-6 space-y-3.5 border-2 border-primary/20 bg-background/95 backdrop-blur-xl shadow-2xl mx-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2 text-base font-black tracking-tight text-foreground">
-              <div className="size-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-xs">
-                <QrCode className="size-4.5" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 pr-6">
+            <DialogTitle className="flex items-center gap-2 text-sm sm:text-base font-black tracking-tight text-foreground min-w-0">
+              <div className="size-7 sm:size-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-xs shrink-0">
+                <QrCode className="size-4" />
               </div>
-              <span>{title}</span>
+              <span className="leading-snug break-words">{title}</span>
             </DialogTitle>
             <Badge
               variant="outline"
-              className="text-[10px] font-mono font-bold bg-primary/5 text-primary border-primary/30 px-2 py-0.5 rounded-lg"
+              className="w-fit text-[10px] font-mono font-bold bg-primary/5 text-primary border-primary/30 px-2 py-0.5 rounded-lg shrink-0"
             >
               ⚡ {scanEngine}
             </Badge>
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 pt-1">
+        <div className="space-y-3.5 pt-1 w-full max-w-full">
           {cameraError ? (
             <div className="p-4 rounded-2xl border border-amber-300/80 bg-amber-500/10 text-amber-900 dark:text-amber-200 text-xs space-y-3 shadow-inner">
               <div className="flex items-start gap-2.5">
@@ -601,7 +690,7 @@ export function QRScannerModal({
               </div>
             </div>
           ) : (
-            <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-500/40 bg-black aspect-video flex items-center justify-center shadow-lg group">
+            <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-500/40 bg-black aspect-4/3 sm:aspect-video flex items-center justify-center shadow-lg group min-h-[180px] max-w-full w-full">
               {isInitializing || loading ? (
                 <div className="flex flex-col items-center gap-2 text-white/80 p-6 text-center">
                   <Loader2 className="size-9 animate-spin text-emerald-400" />
@@ -613,7 +702,7 @@ export function QRScannerModal({
                 <div className="flex flex-col items-center gap-2.5 text-emerald-400 p-6 text-center bg-emerald-950/80 w-full h-full justify-center backdrop-blur-md">
                   <CheckCircle2 className="size-12 animate-bounce text-emerald-400" />
                   <span className="text-base font-black text-white">QR Code Verified!</span>
-                  <span className="text-xs font-mono font-bold text-emerald-300 bg-emerald-900/60 px-3 py-1 rounded-lg border border-emerald-500/40">
+                  <span className="text-xs font-mono font-bold text-emerald-300 bg-emerald-900/60 px-3 py-1 rounded-lg border border-emerald-500/40 break-all max-w-[90%]">
                     {detectedCode}
                   </span>
                 </div>
@@ -633,8 +722,8 @@ export function QRScannerModal({
                     className="w-full h-full object-cover"
                   />
 
-                  <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-4">
-                    <div className="size-48 rounded-2xl border border-emerald-400/40 bg-emerald-500/5 shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] flex flex-col items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-3">
+                    <div className="size-36 sm:size-48 rounded-2xl border border-emerald-400/40 bg-emerald-500/5 shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] flex flex-col items-center justify-center relative overflow-hidden">
                       <div className="absolute top-2 left-2 size-4 border-t-2 border-l-2 border-emerald-400 rounded-tl-md" />
                       <div className="absolute top-2 right-2 size-4 border-t-2 border-r-2 border-emerald-400 rounded-tr-md" />
                       <div className="absolute bottom-2 left-2 size-4 border-b-2 border-l-2 border-emerald-400 rounded-bl-md" />
@@ -642,16 +731,16 @@ export function QRScannerModal({
 
                       <div className="w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent absolute top-0 animate-[scan_1.5s_infinite_ease-in-out] shadow-[0_0_12px_#34d399]" />
 
-                      <QrCode className="size-14 text-white/20" />
+                      <QrCode className="size-10 sm:size-14 text-white/20" />
                     </div>
 
-                    <p className="text-[11px] font-extrabold text-white mt-3 px-4 py-1.5 rounded-full bg-black/80 backdrop-blur-md shadow-xl border border-emerald-500/30 flex items-center gap-1.5">
-                      <Camera className="size-3 text-emerald-400" />
-                      <span>Point camera at Student ID QR Code</span>
+                    <p className="text-[10px] sm:text-[11px] font-extrabold text-white mt-2 sm:mt-3 px-3 py-1 rounded-full bg-black/80 backdrop-blur-md shadow-xl border border-emerald-500/30 flex items-center gap-1.5 max-w-[90%] text-center truncate">
+                      <Camera className="size-3 text-emerald-400 shrink-0" />
+                      <span className="truncate">Point camera at Student ID QR Code</span>
                     </p>
                   </div>
 
-                  <div className="absolute top-3 right-3 flex items-center gap-2">
+                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20">
                     {hasTorch && (
                       <button
                         type="button"
@@ -681,11 +770,11 @@ export function QRScannerModal({
           )}
 
           {!loading && !detectedCode && (
-            <div className="space-y-1.5 pt-1">
+            <div className="space-y-1.5 pt-1 w-full">
               <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase flex items-center gap-1">
                 <Sparkles className="size-3 text-primary" /> Instant Test Sample QRs:
               </span>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-1.5 w-full">
                 {[
                   { code: "23CSE1012", name: "Ashok Dora" },
                   { code: "22ECE045", name: "Priya Sharma" },
@@ -697,7 +786,7 @@ export function QRScannerModal({
                     variant="outline"
                     size="sm"
                     onClick={() => handleScanSubmit(s.code)}
-                    className="h-7 px-2.5 text-[11px] rounded-lg border-primary/20 bg-primary/5 hover:bg-primary/15 text-foreground font-semibold flex items-center gap-1 transition-all"
+                    className="h-8 sm:h-7 px-2.5 text-[11px] rounded-lg border-primary/20 bg-primary/5 hover:bg-primary/15 text-foreground font-semibold flex items-center justify-start sm:justify-center gap-1 transition-all w-full sm:w-auto"
                   >
                     <span className="font-mono text-primary font-bold">{s.code}</span>
                     <span className="opacity-75">({s.name})</span>
@@ -708,8 +797,8 @@ export function QRScannerModal({
           )}
 
           {!loading && !detectedCode && (
-            <div className="flex gap-2 pt-1">
-              <label className="flex-1 flex items-center justify-center gap-1.5 h-10 px-3 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs font-semibold text-foreground cursor-pointer transition-colors shadow-2xs">
+            <div className="flex flex-col sm:flex-row gap-2 pt-1 w-full">
+              <label className="w-full sm:flex-1 flex items-center justify-center gap-1.5 h-10 px-3 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs font-semibold text-foreground cursor-pointer transition-colors shadow-2xs">
                 <Upload className="size-3.5 text-primary" />
                 <span>Upload Image</span>
                 <input type="file" accept="image/*" className="sr-only" onChange={handleFileSelect} />
@@ -719,7 +808,7 @@ export function QRScannerModal({
                 <Button
                   type="button"
                   onClick={handleManualSnap}
-                  className="flex-1 h-10 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5 shadow-xs"
+                  className="w-full sm:flex-1 h-10 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5 shadow-xs"
                 >
                   <QrCode className="size-3.5" />
                   <span>Manual Snap</span>
@@ -728,11 +817,11 @@ export function QRScannerModal({
             </div>
           )}
 
-          <div className="pt-2 border-t border-border space-y-2">
+          <div className="pt-2 border-t border-border space-y-2 w-full">
             <span className="text-[11px] font-bold text-muted-foreground block">
               Fallback: Manual Student ID Lookup
             </span>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full">
               <Input
                 placeholder="e.g. 23CSE1012"
                 value={manualInput}
@@ -743,21 +832,21 @@ export function QRScannerModal({
                     handleScanSubmit(manualInput);
                   }
                 }}
-                className="h-10 rounded-xl text-xs font-semibold font-mono"
+                className="h-10 rounded-xl text-xs font-semibold font-mono w-full"
               />
               <Button
                 type="button"
                 onClick={() => handleScanSubmit(manualInput)}
                 disabled={!manualInput.trim() || loading}
                 size="sm"
-                className="h-10 px-4 rounded-xl font-bold bg-primary text-primary-foreground text-xs shadow-xs"
+                className="h-10 px-5 rounded-xl font-bold bg-primary text-primary-foreground text-xs shadow-xs w-full sm:w-auto shrink-0"
               >
                 <Search className="size-3.5 mr-1" /> Check
               </Button>
             </div>
           </div>
 
-          <div className="flex justify-end pt-1">
+          <div className="flex justify-end pt-1 w-full">
             <Button
               type="button"
               variant="outline"
@@ -766,7 +855,7 @@ export function QRScannerModal({
                 stopCamera();
                 onClose();
               }}
-              className="rounded-xl text-xs font-semibold"
+              className="w-full sm:w-auto h-9 rounded-xl text-xs font-semibold"
             >
               Cancel
             </Button>

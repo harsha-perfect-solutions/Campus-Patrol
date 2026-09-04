@@ -505,6 +505,18 @@ export const toggleUserStatusAdminApi = createServerFn({ method: "POST" })
     return await toggleUserStatusAdmin(data.userId, data.status);
   });
 
+/**
+ * Server function for Admin to update/reassign a Security Officer's gate.
+ */
+export const updateSecurityGateAdminApi = createServerFn({ method: "POST" })
+  .validator((data: { userId: string; assignedGate: string }) => data)
+  .handler(async ({ data }) => {
+    const { requireRole } = await import("../session.server");
+    await requireRole("admin");
+    const { updateSecurityOfficerGateAdmin } = await import("../db/user-management.server");
+    return await updateSecurityOfficerGateAdmin(data.userId, data.assignedGate);
+  });
+
 const authServerApi = {
   signInApi,
   getSelfProfileApi,

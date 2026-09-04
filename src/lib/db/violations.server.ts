@@ -127,15 +127,27 @@ export async function createViolationReport(
     );
   }
 
-  // 3. Re-check movement pass server-side: if student has approved active movement pass, prevent unauthorized movement violation
-  if (violationType === "Unauthorized Class Movement" || violationType === "Corridor Presence During Class") {
+  // 3. Re-check movement pass & club/event authorization server-side: if student has authorized movement, prevent false violation
+  if (violationType === "Unauthorized Class Movement" || violationType === "Corridor Presence During Class" || violationType.toLowerCase().includes("movement")) {
     const activePass = await getActiveMovementPermission(cleanCode);
     if (activePass) {
       throw new Error(
         `Cannot report unauthorized class movement: Student has an active approved Movement Pass (Pass ID: ${activePass.id}, Valid: ${activePass.valid_from} - ${activePass.valid_until}).`,
       );
     }
+    try {
+      const { getActiveStudentEventPermission } = await import("./clubs.server");
+      const activeEventPerm = await getActiveStudentEventPermission(cleanCode);
+      if (activeEventPerm) {
+        throw new Error(
+          `Cannot report unauthorized class movement: Student has an active approved Club/Event Permission (Event: ${activeEventPerm.event_name}, Club: ${activeEventPerm.club_name}).`,
+        );
+      }
+    } catch (e: any) {
+      if (e.message && e.message.startsWith("Cannot report unauthorized")) throw e;
+    }
   }
+
 
   // 3. Duplicate Report Protection (within 15 minutes by same faculty for same student & violation type)
   const duplicateCheck = await db.query(
@@ -198,7 +210,8 @@ export async function createViolationReport(
         subject_code, scheduled_time, room, scheduled_faculty, incident_time,
         observed_at::text, location, violation_type, severity, remarks, witness_notes,
         evidence, reported_by, status::text, explanation, explanation_submitted_at::text,
-        decision, decision_by, decision_at::text, semester, explanation_deadline::text, created_at::text;
+        decision, decision_by, decision_at::text, semester, explanation_deadline::text, 
+        assigned_counselor_id, counselor_assignment_status, created_at::text;
     `;
 
     const initialAuditTrail = JSON.stringify([

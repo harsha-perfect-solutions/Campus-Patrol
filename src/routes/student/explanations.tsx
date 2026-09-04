@@ -468,7 +468,7 @@ function StudentExplanationsPage() {
                     ? "Submitting Explanation..."
                     : deadlineStatus?.expired
                     ? "🚪 Meet HOD at Cabin (24 Hours Exceeded)"
-                    : "Submit Official Explanation to HOD"}
+                    : "Submit Official Explanation to Counselor"}
                 </Button>
               </form>
             )}

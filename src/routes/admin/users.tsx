@@ -20,6 +20,10 @@ import {
   Check,
   X,
   FileText,
+  MapPin,
+  Plus,
+  Trash2,
+  Edit3,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
@@ -46,9 +50,16 @@ import { getAdminUsersApi, updateAdminUserRoleApi } from "@/lib/api/admin.server
 import {
   createSingleUserAdminApi,
   toggleUserStatusAdminApi,
+  updateSecurityGateAdminApi,
   validateStudentBulkImportApi,
   commitStudentBulkImportApi,
 } from "@/lib/api/auth.server";
+import {
+  getCollegeGatesApi,
+  createCollegeGateApi,
+  updateCollegeGateApi,
+  deleteCollegeGateApi,
+} from "@/lib/api/gates.server";
 import type { AdminUserRecord } from "@/lib/db/admin.server";
 import type { BulkImportValidationResult, ImportPreviewItem } from "@/lib/db/user-management.server";
 import { cn } from "@/lib/utils";
@@ -84,11 +95,43 @@ function AdminUsersPage() {
   const [newSec, setNewSec] = useState("A");
   const [submittingUser, setSubmittingUser] = useState(false);
 
+  const [newAssignedGate, setNewAssignedGate] = useState("Gate 1");
+  const [reassignGateOpen, setReassignGateOpen] = useState(false);
+  const [selectedSecurityUser, setSelectedSecurityUser] = useState<AdminUserRecord | null>(null);
+  const [reassignGateValue, setReassignGateValue] = useState("Gate 1");
+  const [reassigningGate, setReassigningGate] = useState(false);
+
   // Bulk Import state
   const [csvContent, setCsvContent] = useState("");
   const [validatingImport, setValidatingImport] = useState(false);
   const [committingImport, setCommittingImport] = useState(false);
   const [importResult, setImportResult] = useState<BulkImportValidationResult | null>(null);
+
+  const handleReassignGate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSecurityUser) return;
+    setReassigningGate(true);
+    try {
+      const res = await updateSecurityGateAdminApi({
+        data: {
+          userId: selectedSecurityUser.id,
+          assignedGate: reassignGateValue,
+        },
+      });
+      if (res.success) {
+        toast.success(`Updated gate assignment to ${reassignGateValue} for ${selectedSecurityUser.name}`);
+        setReassignGateOpen(false);
+        setSelectedSecurityUser(null);
+        await loadUsers();
+      } else {
+        toast.error(res.error || "Failed to reassign gate.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to reassign gate.");
+    } finally {
+      setReassigningGate(false);
+    }
+  };
 
   const loadUsers = async () => {
     setLoading(true);
@@ -104,9 +147,120 @@ function AdminUsersPage() {
     }
   };
 
+  // College Gate Management State
+  const [manageGatesOpen, setManageGatesOpen] = useState(false);
+  const [collegeGates, setCollegeGates] = useState<any[]>([]);
+  const [loadingGates, setLoadingGates] = useState(false);
+
+  // New Gate form state
+  const [newGateName, setNewGateName] = useState("");
+  const [newGateCode, setNewGateCode] = useState("");
+  const [newGateDesc, setNewGateDesc] = useState("");
+  const [submittingGate, setSubmittingGate] = useState(false);
+
+  // Edit Gate state
+  const [editingGate, setEditingGate] = useState<any | null>(null);
+  const [editGateName, setEditGateName] = useState("");
+  const [editGateCode, setEditGateCode] = useState("");
+  const [editGateDesc, setEditGateDesc] = useState("");
+  const [editGateStatus, setEditGateStatus] = useState<"Active" | "Inactive">("Active");
+  const [updatingGate, setUpdatingGate] = useState(false);
+
+  const loadGates = async () => {
+    setLoadingGates(true);
+    try {
+      const res = await getCollegeGatesApi();
+      if (res.success && res.gates) {
+        setCollegeGates(res.gates);
+        if (res.gates.length > 0 && res.gates[0]?.gate_name && !newAssignedGate) {
+          setNewAssignedGate(res.gates[0].gate_name);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load college gates:", err);
+    } finally {
+      setLoadingGates(false);
+    }
+  };
+
   useEffect(() => {
     loadUsers();
+    loadGates();
   }, []);
+
+  const handleCreateGate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newGateName.trim() || !newGateCode.trim()) {
+      toast.error("Please enter Gate Name and Gate Code.");
+      return;
+    }
+    setSubmittingGate(true);
+    try {
+      const res = await createCollegeGateApi({
+        data: {
+          gateName: newGateName,
+          gateCode: newGateCode,
+          description: newGateDesc,
+        },
+      });
+      if (res.success) {
+        toast.success(`Campus Gate '${newGateName.trim()}' created successfully!`);
+        setNewGateName("");
+        setNewGateCode("");
+        setNewGateDesc("");
+        await loadGates();
+      } else {
+        toast.error(res.error || "Failed to create gate.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create gate.");
+    } finally {
+      setSubmittingGate(false);
+    }
+  };
+
+  const handleUpdateGate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingGate) return;
+    setUpdatingGate(true);
+    try {
+      const res = await updateCollegeGateApi({
+        data: {
+          id: editingGate.id,
+          gateName: editGateName,
+          gateCode: editGateCode,
+          description: editGateDesc,
+          status: editGateStatus,
+        },
+      });
+      if (res.success) {
+        toast.success(`Updated gate '${editGateName}' details.`);
+        setEditingGate(null);
+        await loadGates();
+      } else {
+        toast.error(res.error || "Failed to update gate.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update gate.");
+    } finally {
+      setUpdatingGate(false);
+    }
+  };
+
+  const handleDeleteGate = async (gate: any) => {
+    if (!confirm(`Are you sure you want to delete gate '${gate.gate_name}'?`)) return;
+    try {
+      const res = await deleteCollegeGateApi({ data: { id: gate.id } });
+      if (res.success) {
+        toast.success(`Deleted gate '${gate.gate_name}'.`);
+        await loadGates();
+      } else {
+        toast.error(res.error || "Failed to delete gate.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete gate.");
+    }
+  };
 
   const handleRoleChange = async (
     userId: string,
@@ -161,6 +315,7 @@ function AdminUsersPage() {
           name: newName,
           email: newEmail,
           department: newDept,
+          assignedGate: newRole === "security" ? newAssignedGate : newDept,
           year: newYear,
           semester: newSem,
           section: newSec,
@@ -318,7 +473,15 @@ function AdminUsersPage() {
           description="Manage institutional users, execute student bulk CSV imports, toggle account statuses, and oversee authentication credentials."
           breadcrumb={[{ label: "Admin", to: "/admin/dashboard" }, { label: "User Onboarding" }]}
           actions={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 font-bold"
+                onClick={() => setManageGatesOpen(true)}
+              >
+                <MapPin className="size-4 mr-1.5" /> Manage Campus Gates
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -435,7 +598,8 @@ function AdminUsersPage() {
                     <th className="py-3.5 px-4">User Name / Code</th>
                     <th className="py-3.5 px-4">Registered Email</th>
                     <th className="py-3.5 px-4">Role</th>
-                    <th className="py-3.5 px-4">Department</th>
+                    <th className="py-3.5 px-4">Department / Gate</th>
+                    {activeTab === "security" && <th className="py-3.5 px-4">Assigned Gate</th>}
                     <th className="py-3.5 px-4">Status</th>
                     <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
@@ -443,6 +607,9 @@ function AdminUsersPage() {
                 <tbody className="divide-y divide-divider font-medium">
                   {filteredUsers.map((u) => {
                     const isActive = (u.status || "Active").toLowerCase() === "active";
+                    const isSecurity = u.role.toLowerCase() === "security";
+                    const assignedGate = u.assignedPost || u.department || "Unassigned";
+
                     return (
                       <tr key={u.id} className="hover:bg-accent/40 transition-colors">
                         <td className="py-3.5 px-4">
@@ -460,6 +627,13 @@ function AdminUsersPage() {
                           </span>
                         </td>
                         <td className="py-3.5 px-4 font-bold text-foreground">{u.department}</td>
+                        {activeTab === "security" && (
+                          <td className="py-3.5 px-4 font-bold text-emerald-600 dark:text-emerald-400">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-500/20">
+                              📍 {assignedGate}
+                            </span>
+                          </td>
+                        )}
                         <td className="py-3.5 px-4">
                           <button
                             type="button"
@@ -476,21 +650,38 @@ function AdminUsersPage() {
                           </button>
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <Select
-                            value={u.role.toLowerCase()}
-                            onValueChange={(val) => handleRoleChange(u.id, val as any)}
-                          >
-                            <SelectTrigger className="h-8 text-xs rounded-xl w-32 ml-auto">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">ADMIN</SelectItem>
-                              <SelectItem value="hod">HOD</SelectItem>
-                              <SelectItem value="faculty">FACULTY</SelectItem>
-                              <SelectItem value="student">STUDENT</SelectItem>
-                              <SelectItem value="security">SECURITY</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="flex items-center justify-end gap-2">
+                            {isSecurity && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedSecurityUser(u);
+                                  setReassignGateValue(assignedGate !== "Unassigned" ? assignedGate : "Gate 1");
+                                  setReassignGateOpen(true);
+                                }}
+                                className="h-8 text-xs font-bold px-2.5 rounded-xl border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10"
+                              >
+                                Reassign Gate
+                              </Button>
+                            )}
+                            <Select
+                              value={u.role.toLowerCase()}
+                              onValueChange={(val) => handleRoleChange(u.id, val as any)}
+                            >
+                              <SelectTrigger className="h-8 text-xs rounded-xl w-28">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">ADMIN</SelectItem>
+                                <SelectItem value="hod">HOD</SelectItem>
+                                <SelectItem value="faculty">FACULTY</SelectItem>
+                                <SelectItem value="student">STUDENT</SelectItem>
+                                <SelectItem value="security">SECURITY</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -500,6 +691,60 @@ function AdminUsersPage() {
             </div>
           </div>
         )}
+
+        {/* MODAL: REASSIGN GATE */}
+        <Dialog open={reassignGateOpen} onOpenChange={setReassignGateOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 font-bold text-foreground">
+                <Landmark className="size-5 text-primary" /> Reassign College Gate
+              </DialogTitle>
+              <DialogDescription>
+                Reassign security officer <strong>{selectedSecurityUser?.name}</strong> to a different college gate.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleReassignGate} className="space-y-4 text-xs">
+              <div>
+                <Label className="text-xs font-semibold">Select Assigned College Gate *</Label>
+                <Select value={reassignGateValue} onValueChange={setReassignGateValue}>
+                  <SelectTrigger className="mt-1 h-10 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {collegeGates.length === 0 ? (
+                      <SelectItem value={reassignGateValue}>{reassignGateValue}</SelectItem>
+                    ) : (
+                      collegeGates.map((g) => (
+                        <SelectItem key={g.id} value={g.gate_name}>
+                          📍 {g.gate_name} ({g.gate_code})
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setReassignGateOpen(false)}
+                  className="h-9 text-xs rounded-xl"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={reassigningGate}
+                  className="h-9 text-xs font-bold rounded-xl bg-primary text-primary-foreground"
+                >
+                  {reassigningGate ? "Saving Gate Assignment..." : "Confirm Gate Reassignment"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* MODAL: ADD INDIVIDUAL USER */}
         <Dialog open={addUserOpen} onOpenChange={setAddUserOpen}>
@@ -571,35 +816,57 @@ function AdminUsersPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
+              {newRole === "security" ? (
                 <div>
-                  <Label className="text-xs font-semibold">Department *</Label>
-                  <Select value={newDept} onValueChange={setNewDept}>
+                  <Label className="text-xs font-semibold">Assigned College Gate *</Label>
+                  <Select value={newAssignedGate} onValueChange={setNewAssignedGate}>
                     <SelectTrigger className="mt-1 h-10 rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="CSE">CSE</SelectItem>
-                      <SelectItem value="ECE">ECE</SelectItem>
-                      <SelectItem value="MECH">MECH</SelectItem>
-                      <SelectItem value="EEE">EEE</SelectItem>
-                      <SelectItem value="CIVIL">CIVIL</SelectItem>
-                      <SelectItem value="IT">IT</SelectItem>
-                      <SelectItem value="AIML">AIML</SelectItem>
+                      {collegeGates.length === 0 ? (
+                        <SelectItem value={newAssignedGate}>{newAssignedGate}</SelectItem>
+                      ) : (
+                        collegeGates.map((g) => (
+                          <SelectItem key={g.id} value={g.gate_name}>
+                            📍 {g.gate_name} ({g.gate_code})
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs font-semibold">Department *</Label>
+                    <Select value={newDept} onValueChange={setNewDept}>
+                      <SelectTrigger className="mt-1 h-10 rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CSE">CSE</SelectItem>
+                        <SelectItem value="ECE">ECE</SelectItem>
+                        <SelectItem value="MECH">MECH</SelectItem>
+                        <SelectItem value="EEE">EEE</SelectItem>
+                        <SelectItem value="CIVIL">CIVIL</SelectItem>
+                        <SelectItem value="IT">IT</SelectItem>
+                        <SelectItem value="AIML">AIML</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div>
-                  <Label className="text-xs font-semibold">Phone Number</Label>
-                  <Input
-                    value={newPhone}
-                    onChange={(e) => setNewPhone(e.target.value)}
-                    placeholder="+91 9876543210"
-                    className="mt-1 h-10 rounded-xl"
-                  />
+                  <div>
+                    <Label className="text-xs font-semibold">Phone Number</Label>
+                    <Input
+                      value={newPhone}
+                      onChange={(e) => setNewPhone(e.target.value)}
+                      placeholder="+91 9876543210"
+                      className="mt-1 h-10 rounded-xl"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               {newRole === "student" && (
                 <div className="grid grid-cols-3 gap-2">
@@ -785,6 +1052,221 @@ function AdminUsersPage() {
                 </Button>
               </DialogFooter>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* MODAL: MANAGE CAMPUS GATES */}
+        <Dialog open={manageGatesOpen} onOpenChange={setManageGatesOpen}>
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 font-bold text-foreground">
+                <MapPin className="size-5 text-amber-600 dark:text-amber-400" /> College Campus Gates Management
+              </DialogTitle>
+              <DialogDescription>
+                Add, edit, or remove college gate locations dynamically based on your institution's infrastructure.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6 text-xs">
+              {/* Form to Add New Gate */}
+              <form onSubmit={handleCreateGate} className="p-4 rounded-2xl bg-accent/40 border border-border space-y-3">
+                <h4 className="font-bold text-foreground flex items-center gap-1.5 text-xs">
+                  <Plus className="size-4 text-primary" /> Add New Campus Gate
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <Label className="text-[11px]">Gate Name *</Label>
+                    <Input
+                      value={newGateName}
+                      onChange={(e) => setNewGateName(e.target.value)}
+                      placeholder="e.g. North Tech Gate"
+                      className="mt-1 h-9 text-xs rounded-xl"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[11px]">Gate Code *</Label>
+                    <Input
+                      value={newGateCode}
+                      onChange={(e) => setNewGateCode(e.target.value)}
+                      placeholder="e.g. GT-NORTH"
+                      className="mt-1 h-9 text-xs rounded-xl uppercase font-mono"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[11px]">Description (Optional)</Label>
+                    <Input
+                      value={newGateDesc}
+                      onChange={(e) => setNewGateDesc(e.target.value)}
+                      placeholder="e.g. Near CS Block"
+                      className="mt-1 h-9 text-xs rounded-xl"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end pt-1">
+                  <Button
+                    type="submit"
+                    disabled={submittingGate}
+                    size="sm"
+                    className="h-8 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-500 text-white"
+                  >
+                    {submittingGate ? "Creating..." : "Add Gate"}
+                  </Button>
+                </div>
+              </form>
+
+              {/* Dynamic Gates Table */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-foreground text-xs uppercase tracking-wider text-muted-foreground">
+                  Configured Campus Gates ({collegeGates.length})
+                </h4>
+
+                {loadingGates ? (
+                  <div className="p-6 text-center text-muted-foreground">Loading gates from PostgreSQL...</div>
+                ) : collegeGates.length === 0 ? (
+                  <div className="p-6 text-center text-muted-foreground border border-dashed rounded-xl">No gates configured yet.</div>
+                ) : (
+                  <div className="border border-border rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-muted/60 border-b border-border font-bold text-[11px] uppercase">
+                        <tr>
+                          <th className="p-3">Gate Name</th>
+                          <th className="p-3">Gate Code</th>
+                          <th className="p-3">Description</th>
+                          <th className="p-3">Status</th>
+                          <th className="p-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-divider font-medium">
+                        {collegeGates.map((gate) => (
+                          <tr key={gate.id} className="hover:bg-accent/30">
+                            <td className="p-3 font-bold text-foreground">
+                              📍 {gate.gate_name}
+                            </td>
+                            <td className="p-3 font-mono font-semibold text-muted-foreground">
+                              {gate.gate_code}
+                            </td>
+                            <td className="p-3 text-muted-foreground">
+                              {gate.description || "—"}
+                            </td>
+                            <td className="p-3">
+                              <span className={cn(
+                                "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                                gate.status === "Active" ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"
+                              )}>
+                                {gate.status}
+                              </span>
+                            </td>
+                            <td className="p-3 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingGate(gate);
+                                    setEditGateName(gate.gate_name);
+                                    setEditGateCode(gate.gate_code);
+                                    setEditGateDesc(gate.description || "");
+                                    setEditGateStatus(gate.status);
+                                  }}
+                                  className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground"
+                                >
+                                  <Edit3 className="size-3.5" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteGate(gate)}
+                                  className="h-7 w-7 p-0 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setManageGatesOpen(false)} className="h-9 text-xs rounded-xl">
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* MODAL: EDIT GATE */}
+        <Dialog open={!!editingGate} onOpenChange={(open) => !open && setEditingGate(null)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 font-bold text-foreground">
+                <Edit3 className="size-5 text-primary" /> Edit Gate Details
+              </DialogTitle>
+              <DialogDescription>
+                Update details or toggle status for campus gate <strong>{editingGate?.gate_name}</strong>.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleUpdateGate} className="space-y-4 text-xs">
+              <div>
+                <Label className="text-xs font-semibold">Gate Name *</Label>
+                <Input
+                  value={editGateName}
+                  onChange={(e) => setEditGateName(e.target.value)}
+                  className="mt-1 h-10 rounded-xl"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold">Gate Code *</Label>
+                <Input
+                  value={editGateCode}
+                  onChange={(e) => setEditGateCode(e.target.value)}
+                  className="mt-1 h-10 rounded-xl font-mono uppercase"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold">Description</Label>
+                <Input
+                  value={editGateDesc}
+                  onChange={(e) => setEditGateDesc(e.target.value)}
+                  className="mt-1 h-10 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold">Status *</Label>
+                <Select value={editGateStatus} onValueChange={(val: any) => setEditGateStatus(val)}>
+                  <SelectTrigger className="mt-1 h-10 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <DialogFooter className="gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setEditingGate(null)} className="h-9 text-xs rounded-xl">
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updatingGate} className="h-9 text-xs font-bold rounded-xl bg-primary text-primary-foreground">
+                  {updatingGate ? "Saving..." : "Save Gate Changes"}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>

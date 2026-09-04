@@ -620,27 +620,44 @@ function AdminClubsPage() {
                   No registered members found in this club roster.
                 </p>
               ) : (
-                <div className="max-h-80 overflow-y-auto border border-border rounded-xl">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-muted/60 text-muted-foreground font-bold uppercase tracking-wider border-b border-border sticky top-0">
-                      <tr>
-                        <th className="px-3 py-2">Roll Number</th>
-                        <th className="px-3 py-2">Name</th>
-                        <th className="px-3 py-2">Department</th>
-                        <th className="px-3 py-2">Year</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {clubMembersList.map((m) => (
-                        <tr key={m.id} className="hover:bg-muted/40">
-                          <td className="px-3 py-2 font-mono font-bold text-primary">{m.student_id}</td>
-                          <td className="px-3 py-2 font-medium text-foreground">{m.student_name}</td>
-                          <td className="px-3 py-2 text-muted-foreground">{m.department}</td>
-                          <td className="px-3 py-2 text-muted-foreground">{m.year} &bull; {m.section}</td>
+                <div className="max-h-80 overflow-y-auto space-y-2">
+                  {/* Mobile Roster List (< 640px) */}
+                  <div className="block sm:hidden space-y-2">
+                    {clubMembersList.map((m) => (
+                      <div key={m.id} className="p-3 rounded-xl border border-border bg-card space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-primary">{m.student_id}</span>
+                          <span className="text-[11px] font-semibold text-muted-foreground">{m.department}</span>
+                        </div>
+                        <h4 className="font-bold text-foreground">{m.student_name}</h4>
+                        <p className="text-[11px] text-muted-foreground">{m.year} &bull; Section {m.section}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Roster Table (>= 640px) */}
+                  <div className="hidden sm:block border border-border rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-muted/60 text-muted-foreground font-bold uppercase tracking-wider border-b border-border sticky top-0">
+                        <tr>
+                          <th className="px-3 py-2">Roll Number</th>
+                          <th className="px-3 py-2">Name</th>
+                          <th className="px-3 py-2">Department</th>
+                          <th className="px-3 py-2">Year & Section</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {clubMembersList.map((m) => (
+                          <tr key={m.id} className="hover:bg-muted/40">
+                            <td className="px-3 py-2 font-mono font-bold text-primary">{m.student_id}</td>
+                            <td className="px-3 py-2 font-medium text-foreground">{m.student_name}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{m.department}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{m.year} &bull; {m.section}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>

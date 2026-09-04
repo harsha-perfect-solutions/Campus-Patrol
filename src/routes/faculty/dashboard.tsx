@@ -62,7 +62,7 @@ function FacultyDashboardContent() {
         description="Faculty Discipline & Student Movement Authorization Workspace."
         breadcrumb={[{ label: "Faculty", to: "/faculty/dashboard" }, { label: "Dashboard" }]}
         actions={
-          <Button asChild size="lg" className="rounded-xl font-semibold shadow-xs">
+          <Button asChild size="default" className="w-full sm:w-auto rounded-xl font-semibold shadow-xs">
             <Link to="/faculty/check">
               <UserSearch className="size-4 mr-2" /> Check Student Roll No
             </Link>
@@ -71,7 +71,7 @@ function FacultyDashboardContent() {
       />
 
       {/* Summary Stat Cards */}
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
             label: "Today's Reports",
@@ -96,12 +96,12 @@ function FacultyDashboardContent() {
         ].map((s) => (
           <div
             key={s.label}
-            className="card-surface p-5 rounded-2xl border border-border shadow-2xs"
+            className="card-surface p-4 sm:p-5 rounded-2xl border border-border shadow-2xs"
           >
             <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold ${s.color}`}>
               {s.label}
             </span>
-            <p className="mt-3 text-3xl font-extrabold text-foreground">
+            <p className="mt-2.5 text-2xl sm:text-3xl font-extrabold text-foreground">
               {String(s.value).padStart(2, "0")}
             </p>
           </div>
@@ -109,15 +109,15 @@ function FacultyDashboardContent() {
       </div>
 
       {/* MY COORDINATED CLUBS SECTION */}
-      <section className="card-surface p-6 rounded-2xl border border-border shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-border pb-3">
+      <section className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-3 gap-2">
           <div className="flex items-center gap-2">
-            <Building className="size-4 text-primary" />
+            <Building className="size-4 text-primary shrink-0" />
             <span className="text-xs font-bold uppercase tracking-wider text-primary">
               MY COORDINATED CLUBS
             </span>
           </div>
-          <Button variant="outline" size="sm" asChild className="rounded-xl text-xs font-semibold">
+          <Button variant="outline" size="sm" asChild className="rounded-xl text-xs font-semibold w-full sm:w-auto">
             <Link to="/faculty/clubs" search={{ tab: "members" }}>Open Club Workspace &rarr;</Link>
           </Button>
         </div>
@@ -135,29 +135,29 @@ function FacultyDashboardContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {myClubs.map((c) => (
               <div key={c.club_id} className="p-4 rounded-xl border border-border bg-card space-y-3 shadow-2xs">
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-2">
                   <div>
                     <span className="inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider mb-1">
                       {c.club_type}
                     </span>
-                    <h4 className="text-sm font-bold text-foreground">{c.name}</h4>
+                    <h4 className="text-sm font-bold text-foreground break-words">{c.name}</h4>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{c.description}</p>
                   </div>
-                  <ToneBadge tone="info">Coordinator</ToneBadge>
+                  <ToneBadge tone="info" className="shrink-0">Coordinator</ToneBadge>
                 </div>
 
-                <div className="flex items-center gap-2 pt-2 border-t border-border">
-                  <Button size="sm" variant="outline" asChild className="font-semibold text-xs h-7">
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
+                  <Button size="sm" variant="outline" asChild className="font-semibold text-xs h-8 flex-1 sm:flex-initial">
                     <Link to="/faculty/clubs" search={{ tab: "members" }}>
                       <Users className="size-3 mr-1" /> Roster
                     </Link>
                   </Button>
-                  <Button size="sm" variant="outline" asChild className="font-semibold text-xs h-7">
+                  <Button size="sm" variant="outline" asChild className="font-semibold text-xs h-8 flex-1 sm:flex-initial">
                     <Link to="/faculty/clubs" search={{ tab: "events" }}>
                       <Calendar className="size-3 mr-1" /> Events
                     </Link>
                   </Button>
-                  <Button size="sm" asChild className="font-bold text-xs h-7 bg-emerald-600 hover:bg-emerald-700 text-white ml-auto">
+                  <Button size="sm" asChild className="font-bold text-xs h-8 bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto sm:ml-auto">
                     <Link to="/faculty/clubs" search={{ tab: "permissions" }}>
                       <Ticket className="size-3 mr-1" /> Give Permission
                     </Link>

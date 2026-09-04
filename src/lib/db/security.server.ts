@@ -13,6 +13,61 @@ import {
   recordEventParticipantEntry,
 } from "./clubs.server";
 
+let securityGateSchemaEnsured = false;
+
+export async function ensureSecurityGateSchema(): Promise<void> {
+  if (securityGateSchemaEnsured) return;
+  try {
+    await db.query(`
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS assigned_gate_id TEXT;
+    `);
+    securityGateSchemaEnsured = true;
+  } catch (err) {
+    console.warn("[Security Gate Schema] Warning:", err);
+  }
+}
+
+export async function getSecurityOfficerAssignedGate(session: ServerSession): Promise<string | null> {
+  await ensureSecurityGateSchema();
+  if (session.role !== "security") {
+    return null;
+  }
+
+  const res = await db.query(
+    `SELECT assigned_gate_id, assigned_post FROM profiles WHERE id::text = $1 OR UPPER(email) = UPPER($2) LIMIT 1;`,
+    [session.userId, session.email]
+  );
+
+  const row = res.rows[0];
+  if (!row) return null;
+
+  const rawGate = row.assigned_gate_id?.trim() || row.assigned_post?.trim() || null;
+  if (!rawGate || rawGate === "" || rawGate.toLowerCase() === "unassigned" || rawGate.toLowerCase() === "no gate assigned") {
+    return null;
+  }
+
+  return rawGate;
+}
+
+export async function requireSecuritySessionWithGate(session: ServerSession | null): Promise<{
+  session: ServerSession;
+  assignedGate: string;
+}> {
+  if (!session) {
+    throw new Error("Unauthorized: Active session required.");
+  }
+  if (session.role !== "security") {
+    throw new Error("Forbidden: Security access required.");
+  }
+
+  const assignedGate = await getSecurityOfficerAssignedGate(session);
+  if (!assignedGate) {
+    throw new Error("Forbidden: Security Officer has no assigned gate. Please contact Admin to assign a gate.");
+  }
+
+  return { session, assignedGate };
+}
+
 export async function requireSecuritySession(session: ServerSession | null): Promise<ServerSession> {
   if (!session) {
     throw new Error("Unauthorized: Active session required.");
@@ -24,44 +79,51 @@ export async function requireSecuritySession(session: ServerSession | null): Pro
 }
 
 export async function getSecurityDashboardStats(session: ServerSession) {
-  await requireSecuritySession(session);
+  const { assignedGate } = await requireSecuritySessionWithGate(session);
 
-  // Checked today (audit logs by security officer)
+  // Checked today at officer's assigned gate (audit logs by security officer at this gate)
   const checkedRes = await db.query(
     `SELECT COUNT(*) FROM audit_logs 
-     WHERE actor = $1 AND action = 'security_student_checked' 
+     WHERE (actor = $1 OR actor = $2)
+     AND (metadata->>'checkpoint' = $3 OR metadata->>'gate_id' = $3 OR metadata->>'gate' = $3)
      AND timestamp >= CURRENT_DATE`,
-    [session.email]
+    [session.email, session.fullName, assignedGate]
   );
   const checkedToday = parseInt(checkedRes.rows[0]?.count || "0", 10);
 
-  // Active gate passes today
+  // Active gate passes today at this gate
   const activePassRes = await db.query(
     `SELECT COUNT(*) FROM movement_permissions 
      WHERE status = 'approved' AND date = CURRENT_DATE 
-     AND CURRENT_TIME BETWEEN valid_from AND valid_until`
+     AND (checkpoint IS NULL OR checkpoint = $1 OR checkpoint = 'Main Gate')
+     AND CURRENT_TIME BETWEEN valid_from AND valid_until`,
+    [assignedGate]
   );
   const activeGatePasses = parseInt(activePassRes.rows[0]?.count || "0", 10);
 
-  // Reports created by this security officer
+  // Reports created by this security officer at this gate
   const myReportsRes = await db.query(
     `SELECT COUNT(*) FROM violation_reports 
-     WHERE reported_by = $1 OR reported_by = $2`,
-    [session.fullName, session.email]
+     WHERE (reported_by = $1 OR reported_by = $2) AND (location = $3 OR location LIKE $4)`,
+    [session.fullName, session.email, assignedGate, `%${assignedGate}%`]
   );
   const totalReportsByMe = parseInt(myReportsRes.rows[0]?.count || "0", 10);
 
-  // Total campus violation reports today
+  // Total campus violation reports today at this gate
   const totalCampusReportsRes = await db.query(
-    `SELECT COUNT(*) FROM violation_reports WHERE created_at >= CURRENT_DATE`
+    `SELECT COUNT(*) FROM violation_reports 
+     WHERE created_at >= CURRENT_DATE AND (location = $1 OR location LIKE $2)`,
+    [assignedGate, `%${assignedGate}%`]
   );
   const campusReportsToday = parseInt(totalCampusReportsRes.rows[0]?.count || "0", 10);
 
-  // Recent incidents (last 5)
+  // Recent incidents at this gate (last 5)
   const recentIncidentsRes = await db.query(
     `SELECT id, student_code, student_name, department, location, status, created_at, evidence 
      FROM violation_reports 
-     ORDER BY created_at DESC LIMIT 5`
+     WHERE (location = $1 OR location LIKE $2 OR reported_by = $3)
+     ORDER BY created_at DESC LIMIT 5`,
+    [assignedGate, `%${assignedGate}%`, session.fullName]
   );
 
   return {
@@ -376,11 +438,15 @@ export async function verifyGatePass(
   session: ServerSession,
   payload: { passIdOrRollNo: string; checkpoint?: string }
 ): Promise<VerificationResultPayload> {
-  await requireSecuritySession(session);
+  const { assignedGate } = await requireSecuritySessionWithGate(session);
   await ensureSecurityTableColumns();
 
+  if (payload.checkpoint && payload.checkpoint.trim().toLowerCase() !== assignedGate.trim().toLowerCase()) {
+    throw new Error(`Forbidden: Access denied to gate '${payload.checkpoint}'. Your assigned gate is '${assignedGate}'.`);
+  }
+
   const rawInput = (payload.passIdOrRollNo || "").trim();
-  const checkpoint = session.assignedPost || session.department || payload.checkpoint || "Main Gate";
+  const checkpoint = assignedGate;
   const timestamp = new Date().toISOString();
 
   if (!rawInput) {
@@ -394,7 +460,16 @@ export async function verifyGatePass(
     };
   }
 
+  // Handle Real-Time QR System Tokens (CMADMS:QR:...)
+  if (rawInput.toUpperCase().includes("CMADMS:QR:")) {
+    const { verifyQRTokenServer } = await import("./qr.server");
+    const qrMatch = rawInput.match(/CMADMS:QR:[a-f0-9-]+/i);
+    const tokenToVerify = qrMatch ? qrMatch[0] : rawInput.trim();
+    return await verifyQRTokenServer(session, tokenToVerify, checkpoint);
+  }
+
   let cleanCode = rawInput;
+
   try {
     if (rawInput.startsWith("{")) {
       const parsed = JSON.parse(rawInput);
@@ -1272,7 +1347,7 @@ export async function authorizeEarlyExit(
 }
 
 export async function getGatePassVerificationHistory(session: ServerSession) {
-  await requireSecuritySession(session);
+  const { assignedGate } = await requireSecuritySessionWithGate(session);
 
   const res = await db.query(
     `SELECT 
@@ -1285,8 +1360,14 @@ export async function getGatePassVerificationHistory(session: ServerSession) {
        timestamp::text
      FROM audit_logs
      WHERE action IN ('gate_exit_authorized', 'gate_exit_denied', 'gate_entry_verified', 'student_qr_scanned_security', 'gate_pass_verified')
+     AND (
+       metadata->>'checkpoint' = $1 
+       OR metadata->>'gate_id' = $1 
+       OR metadata->>'gate' = $1
+     )
      ORDER BY timestamp DESC
-     LIMIT 50;`
+     LIMIT 50;`,
+    [assignedGate]
   );
 
   return res.rows.map((r: any) => {
@@ -1308,7 +1389,7 @@ export async function getGatePassVerificationHistory(session: ServerSession) {
       passCode: r.metadata?.pass_code || r.pass_id,
       studentName: r.metadata?.student_name || r.student_code,
       department: r.metadata?.department || "CSE",
-      checkpoint: r.metadata?.checkpoint || "Main Gate",
+      checkpoint: assignedGate,
       authorized: isAuthorized,
       resultStatus: r.metadata?.result_status || resultStatus,
       verificationType,

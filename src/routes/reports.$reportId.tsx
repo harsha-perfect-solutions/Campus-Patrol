@@ -93,14 +93,14 @@ function Section({
 
 function Facts({ items }: { items: [string, string][] }) {
   return (
-    <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
+    <dl className="grid gap-x-6 gap-y-2.5 text-sm grid-cols-1 sm:grid-cols-2">
       {items.map(([k, v]) => (
         <div
           key={k}
-          className="flex items-start justify-between gap-4 border-b border-divider pb-2.5"
+          className="flex items-start justify-between gap-3 border-b border-divider pb-2"
         >
-          <dt className="text-xs text-muted-foreground">{k}</dt>
-          <dd className="text-right text-xs font-semibold text-foreground">{v}</dd>
+          <dt className="text-xs text-muted-foreground shrink-0">{k}</dt>
+          <dd className="text-right text-xs font-semibold text-foreground break-words min-w-0">{v}</dd>
         </div>
       ))}
     </dl>
@@ -601,7 +601,7 @@ export function ReportDetail() {
           { label: report.id },
         ]}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <StatusBadge
               status={
                 report.status === "resolved" && (report.decision === "RESOLVED_BY_COUNSELOR" || report.resolutionNote || report.resolvedBy) && (report.decision !== "exonerated" && report.decision !== "warned" && report.decision !== "escalated")
@@ -618,7 +618,7 @@ export function ReportDetail() {
               variant="default"
               size="sm"
               onClick={handleExportExcel}
-              className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-xs"
+              className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-xs flex-1 sm:flex-initial"
             >
               <FileSpreadsheet className="size-4" />
               <span>Export Excel</span>
@@ -628,12 +628,12 @@ export function ReportDetail() {
               variant="outline"
               size="sm"
               onClick={handleExportPDF}
-              className="rounded-xl font-semibold gap-1.5"
+              className="rounded-xl font-semibold gap-1.5 flex-1 sm:flex-initial"
             >
               <Printer className="size-3.5" />
               <span>Print PDF</span>
             </Button>
-            <Button variant="ghost" size="sm" asChild className="rounded-xl">
+            <Button variant="ghost" size="sm" asChild className="rounded-xl shrink-0">
               <Link to="/reports">
                 <ArrowLeft className="size-3.5 mr-1" /> Back
               </Link>

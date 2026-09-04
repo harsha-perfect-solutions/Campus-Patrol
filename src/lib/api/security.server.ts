@@ -117,6 +117,27 @@ export const authorizeEarlyExitApi = createServerFn({ method: "POST" })
     }
   });
 
+export const verifyGateQRApi = createServerFn({ method: "POST" })
+  .validator((data: { qrToken: string; checkpoint?: string }) => data)
+  .handler(async ({ data }) => {
+    try {
+      const session = await requireSecurityAuth();
+      const { verifyQRTokenServer } = await import("../db/qr.server");
+      const res = await verifyQRTokenServer(session, data.qrToken, data.checkpoint);
+      return { ...res };
+    } catch (err: any) {
+      console.error("[Security API Error] verifyGateQRApi:", err);
+      return {
+        success: false,
+        authorized: false,
+        resultStatus: "ACCESS DENIED",
+        failureReason: err.message || "Verification failed.",
+        message: "Student is NOT authorized.",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  });
+
 export const getGatePassVerificationHistoryApi = createServerFn({ method: "GET" }).handler(async () => {
   try {
     const session = await requireSecurityAuth();
@@ -128,5 +149,32 @@ export const getGatePassVerificationHistoryApi = createServerFn({ method: "GET" 
   }
 });
 
+export const getSecurityAssignedGateApi = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    const session = await requireSecurityAuth();
+    const { getSecurityOfficerAssignedGate } = await import("../db/security.server");
+    const assignedGate = await getSecurityOfficerAssignedGate(session);
+    return {
+      success: true,
+      assigned: !!assignedGate,
+      gateId: assignedGate,
+      gateName: assignedGate,
+      officerName: session.fullName,
+      staffCode: session.staffCode,
+      email: session.email,
+    };
+  } catch (err: any) {
+    console.error("[Security API Error] getSecurityAssignedGateApi:", err);
+    return {
+      success: false,
+      assigned: false,
+      gateId: null,
+      gateName: null,
+      error: err.message || "Failed to fetch security gate assignment.",
+    };
+  }
+});
+
 export default {};
+
 

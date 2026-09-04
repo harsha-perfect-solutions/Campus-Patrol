@@ -91,10 +91,22 @@ export async function createMovementPermission(input: NewPermissionInput): Promi
     `;
     const values = [cleanCode, input.reason, input.validFrom, input.validUntil, input.issuedBy];
     const result = await db.query<DBPermission>(query, values);
-    if (!result.rows[0]) {
+    const created = result.rows[0];
+    if (!created) {
       throw new Error("Failed to return created permission row.");
     }
-    return result.rows[0];
+    // Generate QR Pass for approved movement permission
+    if (created.status === "approved") {
+      try {
+        const { getOrCreateQRPassForMovementPermission } = await import("./qr.server");
+        const validFromIso = new Date().toISOString();
+        const validUntilIso = new Date(Date.now() + 86400000).toISOString();
+        await getOrCreateQRPassForMovementPermission(created.id, validFromIso, validUntilIso);
+      } catch (qrErr) {
+        console.warn("[QR Notice] Failed to auto-generate QR pass:", qrErr);
+      }
+    }
+    return created;
   } catch (error) {
     console.error("[Database Error] Error creating movement permission:", error);
     throw new Error("Failed to insert movement permission.");
@@ -132,6 +144,20 @@ export async function approveMovementPermission(
       throw new Error(`Movement permission ${cleanId} not found.`);
     }
 
+    // Auto generate or revoke QR pass depending on newStatus
+    try {
+      const { getOrCreateQRPassForMovementPermission, revokeQRPassByPermission } = await import("./qr.server");
+      if (newStatus === "approved") {
+        const validFromIso = new Date().toISOString();
+        const validUntilIso = new Date(Date.now() + 86400000).toISOString();
+        await getOrCreateQRPassForMovementPermission(updated.id, validFromIso, validUntilIso);
+      } else {
+        await revokeQRPassByPermission("NORMAL_MOVEMENT", updated.id);
+      }
+    } catch (qrErr) {
+      console.warn("[QR Notice] Failed to update QR pass status:", qrErr);
+    }
+
     // Notify the specific student about the approval/rejection
     const studentUserId = await findStudentUserIdByCode(updated.student_code);
     if (studentUserId) {
@@ -157,3 +183,4 @@ export async function approveMovementPermission(
     throw new Error("Failed to update movement permission status.");
   }
 }
+

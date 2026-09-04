@@ -137,4 +137,47 @@ export const getStudentCounselorApi = createServerFn({ method: "POST" })
     return await getStudentCounselorDetails(data.studentCode, data.department, data.year, data.section);
   });
 
+/**
+ * Server API: Get Counseling Student Movement Passes.
+ */
+export const getCounselorPassesApi = createServerFn({ method: "POST" })
+  .validator((data: { status?: string }) => data)
+  .handler(async ({ data }) => {
+    const session = await requireRole("faculty");
+    const { getCounselorPasses } = await import("../db/counselor.server");
+    return await getCounselorPasses(session.userId, data.status);
+  });
+
+/**
+ * Server API: Counselor action - Approve or Reject Student Movement Pass.
+ */
+export const approveCounselorPassApi = createServerFn({ method: "POST" })
+  .validator((data: { passId: string; status: "approved" | "rejected" }) => data)
+  .handler(async ({ data }) => {
+    const session = await requireRole("faculty");
+    const { approveMovementPermission } = await import("../db/permissions.server");
+    const updated = await approveMovementPermission(
+      data.passId,
+      data.status,
+      session.fullName || session.email || "Counselor"
+    );
+    return { success: true, pass: updated };
+  });
+
+/**
+ * Server API: Get assigned counselor information for the logged-in student.
+ * Server-authoritative: Enforces student authorization using session.userId.
+ */
+export const getMyCounselorApi = createServerFn({ method: "GET" }).handler(async () => {
+  const session = await requireRole("student");
+  const { getStudentCounselorDetailsForUser } = await import("../db/counselor.server");
+  return await getStudentCounselorDetailsForUser(
+    session.userId,
+    session.studentCode || undefined,
+    session.department || undefined
+  );
+});
+
 export default {};
+
+

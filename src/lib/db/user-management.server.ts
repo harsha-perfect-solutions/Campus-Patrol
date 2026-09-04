@@ -397,6 +397,7 @@ export async function createSingleUserAdmin(data: {
   name: string;
   email?: string;
   department: string;
+  assignedGate?: string;
   year?: string;
   semester?: number;
   section?: string;
@@ -453,6 +454,8 @@ export async function createSingleUserAdmin(data: {
       );
     }
 
+    const assignedGate = data.assignedGate?.trim() || cleanDept;
+
     const profRes = await client.query(
       `
       INSERT INTO profiles (
@@ -464,8 +467,10 @@ export async function createSingleUserAdmin(data: {
         phone,
         password_hash,
         must_change_password,
-        status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, 'Active')
+        status,
+        assigned_gate_id,
+        assigned_post
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, 'Active', $8, $8)
       RETURNING id;
     `,
       [
@@ -476,6 +481,7 @@ export async function createSingleUserAdmin(data: {
         role === "student" ? cleanCode : null,
         cleanPhone,
         initialHash,
+        role === "security" ? assignedGate : null,
       ]
     );
 
@@ -519,6 +525,27 @@ export async function toggleUserStatusAdmin(
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message || "Failed to update user status." };
+  }
+}
+
+export async function updateSecurityOfficerGateAdmin(
+  userId: string,
+  assignedGate: string
+): Promise<{ success: boolean; error?: string }> {
+  await ensureUserManagementSchema();
+  try {
+    const cleanGate = assignedGate.trim();
+    if (!cleanGate) {
+      return { success: false, error: "Assigned gate cannot be empty." };
+    }
+    await db.query(
+      `UPDATE profiles SET assigned_gate_id = $1, assigned_post = $1 WHERE UPPER(id::text) = UPPER($2);`,
+      [cleanGate, userId]
+    );
+    return { success: true };
+  } catch (err: any) {
+    console.error("[Update Security Gate Error]:", err);
+    return { success: false, error: err.message || "Failed to update security gate assignment." };
   }
 }
 

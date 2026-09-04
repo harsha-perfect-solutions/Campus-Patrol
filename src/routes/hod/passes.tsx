@@ -13,6 +13,7 @@ import {
   Calendar,
   AlertCircle,
   RefreshCw,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
@@ -216,58 +217,101 @@ function HodPassesPage() {
         </div>
 
         {/* Search & Tabs */}
-        <div className="card-surface p-4 rounded-2xl border border-border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab("pending")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                activeTab === "pending"
-                  ? "bg-primary text-primary-foreground shadow-xs"
-                  : "bg-muted/40 text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              Pending ({pendingPasses.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("approved")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                activeTab === "approved"
-                  ? "bg-primary text-primary-foreground shadow-xs"
-                  : "bg-muted/40 text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              Approved ({approvedPasses.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("rejected")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                activeTab === "rejected"
-                  ? "bg-primary text-primary-foreground shadow-xs"
-                  : "bg-muted/40 text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              Rejected ({rejectedPasses.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("all")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                activeTab === "all"
-                  ? "bg-primary text-primary-foreground shadow-xs"
-                  : "bg-muted/40 text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              All Passes ({passes.length})
-            </button>
+        <div className="card-surface p-4 rounded-2xl border border-border shadow-xs w-full">
+          {/* Mobile Layout (< 640px): Status Dropdown on top, Search box below */}
+          <div className="block sm:hidden space-y-3 w-full">
+            <div>
+              <label htmlFor="hod-status-filter-select" className="block text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1">
+                Filter Passes
+              </label>
+              <div className="relative w-full">
+                <select
+                  id="hod-status-filter-select"
+                  aria-label="Filter passes by status"
+                  value={activeTab}
+                  onChange={(e) => setActiveTab(e.target.value as any)}
+                  className="w-full h-10 px-3.5 pr-9 rounded-xl bg-background border border-border text-xs font-bold text-foreground appearance-none outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer shadow-xs"
+                >
+                  <option value="pending">Pending ({pendingPasses.length})</option>
+                  <option value="approved">Approved ({approvedPasses.length})</option>
+                  <option value="rejected">Rejected ({rejectedPasses.length})</option>
+                  <option value="all">All Passes ({passes.length})</option>
+                </select>
+                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <ChevronDown className="size-4" />
+                </div>
+              </div>
+            </div>
+
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search by student or reason..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9 text-xs rounded-xl w-full"
+              />
+            </div>
           </div>
 
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search by student or reason..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 text-xs rounded-xl"
-            />
+          {/* Desktop Layout (>= 640px): Horizontal status tab row and search input */}
+          <div className="hidden sm:flex flex-row items-center justify-between gap-3 w-full">
+            <div className="flex items-center gap-1.5 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setActiveTab("pending")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  activeTab === "pending"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "bg-muted/40 text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                Pending ({pendingPasses.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("approved")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  activeTab === "approved"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "bg-muted/40 text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                Approved ({approvedPasses.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("rejected")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  activeTab === "rejected"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "bg-muted/40 text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                Rejected ({rejectedPasses.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("all")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  activeTab === "all"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "bg-muted/40 text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                All Passes ({passes.length})
+              </button>
+            </div>
+
+            <div className="relative w-64 shrink-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search by student or reason..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9 text-xs rounded-xl"
+              />
+            </div>
           </div>
         </div>
 
