@@ -376,7 +376,7 @@ function HodSafetyPreventionContent() {
                 <div className="p-3 rounded-xl bg-muted/40 border border-divider">
                   <p className="text-muted-foreground">{selectedAlert.evidence.explanation || selectedAlert.description}</p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-center">
                   <div className="p-2 rounded-lg bg-background border border-divider">
                     <span className="text-[10px] text-muted-foreground uppercase">Incidents</span>
                     <p className="font-bold text-foreground">{selectedAlert.evidence.incidentCount}</p>

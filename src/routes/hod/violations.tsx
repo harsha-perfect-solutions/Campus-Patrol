@@ -348,7 +348,7 @@ function HODViolationsPage() {
         )}
 
         {/* KPI Ribbon (7 Metrics) */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4 lg:grid-cols-7">
           {[
             { label: "Total Reports", value: stats?.totalReports ?? 0, color: "text-foreground", bg: "bg-muted/40" },
             { label: "New Reports", value: stats?.newReports ?? 0, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50/60 dark:bg-amber-950/20" },
@@ -995,7 +995,7 @@ function HODViolationsPage() {
                   )}
 
                   {selectedReport.status === "under_review" && (
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Button
                         className="h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs"
                         onClick={() => setResolveOpen(true)}

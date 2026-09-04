@@ -185,7 +185,7 @@ function FacultyCounselorContent() {
 
       {/* Dashboard Stats */}
       {stats && (
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-2xs">
             <span className="text-[10px] sm:text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
               MY STUDENTS

@@ -97,7 +97,7 @@ function StudentDashboardContent() {
       />
 
       {/* Student Overview Metrics */}
-      <div className="grid gap-2.5 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2.5 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <div className="card-surface p-5 rounded-2xl border border-border shadow-2xs">
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
             <UserCheck className="size-3.5 text-primary" /> My Assigned Counselor
