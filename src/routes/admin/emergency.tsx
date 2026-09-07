@@ -445,9 +445,9 @@ function EmergencyCommandContent() {
               return (
                 <div
                   key={inc.id}
-                  className="p-5 hover:bg-muted/30 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  className="p-3.5 sm:p-5 hover:bg-muted/30 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
-                  <div className="space-y-1.5 flex-1">
+                  <div className="space-y-1.5 flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-muted text-foreground">
                         #{inc.id}
@@ -465,7 +465,7 @@ function EmergencyCommandContent() {
                       <span className="text-xs text-muted-foreground">• {inc.department}</span>
                     </div>
 
-                    <div className="text-sm font-black text-foreground flex items-center gap-2">
+                    <div className="text-sm font-black text-foreground flex flex-wrap items-center gap-2">
                       <span>
                         {inc.student_name} ({inc.student_code})
                       </span>
@@ -488,7 +488,7 @@ function EmergencyCommandContent() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row md:flex-col items-start md:items-end justify-between gap-3">
-                    <div className="text-right">
+                    <div className="text-left md:text-right">
                       <span className="text-[11px] font-bold text-muted-foreground block">
                         {isControlledOrResolved ? "Time Elapsed (Frozen)" : "Time Elapsed"}
                       </span>
@@ -498,7 +498,7 @@ function EmergencyCommandContent() {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {inc.status === "reported" && (
                         <Button
                           size="sm"
@@ -540,7 +540,7 @@ function EmergencyCommandContent() {
 
       {/* Incident Detail Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl p-4 sm:p-6">
           {selectedIncident && (
             <div className="space-y-5">
               <DialogHeader>
@@ -705,7 +705,7 @@ function EmergencyCommandContent() {
 
       {/* Mark Controlled Modal */}
       <Dialog open={controlModalOpen} onOpenChange={setControlModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[95vw] max-w-md rounded-2xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Mark Situation Controlled</DialogTitle>
             <DialogDescription>
@@ -739,7 +739,7 @@ function EmergencyCommandContent() {
 
       {/* Resolve Incident Modal */}
       <Dialog open={resolveModalOpen} onOpenChange={setResolveModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[95vw] max-w-md rounded-2xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Finalize Emergency Incident</DialogTitle>
             <DialogDescription>

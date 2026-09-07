@@ -694,7 +694,7 @@ function AdminUsersPage() {
 
         {/* MODAL: REASSIGN GATE */}
         <Dialog open={reassignGateOpen} onOpenChange={setReassignGateOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 font-bold text-foreground">
                 <Landmark className="size-5 text-primary" /> Reassign College Gate
@@ -748,7 +748,7 @@ function AdminUsersPage() {
 
         {/* MODAL: ADD INDIVIDUAL USER */}
         <Dialog open={addUserOpen} onOpenChange={setAddUserOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto rounded-2xl p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 font-bold text-foreground">
                 <UserPlus className="size-5 text-primary" /> Add Individual Account
@@ -919,7 +919,7 @@ function AdminUsersPage() {
 
         {/* MODAL: BULK STUDENT IMPORT */}
         <Dialog open={bulkImportOpen} onOpenChange={setBulkImportOpen}>
-          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 font-bold text-foreground">
                 <FileSpreadsheet className="size-5 text-primary" /> Bulk Student Import Engine
@@ -1007,8 +1007,8 @@ function AdminUsersPage() {
                     </div>
                   </div>
 
-                  <div className="max-h-48 overflow-y-auto border border-border rounded-xl">
-                    <table className="w-full text-left text-[11px]">
+                  <div className="max-h-48 overflow-y-auto overflow-x-auto border border-border rounded-xl">
+                    <table className="w-full text-left text-[11px] min-w-[500px]">
                       <thead className="bg-muted/60 border-b border-border font-bold">
                         <tr>
                           <th className="p-2">Row</th>
@@ -1057,7 +1057,7 @@ function AdminUsersPage() {
 
         {/* MODAL: MANAGE CAMPUS GATES */}
         <Dialog open={manageGatesOpen} onOpenChange={setManageGatesOpen}>
-          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 font-bold text-foreground">
                 <MapPin className="size-5 text-amber-600 dark:text-amber-400" /> College Campus Gates Management
@@ -1127,8 +1127,8 @@ function AdminUsersPage() {
                 ) : collegeGates.length === 0 ? (
                   <div className="p-6 text-center text-muted-foreground border border-dashed rounded-xl">No gates configured yet.</div>
                 ) : (
-                  <div className="border border-border rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-xs">
+                  <div className="border border-border rounded-xl overflow-hidden overflow-x-auto">
+                    <table className="w-full text-left text-xs min-w-[480px]">
                       <thead className="bg-muted/60 border-b border-border font-bold text-[11px] uppercase">
                         <tr>
                           <th className="p-3">Gate Name</th>
@@ -1205,7 +1205,7 @@ function AdminUsersPage() {
 
         {/* MODAL: EDIT GATE */}
         <Dialog open={!!editingGate} onOpenChange={(open) => !open && setEditingGate(null)}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 font-bold text-foreground">
                 <Edit3 className="size-5 text-primary" /> Edit Gate Details

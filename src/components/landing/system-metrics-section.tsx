@@ -39,21 +39,21 @@ export function LandingSystemMetricsSection() {
   return (
     <section className="w-full py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="card-surface p-6 sm:p-8 rounded-3xl border border-border shadow-xs">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="card-surface p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-border shadow-xs">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {metrics.map((m) => {
               const Icon = m.icon;
               return (
-                <div key={m.label} className="flex items-center gap-3.5">
-                  <span className={`grid size-12 place-items-center rounded-2xl ${m.bg} ${m.color} shrink-0`}>
-                    <Icon className="size-6" />
+                <div key={m.label} className="flex items-center gap-3 sm:gap-3.5 p-2 rounded-xl">
+                  <span className={`grid size-11 sm:size-12 place-items-center rounded-xl sm:rounded-2xl ${m.bg} ${m.color} shrink-0`}>
+                    <Icon className="size-5 sm:size-6" />
                   </span>
-                  <div className="space-y-0.5">
-                    <p className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight leading-none">
+                  <div className="space-y-0.5 min-w-0">
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-foreground tracking-tight leading-none">
                       {m.value}
                     </p>
                     <p className="text-xs font-bold text-foreground truncate">{m.label}</p>
-                    <p className="text-[10px] font-semibold text-muted-foreground">{m.subtext}</p>
+                    <p className="text-[10px] font-semibold text-muted-foreground truncate">{m.subtext}</p>
                   </div>
                 </div>
               );

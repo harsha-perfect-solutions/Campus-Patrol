@@ -511,11 +511,11 @@ function AdminViolationsPage() {
 
         {/* Read-Only Institutional Case Oversight Drawer */}
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <SheetContent className="sm:max-w-2xl overflow-y-auto p-0 flex flex-col justify-between">
+          <SheetContent className="w-full sm:max-w-2xl overflow-y-auto p-0 flex flex-col justify-between">
             {selectedReport && (
               <div className="flex-1 flex flex-col min-h-0">
                 {/* Header */}
-                <div className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur-xs px-6 py-4 space-y-2">
+                <div className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur-xs px-4 sm:px-6 py-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-mono font-bold tracking-wider text-muted-foreground uppercase">
                       INSTITUTIONAL AUDIT RECORD #{selectedReport.id}
@@ -543,7 +543,7 @@ function AdminViolationsPage() {
                 </div>
 
                 {/* Body Content */}
-                <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 flex-1 overflow-y-auto">
                   {/* Student Info */}
                   <div className="card-surface p-4 rounded-2xl border border-border shadow-2xs space-y-3">
                     <div className="flex items-center justify-between border-b border-divider pb-2.5">
@@ -798,7 +798,7 @@ function AdminViolationsPage() {
 
         {/* Student Incident History Modal */}
         <Dialog open={studentHistoryModalOpen} onOpenChange={setStudentHistoryModalOpen}>
-          <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-primary">
                 <GraduationCap className="size-5" /> Student Disciplinary Profile

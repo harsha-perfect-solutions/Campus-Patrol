@@ -10,7 +10,7 @@ export function LandingFooter() {
     <footer className="w-full border-t border-border/80 bg-card pt-12 pb-8 text-foreground">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Final CTA Container */}
-        <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-r from-primary via-indigo-700 to-purple-800 p-8 sm:p-12 text-white shadow-xl text-center space-y-6">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-primary/30 bg-gradient-to-r from-primary via-indigo-700 to-purple-800 p-5 sm:p-12 text-white shadow-xl text-center space-y-6">
           <div className="pointer-events-none absolute -top-24 -left-24 size-72 rounded-full bg-white/10 blur-2xl" />
           <div className="pointer-events-none absolute -bottom-24 -right-24 size-72 rounded-full bg-white/10 blur-2xl" />
 

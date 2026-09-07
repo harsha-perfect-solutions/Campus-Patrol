@@ -113,42 +113,42 @@ export function LandingHeroSection() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
                 {/* Floating Card 1: Top Right Metrics Panel */}
-                <div className="absolute top-4 right-4 sm:top-6 sm:right-6 w-56 sm:w-64 card-surface p-3.5 sm:p-4 rounded-2xl border border-white/20 bg-card/90 backdrop-blur-md shadow-md space-y-2 text-xs">
-                  <div className="flex items-center justify-between border-b border-border/50 pb-2">
-                    <div className="flex items-center gap-2 font-bold text-foreground">
-                      <span className="grid size-7 place-items-center rounded-lg bg-primary/10 text-primary">
-                        <QrCode className="size-4" />
+                <div className="absolute top-3 right-3 sm:top-6 sm:right-6 w-48 sm:w-64 card-surface p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-white/20 bg-card/90 backdrop-blur-md shadow-md space-y-2 text-xs">
+                  <div className="flex items-center justify-between border-b border-border/50 pb-1.5 sm:pb-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 font-bold text-foreground">
+                      <span className="grid size-6 sm:size-7 place-items-center rounded-lg bg-primary/10 text-primary">
+                        <QrCode className="size-3.5 sm:size-4" />
                       </span>
-                      <span>Pass Statistics</span>
+                      <span className="text-[11px] sm:text-xs">Pass Statistics</span>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                  <div className="grid grid-cols-2 gap-2 pt-0.5 sm:pt-1 text-[10px] sm:text-[11px]">
                     <div>
-                      <span className="text-muted-foreground block text-[10px]">Verified Passes</span>
-                      <span className="font-extrabold text-foreground text-sm">12,400+</span>
+                      <span className="text-muted-foreground block text-[9px] sm:text-[10px]">Verified Passes</span>
+                      <span className="font-extrabold text-foreground text-xs sm:text-sm">12,400+</span>
                       <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
                         <TrendingUp className="size-2.5" /> ↑ 18.6%
                       </span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground block text-[10px]">Active Users</span>
-                      <span className="font-extrabold text-foreground text-sm">3,256</span>
+                      <span className="text-muted-foreground block text-[9px] sm:text-[10px]">Active Users</span>
+                      <span className="font-extrabold text-foreground text-xs sm:text-sm">3,256</span>
                       <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
                         <TrendingUp className="size-2.5" /> ↑ 12.3%
                       </span>
                     </div>
                   </div>
-                  <div className="pt-2 border-t border-border/50 flex items-center justify-between text-[10px]">
+                  <div className="pt-1.5 sm:pt-2 border-t border-border/50 flex items-center justify-between text-[9px] sm:text-[10px]">
                     <span className="text-muted-foreground">Today's Gate Check</span>
                     <span className="font-extrabold text-primary">1,284 scans</span>
                   </div>
                 </div>
 
                 {/* Floating Status Badge */}
-                <div className="absolute right-4 sm:right-6 bottom-4 flex items-center gap-2 rounded-full border border-emerald-500/30 bg-card/90 backdrop-blur-md px-3.5 py-1.5 text-[11px] font-bold text-foreground shadow-md">
+                <div className="absolute left-3 right-3 sm:left-auto sm:right-6 bottom-3 sm:bottom-4 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 rounded-full border border-emerald-500/30 bg-card/90 backdrop-blur-md px-3 py-1.5 text-[10px] sm:text-[11px] font-bold text-foreground shadow-md max-w-fit mx-auto sm:mx-0">
                   <span className="size-2 rounded-full bg-emerald-500 animate-ping" />
                   <span className="size-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span>System Online &bull; All Services Operational</span>
+                  <span className="truncate">System Online &bull; All Services Operational</span>
                 </div>
               </div>
             </div>
@@ -158,9 +158,9 @@ export function LandingHeroSection() {
 
       {/* Interactive Watch Demo Dialog Modal */}
       <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
-        <DialogContent className="max-w-2xl rounded-3xl p-6 border-border">
+        <DialogContent className="w-[95vw] max-w-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+            <DialogTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
               <Sparkles className="size-5 text-primary" />
               CMADMS System Interactive Demo Walkthrough
             </DialogTitle>

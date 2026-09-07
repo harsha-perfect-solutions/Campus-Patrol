@@ -344,7 +344,7 @@ function HodPassesPage() {
               return (
                 <div
                   key={pass.id}
-                  className={`card-surface p-5 rounded-2xl border transition-all shadow-xs space-y-4 ${
+                  className={`card-surface p-4 sm:p-5 rounded-2xl border transition-all shadow-xs space-y-4 ${
                     isPending
                       ? "border-amber-500/40 bg-amber-500/5 dark:bg-amber-950/10"
                       : isApproved
@@ -471,7 +471,7 @@ function HodPassesPage() {
                   )}
 
                   {!isPending && (
-                    <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/30">
+                    <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] text-muted-foreground pt-1 border-t border-border/30">
                       <span>Authorized/Issued By: <strong className="text-foreground">{pass.issued_by}</strong></span>
                       <span>Created: {new Date(pass.created_at).toLocaleDateString()}</span>
                     </div>

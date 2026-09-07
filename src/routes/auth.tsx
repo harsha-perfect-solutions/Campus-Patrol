@@ -253,7 +253,7 @@ function AuthPage() {
 
   return (
     <div
-      className="h-[100svh] min-h-[100svh] w-full overflow-hidden relative flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-cover bg-center bg-no-repeat selection:bg-primary/20 selection:text-primary box-border"
+      className="min-h-[100svh] w-full overflow-y-auto relative flex items-center justify-center py-6 px-3 sm:px-4 lg:px-6 bg-cover bg-center bg-no-repeat selection:bg-primary/20 selection:text-primary box-border"
       style={{ backgroundImage: "url('/campus-bg.jpg')" }}
     >
       {/* Executive Slate/Navy Tinted Overlay */}
@@ -266,7 +266,7 @@ function AuthPage() {
       <div className="absolute right-12 top-10 size-12 rounded-full border-2 border-primary/25 pointer-events-none hidden sm:block" />
 
       {/* FLOATING GLASS CONTAINER */}
-      <div className="relative z-10 w-[min(520px,calc(100vw-24px))] max-h-[calc(100svh-24px)] bg-card/95 dark:bg-slate-900/95 backdrop-blur-md rounded-[24px] sm:rounded-[28px] border border-border shadow-2xl p-4 sm:p-6 space-y-3 sm:space-y-3.5 box-border overflow-y-auto sm:overflow-y-visible auth-card-entrance">
+      <div className="relative z-10 w-[min(520px,calc(100vw-24px))] my-auto bg-card/95 dark:bg-slate-900/95 backdrop-blur-md rounded-[24px] sm:rounded-[28px] border border-border shadow-2xl p-4 sm:p-6 space-y-3 sm:space-y-3.5 box-border auth-card-entrance">
         
         {/* BRAND HEADER & LOGO */}
         <div className="text-center">
@@ -448,7 +448,7 @@ function AuthPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-5 gap-1">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
             {ROLES.map((role) => {
               const RoleIcon = role.icon;
               return (
@@ -457,9 +457,9 @@ function AuthPage() {
                   type="button"
                   disabled={busy}
                   onClick={() => handleDemoLogin(role.id)}
-                  className="flex items-center justify-center gap-1 py-1.5 px-1 rounded-xl text-[10px] font-semibold bg-card border border-border text-foreground hover:bg-muted shadow-2xs transition-all duration-150 ease-in-out active:scale-[0.98]"
+                  className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-[11px] sm:text-[10px] font-semibold bg-card border border-border text-foreground hover:bg-muted shadow-2xs transition-all duration-150 ease-in-out active:scale-[0.98]"
                 >
-                  <RoleIcon className="size-3 text-primary shrink-0" />
+                  <RoleIcon className="size-3.5 text-primary shrink-0" />
                   <span className="truncate">{role.label}</span>
                 </button>
               );

@@ -20,7 +20,7 @@ export function LandingFeatureCards() {
         {/* 3 Grid Cards Inspired by Reference Design */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 items-stretch">
           {/* Card 1 — Large Light Feature Card */}
-          <div className="md:col-span-2 lg:col-span-6 card-surface p-8 rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card flex flex-col justify-between space-y-6 shadow-xs group hover:border-primary/40 transition-colors">
+          <div className="md:col-span-2 lg:col-span-6 card-surface p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card flex flex-col justify-between space-y-6 shadow-xs group hover:border-primary/40 transition-colors">
             <div className="space-y-4">
               <span className="grid size-11 place-items-center rounded-2xl bg-primary/10 text-primary">
                 <ShieldCheck className="size-6" />
@@ -58,7 +58,7 @@ export function LandingFeatureCards() {
           </div>
 
           {/* Card 2 — Dark Purple Card */}
-          <div className="md:col-span-1 lg:col-span-3 rounded-3xl border border-purple-900/40 bg-gradient-to-b from-[#1e1b4b] to-[#120e2e] p-7 text-white flex flex-col justify-between space-y-6 shadow-md hover:shadow-xl transition-shadow">
+          <div className="md:col-span-1 lg:col-span-3 rounded-2xl sm:rounded-3xl border border-purple-900/40 bg-gradient-to-b from-[#1e1b4b] to-[#120e2e] p-5 sm:p-7 text-white flex flex-col justify-between space-y-6 shadow-md hover:shadow-xl transition-shadow">
             <div className="space-y-4">
               <span className="grid size-11 place-items-center rounded-2xl bg-white/10 text-purple-200 backdrop-blur-xs">
                 <Activity className="size-6" />
@@ -83,7 +83,7 @@ export function LandingFeatureCards() {
           </div>
 
           {/* Card 3 — Dark Purple Card */}
-          <div className="md:col-span-1 lg:col-span-3 rounded-3xl border border-purple-900/40 bg-gradient-to-b from-[#181028] to-[#0f091c] p-7 text-white flex flex-col justify-between space-y-6 shadow-md hover:shadow-xl transition-shadow">
+          <div className="md:col-span-1 lg:col-span-3 rounded-2xl sm:rounded-3xl border border-purple-900/40 bg-gradient-to-b from-[#181028] to-[#0f091c] p-5 sm:p-7 text-white flex flex-col justify-between space-y-6 shadow-md hover:shadow-xl transition-shadow">
             <div className="space-y-4">
               <span className="grid size-11 place-items-center rounded-2xl bg-white/10 text-purple-200 backdrop-blur-xs">
                 <CheckCircle2 className="size-6" />
