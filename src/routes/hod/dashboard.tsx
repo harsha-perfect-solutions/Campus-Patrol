@@ -203,7 +203,7 @@ function HODDashboardContent() {
       </div>
 
       {/* Summary Metrics */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2.5 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         {[
           {
             label: "New Cases",
@@ -228,12 +228,12 @@ function HODDashboardContent() {
         ].map((s) => (
           <div
             key={s.label}
-            className="card-surface p-5 rounded-2xl border border-border shadow-2xs"
+            className="card-surface p-3.5 sm:p-5 rounded-2xl border border-border shadow-2xs flex flex-col justify-between"
           >
-            <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold ${s.color}`}>
+            <span className={`inline-block w-fit px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold leading-tight ${s.color}`}>
               {s.label}
             </span>
-            <p className="mt-3 text-3xl font-extrabold text-foreground">
+            <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-foreground">
               {String(s.value).padStart(2, "0")}
             </p>
           </div>
