@@ -241,9 +241,9 @@ function StudentExplanationsPage() {
             {/* Reporter Evidence Photo (If attached by Faculty) */}
             {targetReport.evidence && (
               <div className="p-4 rounded-2xl border border-blue-200/80 bg-blue-50/40 dark:bg-blue-950/20 space-y-3">
-                <div className="flex items-center justify-between border-b border-blue-200/80 pb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-blue-200/80 pb-2">
                   <div className="flex items-center gap-2">
-                    <ImageIcon className="size-4 text-blue-600 dark:text-blue-400" />
+                    <ImageIcon className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
                     <span className="text-xs font-bold uppercase tracking-wider text-blue-800 dark:text-blue-300">
                       REPORTER EVIDENCE PHOTO ATTACHED
                     </span>
@@ -252,7 +252,7 @@ function StudentExplanationsPage() {
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="h-7 text-[11px] font-bold rounded-lg border-blue-300 text-blue-700 dark:text-blue-300 hover:bg-blue-100/60 gap-1.5"
+                    className="h-7 text-[11px] font-bold rounded-lg border-blue-300 text-blue-700 dark:text-blue-300 hover:bg-blue-100/60 gap-1.5 w-fit"
                     onClick={() => downloadEvidenceImage(targetReport.evidence!, targetReport.id)}
                   >
                     <Download className="size-3" /> Download Photo
@@ -320,7 +320,7 @@ function StudentExplanationsPage() {
                 {/* 24-Hour Deadline Status Banner */}
                 <div
                   className={cn(
-                    "p-3.5 rounded-2xl border flex items-center justify-between text-xs font-semibold shadow-2xs",
+                    "p-3.5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs font-semibold shadow-2xs",
                     deadlineStatus?.expired
                       ? "border-red-300 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300"
                       : "border-amber-300 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",

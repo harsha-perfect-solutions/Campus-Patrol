@@ -645,11 +645,11 @@ export function CheckStudentPage() {
                 </button>
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
               <Button
                 type="button"
                 onClick={() => setQrScannerOpen(true)}
-                className="h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 rounded-xl shadow-xs gap-2"
+                className="h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 rounded-xl shadow-xs gap-2 w-full sm:w-auto justify-center"
               >
                 <QrCode className="size-4" />
                 <span>[ 📷 Scan Student ID ]</span>
@@ -659,7 +659,7 @@ export function CheckStudentPage() {
                 size="lg"
                 loading={loading}
                 disabled={loading}
-                className="h-11 bg-primary text-primary-foreground hover:bg-primary/90 px-6 font-semibold rounded-xl shadow-xs"
+                className="h-11 bg-primary text-primary-foreground hover:bg-primary/90 px-6 font-semibold rounded-xl shadow-xs w-full sm:w-auto justify-center"
               >
                 {!loading && <Search className="size-4 mr-1.5" />}
                 {loading ? "Checking Student..." : "Check Student"}
@@ -669,7 +669,7 @@ export function CheckStudentPage() {
                 variant="outline"
                 size="lg"
                 onClick={handleClear}
-                className="h-11 border-border text-foreground hover:bg-accent px-5 font-semibold rounded-xl"
+                className="h-11 border-border text-foreground hover:bg-accent px-5 font-semibold rounded-xl w-full sm:w-auto justify-center"
               >
                 <RotateCcw className="size-4 mr-1.5" /> Clear
               </Button>
