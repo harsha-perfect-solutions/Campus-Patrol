@@ -86,12 +86,12 @@ function StudentProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
             {/* Left 2 Columns: Premium Digital Student ID Card */}
             <div className="md:col-span-2 lg:col-span-2 space-y-6">
-              <div className="relative overflow-hidden rounded-3xl border-2 border-primary/40 bg-gradient-to-br from-card via-card to-primary/10 p-6 sm:p-8 shadow-md space-y-6">
+              <div className="relative overflow-hidden rounded-3xl border-2 border-primary/40 bg-gradient-to-br from-card via-card to-primary/10 p-4 sm:p-8 shadow-md space-y-5 sm:space-y-6">
                 {/* Background Ambient Glow */}
                 <div className="absolute -top-16 -right-16 size-48 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
 
                 {/* Card Header Banner */}
-                <div className="flex items-center justify-between border-b border-primary/20 pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-primary/20 pb-4 gap-2.5">
                   <div className="flex items-center gap-3">
                     <span className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground font-bold shadow-xs">
                       <GraduationCap className="size-6" />
@@ -175,7 +175,7 @@ function StudentProfilePage() {
               </div>
 
               {/* QR Code Usage & Verification Protocol Card */}
-              <div className="card-surface p-6 rounded-2xl border border-border space-y-3">
+              <div className="card-surface p-4 sm:p-6 rounded-2xl border border-border space-y-3">
                 <div className="flex items-center gap-2 font-bold text-sm text-foreground">
                   <QrCodeIcon className="size-4 text-primary" />
                   <span>How to Use Your Digital ID QR</span>
@@ -207,7 +207,7 @@ function StudentProfilePage() {
             {/* Right 1 Column: Institutional Details & Quick Actions */}
             <div className="space-y-6">
               {/* Institutional Details */}
-              <div className="card-surface p-6 rounded-2xl border border-border space-y-4 text-xs">
+              <div className="card-surface p-4 sm:p-6 rounded-2xl border border-border space-y-4 text-xs">
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <h4 className="font-bold text-foreground text-sm flex items-center gap-2">
                     <Building2 className="size-4 text-primary" /> Institutional Details
@@ -253,7 +253,7 @@ function StudentProfilePage() {
               </div>
 
               {/* Quick Actions Panel */}
-              <div className="card-surface p-6 rounded-2xl border border-border space-y-4">
+              <div className="card-surface p-4 sm:p-6 rounded-2xl border border-border space-y-4">
                 <h4 className="font-bold text-foreground text-sm border-b border-border pb-3">
                   Quick Access
                 </h4>

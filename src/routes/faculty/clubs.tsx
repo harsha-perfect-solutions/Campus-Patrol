@@ -504,7 +504,7 @@ function FacultyClubsPage() {
         ) : (
           <div className="space-y-6">
             {/* Club Selection Bar */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-border">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-border no-scrollbar scroll-smooth">
               {myClubs.map((club) => {
                 const isSelected = selectedClub?.club_id === club.club_id;
                 return (
@@ -512,7 +512,7 @@ function FacultyClubsPage() {
                     key={club.club_id}
                     onClick={() => setSelectedClub(club)}
                     className={cn(
-                      "flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs transition-all whitespace-nowrap",
+                      "shrink-0 flex items-center gap-2.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs transition-all whitespace-nowrap",
                       isSelected
                         ? "bg-primary text-primary-foreground shadow-md"
                         : "bg-card border border-border text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -534,7 +534,7 @@ function FacultyClubsPage() {
             {selectedClub && (
               <div className="space-y-6">
                 {/* Active Club Overview Header */}
-                <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-6">
+                <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-xs space-y-6">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2.5">
@@ -570,7 +570,7 @@ function FacultyClubsPage() {
 
                   {/* Roster & Event Quick Metrics */}
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-4 border-t border-border">
-                    <div className="bg-primary/5 border border-primary/15 rounded-xl p-3 text-center">
+                    <div className="bg-primary/5 border border-primary/15 rounded-xl p-3 text-center col-span-2 sm:col-span-1">
                       <span className="text-[11px] font-semibold text-muted-foreground block">Total Roster</span>
                       <span className="text-xl font-black text-primary">{members.length}</span>
                     </div>
@@ -581,6 +581,39 @@ function FacultyClubsPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* Section Tab Switcher */}
+                <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-divider overflow-x-auto no-scrollbar scroll-smooth">
+                  {[
+                    { id: "members", label: "Club Roster", icon: Users, count: members.length },
+                    { id: "events", label: "Events & Workshops", icon: Calendar, count: events.length },
+                    { id: "permissions", label: "Issue Event Permissions", icon: Ticket },
+                  ].map((tab) => {
+                    const Icon = tab.icon;
+                    const isSelected = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveTab(tab.id as any)}
+                        className={cn(
+                          "shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg text-xs font-semibold transition-all",
+                          isSelected
+                            ? "bg-background text-foreground shadow-xs font-bold"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="size-4 shrink-0" />
+                        <span>{tab.label}</span>
+                        {tab.count !== undefined && (
+                          <span className={cn("px-1.5 py-0.5 rounded-full text-[10px] font-bold", isSelected ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground")}>
+                            {tab.count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* ══════════════════════════════════════════════════════════ */}

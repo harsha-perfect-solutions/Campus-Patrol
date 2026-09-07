@@ -221,7 +221,7 @@ function StudentViolationsPage() {
 
         {/* Action Required Alert Banner */}
         {awaitingResponseCount > 0 && (
-          <div className="rounded-2xl border-2 border-amber-500/80 bg-amber-50/90 dark:bg-amber-950/40 p-4 sm:p-5 flex items-center justify-between gap-4 shadow-sm animate-pulse">
+          <div className="rounded-2xl border-2 border-amber-500/80 bg-amber-50/90 dark:bg-amber-950/40 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-sm animate-pulse">
             <div className="flex items-center gap-3.5">
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-amber-500 text-white shadow-xs">
                 <Clock className="size-5" />
@@ -237,7 +237,7 @@ function StudentViolationsPage() {
             </div>
             <Button
               size="sm"
-              className="bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shrink-0 text-xs"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shrink-0 text-xs w-full sm:w-auto"
               onClick={() => setSelectedQueue("AWAITING_RESPONSE")}
             >
               Respond Now
@@ -246,9 +246,9 @@ function StudentViolationsPage() {
         )}
 
         {/* 7-Metric KPI Grid */}
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+        <div className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
           {[
-            { label: "Total Incidents", value: stats?.totalIncidents ?? 0, color: "text-foreground", bg: "bg-muted/40" },
+            { label: "Total Incidents", value: stats?.totalIncidents ?? 0, color: "text-foreground", bg: "bg-muted/40", span: "col-span-2 sm:col-span-1" },
             { label: "Open Cases", value: stats?.openCases ?? 0, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50/60 dark:bg-blue-950/20" },
             { label: "Awaiting Response", value: stats?.awaitingMyResponse ?? 0, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50/60 dark:bg-amber-950/20" },
             { label: "Under Counselor Review", value: stats?.underHodReview ?? 0, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50/60 dark:bg-indigo-950/20" },
@@ -258,17 +258,17 @@ function StudentViolationsPage() {
           ].map((kpi) => (
             <div
               key={kpi.label}
-              className={cn("p-4 rounded-2xl border border-border flex flex-col justify-between shadow-2xs", kpi.bg)}
+              className={cn("p-3 sm:p-4 rounded-2xl border border-border flex flex-col justify-between shadow-2xs", kpi.bg, kpi.span)}
             >
-              <span className="text-[11px] font-semibold text-muted-foreground truncate">{kpi.label}</span>
-              <span className={cn("text-2xl font-bold mt-1", kpi.color)}>{kpi.value}</span>
+              <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground truncate">{kpi.label}</span>
+              <span className={cn("text-xl sm:text-2xl font-bold mt-1", kpi.color)}>{kpi.value}</span>
             </div>
           ))}
         </div>
 
         {/* Filter Controls & Queue Tabs */}
-        <div className="card-surface p-5 rounded-2xl border border-border space-y-4 shadow-xs">
-          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-divider">
+        <div className="card-surface p-3.5 sm:p-5 rounded-2xl border border-border space-y-4 shadow-xs">
+          <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-divider overflow-x-auto no-scrollbar scroll-smooth">
             {[
               { id: "ALL", label: "All Incidents" },
               { id: "AWAITING_RESPONSE", label: `Awaiting My Response (${awaitingResponseCount})` },
@@ -282,7 +282,7 @@ function StudentViolationsPage() {
                 key={q.id}
                 onClick={() => setSelectedQueue(q.id)}
                 className={cn(
-                  "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                  "shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all",
                   selectedQueue === q.id
                     ? "bg-background text-foreground shadow-xs font-bold"
                     : "text-muted-foreground hover:text-foreground",

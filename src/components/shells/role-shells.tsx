@@ -358,10 +358,62 @@ export function FacultyShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-20 lg:pb-8">
           <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-15 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
+        <Link
+          to="/faculty/dashboard"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname === "/faculty/dashboard" ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <LayoutDashboard className="size-5 mb-0.5" />
+          <span>Home</span>
+        </Link>
+        <Link
+          to="/faculty/check"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/faculty/check") ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <UserSearch className="size-5 mb-0.5" />
+          <span>Verify</span>
+        </Link>
+        <Link
+          to="/faculty/passes"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/faculty/passes") ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <CheckCircle2 className="size-5 mb-0.5" />
+          <span>Passes</span>
+        </Link>
+        <Link
+          to="/faculty/timetable"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/faculty/timetable") ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Calendar className="size-5 mb-0.5" />
+          <span>Schedule</span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Menu className="size-5 mb-0.5" />
+          <span>Menu</span>
+        </button>
+      </nav>
     </div>
   );
 }
@@ -588,10 +640,62 @@ export function HODShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-20 lg:pb-8">
           <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-15 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
+        <Link
+          to="/hod/dashboard"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname === "/hod/dashboard" ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <LayoutDashboard className="size-5 mb-0.5" />
+          <span>Home</span>
+        </Link>
+        <Link
+          to="/hod/violations"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/hod/violations") ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <ShieldAlert className="size-5 mb-0.5" />
+          <span>Incidents</span>
+        </Link>
+        <Link
+          to="/hod/passes"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/hod/passes") ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <CheckCircle2 className="size-5 mb-0.5" />
+          <span>Passes</span>
+        </Link>
+        <Link
+          to="/hod/students"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/hod/students") ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <GraduationCap className="size-5 mb-0.5" />
+          <span>Students</span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Menu className="size-5 mb-0.5" />
+          <span>Menu</span>
+        </button>
+      </nav>
     </div>
   );
 }
@@ -816,10 +920,62 @@ export function StudentShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-20 lg:pb-8">
           <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-15 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
+        <Link
+          to="/student/dashboard"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname === "/student/dashboard" ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <LayoutDashboard className="size-5 mb-0.5" />
+          <span>Home</span>
+        </Link>
+        <Link
+          to="/student/timetable"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/student/timetable") ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Calendar className="size-5 mb-0.5" />
+          <span>Timetable</span>
+        </Link>
+        <Link
+          to="/student/passes"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/student/passes") ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <CheckCircle2 className="size-5 mb-0.5" />
+          <span>Passes</span>
+        </Link>
+        <Link
+          to="/student/violations"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/student/violations") ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <ShieldAlert className="size-5 mb-0.5" />
+          <span>Incidents</span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Menu className="size-5 mb-0.5" />
+          <span>More</span>
+        </button>
+      </nav>
     </div>
   );
 }
@@ -1048,10 +1204,62 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-20 lg:pb-8">
           <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-15 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
+        <Link
+          to="/admin/dashboard"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname === "/admin/dashboard" ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <LayoutDashboard className="size-5 mb-0.5" />
+          <span>Home</span>
+        </Link>
+        <Link
+          to="/admin/violations"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/admin/violations") ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <ShieldAlert className="size-5 mb-0.5" />
+          <span>Incidents</span>
+        </Link>
+        <Link
+          to="/admin/movement-passes"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/admin/movement-passes") ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <ShieldCheck className="size-5 mb-0.5" />
+          <span>Passes</span>
+        </Link>
+        <Link
+          to="/admin/emergency"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/admin/emergency") ? "text-destructive font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <ShieldAlert className="size-5 mb-0.5 text-destructive" />
+          <span>Alert</span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Menu className="size-5 mb-0.5" />
+          <span>Menu</span>
+        </button>
+      </nav>
     </div>
   );
 }
@@ -1266,10 +1474,65 @@ export function SecurityShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-20 lg:pb-8">
           <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-15 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
+        <Link
+          to="/security/check"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/security/check") ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <ShieldCheck className="size-5 mb-0.5" />
+          <span>Verify</span>
+        </Link>
+        <Link
+          to="/security/passes"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/security/passes") ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Clock className="size-5 mb-0.5" />
+          <span>History</span>
+        </Link>
+        <Link
+          to="/notifications"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors relative",
+            pathname.startsWith("/notifications") ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Bell className="size-5 mb-0.5" />
+          <span>Alerts</span>
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-5 size-2 rounded-full bg-destructive" />
+          )}
+        </Link>
+        <Link
+          to="/security/profile"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors",
+            pathname.startsWith("/security/profile") ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <User className="size-5 mb-0.5" />
+          <span>Profile</span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Menu className="size-5 mb-0.5" />
+          <span>Menu</span>
+        </button>
+      </nav>
     </div>
   );
 }

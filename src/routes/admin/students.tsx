@@ -90,10 +90,10 @@ function AdminStudentsPage() {
         />
 
         {/* Dynamic Filters Control Toolbar */}
-        <section className="card-surface p-5 rounded-2xl border border-border shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-divider pb-3">
+        <section className="card-surface p-3.5 sm:p-5 rounded-2xl border border-border shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-divider pb-3 gap-2">
             <div className="flex items-center gap-2">
-              <Filter className="size-4 text-primary" />
+              <Filter className="size-4 text-primary shrink-0" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
                 FILTER STUDENTS BY DEPARTMENT, YEAR & SECTION
               </h3>
@@ -113,7 +113,7 @@ function AdminStudentsPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Department Filter */}
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground">Department</Label>
@@ -208,7 +208,7 @@ function AdminStudentsPage() {
             {filteredStudents.map((s) => (
               <div
                 key={s.student_code}
-                className="card-surface p-5 rounded-2xl border border-border text-xs space-y-2 hover:border-primary/40 transition-colors"
+                className="card-surface p-4 sm:p-5 rounded-2xl border border-border text-xs space-y-2 hover:border-primary/40 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-foreground text-sm block">{s.name}</span>

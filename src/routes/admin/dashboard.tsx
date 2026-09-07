@@ -190,17 +190,17 @@ function AdminDashboardContent() {
         ].map((s) => (
           <div
             key={s.label}
-            className="card-surface p-5 rounded-2xl border border-border shadow-2xs"
+            className="card-surface p-3.5 sm:p-5 rounded-2xl border border-border shadow-2xs"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider truncate">
                 {s.label}
               </span>
               <span className={`grid size-8 place-items-center rounded-xl ${s.color}`}>
                 <s.icon className="size-4" />
               </span>
             </div>
-            <p className="mt-3 text-3xl font-extrabold text-foreground">{s.value}</p>
+            <p className="mt-2 sm:mt-3 text-2xl sm:text-3xl font-extrabold text-foreground">{s.value}</p>
           </div>
         ))}
       </div>
@@ -265,7 +265,7 @@ function AdminDashboardContent() {
         ].map((m) => (
           <div
             key={m.title}
-            className="card-surface p-5 rounded-2xl border border-border shadow-xs flex flex-col justify-between"
+            className="card-surface p-4 sm:p-5 rounded-2xl border border-border shadow-xs flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center gap-2.5">

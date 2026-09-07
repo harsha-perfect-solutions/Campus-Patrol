@@ -257,6 +257,15 @@
   }
 }
 
+/* Mobile scrollbar-free swipeable horizontal strips */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /*
  * Ultra-Clean A4 Print & PDF Document Export Styling.
  * Forces 100% pure white page background, high-contrast dark text,

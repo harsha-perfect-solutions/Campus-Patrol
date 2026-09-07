@@ -100,7 +100,7 @@ function StudentEventPermissionsPage() {
             {eventPermissions.map((perm) => (
               <div
                 key={perm.id}
-                className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-xs hover:border-primary/40 transition-all"
+                className="rounded-2xl border border-border bg-card p-4 sm:p-5 space-y-4 shadow-xs hover:border-primary/40 transition-all"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -119,27 +119,27 @@ function StudentEventPermissionsPage() {
 
                 <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground bg-muted/40 p-3 rounded-xl border border-border">
                   <div className="flex items-center gap-2">
-                    <Calendar className="size-3.5 text-primary" />
-                    <span>Date: <strong className="text-foreground">{perm.event_date}</strong></span>
+                    <Calendar className="size-3.5 text-primary shrink-0" />
+                    <span className="truncate">Date: <strong className="text-foreground">{perm.event_date}</strong></span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Clock className="size-3.5 text-primary" />
-                    <span><strong className="text-foreground">{perm.start_time} - {perm.end_time}</strong></span>
+                    <Clock className="size-3.5 text-primary shrink-0" />
+                    <span className="truncate"><strong className="text-foreground">{perm.start_time} - {perm.end_time}</strong></span>
                   </div>
 
                   <div className="flex items-center gap-2 col-span-2">
-                    <MapPin className="size-3.5 text-primary" />
+                    <MapPin className="size-3.5 text-primary shrink-0" />
                     <span>Venue: <strong className="text-foreground">{perm.location}</strong> ({perm.location_type})</span>
                   </div>
 
                   <div className="flex items-center gap-2 col-span-2 pt-1 border-t border-border/60">
-                    <Building className="size-3.5 text-primary" />
+                    <Building className="size-3.5 text-primary shrink-0" />
                     <span>Coordinator: <strong className="text-foreground">{perm.coordinator_name}</strong></span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-border">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-2 border-t border-border gap-2">
                   <span className="text-[11px] font-semibold text-muted-foreground">
                     Granted: {new Date(perm.created_at).toLocaleDateString()}
                   </span>
@@ -147,7 +147,7 @@ function StudentEventPermissionsPage() {
                   <Button
                     onClick={() => handleOpenQR(perm)}
                     size="sm"
-                    className="gap-2 font-bold shadow-xs"
+                    className="gap-2 font-bold shadow-xs w-full sm:w-auto"
                   >
                     <QrCode className="size-4" />
                     Digital Event Pass

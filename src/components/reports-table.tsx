@@ -103,13 +103,13 @@ export function ReportsTable({
 
   return (
     <section className="card-surface overflow-hidden">
-      <div className="grid gap-4 border-b border-divider px-5 py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+      <div className="grid gap-4 border-b border-divider px-3.5 sm:px-5 py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-foreground">{title}</h2>
           <p className="text-xs text-muted-foreground">{description}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-[180px] flex-1">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2">
+          <div className="relative w-full sm:min-w-[180px] sm:flex-1">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground"
               aria-hidden
@@ -121,42 +121,45 @@ export function ReportsTable({
                 setPage(0);
               }}
               placeholder="Search..."
-              className="h-10 pl-9 text-xs"
+              className="h-10 pl-9 text-xs w-full"
               aria-label="Search reports"
             />
           </div>
-          <Select
-            value={status}
-            onValueChange={(v) => {
-              setStatus(v as ReportStatus | "all");
-              setPage(0);
-            }}
-          >
-            <SelectTrigger className="h-10 w-[150px] text-xs" aria-label="Filter by status">
-              <Filter className="mr-1 size-4" aria-hidden />
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="review">Under Review</SelectItem>
-              <SelectItem value="resolved">Resolved</SelectItem>
-              <SelectItem value="escalated">Escalated</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" size="sm" onClick={() => setSortDesc((v) => !v)} className="h-10 text-xs">
-            <ArrowUpDown className="size-3.5 mr-1" /> {sortDesc ? "Newest" : "Oldest"}
-          </Button>
-          <Button
-            type="button"
-            variant="default"
-            size="sm"
-            onClick={handleExportAllToExcel}
-            className="h-10 px-3.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-xs text-xs"
-          >
-            <FileSpreadsheet className="size-4" />
-            <span>Export Excel</span>
-          </Button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Select
+              value={status}
+              onValueChange={(v) => {
+                setStatus(v as ReportStatus | "all");
+                setPage(0);
+              }}
+            >
+              <SelectTrigger className="h-10 flex-1 sm:w-[150px] text-xs" aria-label="Filter by status">
+                <Filter className="mr-1 size-4" aria-hidden />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="review">Under Review</SelectItem>
+                <SelectItem value="resolved">Resolved</SelectItem>
+                <SelectItem value="escalated">Escalated</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" onClick={() => setSortDesc((v) => !v)} className="h-10 text-xs shrink-0">
+              <ArrowUpDown className="size-3.5 mr-1" /> {sortDesc ? "Newest" : "Oldest"}
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={handleExportAllToExcel}
+              className="h-10 px-3.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-xs text-xs shrink-0"
+            >
+              <FileSpreadsheet className="size-4" />
+              <span className="hidden sm:inline">Export Excel</span>
+              <span className="sm:hidden">Export</span>
+            </Button>
+          </div>
         </div>
       </div>
 

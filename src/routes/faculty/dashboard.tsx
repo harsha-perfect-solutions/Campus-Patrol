@@ -253,15 +253,15 @@ function FacultyDashboardContent() {
       </div>
 
       {/* Recent Violation Reports Filed by Faculty */}
-      <section className="card-surface p-6 rounded-2xl border border-border shadow-xs">
-        <div className="flex items-center justify-between border-b border-divider pb-4">
+      <section className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-divider pb-4 gap-2.5">
           <div className="flex items-center gap-2">
-            <FileText className="size-4 text-primary" />
+            <FileText className="size-4 text-primary shrink-0" />
             <span className="text-xs font-bold uppercase tracking-wider text-foreground">
               RECENT VIOLATION REPORTS FILED
             </span>
           </div>
-          <Button variant="outline" size="sm" asChild className="rounded-xl text-xs">
+          <Button variant="outline" size="sm" asChild className="rounded-xl text-xs w-full sm:w-auto">
             <Link to="/faculty/reports">View All My Reports</Link>
           </Button>
         </div>

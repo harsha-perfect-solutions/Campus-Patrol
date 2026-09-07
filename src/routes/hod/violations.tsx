@@ -320,9 +320,9 @@ function HODViolationsPage() {
 
         {/* Critical Incidents Warning Banner */}
         {hasCriticalIncidents && (
-          <div className="rounded-2xl border-2 border-red-500/80 bg-red-50/90 dark:bg-red-950/40 p-4 sm:p-5 flex items-center justify-between gap-4 shadow-xs animate-pulse">
+          <div className="rounded-2xl border-2 border-red-500/80 bg-red-50/90 dark:bg-red-950/40 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-xs animate-pulse">
             <div className="flex items-center gap-3.5">
-              <span className="grid size-10 place-items-center rounded-xl bg-red-600 text-white shadow-xs">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-red-600 text-white shadow-xs">
                 <ShieldAlert className="size-6" />
               </span>
               <div>
@@ -336,7 +336,7 @@ function HODViolationsPage() {
             </div>
             <Button
               size="sm"
-              className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shrink-0"
+              className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shrink-0 w-full sm:w-auto"
               onClick={() => {
                 setSeverityFilter("Critical");
                 setSelectedQueue("ALL");
@@ -348,9 +348,9 @@ function HODViolationsPage() {
         )}
 
         {/* KPI Ribbon (7 Metrics) */}
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4 lg:grid-cols-7">
+        <div className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-4 lg:grid-cols-7">
           {[
-            { label: "Total Reports", value: stats?.totalReports ?? 0, color: "text-foreground", bg: "bg-muted/40" },
+            { label: "Total Reports", value: stats?.totalReports ?? 0, color: "text-foreground", bg: "bg-muted/40", span: "col-span-2 sm:col-span-1" },
             { label: "New Reports", value: stats?.newReports ?? 0, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50/60 dark:bg-amber-950/20" },
             { label: "Under Review", value: stats?.underReview ?? 0, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50/60 dark:bg-blue-950/20" },
             { label: "High Severity", value: stats?.highSeverity ?? 0, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50/60 dark:bg-orange-950/20" },
@@ -360,19 +360,19 @@ function HODViolationsPage() {
           ].map((kpi) => (
             <div
               key={kpi.label}
-              className={cn("p-4 rounded-2xl border border-border flex flex-col justify-between shadow-2xs", kpi.bg)}
+              className={cn("p-3 sm:p-4 rounded-2xl border border-border flex flex-col justify-between shadow-2xs", kpi.bg, kpi.span)}
             >
-              <span className="text-[11px] font-semibold text-muted-foreground truncate">{kpi.label}</span>
-              <span className={cn("text-2xl font-bold mt-1", kpi.color)}>{kpi.value}</span>
+              <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground truncate">{kpi.label}</span>
+              <span className={cn("text-xl sm:text-2xl font-bold mt-1", kpi.color)}>{kpi.value}</span>
             </div>
           ))}
         </div>
 
         {/* Queue Switcher & Filter Controls */}
-        <div className="card-surface p-5 rounded-2xl border border-border space-y-4 shadow-xs">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-divider pb-4">
+        <div className="card-surface p-3.5 sm:p-5 rounded-2xl border border-border space-y-4 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-divider pb-4">
             {/* Queue Tabs */}
-            <div className="flex flex-wrap items-center gap-1.5 p-1 bg-muted/60 rounded-xl">
+            <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl overflow-x-auto no-scrollbar scroll-smooth max-w-full">
               {[
                 { id: "ALL", label: "All Cases" },
                 { id: "NEW", label: "New Reports" },
@@ -386,7 +386,7 @@ function HODViolationsPage() {
                   key={q.id}
                   onClick={() => setSelectedQueue(q.id as any)}
                   className={cn(
-                    "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                    "shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all",
                     selectedQueue === q.id
                       ? "bg-background text-foreground shadow-xs font-bold"
                       : "text-muted-foreground hover:text-foreground",

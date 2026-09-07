@@ -77,8 +77,8 @@ function FacultyPassesPage() {
         </div>
 
         {/* Search Bar */}
-        <div className="card-surface p-4 rounded-2xl border border-border flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-2 w-full">
+        <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-xs">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
             <Input
               type="text"
               placeholder="Enter Student Roll No (e.g. 23CSE1012)..."
@@ -92,7 +92,7 @@ function FacultyPassesPage() {
               onClick={() => handleSearch(searchCode)}
               loading={loading}
               disabled={loading}
-              className="h-10 px-5 rounded-xl text-xs font-bold shrink-0"
+              className="h-10 px-5 rounded-xl text-xs font-bold shrink-0 w-full sm:w-auto justify-center"
             >
               {!loading && <Search className="size-3.5 mr-1.5" />}
               {loading ? "Looking up..." : "Lookup Pass Status"}
@@ -102,15 +102,15 @@ function FacultyPassesPage() {
 
         {/* Student Pass Details Card */}
         {student ? (
-          <div className="card-surface p-6 rounded-2xl border border-border space-y-4 shadow-xs">
-            <div className="flex items-center justify-between border-b border-border pb-4">
+          <div className="card-surface p-4 sm:p-6 rounded-2xl border border-border space-y-4 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-4 gap-2">
               <div>
                 <h2 className="text-base font-bold text-foreground">{student.name}</h2>
                 <p className="text-xs text-muted-foreground font-mono">
                   {student.student_code} &bull; {student.department} Department &bull; {student.year} (Section {student.section})
                 </p>
               </div>
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <span className="self-start sm:self-auto text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                 {student.status}
               </span>
             </div>

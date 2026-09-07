@@ -338,7 +338,7 @@ function StudentPassesPage() {
           actions={
             <Button
               onClick={() => setShowApplyModal((prev) => !prev)}
-              className="rounded-xl font-semibold bg-primary text-primary-foreground shadow-xs"
+              className="rounded-xl font-semibold bg-primary text-primary-foreground shadow-xs w-full sm:w-auto"
             >
               <Plus className="size-4 mr-1.5" /> Apply New Pass
             </Button>
@@ -349,7 +349,7 @@ function StudentPassesPage() {
         {showApplyModal && (
           <form
             onSubmit={handleRequestPass}
-            className="card-surface p-6 rounded-2xl border border-primary/30 shadow-xs w-full max-w-2xl space-y-4"
+            className="card-surface p-4 sm:p-6 rounded-2xl border border-primary/30 shadow-xs w-full max-w-2xl space-y-4"
           >
             <div className="flex items-center justify-between border-b border-border pb-3">
               <h3 className="text-sm font-bold text-foreground">
@@ -611,7 +611,7 @@ function StudentPassesPage() {
                 <div
                   key={pass.id}
                   className={cn(
-                    "card-surface p-5 sm:p-6 rounded-2xl border space-y-4 flex flex-col justify-between transition-all duration-150",
+                    "card-surface p-4 sm:p-6 rounded-2xl border space-y-4 flex flex-col justify-between transition-all duration-150",
                     derived.borderClass,
                     derived.bgClass,
                     derived.state === "active" && "shadow-md ring-1 ring-emerald-500/30"

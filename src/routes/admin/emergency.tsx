@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -315,13 +316,14 @@ function EmergencyCommandContent() {
       />
 
       {/* Simplified KPI Cards (5 Cards) */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4">
         {[
           {
             label: "Active Emergencies",
             val: stats.activeEmergencies,
             icon: Flame,
             color: "bg-red-500/10 text-red-600 border-red-500/20",
+            span: "col-span-2 sm:col-span-1",
           },
           {
             label: "Controlled Incidents",
@@ -348,21 +350,21 @@ function EmergencyCommandContent() {
             color: "bg-slate-500/10 text-slate-600 border-slate-500/20",
           },
         ].map((k) => (
-          <div key={k.label} className={`card-surface p-4 rounded-2xl border ${k.color} shadow-2xs`}>
+          <div key={k.label} className={cn("card-surface p-3 sm:p-4 rounded-2xl border shadow-2xs", k.color, k.span)}>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground truncate">
                 {k.label}
               </span>
-              <k.icon className="size-4" />
+              <k.icon className="size-4 shrink-0" />
             </div>
-            <p className="mt-2 text-2xl font-black text-foreground">{k.val}</p>
+            <p className="mt-2 text-xl sm:text-2xl font-black text-foreground">{k.val}</p>
           </div>
         ))}
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="card-surface p-4 rounded-2xl border border-border shadow-xs flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth w-full sm:w-auto pb-1 sm:pb-0">
           {[
             { id: "active", label: "Active (Reported)" },
             { id: "controlled", label: "Controlled" },
@@ -374,21 +376,21 @@ function EmergencyCommandContent() {
               size="sm"
               variant={statusFilter === st.id ? "default" : "outline"}
               onClick={() => setStatusFilter(st.id)}
-              className="rounded-xl text-xs h-8 font-semibold"
+              className="shrink-0 rounded-xl text-xs h-8 font-semibold"
             >
               {st.label}
             </Button>
           ))}
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search student, room, location..."
-              className="pl-9 h-8 text-xs rounded-xl"
+              className="pl-9 h-9 sm:h-8 text-xs rounded-xl"
             />
           </div>
 
@@ -396,7 +398,7 @@ function EmergencyCommandContent() {
             value={deptFilter}
             onChange={(e) => setDeptFilter(e.target.value)}
             aria-label="Filter by department"
-            className="h-8 text-xs rounded-xl border border-input bg-background px-3 font-semibold text-foreground focus:outline-none"
+            className="h-9 sm:h-8 text-xs rounded-xl border border-input bg-background px-3 font-semibold text-foreground focus:outline-none"
           >
             <option value="ALL">All Departments</option>
             <option value="CSE">CSE</option>

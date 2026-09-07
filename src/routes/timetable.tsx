@@ -282,7 +282,7 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
       </div>
 
       {/* Timetable Slot List Card */}
-      <section className="card-surface p-5 sm:p-7">
+      <section className="card-surface p-3.5 sm:p-6 lg:p-7">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Clock className="size-8 animate-spin text-primary/60" />

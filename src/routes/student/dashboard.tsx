@@ -97,68 +97,64 @@ function StudentDashboardContent() {
       />
 
       {/* Student Overview Metrics */}
-      <div className="grid gap-2.5 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="card-surface p-5 rounded-2xl border border-border shadow-2xs">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <UserCheck className="size-3.5 text-primary" /> My Assigned Counselor
+      <div className="grid gap-2.5 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="card-surface p-3.5 sm:p-5 rounded-2xl border border-border shadow-2xs flex flex-col justify-between">
+          <span className="text-[11px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <UserCheck className="size-3.5 text-primary shrink-0" /> Counselor
           </span>
           {counselorInfo?.assigned ? (
-            <div className="mt-2">
-              <p className="text-base font-extrabold text-foreground">{counselorInfo.counselorName}</p>
-              <p className="text-xs font-semibold text-primary mt-0.5">{counselorInfo.role || "Class Counselor"}</p>
-              <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
-                {counselorInfo.staffCode ? `ID: ${counselorInfo.staffCode} • ` : ""}
+            <div className="mt-1.5">
+              <p className="text-sm sm:text-base font-extrabold text-foreground truncate">{counselorInfo.counselorName}</p>
+              <p className="text-[11px] sm:text-xs font-semibold text-primary truncate mt-0.5">{counselorInfo.role || "Class Counselor"}</p>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground font-mono truncate mt-0.5">
                 {counselorInfo.department || "Faculty"}
               </p>
-              {counselorInfo.email && (
-                <p className="text-[11px] text-muted-foreground truncate mt-0.5">{counselorInfo.email}</p>
-              )}
             </div>
           ) : (
-            <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mt-2">
-              Counselor not assigned. Please contact Admin/HOD.
+            <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 mt-1.5">
+              Not assigned
             </p>
           )}
         </div>
 
-        <div className="card-surface p-5 rounded-2xl border border-border shadow-2xs">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
-            Active Gate Pass
+        <div className="card-surface p-3.5 sm:p-5 rounded-2xl border border-border shadow-2xs flex flex-col justify-between">
+          <span className="text-[11px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+            Gate Pass
           </span>
-          <p className="text-base font-bold text-foreground mt-2">
-            {stats.activeGatePass || "No Active Gate Pass"}
+          <p className="text-sm sm:text-base font-bold text-foreground mt-1.5 truncate">
+            {stats.activeGatePass || "No Active Pass"}
           </p>
-          <p className="text-[11px] text-muted-foreground mt-1">
-            {stats.validUntil ? `Valid until ${stats.validUntil}` : "In class session"}
+          <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">
+            {stats.validUntil ? `Until ${stats.validUntil}` : "In class session"}
           </p>
         </div>
 
-        <div className="card-surface p-5 rounded-2xl border border-border shadow-2xs">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
-            Current Semester Violations
+        <div className="card-surface p-3.5 sm:p-5 rounded-2xl border border-border shadow-2xs flex flex-col justify-between">
+          <span className="text-[11px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+            Violations
           </span>
-          <p className="text-3xl font-extrabold text-foreground mt-2">
+          <p className="text-2xl sm:text-3xl font-extrabold text-foreground mt-1.5">
             {stats.confirmedViolations}
           </p>
-          <p className="text-[11px] text-muted-foreground mt-1">Confirmed current-semester count</p>
+          <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">Current Semester</p>
         </div>
 
-        <div className="card-surface p-5 rounded-2xl border border-border shadow-2xs">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+        <div className="card-surface p-3.5 sm:p-5 rounded-2xl border border-border shadow-2xs flex flex-col justify-between">
+          <span className="text-[11px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider block">
             Academic Status
           </span>
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-2">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1.5">
             <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-            Active Student &bull; Sem 6
+            Active &bull; Sem 6
           </span>
-          <p className="text-[11px] text-muted-foreground mt-1">3rd Year &bull; Section A</p>
+          <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">3rd Year &bull; Sec A</p>
         </div>
       </div>
 
       {/* Two Column Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Student Digital Identity Card */}
-        <section className="card-surface p-6 rounded-2xl border border-border shadow-xs flex flex-col justify-between">
+        <section className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 border-b border-divider pb-3">
               <User className="size-4 text-primary" />
@@ -168,7 +164,7 @@ function StudentDashboardContent() {
             </div>
 
             <div className="mt-4 flex items-center gap-4">
-              <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary font-bold text-xl border border-primary/20">
+              <span className="grid size-12 sm:size-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary font-bold text-lg sm:text-xl border border-primary/20">
                 {studentName
                   .split(" ")
                   .map((n) => n[0])
@@ -176,8 +172,8 @@ function StudentDashboardContent() {
                   .toUpperCase()}
               </span>
               <div>
-                <h3 className="text-lg font-bold text-foreground">{studentName}</h3>
-                <p className="text-xs font-bold text-muted-foreground">{rollNo}</p>
+                <h3 className="text-base sm:text-lg font-bold text-foreground">{studentName}</h3>
+                <p className="text-xs font-bold text-muted-foreground font-mono">{rollNo}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   CSE &bull; 3rd Year &bull; Semester 6
                 </p>
@@ -185,12 +181,12 @@ function StudentDashboardContent() {
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-divider flex items-center justify-between gap-2">
+          <div className="mt-6 pt-4 border-t border-divider grid grid-cols-3 gap-2">
             <Button
               variant="outline"
               size="sm"
               asChild
-              className="rounded-xl text-xs font-semibold"
+              className="rounded-xl text-[11px] sm:text-xs font-semibold px-1 text-center justify-center"
             >
               <Link to="/student/profile">Profile & ID</Link>
             </Button>
@@ -198,7 +194,7 @@ function StudentDashboardContent() {
               variant="outline"
               size="sm"
               asChild
-              className="rounded-xl text-xs font-semibold"
+              className="rounded-xl text-[11px] sm:text-xs font-semibold px-1 text-center justify-center"
             >
               <Link to="/student/passes">My Passes</Link>
             </Button>
@@ -206,23 +202,23 @@ function StudentDashboardContent() {
               variant="outline"
               size="sm"
               asChild
-              className="rounded-xl text-xs font-semibold text-amber-600 dark:text-amber-400 border-amber-300"
+              className="rounded-xl text-[11px] sm:text-xs font-semibold text-amber-600 dark:text-amber-400 border-amber-300 px-1 text-center justify-center"
             >
-              <Link to="/student/violations">My Incidents</Link>
+              <Link to="/student/violations">Incidents</Link>
             </Button>
           </div>
         </section>
 
         {/* Today's Timetable */}
-        <section className="card-surface p-6 rounded-2xl border border-border shadow-xs">
-          <div className="flex items-center justify-between border-b border-divider pb-3">
+        <section className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-divider pb-3 gap-1.5">
             <div className="flex items-center gap-2">
               <BookOpen className="size-4 text-primary" />
               <span className="text-xs font-bold uppercase tracking-wider text-primary">
                 MY TODAY CLASS SCHEDULE
               </span>
             </div>
-            <Button variant="ghost" size="sm" asChild className="rounded-xl text-xs">
+            <Button variant="ghost" size="sm" asChild className="rounded-xl text-xs self-start sm:self-auto">
               <Link to="/student/timetable">Full Timetable</Link>
             </Button>
           </div>

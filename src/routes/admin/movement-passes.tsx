@@ -251,63 +251,63 @@ function AdminMovementPassesPage() {
         />
 
         {/* 1. KPI CARDS METRICS RIBBON */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-          <div className="card-surface p-4 rounded-2xl border border-border space-y-1 shadow-xs">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase flex items-center gap-1">
-              <FileText className="size-3 text-primary" /> Total
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-2.5">
+          <div className="card-surface p-3 sm:p-4 rounded-2xl border border-border space-y-1 shadow-xs col-span-2 sm:col-span-1">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase flex items-center gap-1">
+              <FileText className="size-3 text-primary shrink-0" /> Total
             </span>
-            <p className="text-2xl font-black text-foreground">{stats?.totalRequests ?? 0}</p>
+            <p className="text-xl sm:text-2xl font-black text-foreground">{stats?.totalRequests ?? 0}</p>
           </div>
 
-          <div className="card-surface p-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-1 shadow-xs">
-            <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase flex items-center gap-1">
-              <Clock className="size-3" /> Pending HOD
+          <div className="card-surface p-3 sm:p-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-1 shadow-xs">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase flex items-center gap-1 truncate">
+              <Clock className="size-3 shrink-0" /> Pending HOD
             </span>
-            <p className="text-2xl font-black text-amber-700 dark:text-amber-300">{stats?.pending ?? 0}</p>
+            <p className="text-xl sm:text-2xl font-black text-amber-700 dark:text-amber-300">{stats?.pending ?? 0}</p>
           </div>
 
-          <div className="card-surface p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-1 shadow-xs">
-            <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase flex items-center gap-1">
-              <CheckCircle2 className="size-3" /> Approved
+          <div className="card-surface p-3 sm:p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-1 shadow-xs">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase flex items-center gap-1 truncate">
+              <CheckCircle2 className="size-3 shrink-0" /> Approved
             </span>
-            <p className="text-2xl font-black text-emerald-700 dark:text-emerald-300">{stats?.approved ?? 0}</p>
+            <p className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-300">{stats?.approved ?? 0}</p>
           </div>
 
-          <div className="card-surface p-4 rounded-2xl border border-rose-500/30 bg-rose-500/5 space-y-1 shadow-xs">
-            <span className="text-[11px] font-semibold text-rose-700 dark:text-rose-400 uppercase flex items-center gap-1">
-              <XCircle className="size-3" /> Rejected
+          <div className="card-surface p-3 sm:p-4 rounded-2xl border border-rose-500/30 bg-rose-500/5 space-y-1 shadow-xs">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-rose-700 dark:text-rose-400 uppercase flex items-center gap-1 truncate">
+              <XCircle className="size-3 shrink-0" /> Rejected
             </span>
-            <p className="text-2xl font-black text-rose-700 dark:text-rose-300">{stats?.rejected ?? 0}</p>
+            <p className="text-xl sm:text-2xl font-black text-rose-700 dark:text-rose-300">{stats?.rejected ?? 0}</p>
           </div>
 
-          <div className="card-surface p-4 rounded-2xl border border-cyan-500/40 bg-cyan-500/10 space-y-1 shadow-xs">
-            <span className="text-[11px] font-bold text-cyan-700 dark:text-cyan-300 uppercase flex items-center gap-1">
-              <Activity className="size-3 animate-spin" /> Outside
+          <div className="card-surface p-3 sm:p-4 rounded-2xl border border-cyan-500/40 bg-cyan-500/10 space-y-1 shadow-xs">
+            <span className="text-[10px] sm:text-[11px] font-bold text-cyan-700 dark:text-cyan-300 uppercase flex items-center gap-1 truncate">
+              <Activity className="size-3 shrink-0 animate-spin" /> Outside
             </span>
-            <p className="text-2xl font-black text-cyan-700 dark:text-cyan-300">{stats?.currentlyOutside ?? 0}</p>
+            <p className="text-xl sm:text-2xl font-black text-cyan-700 dark:text-cyan-300">{stats?.currentlyOutside ?? 0}</p>
           </div>
 
-          <div className="card-surface p-4 rounded-2xl border border-purple-500/30 bg-purple-500/5 space-y-1 shadow-xs">
-            <span className="text-[11px] font-semibold text-purple-700 dark:text-purple-400 uppercase flex items-center gap-1">
-              <CheckCircle2 className="size-3" /> Completed
+          <div className="card-surface p-3 sm:p-4 rounded-2xl border border-purple-500/30 bg-purple-500/5 space-y-1 shadow-xs">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-purple-700 dark:text-purple-400 uppercase flex items-center gap-1 truncate">
+              <CheckCircle2 className="size-3 shrink-0" /> Completed
             </span>
-            <p className="text-2xl font-black text-purple-700 dark:text-purple-300">{stats?.completed ?? 0}</p>
+            <p className="text-xl sm:text-2xl font-black text-purple-700 dark:text-purple-300">{stats?.completed ?? 0}</p>
           </div>
 
-          <div className="card-surface p-4 rounded-2xl border border-red-500/40 bg-red-500/10 space-y-1 shadow-xs">
-            <span className="text-[11px] font-bold text-red-700 dark:text-red-400 uppercase flex items-center gap-1">
-              <ShieldAlert className="size-3" /> Denials
+          <div className="card-surface p-3 sm:p-4 rounded-2xl border border-red-500/40 bg-red-500/10 space-y-1 shadow-xs">
+            <span className="text-[10px] sm:text-[11px] font-bold text-red-700 dark:text-red-400 uppercase flex items-center gap-1 truncate">
+              <ShieldAlert className="size-3 shrink-0" /> Denials
             </span>
-            <p className="text-2xl font-black text-red-700 dark:text-red-300">{stats?.unauthorizedAttempts ?? 0}</p>
+            <p className="text-xl sm:text-2xl font-black text-red-700 dark:text-red-300">{stats?.unauthorizedAttempts ?? 0}</p>
           </div>
         </div>
 
         {/* 2. DEDICATED CURRENTLY OUTSIDE SECTION */}
         {currentlyOutside.length > 0 && (
-          <div className="card-surface p-5 rounded-2xl border-2 border-cyan-500/40 bg-cyan-500/5 space-y-4 shadow-sm">
+          <div className="card-surface p-4 sm:p-5 rounded-2xl border-2 border-cyan-500/40 bg-cyan-500/5 space-y-4 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-cyan-500/20 pb-3">
               <div className="flex items-center gap-2.5">
-                <span className="grid size-8 place-items-center rounded-xl bg-cyan-500 text-white font-bold shadow-xs">
+                <span className="grid size-8 place-items-center rounded-xl bg-cyan-500 text-white font-bold shadow-xs shrink-0">
                   <Activity className="size-4 animate-pulse" />
                 </span>
                 <div>
@@ -332,7 +332,7 @@ function AdminMovementPassesPage() {
                       <p className="font-bold text-foreground">{item.studentName}</p>
                       <p className="text-[11px] font-mono text-primary">{item.studentCode} &bull; {item.department}</p>
                     </div>
-                    <span className="px-2 py-0.5 rounded-md bg-cyan-600/15 text-cyan-700 dark:text-cyan-300 font-bold text-[10px]">
+                    <span className="px-2 py-0.5 rounded-md bg-cyan-600/15 text-cyan-700 dark:text-cyan-300 font-bold text-[10px] shrink-0">
                       {item.durationOutsideMinutes} mins outside
                     </span>
                   </div>
@@ -352,8 +352,8 @@ function AdminMovementPassesPage() {
         )}
 
         {/* 3. FILTERS & SEARCH BAR */}
-        <div className="p-4 rounded-2xl border border-border bg-card shadow-xs space-y-3">
-          <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row items-center gap-3">
+        <div className="p-3.5 sm:p-4 rounded-2xl border border-border bg-card shadow-xs space-y-3">
+          <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
@@ -364,14 +364,14 @@ function AdminMovementPassesPage() {
               />
             </div>
 
-            <Button type="submit" size="sm" className="rounded-xl text-xs font-semibold h-10 px-4">
+            <Button type="submit" size="sm" className="rounded-xl text-xs font-semibold h-10 px-4 w-full sm:w-auto shrink-0 justify-center">
               <Search className="size-3.5 mr-1.5" /> Search
             </Button>
           </form>
 
           {/* Quick Filter Tabs */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/60 text-xs">
-            <div className="flex items-center gap-1 text-muted-foreground font-semibold text-[11px] mr-2">
+          <div className="flex items-center gap-2 pt-2 border-t border-border/60 text-xs overflow-x-auto no-scrollbar scroll-smooth pb-1">
+            <div className="flex items-center gap-1 text-muted-foreground font-semibold text-[11px] mr-1 shrink-0">
               <Filter className="size-3" /> Filters:
             </div>
 
@@ -390,7 +390,7 @@ function AdminMovementPassesPage() {
                 key={st.id}
                 type="button"
                 onClick={() => setStatusFilter(st.id)}
-                className={`px-3 py-1 rounded-xl text-[11px] font-semibold transition-colors ${
+                className={`shrink-0 px-3 py-1 rounded-xl text-[11px] font-semibold transition-colors ${
                   statusFilter === st.id
                     ? "bg-primary text-primary-foreground font-bold shadow-xs"
                     : "bg-muted/60 text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -400,13 +400,13 @@ function AdminMovementPassesPage() {
               </button>
             ))}
 
-            <div className="h-4 w-px bg-border mx-1" />
+            <div className="h-4 w-px bg-border mx-1 shrink-0" />
 
             {/* Date filter */}
             <button
               type="button"
               onClick={() => setDateFilter(dateFilter === "today" ? "all" : "today")}
-              className={`px-3 py-1 rounded-xl text-[11px] font-semibold transition-colors ${
+              className={`shrink-0 px-3 py-1 rounded-xl text-[11px] font-semibold transition-colors ${
                 dateFilter === "today"
                   ? "bg-primary text-primary-foreground font-bold shadow-xs"
                   : "bg-muted/60 text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -420,7 +420,7 @@ function AdminMovementPassesPage() {
               value={deptFilter}
               onChange={(e) => setDeptFilter(e.target.value)}
               aria-label="Filter by department"
-              className="px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-muted/60 border border-border text-foreground outline-hidden focus:ring-1 focus:ring-primary"
+              className="shrink-0 px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-muted/60 border border-border text-foreground outline-hidden focus:ring-1 focus:ring-primary"
             >
               <option value="all">All Departments</option>
               <option value="CSE">CSE</option>

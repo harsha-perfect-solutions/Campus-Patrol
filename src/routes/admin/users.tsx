@@ -473,11 +473,11 @@ function AdminUsersPage() {
           description="Manage institutional users, execute student bulk CSV imports, toggle account statuses, and oversee authentication credentials."
           breadcrumb={[{ label: "Admin", to: "/admin/dashboard" }, { label: "User Onboarding" }]}
           actions={
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-xl border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 font-bold"
+                className="rounded-xl border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 font-bold w-full sm:w-auto"
                 onClick={() => setManageGatesOpen(true)}
               >
                 <MapPin className="size-4 mr-1.5" /> Manage Campus Gates
@@ -485,7 +485,7 @@ function AdminUsersPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-xl border-primary/30 text-primary hover:bg-primary/10 font-bold"
+                className="rounded-xl border-primary/30 text-primary hover:bg-primary/10 font-bold w-full sm:w-auto"
                 onClick={() => {
                   setImportResult(null);
                   setBulkImportOpen(true);
@@ -495,7 +495,7 @@ function AdminUsersPage() {
               </Button>
               <Button
                 size="sm"
-                className="rounded-xl font-bold bg-primary text-primary-foreground shadow-sm"
+                className="rounded-xl font-bold bg-primary text-primary-foreground shadow-sm w-full sm:w-auto"
                 onClick={() => setAddUserOpen(true)}
               >
                 <UserPlus className="size-4 mr-1.5" /> Add Individual User
@@ -505,7 +505,7 @@ function AdminUsersPage() {
         />
 
         {/* ROLE TABS */}
-        <div className="flex items-center gap-1 border-b border-border pb-1 overflow-x-auto">
+        <div className="flex items-center gap-1 border-b border-border pb-1 overflow-x-auto no-scrollbar scroll-smooth">
           {[
             { id: "students", label: "Students", icon: UserRound, count: users.filter((u) => u.role === "student").length },
             { id: "faculty", label: "Faculty", icon: GraduationCap, count: users.filter((u) => u.role === "faculty").length },
@@ -520,7 +520,7 @@ function AdminUsersPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all",
+                  "shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all",
                   active
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -537,7 +537,7 @@ function AdminUsersPage() {
         </div>
 
         {/* SEARCH & FILTERS BAR */}
-        <div className="card-surface p-4 rounded-2xl border border-border flex flex-col sm:flex-row gap-3 items-center justify-between">
+        <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
@@ -548,9 +548,9 @@ function AdminUsersPage() {
             />
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <Select value={deptFilter} onValueChange={setDeptFilter}>
-              <SelectTrigger className="h-10 text-xs rounded-xl w-36">
+              <SelectTrigger className="h-10 text-xs rounded-xl flex-1 sm:w-36">
                 <SelectValue placeholder="Department" />
               </SelectTrigger>
               <SelectContent>
@@ -566,7 +566,7 @@ function AdminUsersPage() {
             </Select>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-10 text-xs rounded-xl w-32">
+              <SelectTrigger className="h-10 text-xs rounded-xl flex-1 sm:w-32">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>

@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -230,7 +231,36 @@ function FacultyCounselorContent() {
         </div>
       )}
 
-
+      {/* Workspace Tab Switcher */}
+      <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-divider overflow-x-auto no-scrollbar scroll-smooth">
+        {[
+          { id: "cases", label: "Violation Cases", icon: ShieldAlert, count: violations.length },
+          { id: "passes", label: "Pass Approvals", icon: CheckCircle2, count: passes.length },
+          { id: "students", label: "Assigned Students", icon: Users, count: students.length },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isSelected = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id as any)}
+              className={cn(
+                "shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg text-xs font-semibold transition-all",
+                isSelected
+                  ? "bg-background text-foreground shadow-xs font-bold"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon className="size-4 shrink-0" />
+              <span>{tab.label}</span>
+              <span className={cn("px-1.5 py-0.5 rounded-full text-[10px] font-bold", isSelected ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground")}>
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
       {/* CASES TAB */}
       {activeTab === "cases" && (

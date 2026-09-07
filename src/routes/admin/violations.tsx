@@ -262,7 +262,7 @@ function AdminViolationsPage() {
         )}
 
         {/* 8-Metric KPI Grid */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+        <div className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-4 lg:grid-cols-8">
           {[
             { label: "Total Incidents", value: stats?.totalIncidents ?? 0, color: "text-foreground", bg: "bg-muted/40" },
             { label: "New Reports", value: stats?.newReports ?? 0, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50/60 dark:bg-amber-950/20" },
@@ -275,18 +275,18 @@ function AdminViolationsPage() {
           ].map((kpi) => (
             <div
               key={kpi.label}
-              className={cn("p-4 rounded-2xl border border-border flex flex-col justify-between shadow-2xs", kpi.bg)}
+              className={cn("p-3 sm:p-4 rounded-2xl border border-border flex flex-col justify-between shadow-2xs", kpi.bg)}
             >
-              <span className="text-[11px] font-semibold text-muted-foreground truncate">{kpi.label}</span>
-              <span className={cn("text-2xl font-bold mt-1", kpi.color)}>{kpi.value}</span>
+              <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground truncate">{kpi.label}</span>
+              <span className={cn("text-xl sm:text-2xl font-bold mt-1", kpi.color)}>{kpi.value}</span>
             </div>
           ))}
         </div>
 
         {/* Filter Bar & Queue Switcher */}
-        <div className="card-surface p-5 rounded-2xl border border-border space-y-4 shadow-xs">
+        <div className="card-surface p-3.5 sm:p-5 rounded-2xl border border-border space-y-4 shadow-xs">
           {/* Queue Filter Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-divider">
+          <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-divider overflow-x-auto no-scrollbar scroll-smooth">
             {[
               { id: "ALL", label: "All Incidents" },
               { id: "NEW", label: "New Reports" },
@@ -301,7 +301,7 @@ function AdminViolationsPage() {
                 key={q.id}
                 onClick={() => setSelectedQueue(q.id)}
                 className={cn(
-                  "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                  "shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all",
                   selectedQueue === q.id
                     ? "bg-background text-foreground shadow-xs font-bold"
                     : "text-muted-foreground hover:text-foreground",

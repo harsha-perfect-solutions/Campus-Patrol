@@ -112,10 +112,10 @@ function HODStudentsPage() {
         />
 
         {/* Dynamic Filters Control Toolbar */}
-        <section className="card-surface p-5 rounded-2xl border border-border shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-divider pb-3">
+        <section className="card-surface p-3.5 sm:p-5 rounded-2xl border border-border shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-divider pb-3 gap-2">
             <div className="flex items-center gap-2">
-              <Filter className="size-4 text-primary" />
+              <Filter className="size-4 text-primary shrink-0" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
                 FILTER STUDENTS BY YEAR & SECTION
               </h3>
@@ -222,7 +222,7 @@ function HODStudentsPage() {
               return (
                 <div
                   key={s.id}
-                  className="card-surface p-5 rounded-2xl border border-border shadow-2xs space-y-4 hover:border-primary/40 transition-colors"
+                  className="card-surface p-4 sm:p-5 rounded-2xl border border-border shadow-2xs space-y-4 hover:border-primary/40 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary font-bold text-base border border-primary/20">

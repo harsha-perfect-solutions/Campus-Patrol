@@ -25,8 +25,8 @@ function SecurityProfilePage() {
         />
 
         <div className="max-w-2xl mx-auto space-y-6">
-          <div className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-6">
-            <div className="flex items-center gap-4 border-b border-border pb-6">
+          <div className="p-4 sm:p-6 rounded-2xl border border-border bg-card shadow-xs space-y-5 sm:space-y-6">
+            <div className="flex items-center gap-3.5 sm:gap-4 border-b border-border pb-5 sm:pb-6">
               <div className="size-16 rounded-2xl bg-amber-500/20 text-amber-800 dark:text-amber-300 grid place-items-center font-bold text-xl">
                 SEC
               </div>

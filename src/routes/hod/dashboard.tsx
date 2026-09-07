@@ -165,7 +165,7 @@ function HODDashboardContent() {
           </span>
         </div>
 
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-2.5 sm:gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
           {[
             { dept: "CSE", name: "Computer Science", count: 15, isUserDept: userDept === "CSE", color: "border-primary/40 bg-primary/5 text-primary" },
             { dept: "ECE", name: "Electronics & Comm", count: 8, isUserDept: userDept === "ECE", color: "border-purple-300 bg-purple-50/40 text-purple-700 dark:bg-purple-950/20 dark:text-purple-300" },
@@ -177,7 +177,7 @@ function HODDashboardContent() {
             <div
               key={b.dept}
               className={cn(
-                "card-surface p-4 rounded-2xl border transition-all relative overflow-hidden",
+                "card-surface p-3 sm:p-4 rounded-2xl border transition-all relative overflow-hidden",
                 b.isUserDept ? "border-2 border-primary shadow-xs ring-2 ring-primary/20" : "border-border"
               )}
             >
@@ -191,7 +191,7 @@ function HODDashboardContent() {
                   </span>
                 )}
               </div>
-              <p className="mt-2 text-2xl font-black text-foreground">
+              <p className="mt-2 text-xl sm:text-2xl font-black text-foreground">
                 {String(b.count).padStart(2, "0")}
               </p>
               <p className="text-[10px] font-medium text-muted-foreground truncate mt-0.5">
@@ -344,15 +344,15 @@ function HODDashboardContent() {
       </section>
 
       {/* Cases Requiring Immediate Attention */}
-      <section className="card-surface p-6 rounded-2xl border border-border shadow-xs">
-        <div className="flex items-center justify-between border-b border-divider pb-4">
+      <section className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-divider pb-4 gap-2.5">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="size-4 text-amber-600" />
+            <AlertTriangle className="size-4 text-amber-600 shrink-0" />
             <span className="text-xs font-bold uppercase tracking-wider text-foreground">
               INCIDENTS & VIOLATIONS REQUIRING ATTENTION
             </span>
           </div>
-          <Button variant="outline" size="sm" asChild className="rounded-xl text-xs font-semibold">
+          <Button variant="outline" size="sm" asChild className="rounded-xl text-xs font-semibold w-full sm:w-auto">
             <Link to="/hod/violations">Open Full Incident Console &rarr;</Link>
           </Button>
         </div>
