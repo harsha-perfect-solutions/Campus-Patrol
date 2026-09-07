@@ -207,7 +207,7 @@ function StudentExplanationsPage() {
             Loading violation case details...
           </div>
         ) : targetReport ? (
-          <div className="card-surface p-6 rounded-2xl border border-border shadow-xs max-w-2xl space-y-6">
+          <div className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs max-w-2xl space-y-6">
             {/* Incident Summary Card */}
             <div className="p-4 rounded-2xl border border-border bg-muted/20 space-y-2.5">
               <div className="flex items-center justify-between border-b border-divider pb-2">

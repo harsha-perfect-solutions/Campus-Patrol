@@ -283,7 +283,7 @@ export function SafetyAnalyticsDashboard({
       <div className="card-surface p-4 rounded-2xl border border-border shadow-xs space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-divider pb-3">
           {/* Preset Date Buttons */}
-          <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl">
+          <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl overflow-x-auto no-scrollbar scroll-smooth w-full sm:w-auto max-w-full">
             {(
               [
                 { id: "7d", label: "Last 7 Days" },
@@ -297,7 +297,7 @@ export function SafetyAnalyticsDashboard({
                 key={p.id}
                 onClick={() => handlePresetChange(p.id)}
                 className={cn(
-                  "px-3 py-1 text-xs font-bold rounded-lg transition-colors",
+                  "px-3 py-1 text-xs font-bold rounded-lg transition-colors shrink-0 whitespace-nowrap",
                   datePreset === p.id
                     ? "bg-card text-foreground shadow-2xs"
                     : "text-muted-foreground hover:text-foreground",
@@ -427,7 +427,7 @@ export function SafetyAnalyticsDashboard({
       </div>
 
       {/* ─── 1. 10 DYNAMIC KPI CARDS ───────────────────────────────────────── */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3">
         {[
           {
             label: "Total Incidents",
@@ -513,7 +513,7 @@ export function SafetyAnalyticsDashboard({
           <button
             key={kpi.label}
             onClick={() => handleTriggerDrilldown(kpi.drillType, kpi.drillKey, kpi.label)}
-            className="card-surface p-4 rounded-2xl border border-border shadow-2xs hover:border-primary/40 hover:shadow-xs transition-all text-left flex items-center justify-between group cursor-pointer"
+            className="card-surface p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-border shadow-2xs hover:border-primary/40 hover:shadow-xs transition-all text-left flex items-center justify-between group cursor-pointer"
           >
             <div>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
@@ -532,7 +532,7 @@ export function SafetyAnalyticsDashboard({
 
       {/* ─── 2. EMERGENCY RESPONSE METRICS ─────────────────────────────────── */}
       <div className="card-surface p-5 rounded-2xl border border-border shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-divider pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-divider pb-3">
           <div className="flex items-center gap-2.5">
             <span className="grid size-8 place-items-center rounded-xl bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300">
               <ShieldAlert className="size-4.5" />
@@ -547,12 +547,12 @@ export function SafetyAnalyticsDashboard({
             </div>
           </div>
 
-          <span className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-950/80 px-2.5 py-1 rounded-full">
+          <span className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-950/80 px-2.5 py-1 rounded-full w-fit">
             {analytics?.emergency.total || 0} Total Emergencies
           </span>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
           {[
             {
               title: "Avg Triage Response",
@@ -717,7 +717,7 @@ export function SafetyAnalyticsDashboard({
       {/* ─── 4. DEPARTMENT BENCHMARKS (ADMIN ONLY) ─────────────────────────── */}
       {role === "admin" && (
         <div className="card-surface rounded-2xl border border-border overflow-hidden shadow-xs">
-          <div className="px-5 py-4 border-b border-divider flex items-center justify-between bg-muted/20">
+          <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-divider flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 bg-muted/20">
             <div className="flex items-center gap-2">
               <Building2 className="size-4.5 text-primary" />
               <h2 className="text-xs font-bold text-foreground uppercase tracking-wide">
@@ -918,7 +918,7 @@ export function SafetyAnalyticsDashboard({
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
           <div className="p-3.5 rounded-xl bg-muted/40 border border-divider">
             <p className="text-[10px] font-bold text-muted-foreground uppercase">Avg Time to HOD Review</p>
             <p className="mt-1 text-2xl font-black text-foreground">
@@ -955,7 +955,7 @@ export function SafetyAnalyticsDashboard({
 
       {/* ─── 7. DRILL-DOWN MODAL ───────────────────────────────────────────── */}
       <Dialog open={drillOpen} onOpenChange={setDrillOpen}>
-        <DialogContent className="max-w-3xl rounded-2xl p-6 max-h-[85vh] flex flex-col">
+        <DialogContent className="max-w-3xl w-[95vw] sm:w-full rounded-2xl p-4 sm:p-6 max-h-[85vh] flex flex-col">
           <DialogHeader className="border-b border-divider pb-3 shrink-0">
             <DialogTitle className="text-base font-bold text-foreground flex items-center justify-between">
               <span>{drillTitle}</span>

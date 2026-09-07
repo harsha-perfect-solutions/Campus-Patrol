@@ -320,12 +320,12 @@ function AdminSafetyReportsContent() {
         description="Institutional safety command intelligence, historical hotspot detection, emergency response benchmarks, and immutable executive reporting."
         breadcrumb={[{ label: "Admin", to: "/admin/dashboard" }, { label: "Safety Intelligence" }]}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setHistoryModalOpen(true)}
-              className="rounded-xl text-xs h-9 gap-1.5 shadow-2xs font-semibold"
+              className="rounded-xl text-xs h-9 gap-1.5 shadow-2xs font-semibold flex-1 sm:flex-initial"
             >
               <History className="size-3.5 text-primary" />
               Saved Reports ({savedReports.length})
@@ -335,7 +335,7 @@ function AdminSafetyReportsContent() {
               variant="outline"
               size="sm"
               onClick={handleExportCSV}
-              className="rounded-xl text-xs h-9 gap-1.5 shadow-2xs"
+              className="rounded-xl text-xs h-9 gap-1.5 shadow-2xs flex-1 sm:flex-initial"
             >
               <Download className="size-3.5" />
               Export CSV
@@ -357,7 +357,7 @@ function AdminSafetyReportsContent() {
                 setCustomReportTitle(`Executive Safety Brief — ${new Date().toLocaleDateString()}`);
                 setGenerateModalOpen(true);
               }}
-              className="rounded-xl text-xs font-bold h-9 gap-1.5 bg-primary text-primary-foreground shadow-xs"
+              className="rounded-xl text-xs font-bold h-9 gap-1.5 bg-primary text-primary-foreground shadow-xs w-full sm:w-auto"
             >
               <FileCheck className="size-3.5" />
               Generate Safety Report
@@ -367,9 +367,9 @@ function AdminSafetyReportsContent() {
       />
 
       {/* Filter & Date Presets Bar */}
-      <div className="card-surface p-4 rounded-2xl border border-border shadow-xs space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-divider pb-3">
-          <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl">
+      <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-divider pb-3">
+          <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl overflow-x-auto no-scrollbar scroll-smooth w-full sm:w-auto shrink-0">
             {(
               [
                 { id: "7d", label: "Last 7 Days" },
@@ -384,7 +384,7 @@ function AdminSafetyReportsContent() {
                 key={p.id}
                 onClick={() => handlePresetChange(p.id)}
                 className={cn(
-                  "px-3 py-1 text-xs font-bold rounded-lg transition-colors",
+                  "px-3 py-1 text-xs font-bold rounded-lg transition-colors shrink-0 whitespace-nowrap",
                   datePreset === p.id
                     ? "bg-card text-foreground shadow-2xs"
                     : "text-muted-foreground hover:text-foreground",
@@ -453,7 +453,7 @@ function AdminSafetyReportsContent() {
       </div>
 
       {/* ─── 1. 10 DYNAMIC EXECUTIVE KPI CARDS ──────────────────────────────── */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3">
         {[
           {
             label: "Total Safety Reports",
@@ -528,25 +528,25 @@ function AdminSafetyReportsContent() {
         ].map((kpi) => (
           <div
             key={kpi.label}
-            className="card-surface p-4 rounded-2xl border border-border shadow-2xs flex items-center justify-between"
+            className="card-surface p-3 sm:p-4 rounded-2xl border border-border shadow-2xs flex items-center justify-between"
           >
             <div>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 {kpi.label}
               </p>
-              <p className="mt-1 text-2xl font-extrabold text-foreground">{kpi.value}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{kpi.sub}</p>
+              <p className="mt-1 text-xl sm:text-2xl font-extrabold text-foreground">{kpi.value}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{kpi.sub}</p>
             </div>
-            <span className={`grid size-9 place-items-center rounded-xl shrink-0 ${kpi.color}`}>
-              <kpi.icon className="size-4.5" />
+            <span className={`grid size-8 sm:size-9 place-items-center rounded-xl shrink-0 ${kpi.color}`}>
+              <kpi.icon className="size-4 sm:size-4.5" />
             </span>
           </div>
         ))}
       </div>
 
       {/* ─── 2. HISTORICAL SAFETY HOTSPOT RADAR ─────────────────────────────── */}
-      <div className="card-surface p-5 rounded-2xl border border-border shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-divider pb-3">
+      <div className="card-surface p-4 sm:p-5 rounded-2xl border border-border shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-divider pb-3">
           <div className="flex items-center gap-2.5">
             <span className="grid size-8 place-items-center rounded-xl bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300">
               <MapPin className="size-4.5" />
@@ -889,7 +889,7 @@ function AdminSafetyReportsContent() {
 
       {/* ─── MODAL 1: GENERATE SAFETY REPORT SNAPSHOT ──────────────────────── */}
       <Dialog open={generateModalOpen} onOpenChange={setGenerateModalOpen}>
-        <DialogContent className="max-w-md rounded-2xl p-6">
+        <DialogContent className="w-[95vw] sm:w-full max-w-md rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <FileCheck className="size-5 text-primary" />
@@ -949,7 +949,7 @@ function AdminSafetyReportsContent() {
 
       {/* ─── MODAL 2: SAVED REPORTS LIST ───────────────────────────────────── */}
       <Dialog open={historyModalOpen} onOpenChange={setHistoryModalOpen}>
-        <DialogContent className="max-w-2xl rounded-2xl p-6 max-h-[85vh] flex flex-col">
+        <DialogContent className="w-[95vw] sm:w-full max-w-2xl rounded-2xl p-4 sm:p-6 max-h-[85vh] flex flex-col">
           <DialogHeader className="border-b border-divider pb-3 shrink-0">
             <DialogTitle className="text-base font-bold text-foreground flex items-center justify-between">
               <span className="flex items-center gap-2">
@@ -972,13 +972,13 @@ function AdminSafetyReportsContent() {
                 {savedReports.map((r) => (
                   <div
                     key={r.id}
-                    className="p-3.5 text-xs flex items-center justify-between hover:bg-accent/40 transition-colors"
+                    className="p-3.5 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-accent/40 transition-colors"
                   >
                     <div>
                       <div className="flex items-center gap-2 font-bold text-foreground">
                         <span className="font-mono text-primary">{r.id}</span>
                         <span>•</span>
-                        <span>{r.title}</span>
+                        <span className="line-clamp-1">{r.title}</span>
                       </div>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
                         Scope: <strong>{r.department}</strong> • {r.dateRangeLabel} • By {r.generatedBy} on {new Date(r.createdAt).toLocaleString()}
@@ -992,7 +992,7 @@ function AdminSafetyReportsContent() {
                         setSelectedSnapshot(r);
                         setViewSnapshotModalOpen(true);
                       }}
-                      className="rounded-xl text-xs h-8 font-bold text-primary shrink-0"
+                      className="rounded-xl text-xs h-8 font-bold text-primary shrink-0 w-full sm:w-auto"
                     >
                       View Report &rarr;
                     </Button>
@@ -1006,7 +1006,7 @@ function AdminSafetyReportsContent() {
 
       {/* ─── MODAL 3: VIEW SINGLE SAVED SNAPSHOT ───────────────────────────── */}
       <Dialog open={viewSnapshotModalOpen} onOpenChange={setViewSnapshotModalOpen}>
-        <DialogContent className="max-w-3xl rounded-2xl p-6 max-h-[90vh] flex flex-col">
+        <DialogContent className="w-[95vw] sm:w-full max-w-3xl rounded-2xl p-4 sm:p-6 max-h-[90vh] flex flex-col">
           {selectedSnapshot && (
             <>
               <DialogHeader className="border-b border-divider pb-3 shrink-0">

@@ -156,14 +156,14 @@ function AdminCounselorsContent() {
         description="Assign faculty counselors to class sections and configure student assignments."
         breadcrumb={[{ label: "Admin", to: "/admin/dashboard" }, { label: "Counselor Management" }]}
         actions={
-          <Button onClick={() => setAddModalOpen(true)} className="rounded-xl font-bold shadow-xs">
+          <Button onClick={() => setAddModalOpen(true)} className="rounded-xl font-bold shadow-xs w-full sm:w-auto">
             <UserPlus className="size-4 mr-2" /> Add Counselor to Section
           </Button>
         }
       />
 
       {/* Class Section Filters */}
-      <div className="card-surface p-5 rounded-2xl border border-border shadow-2xs space-y-4">
+      <div className="card-surface p-4 sm:p-5 rounded-2xl border border-border shadow-2xs space-y-4">
         <div className="flex items-center gap-2 border-b border-border pb-3">
           <Filter className="size-4 text-primary" />
           <span className="text-xs font-bold uppercase tracking-wider text-primary">
@@ -171,7 +171,7 @@ function AdminCounselorsContent() {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <div>
             <Label className="text-xs font-semibold">Department</Label>
             <select
@@ -181,6 +181,7 @@ function AdminCounselorsContent() {
             >
               <option value="CSE">CSE</option>
               <option value="ECE">ECE</option>
+              <option value="EEE">EEE</option>
               <option value="MECH">MECH</option>
               <option value="CIVIL">CIVIL</option>
             </select>
@@ -216,7 +217,7 @@ function AdminCounselorsContent() {
           </div>
 
           <div>
-            <Label className="text-xs font-semibold">Section</Label>
+            <Label className="text-xs font-semibold">Class Section</Label>
             <select
               value={section}
               onChange={(e) => setSection(e.target.value)}
@@ -231,12 +232,12 @@ function AdminCounselorsContent() {
       </div>
 
       {/* Counselor Summary Header */}
-      <div className="card-surface p-6 rounded-2xl border border-border shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="inline-block text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider mb-1">
             {department} &bull; {year} &bull; Sem {semester} &bull; {section}
           </span>
-          <h3 className="text-lg font-bold text-foreground">
+          <h3 className="text-base sm:text-lg font-bold text-foreground">
             Class Counselors ({assignments.length}) &bull; Total Students: {totalAssignedStudents}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -244,16 +245,16 @@ function AdminCounselorsContent() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             onClick={() => setRedistributeModalOpen(true)}
             disabled={assignments.length === 0}
-            className="rounded-xl text-xs font-bold gap-2"
+            className="rounded-xl text-xs font-bold gap-2 flex-1 sm:flex-initial"
           >
             <Shuffle className="size-3.5 text-primary" /> Redistribute Students
           </Button>
-          <Button onClick={() => setAddModalOpen(true)} size="sm" className="rounded-xl font-bold text-xs">
+          <Button onClick={() => setAddModalOpen(true)} size="sm" className="rounded-xl font-bold text-xs flex-1 sm:flex-initial">
             <UserPlus className="size-3.5 mr-1" /> Add Counselor
           </Button>
         </div>
@@ -336,10 +337,10 @@ function AdminCounselorsContent() {
 
       {/* Add Counselor Modal */}
       {addModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-xl p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border pb-3">
-              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+              <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
                 <UserPlus className="size-5 text-primary" /> Add Counselor to {department} {year} {section}
               </h3>
               <Button variant="ghost" size="sm" onClick={() => setAddModalOpen(false)}>
@@ -384,10 +385,10 @@ function AdminCounselorsContent() {
 
       {/* Redistribute Students Modal */}
       {redistributeModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-xl p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border pb-3">
-              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+              <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
                 <Shuffle className="size-5 text-primary" /> Redistribute Students
               </h3>
               <Button variant="ghost" size="sm" onClick={() => setRedistributeModalOpen(false)}>

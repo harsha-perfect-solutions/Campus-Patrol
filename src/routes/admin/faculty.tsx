@@ -278,7 +278,7 @@ function AdminFacultyPage() {
           />
           <Button
             onClick={handleOpenAddModal}
-            className="h-10 px-4 rounded-xl font-semibold bg-primary text-primary-foreground shadow-xs shrink-0 self-start sm:self-auto gap-2"
+            className="h-10 px-4 rounded-xl font-semibold bg-primary text-primary-foreground shadow-xs shrink-0 w-full sm:w-auto gap-2"
           >
             <Plus className="size-4" />
             <span>Add New Faculty Member</span>
@@ -286,7 +286,7 @@ function AdminFacultyPage() {
         </div>
 
         {/* KPI Metrics */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div className="card-surface p-4 rounded-2xl border border-border shadow-2xs flex items-center justify-between">
             <div>
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
@@ -500,7 +500,7 @@ function AdminFacultyPage() {
 
         {/* Add / Edit Faculty Modal */}
         <Dialog open={formModalOpen} onOpenChange={setFormModalOpen}>
-          <DialogContent className="sm:max-w-md rounded-2xl p-6">
+          <DialogContent className="w-[95vw] sm:w-full sm:max-w-md rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-base font-bold">
                 {editingFaculty ? (
@@ -525,7 +525,7 @@ function AdminFacultyPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs font-bold">Staff Code *</Label>
                   <Input
@@ -555,7 +555,7 @@ function AdminFacultyPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs font-bold">Institutional Email *</Label>
                   <Input
@@ -628,7 +628,7 @@ function AdminFacultyPage() {
 
         {/* Delete Confirmation Modal */}
         <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-          <DialogContent className="sm:max-w-md rounded-2xl p-6">
+          <DialogContent className="w-[95vw] sm:w-full sm:max-w-md rounded-2xl p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-base font-bold text-destructive">
                 <Trash2 className="size-5" /> Remove Faculty Member?

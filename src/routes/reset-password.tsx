@@ -156,7 +156,7 @@ function ForgotPasswordPage() {
         </div>
 
         {/* Stepper Progress */}
-        <div className="flex items-center justify-between px-6 py-2 rounded-xl border border-slate-800 bg-slate-900/60 text-xs">
+        <div className="flex items-center justify-between px-3 sm:px-6 py-2 rounded-xl border border-slate-800 bg-slate-900/60 text-xs">
           <span className={`font-semibold flex items-center gap-1 ${step >= 1 ? "text-indigo-400" : "text-slate-600"}`}>
             1. Email
           </span>
@@ -170,7 +170,7 @@ function ForgotPasswordPage() {
           </span>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 shadow-2xl backdrop-blur-xl">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-4 sm:p-6 shadow-2xl backdrop-blur-xl">
           {errorMessage && (
             <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-300">
               <AlertTriangle className="size-4 shrink-0 text-red-400 mt-0.5" />

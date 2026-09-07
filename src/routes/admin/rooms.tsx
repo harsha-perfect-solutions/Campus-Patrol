@@ -427,22 +427,22 @@ function AdminRoomsPage() {
     <RoleGuard allowedRoles={["admin"]}>
       <div className="space-y-6 pb-16">
         {/* Page Header Bar */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card border rounded-2xl p-5 shadow-xs">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card border rounded-2xl p-4 sm:p-5 shadow-xs">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               <Building2 className="w-4 h-4 text-primary" />
               <span>Campus Infrastructure Console</span>
             </div>
-            <h1 className="text-2xl font-black tracking-tight mt-1">Buildings & Campus Locations</h1>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight mt-1">Buildings & Campus Locations</h1>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
             {mainTab === "BUILDINGS" ? (
               <>
                 <Button
                   onClick={() => setAddBuildingModalOpen(true)}
                   variant="outline"
-                  className="gap-2 font-bold text-xs rounded-xl border-primary/40 hover:bg-primary/5"
+                  className="gap-2 font-bold text-xs rounded-xl border-primary/40 hover:bg-primary/5 flex-1 sm:flex-initial"
                 >
                   <Plus className="w-4 h-4 text-primary" />
                   <span>+ Add Academic Building</span>
@@ -450,7 +450,7 @@ function AdminRoomsPage() {
 
                 <Button
                   onClick={() => handleOpenAddRoom(selectedBuilding)}
-                  className="gap-2 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 rounded-xl px-4"
+                  className="gap-2 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 rounded-xl px-4 flex-1 sm:flex-initial text-xs"
                 >
                   <Plus className="w-4 h-4" />
                   <span>+ Add Room to Building</span>
@@ -459,7 +459,7 @@ function AdminRoomsPage() {
             ) : (
               <Button
                 onClick={() => setAddLocationModalOpen(true)}
-                className="gap-2 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 rounded-xl px-5"
+                className="gap-2 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 rounded-xl px-4 sm:px-5 w-full sm:w-auto text-xs"
               >
                 <Plus className="w-4 h-4" />
                 <span>+ Add Campus Roaming Location</span>
@@ -469,7 +469,7 @@ function AdminRoomsPage() {
         </div>
 
         {/* Primary Master Navigation Tabs - High Contrast Premium Redesign */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/60 p-2 rounded-2xl border border-border/80 shadow-inner">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 bg-muted/60 p-2 rounded-2xl border border-border/80 shadow-inner">
           <button
             onClick={() => {
               setMainTab("BUILDINGS");
@@ -478,34 +478,16 @@ function AdminRoomsPage() {
             className={`flex items-center gap-3.5 p-4 rounded-xl text-left transition-all duration-200 ${
               mainTab === "BUILDINGS"
                 ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 ring-2 ring-primary/40 font-black"
-                : "bg-card/70 hover:bg-card text-muted-foreground hover:text-foreground font-bold border border-border/50"
+                : "bg-card text-foreground hover:bg-card/80 border border-border shadow-xs font-semibold"
             }`}
           >
-            <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-black ${
-                mainTab === "BUILDINGS"
-                  ? "bg-white/20 text-white"
-                  : "bg-primary/10 text-primary"
-              }`}
-            >
+            <div className={`p-2.5 rounded-xl ${mainTab === "BUILDINGS" ? "bg-white/20 text-white" : "bg-primary/10 text-primary"}`}>
               <Building2 className="w-5 h-5" />
             </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-black tracking-tight">1. Academic Buildings & Classrooms/Labs</span>
-                {mainTab === "BUILDINGS" && (
-                  <span className="bg-white/25 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full backdrop-blur-xs">
-                    ACTIVE VIEW
-                  </span>
-                )}
-              </div>
-              <p
-                className={`text-xs mt-0.5 truncate font-medium ${
-                  mainTab === "BUILDINGS" ? "text-primary-foreground/90" : "text-muted-foreground"
-                }`}
-              >
-                Manage teaching blocks, classrooms, and practical labs
+            <div>
+              <p className="text-sm font-black">1. Academic Buildings & Classrooms</p>
+              <p className={`text-xs mt-0.5 ${mainTab === "BUILDINGS" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                Block-by-block classrooms, labs, capacities & faculty allocations
               </p>
             </div>
           </button>
@@ -515,37 +497,15 @@ function AdminRoomsPage() {
             className={`flex items-center gap-3.5 p-4 rounded-xl text-left transition-all duration-200 ${
               mainTab === "ROAMING_LOCATIONS"
                 ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 ring-2 ring-primary/40 font-black"
-                : "bg-card/70 hover:bg-card text-muted-foreground hover:text-foreground font-bold border border-border/50"
+                : "bg-card text-foreground hover:bg-card/80 border border-border shadow-xs font-semibold"
             }`}
           >
-            <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-black ${
-                mainTab === "ROAMING_LOCATIONS"
-                  ? "bg-white/20 text-white"
-                  : "bg-primary/10 text-primary"
-              }`}
-            >
+            <div className={`p-2.5 rounded-xl ${mainTab === "ROAMING_LOCATIONS" ? "bg-white/20 text-white" : "bg-primary/10 text-primary"}`}>
               <MapPin className="w-5 h-5" />
             </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-black tracking-tight">2. Common Campus Roaming Locations</span>
-                <span
-                  className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
-                    mainTab === "ROAMING_LOCATIONS"
-                      ? "bg-white/25 text-white backdrop-blur-xs"
-                      : "bg-primary/15 text-primary font-black"
-                  }`}
-                >
-                  {roamingLocations.length} LOCATIONS
-                </span>
-              </div>
-              <p
-                className={`text-xs mt-0.5 truncate font-medium ${
-                  mainTab === "ROAMING_LOCATIONS" ? "text-primary-foreground/90" : "text-muted-foreground"
-                }`}
-              >
+            <div>
+              <p className="text-sm font-black">2. Campus Roaming Locations</p>
+              <p className={`text-xs mt-0.5 ${mainTab === "ROAMING_LOCATIONS" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
                 Canteen, Parking, Sports Ground & common roaming areas
               </p>
             </div>
@@ -556,10 +516,10 @@ function AdminRoomsPage() {
         {mainTab === "BUILDINGS" && (
           <div className="space-y-6">
             {/* View Mode Breadcrumb Switcher */}
-            <div className="flex items-center gap-2 bg-muted/40 p-2.5 rounded-xl border text-xs font-semibold">
+            <div className="flex items-center gap-2 bg-muted/40 p-2 sm:p-2.5 rounded-xl border text-xs font-semibold overflow-x-auto no-scrollbar scroll-smooth">
               <button
                 onClick={() => setViewMode("BUILDINGS_LIST")}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all shrink-0 whitespace-nowrap ${
                   viewMode === "BUILDINGS_LIST"
                     ? "bg-primary text-primary-foreground font-bold shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
@@ -569,11 +529,11 @@ function AdminRoomsPage() {
                 <span>Academic Buildings Overview ({customBuildings.length})</span>
               </button>
 
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
 
               <button
                 onClick={() => setViewMode("BUILDING_DETAIL")}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all shrink-0 whitespace-nowrap ${
                   viewMode === "BUILDING_DETAIL"
                     ? "bg-primary text-primary-foreground font-bold shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
@@ -587,9 +547,9 @@ function AdminRoomsPage() {
             {/* LEVEL 1: ACADEMIC BUILDINGS OVERVIEW */}
             {viewMode === "BUILDINGS_LIST" && (
               <div className="space-y-5">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <h2 className="text-lg font-black tracking-tight text-foreground flex items-center gap-2">
+                    <h2 className="text-base sm:text-lg font-black tracking-tight text-foreground flex items-center gap-2">
                       <Building2 className="w-5 h-5 text-primary" />
                       Academic Building Blocks Directory
                     </h2>
@@ -971,7 +931,7 @@ function AdminRoomsPage() {
 
         {/* MODAL 1: ADD NEW ACADEMIC BUILDING */}
         <Dialog open={addBuildingModalOpen} onOpenChange={setAddBuildingModalOpen}>
-          <DialogContent className="sm:max-w-[440px] rounded-2xl">
+          <DialogContent className="w-[95vw] sm:w-full sm:max-w-[440px] rounded-2xl p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-primary" />
@@ -1008,7 +968,7 @@ function AdminRoomsPage() {
 
         {/* MODAL 2: ADD NEW CAMPUS ROAMING LOCATION */}
         <Dialog open={addLocationModalOpen} onOpenChange={setAddLocationModalOpen}>
-          <DialogContent className="sm:max-w-[460px] rounded-2xl">
+          <DialogContent className="w-[95vw] sm:w-full sm:max-w-[460px] rounded-2xl p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-primary" />
@@ -1066,7 +1026,7 @@ function AdminRoomsPage() {
 
         {/* MODAL 3: ADD / EDIT ROOM IN ACADEMIC BUILDING */}
         <Dialog open={formModalOpen} onOpenChange={setFormModalOpen}>
-          <DialogContent className="sm:max-w-[500px] rounded-2xl">
+          <DialogContent className="w-[95vw] sm:w-full sm:max-w-[500px] rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 {editingRoom ? <Pencil className="w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
@@ -1078,7 +1038,7 @@ function AdminRoomsPage() {
             </DialogHeader>
 
             <form onSubmit={handleSaveRoom} className="space-y-4 pt-1">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs font-bold">Academic Building Block *</Label>
                   <Select value={formBuilding} onValueChange={(val) => setFormBuilding(val)}>
@@ -1107,7 +1067,7 @@ function AdminRoomsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs font-bold">Floor Level *</Label>
                   <Input
@@ -1188,7 +1148,7 @@ function AdminRoomsPage() {
 
         {/* MODAL 4: CONFIRM DELETE ROOM */}
         <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-          <DialogContent className="sm:max-w-[420px] rounded-2xl">
+          <DialogContent className="w-[95vw] sm:w-full sm:max-w-[420px] rounded-2xl p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-destructive">
                 <Trash2 className="w-5 h-5" />

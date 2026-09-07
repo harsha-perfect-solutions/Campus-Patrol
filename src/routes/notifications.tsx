@@ -249,29 +249,28 @@ export function NotificationsPage() {
         }
         breadcrumb={[{ label: "Home", to: "/" }, { label: "System" }, { label: "Notifications" }]}
         actions={
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleMarkAllRead}
-              disabled={unreadCount === 0 || loading}
-              id="mark-all-read-btn"
-            >
-              <CheckCheck className="size-3.5" />
-              Mark all as read
-            </Button>
-          </>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleMarkAllRead}
+            disabled={unreadCount === 0 || loading}
+            id="mark-all-read-btn"
+            className="w-full sm:w-auto text-xs"
+          >
+            <CheckCheck className="size-3.5 mr-1" />
+            Mark all as read
+          </Button>
         }
       />
 
       {/* Filter Tabs */}
-      <div className="flex gap-1 rounded-xl border border-border bg-card p-1 w-fit">
+      <div className="flex gap-1 rounded-xl border border-border bg-card p-1 w-full sm:w-fit overflow-x-auto no-scrollbar">
         {(["all", "unread", "read"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
             className={cn(
-              "rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-colors",
+              "rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-colors flex-1 sm:flex-initial text-center",
               filter === f
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground",
@@ -308,7 +307,7 @@ export function NotificationsPage() {
                 <li
                   key={n.id}
                   className={cn(
-                    "flex items-start gap-4 px-5 py-4 transition-colors",
+                    "flex items-start gap-3 sm:gap-4 px-3.5 sm:px-5 py-3.5 sm:py-4 transition-colors",
                     !n.read && "bg-primary/5",
                     route !== "#" && "cursor-pointer hover:bg-accent/60",
                   )}

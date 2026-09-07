@@ -293,18 +293,18 @@ function AdminClubsPage() {
           title="Club Management"
           description="Create and manage student clubs, assign faculty coordinators, and oversee member rosters."
           actions={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={loadData}
                 disabled={loading}
-                className="gap-2 font-bold"
+                className="gap-2 font-bold flex-1 sm:flex-initial"
               >
                 <RefreshCw className={cn("size-4", loading && "animate-spin")} />
                 Refresh
               </Button>
-              <Button onClick={handleOpenCreateModal} size="sm" className="gap-2 font-bold shadow-xs">
+              <Button onClick={handleOpenCreateModal} size="sm" className="gap-2 font-bold shadow-xs flex-1 sm:flex-initial">
                 <Plus className="size-4" />
                 Add Club
               </Button>
@@ -313,7 +313,7 @@ function AdminClubsPage() {
         />
 
         {/* Overview Stat Cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
             <div className="flex items-center gap-3">
               <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
@@ -321,7 +321,7 @@ function AdminClubsPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold text-muted-foreground">Total Clubs</p>
-                <p className="text-2xl font-black text-foreground">{clubs.length}</p>
+                <p className="text-xl sm:text-2xl font-black text-foreground">{clubs.length}</p>
               </div>
             </div>
           </div>
@@ -333,7 +333,7 @@ function AdminClubsPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold text-muted-foreground">Active Clubs</p>
-                <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{activeCount}</p>
+                <p className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">{activeCount}</p>
               </div>
             </div>
           </div>
@@ -345,7 +345,7 @@ function AdminClubsPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold text-muted-foreground">Faculty Coordinators</p>
-                <p className="text-2xl font-black text-foreground">
+                <p className="text-xl sm:text-2xl font-black text-foreground">
                   {clubs.reduce((acc, c) => acc + c.coordinators.length, 0)}
                 </p>
               </div>
@@ -353,19 +353,19 @@ function AdminClubsPage() {
           </div>
         </div>
 
-        {/* Filter Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-border shadow-2xs">
+        {/* Search & Filter Bar */}
+        <div className="flex flex-col sm:flex-row items-center gap-3">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="size-4 absolute left-3 top-2.5 text-muted-foreground" />
             <Input
               placeholder="Search club by name, type or description..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-background h-9 text-xs"
+              className="pl-9 bg-background h-9 text-xs w-full"
             />
           </div>
           <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
-            <SelectTrigger className="w-36 bg-background h-9 text-xs">
+            <SelectTrigger className="w-full sm:w-36 bg-background h-9 text-xs">
               <SelectValue placeholder="Status Filter" />
             </SelectTrigger>
             <SelectContent>
@@ -487,7 +487,7 @@ function AdminClubsPage() {
 
         {/* Add/Edit Club Modal */}
         <Dialog open={clubModalOpen} onOpenChange={setClubModalOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="w-[95vw] sm:w-full sm:max-w-md rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingClub ? `Edit Club — ${editingClub.name}` : "Create New Student Club"}</DialogTitle>
             </DialogHeader>
@@ -502,7 +502,7 @@ function AdminClubsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Club Category *</Label>
                   <Select value={formType} onValueChange={setFormType}>
@@ -566,7 +566,7 @@ function AdminClubsPage() {
 
         {/* Assign Coordinator Modal */}
         <Dialog open={coordinatorModalOpen} onOpenChange={setCoordinatorModalOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="w-[95vw] sm:w-full sm:max-w-md rounded-2xl p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle>Assign Faculty Coordinator</DialogTitle>
             </DialogHeader>
@@ -605,7 +605,7 @@ function AdminClubsPage() {
 
         {/* View Roster Modal */}
         <Dialog open={membersModalOpen} onOpenChange={setMembersModalOpen}>
-          <DialogContent className="sm:max-w-xl">
+          <DialogContent className="w-[95vw] sm:w-full sm:max-w-xl rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Roster Members — {selectedClubForMembers?.name}</DialogTitle>
             </DialogHeader>

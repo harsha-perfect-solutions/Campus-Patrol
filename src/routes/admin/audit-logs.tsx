@@ -48,46 +48,48 @@ function AdminAuditLogsPage() {
             Loading append-only audit trail from database...
           </div>
         ) : (
-          <div className="card-surface p-6 rounded-2xl border border-border shadow-xs overflow-hidden">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b border-divider text-muted-foreground uppercase tracking-wider">
-                <tr>
-                  <th className="py-3 px-4">Audit ID</th>
-                  <th className="py-3 px-4">Actor</th>
-                  <th className="py-3 px-4">Role</th>
-                  <th className="py-3 px-4">Action</th>
-                  <th className="py-3 px-4">Target Entity</th>
-                  <th className="py-3 px-4 text-right">Timestamp</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-divider font-medium">
-                {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-accent/40 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-foreground font-mono text-[11px]">
-                      {log.id.slice(0, 8)}...
-                    </td>
-                    <td className="py-3.5 px-4 text-foreground font-semibold">{log.actor}</td>
-                    <td className="py-3.5 px-4">
-                      <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-1 text-[10px] font-extrabold text-foreground uppercase">
-                        {log.actor_role}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-[11px] text-primary">{log.action}</td>
-                    <td className="py-3.5 px-4 text-muted-foreground font-mono text-[11px]">
-                      {log.target} ({log.target_id})
-                    </td>
-                    <td className="py-3.5 px-4 text-right text-subtle-foreground font-mono text-[11px]">
-                      {new Date(log.timestamp).toLocaleString("en-IN", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </td>
+          <div className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-divider text-muted-foreground uppercase tracking-wider">
+                  <tr>
+                    <th className="py-3 px-4">Audit ID</th>
+                    <th className="py-3 px-4">Actor</th>
+                    <th className="py-3 px-4">Role</th>
+                    <th className="py-3 px-4">Action</th>
+                    <th className="py-3 px-4">Target Entity</th>
+                    <th className="py-3 px-4 text-right">Timestamp</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-divider font-medium">
+                  {logs.map((log) => (
+                    <tr key={log.id} className="hover:bg-accent/40 transition-colors">
+                      <td className="py-3.5 px-4 font-bold text-foreground font-mono text-[11px]">
+                        {log.id.slice(0, 8)}...
+                      </td>
+                      <td className="py-3.5 px-4 text-foreground font-semibold">{log.actor}</td>
+                      <td className="py-3.5 px-4">
+                        <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-1 text-[10px] font-extrabold text-foreground uppercase">
+                          {log.actor_role}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-[11px] text-primary">{log.action}</td>
+                      <td className="py-3.5 px-4 text-muted-foreground font-mono text-[11px]">
+                        {log.target} ({log.target_id})
+                      </td>
+                      <td className="py-3.5 px-4 text-right text-subtle-foreground font-mono text-[11px]">
+                        {new Date(log.timestamp).toLocaleString("en-IN", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

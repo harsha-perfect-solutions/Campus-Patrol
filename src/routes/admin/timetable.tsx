@@ -404,22 +404,22 @@ function AdminTimetableContent() {
   return (
     <div className="space-y-6 pb-16">
       {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card border rounded-2xl p-5 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card border rounded-2xl p-4 sm:p-5 shadow-xs">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             <Calendar className="w-4 h-4 text-primary" />
             <span>Data-Driven Master Institutional Schedule</span>
           </div>
-          <h1 className="text-2xl font-black tracking-tight mt-1">Time Table</h1>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight mt-1">Time Table</h1>
         </div>
 
         {/* Action Button & Navigation Cards Switcher */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full md:w-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setNavStep("year")}
-            className="gap-2 text-xs font-semibold"
+            className="gap-2 text-xs font-semibold flex-1 sm:flex-initial"
           >
             <Layers className="w-4 h-4 text-primary" />
             <span>Hierarchy Card View</span>
@@ -427,7 +427,7 @@ function AdminTimetableContent() {
 
           <Button
             onClick={() => handleOpenAdd()}
-            className="gap-2 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 rounded-xl px-5"
+            className="gap-2 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 rounded-xl px-4 sm:px-5 flex-1 sm:flex-initial text-xs sm:text-sm"
           >
             <Plus className="w-4 h-4" />
             <span>+ Add / Edit Time Table</span>
@@ -436,7 +436,7 @@ function AdminTimetableContent() {
       </div>
 
       {/* Step Navigation Breadcrumbs */}
-      <div className="flex flex-wrap items-center gap-2 bg-muted/40 p-2.5 rounded-xl border text-xs font-semibold">
+      <div className="flex items-center gap-1.5 sm:gap-2 bg-muted/40 p-2 sm:p-2.5 rounded-xl border text-xs font-semibold overflow-x-auto no-scrollbar scroll-smooth">
         <button
           onClick={() => setNavStep("year")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
@@ -912,7 +912,7 @@ function AdminTimetableContent() {
           setIsEditModalOpen(false);
         }
       }}>
-        <DialogContent className="sm:max-w-[600px] rounded-2xl">
+        <DialogContent className="w-[95vw] sm:w-full sm:max-w-[600px] rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {isEditModalOpen ? (
@@ -1216,7 +1216,7 @@ function AdminTimetableContent() {
 
       {/* DELETE MODAL */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <DialogContent className="sm:max-w-[420px] rounded-2xl">
+        <DialogContent className="w-[95vw] sm:w-full sm:max-w-[420px] rounded-2xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="w-5 h-5" />

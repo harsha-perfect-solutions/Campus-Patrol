@@ -173,7 +173,7 @@ function HodSafetyPreventionContent() {
       />
 
       {/* ─── 1. DEPARTMENT KPIS ─────────────────────────────────────────────── */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         {[
           {
             label: "Department Active Alerts",
@@ -360,7 +360,7 @@ function HodSafetyPreventionContent() {
 
       {/* ─── MODAL 1: ALERT EVIDENCE DRAWER ─────────────────────────────────── */}
       <Dialog open={!!selectedAlert} onOpenChange={(open) => !open && setSelectedAlert(null)}>
-        <DialogContent className="max-w-md rounded-2xl p-6">
+        <DialogContent className="max-w-md w-[95vw] sm:w-full rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
           {selectedAlert && (
             <>
               <DialogHeader>
@@ -404,7 +404,7 @@ function HodSafetyPreventionContent() {
 
       {/* ─── MODAL 2: COMPLETE ACTION MODAL ─────────────────────────────────── */}
       <Dialog open={completeActionModalOpen} onOpenChange={setCompleteActionModalOpen}>
-        <DialogContent className="max-w-md rounded-2xl p-6">
+        <DialogContent className="max-w-md w-[95vw] sm:w-full rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <CheckCircle2 className="size-5 text-emerald-600" />

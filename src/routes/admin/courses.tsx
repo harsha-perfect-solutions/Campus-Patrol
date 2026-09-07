@@ -244,13 +244,13 @@ function AdminCoursesContent() {
         description="Master catalog of institutional subjects, course codes, credit weightages, and faculty assignments."
         breadcrumb={[{ label: "Admin", to: "/admin/dashboard" }, { label: "Courses" }]}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
               size="sm"
               onClick={fetchCourses}
               disabled={loading}
-              className="rounded-xl font-bold text-xs h-9 gap-1.5 shadow-2xs"
+              className="rounded-xl font-bold text-xs h-9 gap-1.5 shadow-2xs flex-1 sm:flex-initial"
             >
               <RefreshCw className={cn("size-3.5", loading && "animate-spin")} />
               Refresh
@@ -258,7 +258,7 @@ function AdminCoursesContent() {
             <Button
               size="sm"
               onClick={handleOpenCreate}
-              className="rounded-xl font-bold text-xs h-9 gap-2 shadow-xs bg-primary text-primary-foreground"
+              className="rounded-xl font-bold text-xs h-9 gap-2 shadow-xs bg-primary text-primary-foreground flex-1 sm:flex-initial"
             >
               <Plus className="size-4" />
               Add Course
@@ -268,7 +268,7 @@ function AdminCoursesContent() {
       />
 
       {/* KPI Stats */}
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {[
           {
             label: "Total Courses",
@@ -486,11 +486,9 @@ function AdminCoursesContent() {
             </table>
           </div>
         )}
-      </div>
-
-      {/* Add / Edit Course Dialog */}
+      </div>      {/* Add / Edit Course Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md rounded-2xl p-6">
+        <DialogContent className="w-[95vw] sm:w-full sm:max-w-md rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-foreground">
               {editingCourse ? "Edit Course" : "Add New Course"}
@@ -498,7 +496,7 @@ function AdminCoursesContent() {
           </DialogHeader>
 
           <form onSubmit={handleSaveCourse} className="space-y-4 py-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs font-bold">Course Code *</Label>
                 <Input
@@ -509,6 +507,7 @@ function AdminCoursesContent() {
                   className="mt-1 text-xs h-9 rounded-xl font-mono uppercase"
                 />
               </div>
+
               <div>
                 <Label className="text-xs font-bold">Department *</Label>
                 <Select value={formDept} onValueChange={setFormDept}>
@@ -537,7 +536,7 @@ function AdminCoursesContent() {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <div>
                 <Label className="text-xs font-bold">Semester</Label>
                 <Select value={String(formSem)} onValueChange={(v) => setFormSem(Number(v))}>
@@ -624,7 +623,7 @@ function AdminCoursesContent() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="max-w-md rounded-2xl p-6">
+        <DialogContent className="w-[95vw] sm:w-full sm:max-w-md rounded-2xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-destructive flex items-center gap-2">
               <Trash2 className="size-4" /> Delete Academic Course?

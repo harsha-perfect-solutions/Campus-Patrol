@@ -233,13 +233,13 @@ function AdminDepartmentsPage() {
           description="Manage institutional academic departments, codes, descriptions, and active status."
           breadcrumb={[{ label: "Admin", to: "/admin/dashboard" }, { label: "Departments" }]}
           actions={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={fetchDepartments}
                 disabled={loading}
-                className="rounded-xl font-bold text-xs h-9 gap-1.5 shadow-2xs"
+                className="rounded-xl font-bold text-xs h-9 gap-1.5 shadow-2xs flex-1 sm:flex-initial"
               >
                 <RefreshCw className={cn("size-3.5", loading && "animate-spin")} />
                 Refresh
@@ -247,7 +247,7 @@ function AdminDepartmentsPage() {
               <Button
                 size="sm"
                 onClick={handleOpenCreate}
-                className="rounded-xl font-bold text-xs h-9 gap-2 shadow-xs bg-primary text-primary-foreground"
+                className="rounded-xl font-bold text-xs h-9 gap-2 shadow-xs bg-primary text-primary-foreground flex-1 sm:flex-initial"
               >
                 <Plus className="size-4" />
                 Add Department
@@ -257,7 +257,7 @@ function AdminDepartmentsPage() {
         />
 
         {/* KPI Stats */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div className="card-surface p-4 rounded-2xl border border-border shadow-2xs flex items-center justify-between">
             <div>
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
@@ -448,7 +448,7 @@ function AdminDepartmentsPage() {
 
         {/* Add / Edit Department Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-md rounded-2xl p-6">
+          <DialogContent className="w-[95vw] sm:w-full sm:max-w-md rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-base font-bold text-foreground">
                 {editingDept ? "Edit Department" : "Add New Department"}
@@ -518,7 +518,7 @@ function AdminDepartmentsPage() {
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent className="max-w-md rounded-2xl p-6">
+          <DialogContent className="w-[95vw] sm:w-full sm:max-w-md rounded-2xl p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle className="text-base font-bold text-destructive flex items-center gap-2">
                 <Trash2 className="size-4" /> Delete Academic Department?

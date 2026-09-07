@@ -968,7 +968,7 @@ export function CheckStudentPage() {
 
           {/* Dedicated Faculty Incident Action Bar */}
           {!formOpen && (
-            <section className="card-surface p-5 sm:p-6 rounded-2xl border border-border shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <section className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3.5">
                 <span className="grid size-10 shrink-0 place-items-center rounded-full bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400">
                   <AlertTriangle className="size-5" />
@@ -983,7 +983,7 @@ export function CheckStudentPage() {
               <Button
                 type="button"
                 onClick={handleOpenReportForm}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold h-11 px-6 rounded-xl shadow-xs gap-2 shrink-0"
+                className="bg-red-600 hover:bg-red-700 text-white font-bold h-11 px-6 rounded-xl shadow-xs gap-2 shrink-0 w-full sm:w-auto"
               >
                 <AlertTriangle className="size-4" />
                 <span>[ REPORT INCIDENT ]</span>
@@ -994,7 +994,7 @@ export function CheckStudentPage() {
           {/* Report Incident Form */}
           {formOpen && (
             <section className="card-surface rounded-2xl overflow-hidden border border-border shadow-md">
-              <div className="border-b border-divider px-6 py-4 bg-muted/30">
+              <div className="border-b border-divider px-4 sm:px-6 py-3.5 sm:py-4 bg-muted/30">
                 <h2 className="text-base font-bold text-foreground">
                   Report Student Incident
                 </h2>
@@ -1002,7 +1002,7 @@ export function CheckStudentPage() {
                   Record an observed incident and submit it to the Department HOD for review.
                 </p>
               </div>
-              <div className="grid gap-6 p-6 lg:grid-cols-2">
+              <div className="grid gap-6 p-4 sm:p-6 lg:grid-cols-2">
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">Student Information</h3>
                   <dl className="mt-4 divide-y divide-divider text-xs sm:text-sm">
@@ -1236,13 +1236,13 @@ export function CheckStudentPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col gap-3 border-t border-divider px-6 py-4 sm:flex-row sm:justify-end bg-muted/20">
-                <Button variant="outline" onClick={() => setFormOpen(false)} className="rounded-xl">
+              <div className="flex flex-col gap-2.5 sm:gap-3 border-t border-divider px-4 sm:px-6 py-3.5 sm:py-4 sm:flex-row sm:justify-end bg-muted/20">
+                <Button variant="outline" onClick={() => setFormOpen(false)} className="rounded-xl w-full sm:w-auto">
                   Cancel
                 </Button>
                 <Button
                   variant="destructive"
-                  className="bg-red-600 hover:bg-red-700 rounded-xl font-bold px-6"
+                  className="bg-red-600 hover:bg-red-700 rounded-xl font-bold px-6 w-full sm:w-auto text-xs sm:text-sm"
                   onClick={() => {
                     if (!location) {
                       toast.error("Please select or specify observed location.");

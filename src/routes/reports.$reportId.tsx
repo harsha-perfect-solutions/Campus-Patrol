@@ -82,11 +82,11 @@ function Section({
 }) {
   return (
     <section className="card-surface rounded-2xl border border-border overflow-hidden shadow-xs">
-      <div className="flex items-center gap-2 border-b border-divider px-5 py-3.5 bg-muted/20">
+      <div className="flex items-center gap-2 border-b border-divider px-4 py-3 sm:px-5 sm:py-3.5 bg-muted/20">
         <Icon className="size-[18px] text-primary" aria-hidden />
         <h2 className="text-sm font-bold text-foreground">{title}</h2>
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </section>
   );
 }
@@ -853,12 +853,12 @@ export function ReportDetail() {
                   As the assigned Class Counselor, you have full authority to make the final decision to resolve this violation case. If you determine this is a high-severity violation or requires formal departmental action, pass/escalate this issue directly to the HOD.
                 </p>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3">
                   <Button
                     type="button"
                     variant={counselorActionType === "resolve" ? "default" : "outline"}
                     onClick={() => setCounselorActionType("resolve")}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs h-10 shadow-xs"
+                    className="w-full sm:flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs h-10 shadow-xs"
                   >
                     <CheckCircle2 className="size-4 mr-1.5" /> COUNSELOR FINAL DECISION
                   </Button>
@@ -866,7 +866,7 @@ export function ReportDetail() {
                     type="button"
                     variant={counselorActionType === "escalate" ? "default" : "outline"}
                     onClick={() => setCounselorActionType("escalate")}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-10 shadow-xs"
+                    className="w-full sm:flex-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-10 shadow-xs"
                   >
                     <AlertTriangle className="size-4 mr-1.5" /> ESCALATE HIGH-SEVERITY ISSUE TO HOD
                   </Button>

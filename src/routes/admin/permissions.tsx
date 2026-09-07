@@ -214,8 +214,8 @@ export function AdminPermissionsPage() {
             Loading movement pass clearance records...
           </div>
         ) : (
-          <div className="card-surface p-6 rounded-2xl border border-border shadow-xs overflow-hidden">
-            <div className="flex items-center justify-between pb-4 mb-2 border-b border-border">
+          <div className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-2 border-b border-border">
               <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Building2 className="size-4 text-primary" />
                 Student Gate Pass Clearance & Attendance Log ({filteredPasses.length})

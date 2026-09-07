@@ -342,9 +342,8 @@ function AdminSafetyPreventionContent() {
           </div>
         }
       />
-
       {/* ─── 1. KPI CARDS ───────────────────────────────────────────────────── */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
         {[
           {
             label: "Active Alerts",
@@ -391,26 +390,26 @@ function AdminSafetyPreventionContent() {
         ].map((kpi) => (
           <div
             key={kpi.label}
-            className="card-surface p-4 rounded-2xl border border-border shadow-2xs flex items-center justify-between"
+            className="card-surface p-3 sm:p-4 rounded-2xl border border-border shadow-2xs flex items-center justify-between"
           >
             <div>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 {kpi.label}
               </p>
-              <p className="mt-1 text-2xl font-black text-foreground">{kpi.value}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{kpi.sub}</p>
+              <p className="mt-1 text-xl sm:text-2xl font-black text-foreground">{kpi.value}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{kpi.sub}</p>
             </div>
-            <span className={`grid size-9 place-items-center rounded-xl shrink-0 ${kpi.color}`}>
-              <kpi.icon className="size-4.5" />
+            <span className={`grid size-8 sm:size-9 place-items-center rounded-xl shrink-0 ${kpi.color}`}>
+              <kpi.icon className="size-4 sm:size-4.5" />
             </span>
           </div>
         ))}
       </div>
 
       {/* ─── 2. TAB CONTROLS & FILTER TOOLBAR ────────────────────────────────── */}
-      <div className="card-surface p-4 rounded-2xl border border-border shadow-xs space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-divider pb-3">
-          <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl">
+      <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-divider pb-3">
+          <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl overflow-x-auto no-scrollbar scroll-smooth w-full sm:w-auto shrink-0">
             {[
               { id: "alerts", label: `Active Alerts (${alerts.length})` },
               { id: "actions", label: `Preventive Actions (${actions.length})` },
@@ -421,7 +420,7 @@ function AdminSafetyPreventionContent() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={cn(
-                  "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors",
+                  "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors shrink-0 whitespace-nowrap",
                   activeTab === tab.id
                     ? "bg-card text-foreground shadow-2xs"
                     : "text-muted-foreground hover:text-foreground",
@@ -432,8 +431,8 @@ function AdminSafetyPreventionContent() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="w-36">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex-1 sm:w-36">
               <Select value={deptFilter} onValueChange={setDeptFilter}>
                 <SelectTrigger className="text-xs h-8 rounded-xl">
                   <SelectValue placeholder="Department" />
@@ -448,8 +447,7 @@ function AdminSafetyPreventionContent() {
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="w-32">
+            <div className="flex-1 sm:w-32">
               <Select value={severityFilter} onValueChange={setSeverityFilter}>
                 <SelectTrigger className="text-xs h-8 rounded-xl">
                   <SelectValue placeholder="Severity" />
@@ -778,7 +776,7 @@ function AdminSafetyPreventionContent() {
 
       {/* ─── MODAL 1: ALERT EVIDENCE & DETAILS DRAWER ───────────────────────── */}
       <Dialog open={!!selectedAlert} onOpenChange={(open) => !open && setSelectedAlert(null)}>
-        <DialogContent className="max-w-xl rounded-2xl p-6">
+        <DialogContent className="w-[95vw] sm:w-full max-w-xl rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
           {selectedAlert && (
             <>
               <DialogHeader>
@@ -837,19 +835,19 @@ function AdminSafetyPreventionContent() {
                 )}
               </div>
 
-              <DialogFooter className="gap-2">
+              <DialogFooter className="flex-col sm:flex-row gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleEscalateAlert(selectedAlert.id)}
-                  className="rounded-xl text-xs h-9 text-red-600"
+                  className="rounded-xl text-xs h-9 text-red-600 w-full sm:w-auto"
                 >
                   Escalate
                 </Button>
                 <Button
                   size="sm"
                   onClick={() => handleConvertAlertToAction(selectedAlert)}
-                  className="rounded-xl text-xs font-bold h-9 bg-primary text-primary-foreground gap-1.5"
+                  className="rounded-xl text-xs font-bold h-9 bg-primary text-primary-foreground gap-1.5 w-full sm:w-auto"
                 >
                   Convert to Action &rarr;
                 </Button>
@@ -861,7 +859,7 @@ function AdminSafetyPreventionContent() {
 
       {/* ─── MODAL 2: DISPATCH PREVENTIVE ACTION ────────────────────────────── */}
       <Dialog open={createActionModalOpen} onOpenChange={setCreateActionModalOpen}>
-        <DialogContent className="max-w-lg rounded-2xl p-6">
+        <DialogContent className="w-[95vw] sm:w-full max-w-lg rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <Shield className="size-5 text-primary" />
@@ -893,7 +891,7 @@ function AdminSafetyPreventionContent() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs font-bold">Action Type</Label>
                 <Select value={actionType} onValueChange={(v) => setActionType(v as any)}>
@@ -926,7 +924,7 @@ function AdminSafetyPreventionContent() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <Label className="text-xs font-bold">Department</Label>
                 <Input
@@ -935,7 +933,7 @@ function AdminSafetyPreventionContent() {
                   className="mt-1 text-xs h-8 rounded-xl"
                 />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <Label className="text-xs font-bold">Location Zone *</Label>
                 <Input
                   value={actionLocation}
@@ -946,7 +944,7 @@ function AdminSafetyPreventionContent() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs font-bold">Assigned Role</Label>
                 <Select value={actionAssignedRole} onValueChange={setActionAssignedRole}>
@@ -999,7 +997,7 @@ function AdminSafetyPreventionContent() {
 
       {/* ─── MODAL 3: COMPLETE PREVENTIVE ACTION ────────────────────────────── */}
       <Dialog open={completeActionModalOpen} onOpenChange={setCompleteActionModalOpen}>
-        <DialogContent className="max-w-md rounded-2xl p-6">
+        <DialogContent className="w-[95vw] sm:w-full max-w-md rounded-2xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <CheckCircle2 className="size-5 text-emerald-600" />

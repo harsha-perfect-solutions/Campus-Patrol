@@ -358,8 +358,8 @@ export function SecurityCheckPage() {
         )}
 
         {/* Verification Options Card */}
-        <div className="card-surface p-6 rounded-2xl border border-border shadow-xs space-y-4">
-          <div className="p-6 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 text-center space-y-4">
+        <div className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs space-y-4">
+          <div className="p-4 sm:p-6 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 text-center space-y-4">
               <div className="mx-auto size-16 rounded-2xl bg-primary/10 text-primary grid place-items-center">
                 <QrCode className="size-8 animate-pulse" />
               </div>
@@ -440,7 +440,7 @@ export function SecurityCheckPage() {
           <div className="space-y-4">
             {/* CASE A: BEFORE VALIDITY (AMBER/GOLD CARD) */}
             {result.timeState === "BEFORE_VALIDITY" ? (
-              <div className="card-surface p-6 sm:p-8 rounded-2xl border-2 border-amber-500 bg-amber-500/10 dark:bg-amber-950/40 shadow-lg space-y-6">
+              <div className="card-surface p-4 sm:p-6 rounded-2xl border-2 border-amber-500 bg-amber-500/10 dark:bg-amber-950/40 shadow-lg space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-amber-500/30 pb-4">
                   <div className="flex items-center gap-3">
                     <span className="grid size-12 place-items-center rounded-2xl bg-amber-500 text-white font-bold shadow-md">
@@ -523,7 +523,7 @@ export function SecurityCheckPage() {
               </div>
             ) : result.timeState === "EARLY_EXIT_AUTHORIZED" ? (
               /* CASE D: EARLY EXIT ALREADY AUTHORIZED */
-              <div className="card-surface p-6 sm:p-8 rounded-2xl border-2 border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/40 shadow-lg space-y-6">
+              <div className="card-surface p-4 sm:p-6 rounded-2xl border-2 border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/40 shadow-lg space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-emerald-500/30 pb-4">
                   <div className="flex items-center gap-3">
                     <span className="grid size-12 place-items-center rounded-2xl bg-emerald-500 text-white font-bold shadow-md">
@@ -539,7 +539,7 @@ export function SecurityCheckPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     <Button
                       type="button"
                       variant="outline"
@@ -594,7 +594,7 @@ export function SecurityCheckPage() {
             ) : result.authorized ? (
               /* CASE B: ACTIVE / AUTHORIZED (GREEN CARD) */
               <div
-                className={`card-surface p-6 sm:p-8 rounded-2xl border-2 shadow-lg space-y-6 ${
+                className={`card-surface p-4 sm:p-6 rounded-2xl border-2 shadow-lg space-y-6 ${
                   result.verificationType === "ENTRY"
                     ? "border-cyan-500 bg-cyan-500/10 dark:bg-cyan-950/40"
                     : "border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/40"
@@ -635,7 +635,7 @@ export function SecurityCheckPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     <Button
                       type="button"
                       variant="outline"
@@ -731,7 +731,7 @@ export function SecurityCheckPage() {
               </div>
             ) : (
               /* CASE C: EXPIRED / DENIED (RED CARD) */
-              <div className="card-surface p-6 sm:p-8 rounded-2xl border-2 border-rose-500 bg-rose-500/10 dark:bg-rose-950/40 shadow-lg space-y-6">
+              <div className="card-surface p-4 sm:p-6 rounded-2xl border-2 border-rose-500 bg-rose-500/10 dark:bg-rose-950/40 shadow-lg space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-rose-500/30 pb-4">
                   <div className="flex items-center gap-3">
                     <span className="grid size-12 place-items-center rounded-2xl bg-rose-500 text-white font-bold shadow-md">
@@ -747,7 +747,7 @@ export function SecurityCheckPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     <Button
                       type="button"
                       variant="outline"

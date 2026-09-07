@@ -23,24 +23,24 @@ function HODDepartmentPage() {
           breadcrumb={[{ label: "HOD", to: "/hod/dashboard" }, { label: "Department Overview" }]}
         />
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="card-surface p-6 rounded-2xl border border-border shadow-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs">
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
               Total Students
             </span>
-            <p className="text-3xl font-extrabold text-foreground mt-2">1,240</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-foreground mt-2">1,240</p>
           </div>
-          <div className="card-surface p-6 rounded-2xl border border-border shadow-xs">
+          <div className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs">
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
               Faculty Members
             </span>
-            <p className="text-3xl font-extrabold text-foreground mt-2">48</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-foreground mt-2">48</p>
           </div>
-          <div className="card-surface p-6 rounded-2xl border border-border shadow-xs">
+          <div className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs">
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
               Active Classrooms
             </span>
-            <p className="text-3xl font-extrabold text-foreground mt-2">16 Rooms</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-foreground mt-2">16 Rooms</p>
           </div>
         </div>
       </div>
