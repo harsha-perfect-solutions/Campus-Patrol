@@ -160,7 +160,11 @@ export function useRealtimeNotifications() {
   const sendTestNotification = useCallback(
     async (title?: string, detail?: string, tone?: string) => {
       try {
-        const res = await sendTestNotificationApi({ data: { title, detail, tone } });
+        const payload: { title?: string | undefined; detail?: string | undefined; tone?: string | undefined } = {};
+        if (title !== undefined) payload.title = title;
+        if (detail !== undefined) payload.detail = detail;
+        if (tone !== undefined) payload.tone = tone;
+        const res = await sendTestNotificationApi({ data: payload });
         if (res.success) {
           await refreshFromDb();
           return true;

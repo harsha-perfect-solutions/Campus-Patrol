@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -67,25 +68,44 @@ import {
 import { downloadEvidenceImage } from "@/lib/download-evidence";
 import { cn } from "@/lib/utils";
 
+const searchSchema = z.object({
+  queue: z.string().optional(),
+});
+
 export const Route = createFileRoute("/admin/violations")({
+  validateSearch: searchSchema,
   head: () => ({ meta: [{ title: "Institutional Compliance & Oversight — Admin Portal" }] }),
   component: AdminViolationsPage,
 });
 
 function AdminViolationsPage() {
   const { profile } = useAuth();
+  const search = Route.useSearch();
 
   const [reports, setReports] = useState<DBViolationReport[]>([]);
   const [stats, setStats] = useState<AdminViolationStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Queues & Filters
-  const [selectedQueue, setSelectedQueue] = useState<string>("ALL");
+  const [selectedQueue, setSelectedQueue] = useState<string>(search.queue?.toUpperCase() || "ALL");
   const [departmentFilter, setDepartmentFilter] = useState("ALL");
   const [severityFilter, setSeverityFilter] = useState("ALL");
   const [violationTypeFilter, setViolationTypeFilter] = useState("ALL");
   const [yearFilter, setYearFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const handleInspectCritical = () => {
+    setSelectedQueue("CRITICAL");
+    setDepartmentFilter("ALL");
+    setSeverityFilter("ALL");
+    setViolationTypeFilter("ALL");
+    setYearFilter("ALL");
+    setSearchQuery("");
+    toast.info("Filtered to Critical & Suspected Violence incidents queue");
+    setTimeout(() => {
+      document.getElementById("violations-table-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+  };
 
   // Drawer / Investigation State
   const [selectedReport, setSelectedReport] = useState<DBViolationReport | null>(null);
@@ -252,8 +272,8 @@ function AdminViolationsPage() {
             <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
               <Button
                 size="sm"
-                className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs flex-1 md:flex-initial"
-                onClick={() => setSelectedQueue("CRITICAL")}
+                className="bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white font-bold rounded-xl text-xs flex-1 md:flex-initial shadow-sm transition-all cursor-pointer"
+                onClick={handleInspectCritical}
               >
                 Inspect Critical Incidents
               </Button>
@@ -264,27 +284,39 @@ function AdminViolationsPage() {
         {/* 8-Metric KPI Grid */}
         <div className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-4 lg:grid-cols-8">
           {[
-            { label: "Total Incidents", value: stats?.totalIncidents ?? 0, color: "text-foreground", bg: "bg-muted/40" },
-            { label: "New Reports", value: stats?.newReports ?? 0, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50/60 dark:bg-amber-950/20" },
-            { label: "Under HOD Review", value: stats?.underReview ?? 0, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50/60 dark:bg-blue-950/20" },
-            { label: "High Severity", value: stats?.highSeverity ?? 0, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50/60 dark:bg-orange-950/20" },
-            { label: "Critical", value: stats?.critical ?? 0, color: "text-red-600 dark:text-red-400", bg: "bg-red-50/60 dark:bg-red-950/20" },
-            { label: "Violence Reports", value: stats?.violenceReports ?? 0, color: "text-rose-700 dark:text-rose-400", bg: "bg-rose-50/60 dark:bg-rose-950/20" },
-            { label: "Resolved", value: stats?.resolved ?? 0, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50/60 dark:bg-emerald-950/20" },
-            { label: "Dismissed", value: stats?.dismissed ?? 0, color: "text-muted-foreground", bg: "bg-muted/30" },
+            { label: "Total Incidents", queueId: "ALL", value: stats?.totalIncidents ?? 0, color: "text-foreground", bg: "bg-muted/40" },
+            { label: "New Reports", queueId: "NEW", value: stats?.newReports ?? 0, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50/60 dark:bg-amber-950/20" },
+            { label: "Under HOD Review", queueId: "UNDER_REVIEW", value: stats?.underReview ?? 0, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50/60 dark:bg-blue-950/20" },
+            { label: "High Severity", queueId: "HIGH_SEVERITY", value: stats?.highSeverity ?? 0, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50/60 dark:bg-orange-950/20" },
+            { label: "Critical", queueId: "CRITICAL", value: stats?.critical ?? 0, color: "text-red-600 dark:text-red-400", bg: "bg-red-50/60 dark:bg-red-950/20" },
+            { label: "Violence Reports", queueId: "VIOLENCE", value: stats?.violenceReports ?? 0, color: "text-rose-700 dark:text-rose-400", bg: "bg-rose-50/60 dark:bg-rose-950/20" },
+            { label: "Resolved", queueId: "RESOLVED", value: stats?.resolved ?? 0, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50/60 dark:bg-emerald-950/20" },
+            { label: "Dismissed", queueId: "DISMISSED", value: stats?.dismissed ?? 0, color: "text-muted-foreground", bg: "bg-muted/30" },
           ].map((kpi) => (
-            <div
+            <button
               key={kpi.label}
-              className={cn("p-3 sm:p-4 rounded-2xl border border-border flex flex-col justify-between shadow-2xs", kpi.bg)}
+              type="button"
+              onClick={() => {
+                if (kpi.queueId === "CRITICAL") {
+                  handleInspectCritical();
+                } else {
+                  setSelectedQueue(kpi.queueId);
+                  document.getElementById("violations-table-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+              className={cn(
+                "p-3 sm:p-4 rounded-2xl border border-border flex flex-col justify-between shadow-2xs text-left transition-all hover:ring-2 hover:ring-primary/40 cursor-pointer active:scale-[0.98]",
+                selectedQueue === kpi.queueId ? "ring-2 ring-primary border-primary bg-primary/5" : kpi.bg
+              )}
             >
               <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground truncate">{kpi.label}</span>
               <span className={cn("text-xl sm:text-2xl font-bold mt-1", kpi.color)}>{kpi.value}</span>
-            </div>
+            </button>
           ))}
         </div>
 
         {/* Filter Bar & Queue Switcher */}
-        <div className="card-surface p-3.5 sm:p-5 rounded-2xl border border-border space-y-4 shadow-xs">
+        <div id="violations-table-section" className="card-surface p-3.5 sm:p-5 rounded-2xl border border-border space-y-4 shadow-xs scroll-mt-6">
           {/* Queue Filter Tabs */}
           <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-divider overflow-x-auto no-scrollbar scroll-smooth">
             {[

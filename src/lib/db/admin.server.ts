@@ -1075,9 +1075,9 @@ export async function getAdminViolationReports(
       } else if (st === "resolved") {
         conditions.push(`status IN ('resolved', 'exonerated', 'warned')`);
       } else if (st === "critical") {
-        conditions.push(`(severity = 'Critical' OR violation_type ILIKE '%Violence%' OR violation_type ILIKE '%Physical Altercation%')`);
+        conditions.push(`(UPPER(severity) = 'CRITICAL' OR violation_type ILIKE '%Violence%' OR violation_type ILIKE '%Physical Altercation%')`);
       } else if (st === "high") {
-        conditions.push(`severity = 'High'`);
+        conditions.push(`UPPER(severity) = 'HIGH'`);
       } else if (st === "violence") {
         conditions.push(`(violation_type ILIKE '%Violence%' OR violation_type ILIKE '%Physical Altercation%')`);
       } else {
@@ -1126,9 +1126,9 @@ export async function getAdminViolationReports(
       WHERE ${conditions.join(" AND ")}
       ORDER BY 
         CASE 
-          WHEN severity = 'Critical' THEN 1
+          WHEN UPPER(severity) = 'CRITICAL' THEN 1
           WHEN violation_type ILIKE '%Violence%' THEN 2
-          WHEN severity = 'High' THEN 3
+          WHEN UPPER(severity) = 'HIGH' THEN 3
           WHEN status = 'escalated' THEN 4
           WHEN status = 'reported' THEN 5
           ELSE 6

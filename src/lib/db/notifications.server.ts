@@ -69,12 +69,12 @@ export type CreateNotificationInput = {
 
 export type UserRecipientContext = {
   userId: string;
-  role?: string;
-  department?: string | null;
-  staffCode?: string | null;
-  studentCode?: string | null;
-  fullName?: string | null;
-  email?: string | null;
+  role?: string | undefined;
+  department?: string | null | undefined;
+  staffCode?: string | null | undefined;
+  studentCode?: string | null | undefined;
+  fullName?: string | null | undefined;
+  email?: string | null | undefined;
 };
 
 // ─── Schema Auto-Initialization ─────────────────────────────────────────────
@@ -428,15 +428,7 @@ export async function createNotificationServer(
 
 // ─── Recipient Query SQL Builder ───────────────────────────────────────────
 
-function buildRecipientMatchCondition(params: {
-  userId: string;
-  role?: string;
-  department?: string | null;
-  staffCode?: string | null;
-  studentCode?: string | null;
-  fullName?: string | null;
-  email?: string | null;
-}): { sql: string; values: any[] } {
+function buildRecipientMatchCondition(params: UserRecipientContext): { sql: string; values: any[] } {
   const cleanUserId = (params.userId || "").trim();
   const cleanRole = (params.role || "").trim().toLowerCase();
   const cleanDept = (params.department || "").trim().toUpperCase();

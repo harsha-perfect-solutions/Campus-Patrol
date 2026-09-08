@@ -154,7 +154,7 @@ export const markAllNotificationsReadApi = createServerFn({ method: "POST" }).ha
  * Immediately pushes to the notification feed and triggers sonner toast in real-time.
  */
 export const sendTestNotificationApi = createServerFn({ method: "POST" })
-  .validator((data?: { title?: string; detail?: string; tone?: string }) => data || {})
+  .validator((data?: { title?: string | undefined; detail?: string | undefined; tone?: string | undefined }) => data || {})
   .handler(async ({ data }): Promise<{ success: boolean; error?: string }> => {
     try {
       const { requireAuthenticatedUser } = await import("../session.server");
