@@ -88,9 +88,6 @@ function AdminDashboardContent() {
             <Button size="sm" variant="outline" asChild className="rounded-xl text-xs font-semibold h-9 flex-1 sm:flex-initial">
               <Link to="/admin/violations">Incidents</Link>
             </Button>
-            <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-9 w-full sm:w-auto" asChild>
-              <Link to="/admin/emergency">Emergency Center</Link>
-            </Button>
             <Button size="sm" variant="outline" asChild className="rounded-xl text-xs font-semibold h-9 flex-1 sm:flex-initial">
               <Link to="/admin/timetable">Timetable</Link>
             </Button>
@@ -124,15 +121,7 @@ function AdminDashboardContent() {
                 className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-9 w-full sm:w-auto"
                 asChild
               >
-                <Link to="/admin/emergency">Emergency Command Center &rarr;</Link>
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="font-bold rounded-xl text-xs h-9 w-full sm:w-auto"
-                asChild
-              >
-                <Link to="/admin/violations">Disciplinary Console</Link>
+                <Link to="/admin/violations">Review Critical Cases &rarr;</Link>
               </Button>
             </div>
           </div>

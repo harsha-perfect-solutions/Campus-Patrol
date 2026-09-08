@@ -291,6 +291,22 @@ export async function destroySession(sessionId: string): Promise<boolean> {
 }
 
 /**
+ * Destroys all active server-side sessions for a given user in PostgreSQL.
+ */
+export async function destroyAllUserSessions(userId: string): Promise<boolean> {
+  const cleanId = userId?.trim();
+  if (!cleanId) return true;
+
+  try {
+    await db.query("DELETE FROM user_sessions WHERE user_id::text = $1;", [cleanId]);
+    return true;
+  } catch (error) {
+    console.error("[Session Error] Failed to destroy user sessions:", error);
+    return false;
+  }
+}
+
+/**
  * Server-side authorization helper: Reads HttpOnly session cookie and resolves user session.
  */
 import { getCookieServer } from "./server-cookies";

@@ -65,19 +65,6 @@ export function LandingHeroSection() {
                     Sign In <ArrowRight className="size-4 ml-2" />
                   </Link>
                 </Button>
-
-                <Button
-                  type="button"
-                  size="lg"
-                  variant="outline"
-                  onClick={() => setDemoOpen(true)}
-                  className="h-12 rounded-2xl border-primary/30 bg-card text-foreground hover:bg-primary/10 px-6 font-semibold shadow-2xs transition-all hover:scale-[1.02] text-xs sm:text-sm gap-2"
-                >
-                  <span className="grid size-6 place-items-center rounded-full bg-primary/15 text-primary">
-                    <Play className="size-3 fill-primary ml-0.5" />
-                  </span>
-                  Watch Demo
-                </Button>
               </div>
 
               {/* Trust Indicators Bar */}

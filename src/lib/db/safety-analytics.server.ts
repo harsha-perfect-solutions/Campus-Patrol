@@ -117,6 +117,7 @@ export interface CompleteSafetyAnalyticsResponse {
   timetable: TimetableIncidentStats;
   facultyReporting: FacultyReportingStat[];
   resolution: ResolutionStats;
+  topLocations: { area: string; count: number }[];
 }
 
 // ─── Ensure DB Indexes ───────────────────────────────────────────────────────
@@ -675,6 +676,35 @@ export async function getResolutionStats(
   );
 }
 
+// ─── 9b. Top 3 High-Reporting Areas in Campus ─────────────────────────────────
+
+export async function getTopReportingAreas(
+  filters: SafetyAnalyticsFilters = {},
+): Promise<{ area: string; count: number }[]> {
+  try {
+    await ensureAnalyticsIndexes();
+    const { sql, values } = buildViolationWhereClause(filters);
+
+    const query = `
+      SELECT
+        COALESCE(NULLIF(TRIM(v.location), ''), NULLIF(TRIM(v.room), '')) AS area,
+        COUNT(*)::int AS count
+      FROM violation_reports v
+      WHERE ${sql}
+        AND COALESCE(NULLIF(TRIM(v.location), ''), NULLIF(TRIM(v.room), '')) IS NOT NULL
+      GROUP BY COALESCE(NULLIF(TRIM(v.location), ''), NULLIF(TRIM(v.room), ''))
+      ORDER BY count DESC
+      LIMIT 3;
+    `;
+
+    const res = await db.query<{ area: string; count: number }>(query, values);
+    return res.rows || [];
+  } catch (err) {
+    console.error("[Analytics DB Error] Error in getTopReportingAreas:", err);
+    return [];
+  }
+}
+
 // ─── 10. Complete Analytics Aggregation ──────────────────────────────────────
 
 export async function getCompleteSafetyAnalytics(
@@ -690,6 +720,7 @@ export async function getCompleteSafetyAnalytics(
     timetable,
     facultyReporting,
     resolution,
+    topLocations,
   ] = await Promise.all([
     getSafetyKPIs(filters),
     getIncidentTrends(filters, "day"),
@@ -700,6 +731,7 @@ export async function getCompleteSafetyAnalytics(
     getTimetableIncidentStats(filters),
     getFacultyReportingStats(filters),
     getResolutionStats(filters),
+    getTopReportingAreas(filters),
   ]);
 
   return {
@@ -712,6 +744,7 @@ export async function getCompleteSafetyAnalytics(
     timetable,
     facultyReporting,
     resolution,
+    topLocations,
   };
 }
 

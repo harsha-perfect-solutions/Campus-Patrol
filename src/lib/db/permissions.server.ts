@@ -1,6 +1,7 @@
 import { db } from "../db.server";
 import {
   findStudentUserIdByCode,
+  findHodUserIdForStudentCode,
   createNotificationServer,
 } from "./notifications.server";
 
@@ -106,6 +107,24 @@ export async function createMovementPermission(input: NewPermissionInput): Promi
         console.warn("[QR Notice] Failed to auto-generate QR pass:", qrErr);
       }
     }
+
+    // Notify HOD & Admin
+    try {
+      const hodUserId = await findHodUserIdForStudentCode(cleanCode);
+      await createNotificationServer({
+        recipientUserId: hodUserId,
+        recipientRole: "hod",
+        type: "movement_pass_requested",
+        title: "New Movement Pass Issued 🎟️",
+        detail: `Pass ID #${created.id} issued for ${cleanCode}. Reason: ${created.reason?.slice(0, 60) ?? ""}`,
+        tone: "info",
+        relatedId: created.id,
+        relatedType: "movement_permission",
+      });
+    } catch (notifErr) {
+      console.warn("[Pass Notification Notice] Failed to send pass notification:", notifErr);
+    }
+
     return created;
   } catch (error) {
     console.error("[Database Error] Error creating movement permission:", error);
@@ -176,6 +195,21 @@ export async function approveMovementPermission(
         relatedType: "movement_permission",
       });
     }
+
+    // Notify Security Team about pass status update
+    try {
+      if (newStatus === "approved") {
+        await createNotificationServer({
+          recipientRole: "security",
+          type: "gate_pass_approved",
+          title: "Approved Movement Pass Available 🚪",
+          detail: `Pass #${updated.id} approved for student ${updated.student_code} (${updated.valid_from} - ${updated.valid_until}).`,
+          tone: "resolved",
+          relatedId: cleanId,
+          relatedType: "movement_permission",
+        });
+      }
+    } catch {}
 
     return updated;
   } catch (error) {

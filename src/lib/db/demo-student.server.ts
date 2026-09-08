@@ -21,7 +21,7 @@ export async function seedDemoStudentAccount(): Promise<DemoStudentDetails> {
   try {
     const passwordHash = await hashPassword("Password123!");
 
-    // 1. Ensure Demo Student 1: Ashok Dora (23CSE1012 / student@cmadms.edu)
+    // 1. Ensure Demo Student 1: Ashok Dora (23CSE1012 / chodiashokdora278@gmail.com)
     const st1Check = await db.query(`SELECT student_code FROM students WHERE UPPER(student_code) = '23CSE1012';`);
     if (st1Check.rows.length === 0) {
       await db.query(
@@ -30,18 +30,18 @@ export async function seedDemoStudentAccount(): Promise<DemoStudentDetails> {
       );
     }
 
-    const p1Check = await db.query(`SELECT id::text FROM profiles WHERE UPPER(email) = 'STUDENT@CMADMS.EDU' OR UPPER(student_code) = '23CSE1012';`);
+    const p1Check = await db.query(`SELECT id::text FROM profiles WHERE UPPER(email) IN ('STUDENT@CMADMS.EDU', 'CHODIASHOKDORA278@GMAIL.COM') OR UPPER(student_code) = '23CSE1012';`);
     let user1Id: string | null = null;
     if (p1Check.rows.length > 0) {
       user1Id = p1Check.rows[0].id;
       await db.query(
-        `UPDATE profiles SET password_hash = $1, must_change_password = FALSE, status = 'Active', student_code = '23CSE1012' WHERE id = $2;`,
+        `UPDATE profiles SET email = 'chodiashokdora278@gmail.com', full_name = 'Ashok Dora', password_hash = $1, must_change_password = FALSE, status = 'Active', student_code = '23CSE1012' WHERE id = $2;`,
         [passwordHash, user1Id]
       );
     } else {
       const p1Res = await db.query(
         `INSERT INTO profiles (full_name, email, department, student_code, password_hash, must_change_password, status)
-         VALUES ('Ashok Dora', 'student@cmadms.edu', 'CSE', '23CSE1012', $1, FALSE, 'Active')
+         VALUES ('Ashok Dora', 'chodiashokdora278@gmail.com', 'CSE', '23CSE1012', $1, FALSE, 'Active')
          RETURNING id::text;`,
         [passwordHash]
       );
@@ -69,7 +69,7 @@ export async function seedDemoStudentAccount(): Promise<DemoStudentDetails> {
     if (p2Check.rows.length > 0) {
       user2Id = p2Check.rows[0].id;
       await db.query(
-        `UPDATE profiles SET password_hash = $1, must_change_password = FALSE, status = 'Active', student_code = '23CSE9999' WHERE id = $2;`,
+        `UPDATE profiles SET password_hash = COALESCE(password_hash, $1), status = 'Active', student_code = '23CSE9999' WHERE id = $2;`,
         [passwordHash, user2Id]
       );
     } else {
@@ -95,7 +95,7 @@ export async function seedDemoStudentAccount(): Promise<DemoStudentDetails> {
     if (pSecCheck.rows.length > 0) {
       secUserId = pSecCheck.rows[0].id;
       await db.query(
-        `UPDATE profiles SET password_hash = $1, must_change_password = FALSE, status = 'Active', department = 'Main Gate', assigned_post = 'Main Gate' WHERE id = $2;`,
+        `UPDATE profiles SET password_hash = COALESCE(password_hash, $1), status = 'Active', department = 'Main Gate', assigned_post = 'Main Gate' WHERE id = $2;`,
         [passwordHash, secUserId]
       );
     } else {
@@ -121,7 +121,7 @@ export async function seedDemoStudentAccount(): Promise<DemoStudentDetails> {
     let facUserId: string | null = null;
     if (pFacCheck.rows.length > 0) {
       facUserId = pFacCheck.rows[0].id;
-      await db.query(`UPDATE profiles SET password_hash = $1, must_change_password = FALSE, status = 'Active' WHERE id = $2;`, [passwordHash, facUserId]);
+      await db.query(`UPDATE profiles SET password_hash = COALESCE(password_hash, $1), status = 'Active' WHERE id = $2;`, [passwordHash, facUserId]);
     } else {
       const pFacRes = await db.query(
         `INSERT INTO profiles (full_name, email, department, staff_code, password_hash, must_change_password, status)
@@ -145,7 +145,7 @@ export async function seedDemoStudentAccount(): Promise<DemoStudentDetails> {
     let hodUserId: string | null = null;
     if (pHodCheck.rows.length > 0) {
       hodUserId = pHodCheck.rows[0].id;
-      await db.query(`UPDATE profiles SET password_hash = $1, must_change_password = FALSE, status = 'Active' WHERE id = $2;`, [passwordHash, hodUserId]);
+      await db.query(`UPDATE profiles SET password_hash = COALESCE(password_hash, $1), status = 'Active' WHERE id = $2;`, [passwordHash, hodUserId]);
     } else {
       const pHodRes = await db.query(
         `INSERT INTO profiles (full_name, email, department, staff_code, password_hash, must_change_password, status)
@@ -169,7 +169,7 @@ export async function seedDemoStudentAccount(): Promise<DemoStudentDetails> {
     let admUserId: string | null = null;
     if (pAdmCheck.rows.length > 0) {
       admUserId = pAdmCheck.rows[0].id;
-      await db.query(`UPDATE profiles SET password_hash = $1, must_change_password = FALSE, status = 'Active' WHERE id = $2;`, [passwordHash, admUserId]);
+      await db.query(`UPDATE profiles SET password_hash = COALESCE(password_hash, $1), status = 'Active' WHERE id = $2;`, [passwordHash, admUserId]);
     } else {
       const pAdmRes = await db.query(
         `INSERT INTO profiles (full_name, email, department, staff_code, password_hash, must_change_password, status)
@@ -244,7 +244,7 @@ export async function seedDemoStudentAccount(): Promise<DemoStudentDetails> {
       year: "3rd Year",
       section: "Section A",
       semester: 6,
-      email: "student@cmadms.edu",
+      email: "chodiashokdora278@gmail.com",
       role: "student",
       samplePassId: samplePassId,
       sampleReportId: "RPT-890453",
@@ -258,7 +258,7 @@ export async function seedDemoStudentAccount(): Promise<DemoStudentDetails> {
       year: "3rd Year",
       section: "Section A",
       semester: 6,
-      email: "student@cmadms.edu",
+      email: "chodiashokdora278@gmail.com",
       role: "student",
       samplePassId: "99999999-9999-4999-a999-999999999999",
       sampleReportId: "RPT-890453",

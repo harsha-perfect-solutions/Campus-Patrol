@@ -346,23 +346,22 @@ export async function createNotificationServer(
 
   if (!effectiveUserId && !recId) {
     console.warn(
-      "[Notification] createNotificationServer called without recipientUserId or recipientId — skipping",
+      "[Notification] createNotificationServer called without recipientUserId, recipientId, or valid target role — skipping",
     );
     return;
   }
-
   const uuidUserId = recipientUserId && isUuid(recipientUserId) ? recipientUserId : null;
 
   // Idempotency: Prevent duplicate notifications for the same recipient, type, entity, and event title
   if (relatedId) {
     const existing = await db.query(
       `SELECT id FROM notifications 
-       WHERE (recipient_user_id::text = $1 OR recipient_id = $2) 
-         AND type = $3 
-         AND related_id = $4 
-         AND title = $5
+       WHERE (recipient_user_id::text = $1 OR recipient_id = $2 OR recipient_role = $3) 
+         AND type = $4 
+         AND related_id = $5 
+         AND title = $6
        LIMIT 1`,
-      [effectiveUserId, recId, type, String(relatedId), title]
+      [effectiveUserId, recId, recipientRole, type, String(relatedId), title]
     );
     if (existing.rows.length > 0) {
       return; // Already notified, suppress duplicate
@@ -597,7 +596,6 @@ export async function getUnreadCountForUser(
 
 /**
  * Marks a single notification as read.
- * Verifies recipient ownership before updating.
  */
 export async function markNotificationRead(
   notifId: string,
@@ -625,7 +623,6 @@ export async function markNotificationRead(
 
 /**
  * Marks all notifications for a specific user as read.
- * Strictly scoped to the authenticated user.
  */
 export async function markAllNotificationsRead(
   userArg: string | UserRecipientContext,
@@ -647,5 +644,6 @@ export async function markAllNotificationsRead(
   const res = await db.query(query, values);
   return res.rowCount ?? 0;
 }
+
 
 

@@ -1,9 +1,55 @@
+import crypto from "crypto";
 import { db } from "../db.server";
-import { hashPassword, verifyPasswordDetailed } from "../session.server";
+import { hashPassword, verifyPasswordDetailed, destroyAllUserSessions } from "../session.server";
 import { getCollegeEmailDomain, getInitialDefaultPassword } from "../env.server";
 import { createNotificationServer } from "./notifications.server";
 
 let schemaEnsured = false;
+
+export function getTemporaryPasswordLifetimeHours(): number {
+  const envVal = process.env["TEMP_PASSWORD_EXPIRES_HOURS"];
+  if (envVal) {
+    const parsed = parseInt(envVal, 10);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  return 72; // Default 72 hours (3 days)
+}
+
+/**
+ * Generates a cryptographically strong, non-predictable temporary password
+ * guaranteeing uppercase, lowercase, numeric, and special characters.
+ */
+export function generateTemporaryPassword(): string {
+  const charsUpper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const charsLower = "abcdefghijkmnopqrstuvwxyz";
+  const charsNum = "23456789";
+  const charsSpec = "@#$%&*!";
+
+  const getRandomChar = (str: string): string => str[crypto.randomInt(0, str.length)]!;
+
+  const pwd = [
+    getRandomChar(charsUpper),
+    getRandomChar(charsLower),
+    getRandomChar(charsLower),
+    getRandomChar(charsUpper),
+    getRandomChar(charsSpec),
+    getRandomChar(charsNum),
+    getRandomChar(charsNum),
+    getRandomChar(charsLower),
+    getRandomChar(charsNum),
+    getRandomChar(charsSpec),
+  ];
+
+  // Securely shuffle character array
+  for (let i = pwd.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(0, i + 1);
+    const temp = pwd[i]!;
+    pwd[i] = pwd[j]!;
+    pwd[j] = temp;
+  }
+
+  return pwd.join("");
+}
 
 export async function ensureUserManagementSchema(): Promise<void> {
   if (schemaEnsured) return;
@@ -11,6 +57,7 @@ export async function ensureUserManagementSchema(): Promise<void> {
     // 1. Ensure profiles table has required management columns
     await db.query(`
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT TRUE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS temporary_password_expires_at TIMESTAMPTZ;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'Active';
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT '';
     `);
@@ -25,6 +72,16 @@ export async function ensureUserManagementSchema(): Promise<void> {
         expires_at TIMESTAMPTZ NOT NULL,
         attempts INT DEFAULT 0,
         used BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        actor TEXT,
+        actor_role TEXT,
+        action TEXT NOT NULL,
+        target TEXT,
+        target_id TEXT,
+        metadata JSONB,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
       CREATE INDEX IF NOT EXISTS idx_password_resets_email ON password_resets(email);
@@ -269,24 +326,35 @@ export async function validateStudentBulkImport(
   };
 }
 
+export type BulkImportCredential = {
+  name: string;
+  rollNumber: string;
+  email: string;
+  role: string;
+  tempPassword: string;
+};
+
 export async function commitStudentBulkImport(
   validItems: ImportPreviewItem[]
-): Promise<{ success: boolean; importedCount: number; error?: string }> {
+): Promise<{ success: boolean; importedCount: number; credentials?: BulkImportCredential[]; error?: string }> {
   await ensureUserManagementSchema();
   if (validItems.length === 0) {
     return { success: false, importedCount: 0, error: "No valid records to import." };
   }
 
-  const initialPassword = getInitialDefaultPassword();
-  const initialPasswordHash = hashPassword(initialPassword);
-
+  const hours = getTemporaryPasswordLifetimeHours();
   const client = await db.getClient();
+  const credentials: BulkImportCredential[] = [];
+
   try {
     await client.query("BEGIN");
 
     let imported = 0;
     for (const item of validItems) {
       if (!item.isValid) continue;
+
+      const tempPassword = generateTemporaryPassword();
+      const tempPasswordHash = hashPassword(tempPassword);
 
       // 1. Insert/Update students table
       const stCheck = await client.query(
@@ -329,7 +397,7 @@ export async function commitStudentBulkImport(
         );
       }
 
-      // 2. Insert into profiles table with must_change_password = true
+      // 2. Insert into profiles table with must_change_password = true and expiration
       let profRes = await client.query(
         `SELECT id FROM profiles WHERE UPPER(student_code) = UPPER($1) OR UPPER(email) = UPPER($2) LIMIT 1;`,
         [item.rollNumber, item.generatedEmail]
@@ -346,21 +414,22 @@ export async function commitStudentBulkImport(
             student_code,
             password_hash,
             must_change_password,
+            temporary_password_expires_at,
             status
-          ) VALUES ($1, $2, $3, $4, $5, TRUE, 'Active')
+          ) VALUES ($1, $2, $3, $4, $5, TRUE, NOW() + ($6 || ' hours')::INTERVAL, 'Active')
           RETURNING id;
         `,
-          [item.name, item.generatedEmail, item.department, item.rollNumber, initialPasswordHash]
+          [item.name, item.generatedEmail, item.department, item.rollNumber, tempPasswordHash, `${hours}`]
         );
         userId = insRes.rows[0]?.id;
       } else {
         await client.query(
           `
           UPDATE profiles
-          SET full_name = $1, email = $2, department = $3, status = 'Active'
-          WHERE id = $4;
+          SET full_name = $1, email = $2, department = $3, password_hash = $4, must_change_password = TRUE, temporary_password_expires_at = NOW() + ($5 || ' hours')::INTERVAL, status = 'Active'
+          WHERE id = $6;
         `,
-          [item.name, item.generatedEmail, item.department, userId]
+          [item.name, item.generatedEmail, item.department, tempPasswordHash, `${hours}`, userId]
         );
       }
 
@@ -376,12 +445,28 @@ export async function commitStudentBulkImport(
             [userId]
           );
         }
+
+        // Audit Log entry (no sensitive credentials logged)
+        await client.query(
+          `INSERT INTO audit_logs (actor, actor_role, action, target, target_id, metadata)
+           VALUES ('System Admin', 'admin', 'USER_INITIAL_PASSWORD_SET', $1, $2, $3);`,
+          [item.name, userId, JSON.stringify({ email: item.generatedEmail, role: "student" })]
+        );
       }
+
+      credentials.push({
+        name: item.name,
+        rollNumber: item.rollNumber,
+        email: item.generatedEmail,
+        role: "STUDENT",
+        tempPassword,
+      });
+
       imported++;
     }
 
     await client.query("COMMIT");
-    return { success: true, importedCount: imported };
+    return { success: true, importedCount: imported, credentials };
   } catch (err: any) {
     await client.query("ROLLBACK");
     console.error("[Bulk Import Error] Transaction failed:", err);
@@ -402,7 +487,15 @@ export async function createSingleUserAdmin(data: {
   semester?: number;
   section?: string;
   phone?: string;
-}): Promise<{ success: boolean; userId?: string; error?: string }> {
+}): Promise<{
+  success: boolean;
+  userId?: string;
+  tempPassword?: string;
+  email?: string;
+  name?: string;
+  role?: string;
+  error?: string;
+}> {
   await ensureUserManagementSchema();
   const role = data.role.toLowerCase();
   const cleanCode = data.code.trim().toUpperCase();
@@ -429,8 +522,9 @@ export async function createSingleUserAdmin(data: {
     return { success: false, error: `Account with code '${cleanCode}' or email '${email}' already exists.` };
   }
 
-  const initialPassword = getInitialDefaultPassword();
-  const initialHash = hashPassword(initialPassword);
+  const tempPassword = generateTemporaryPassword();
+  const tempHash = hashPassword(tempPassword);
+  const hours = getTemporaryPasswordLifetimeHours();
 
   const client = await db.getClient();
   try {
@@ -467,10 +561,11 @@ export async function createSingleUserAdmin(data: {
         phone,
         password_hash,
         must_change_password,
+        temporary_password_expires_at,
         status,
         assigned_gate_id,
         assigned_post
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, 'Active', $8, $8)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, NOW() + ($8 || ' hours')::INTERVAL, 'Active', $9, $9)
       RETURNING id;
     `,
       [
@@ -480,7 +575,8 @@ export async function createSingleUserAdmin(data: {
         role !== "student" ? cleanCode : null,
         role === "student" ? cleanCode : null,
         cleanPhone,
-        initialHash,
+        tempHash,
+        `${hours}`,
         role === "security" ? assignedGate : null,
       ]
     );
@@ -494,14 +590,105 @@ export async function createSingleUserAdmin(data: {
       [userId, role]
     );
 
+    // Record audit log (no password in metadata)
+    await client.query(
+      `INSERT INTO audit_logs (actor, actor_role, action, target, target_id, metadata)
+       VALUES ('System Admin', 'admin', 'USER_INITIAL_PASSWORD_SET', $1, $2, $3);`,
+      [cleanName, userId, JSON.stringify({ email, role })]
+    );
+
     await client.query("COMMIT");
-    return { success: true, userId };
+    return {
+      success: true,
+      userId,
+      tempPassword,
+      email,
+      name: cleanName,
+      role: role.toUpperCase(),
+    };
   } catch (err: any) {
     await client.query("ROLLBACK");
     console.error("[Create User Error]:", err);
     return { success: false, error: err.message || "Failed to create user account." };
   } finally {
     client.release();
+  }
+}
+
+export async function resetUserPasswordAdmin(
+  userId: string,
+  actorName: string = "System Admin",
+  actorRole: string = "admin"
+): Promise<{
+  success: boolean;
+  tempPassword?: string;
+  email?: string;
+  name?: string;
+  role?: string;
+  error?: string;
+}> {
+  await ensureUserManagementSchema();
+  const cleanId = userId?.trim();
+  if (!cleanId) {
+    return { success: false, error: "Invalid user ID." };
+  }
+
+  try {
+    // 1. Fetch user profile
+    const userRes = await db.query(
+      `
+      SELECT p.id, p.full_name, p.email, COALESCE(ur.role::text, 'student') as role
+      FROM profiles p
+      LEFT JOIN user_roles ur ON ur.user_id = p.id
+      WHERE UPPER(p.id::text) = UPPER($1)
+      LIMIT 1;
+    `,
+      [cleanId]
+    );
+
+    const user = userRes.rows[0];
+    if (!user) {
+      return { success: false, error: "User profile not found." };
+    }
+
+    // 2. Generate new temporary password & hash
+    const tempPassword = generateTemporaryPassword();
+    const newHash = hashPassword(tempPassword);
+    const hours = getTemporaryPasswordLifetimeHours();
+
+    // 3. Update database
+    await db.query(
+      `
+      UPDATE profiles
+      SET password_hash = $1,
+          must_change_password = TRUE,
+          temporary_password_expires_at = NOW() + ($2 || ' hours')::INTERVAL,
+          updated_at = NOW()
+      WHERE id = $3;
+    `,
+      [newHash, `${hours}`, user.id]
+    );
+
+    // 4. Invalidate all existing sessions for this user
+    await destroyAllUserSessions(user.id);
+
+    // 5. Insert audit log event (no sensitive credentials stored)
+    await db.query(
+      `INSERT INTO audit_logs (actor, actor_role, action, target, target_id, metadata)
+       VALUES ($1, $2, 'ADMIN_PASSWORD_RESET', $3, $4, $5);`,
+      [actorName, actorRole, user.full_name, user.id, JSON.stringify({ email: user.email, role: user.role })]
+    );
+
+    return {
+      success: true,
+      tempPassword,
+      email: user.email,
+      name: user.full_name,
+      role: (user.role || "STUDENT").toUpperCase(),
+    };
+  } catch (err: any) {
+    console.error("[Admin Password Reset Error]:", err);
+    return { success: false, error: err.message || "Failed to reset user password." };
   }
 }
 
@@ -602,7 +789,10 @@ export async function requestPasswordResetOtp(
       [user.id, cleanEmail, otpHash, expiresAt]
     );
 
-    // 5. Send notification / email dispatch
+    // 5. Send real-time SMTP email dispatch and in-app notification
+    const { sendOtpEmail } = await import("../email.server");
+    await sendOtpEmail(cleanEmail, otp);
+
     await createNotificationServer({
       recipientUserId: user.id,
       type: "info",
@@ -722,31 +912,92 @@ export async function changeInitialPassword(
   userId: string,
   newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
+  return changePasswordUser(userId, "", newPassword, newPassword, true);
+}
+
+export async function changePasswordUser(
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string,
+  skipCurrentCheck: boolean = false
+): Promise<{ success: boolean; error?: string }> {
   await ensureUserManagementSchema();
-  if (!newPassword || newPassword.length < 8) {
-    return { success: false, error: "New password must be at least 8 characters long." };
+  const cleanId = userId?.trim();
+  if (!cleanId) {
+    return { success: false, error: "Invalid user session." };
   }
 
-  const initialPassword = getInitialDefaultPassword();
-  if (newPassword === initialPassword) {
-    return { success: false, error: "New password cannot be the initial default password." };
+  if (!newPassword || !confirmPassword) {
+    return { success: false, error: "New password and confirmation are required." };
+  }
+
+  if (newPassword !== confirmPassword) {
+    return { success: false, error: "New passwords do not match." };
+  }
+
+  if (!skipCurrentCheck && !currentPassword) {
+    return { success: false, error: "Current password is required." };
+  }
+
+  if (!skipCurrentCheck && currentPassword === newPassword) {
+    return { success: false, error: "New password must be different from current password." };
+  }
+
+  // Password Policy check
+  const hasMinLength = newPassword.length >= 8;
+  const hasUpper = /[A-Z]/.test(newPassword);
+  const hasLower = /[a-z]/.test(newPassword);
+  const hasDigit = /[0-9]/.test(newPassword);
+  const hasSpecial = /[^A-Za-z0-9]/.test(newPassword);
+
+  if (!hasMinLength || !hasUpper || !hasLower || !hasDigit || !hasSpecial) {
+    return {
+      success: false,
+      error:
+        "Password must be at least 8 characters long and contain uppercase, lowercase, numeric, and special characters.",
+    };
   }
 
   try {
-    const newHash = hashPassword(newPassword);
+    const userRes = await db.query(
+      `SELECT p.id, p.full_name, p.email, p.password_hash, COALESCE(ur.role::text, 'student') as role FROM profiles p LEFT JOIN user_roles ur ON ur.user_id = p.id WHERE UPPER(p.id::text) = UPPER($1) LIMIT 1;`,
+      [cleanId]
+    );
 
+    const user = userRes.rows[0];
+    if (!user) {
+      return { success: false, error: "User profile not found." };
+    }
+
+    if (!skipCurrentCheck && user.password_hash) {
+      const verifyRes = verifyPasswordDetailed(currentPassword, user.password_hash);
+      if (!verifyRes.valid) {
+        return { success: false, error: "Current password is incorrect." };
+      }
+    }
+
+    const newHash = hashPassword(newPassword);
     await db.query(
       `
       UPDATE profiles
-      SET password_hash = $1, must_change_password = FALSE, updated_at = NOW()
+      SET password_hash = $1, must_change_password = FALSE, temporary_password_expires_at = NULL, updated_at = NOW()
       WHERE UPPER(id::text) = UPPER($2);
     `,
-      [newHash, userId]
+      [newHash, cleanId]
+    );
+
+    // Audit log entry (no passwords in metadata)
+    await db.query(
+      `INSERT INTO audit_logs (actor, actor_role, action, target, target_id, metadata)
+       VALUES ($1, $2, 'PASSWORD_CHANGED', $1, $3, $4);`,
+      [user.full_name, user.role || "student", user.id, JSON.stringify({ email: user.email })]
     );
 
     return { success: true };
   } catch (err: any) {
-    console.error("[Initial Password Change Error]:", err);
-    return { success: false, error: err.message || "Failed to change initial password." };
+    console.error("[User Password Change Error]:", err);
+    return { success: false, error: err.message || "Failed to update password." };
   }
 }
+

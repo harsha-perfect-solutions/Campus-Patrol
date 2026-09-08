@@ -16,6 +16,10 @@ import {
   Landmark,
   UserRound,
   Eye,
+  EyeOff,
+  Copy,
+  KeyRound,
+  ShieldAlert,
   RefreshCcw,
   Check,
   X,
@@ -53,6 +57,7 @@ import {
   updateSecurityGateAdminApi,
   validateStudentBulkImportApi,
   commitStudentBulkImportApi,
+  resetUserPasswordAdminApi,
 } from "@/lib/api/auth.server";
 import {
   getCollegeGatesApi,
@@ -61,7 +66,7 @@ import {
   deleteCollegeGateApi,
 } from "@/lib/api/gates.server";
 import type { AdminUserRecord } from "@/lib/db/admin.server";
-import type { BulkImportValidationResult, ImportPreviewItem } from "@/lib/db/user-management.server";
+import type { BulkImportValidationResult, ImportPreviewItem, BulkImportCredential } from "@/lib/db/user-management.server";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/users")({
@@ -106,6 +111,109 @@ function AdminUsersPage() {
   const [validatingImport, setValidatingImport] = useState(false);
   const [committingImport, setCommittingImport] = useState(false);
   const [importResult, setImportResult] = useState<BulkImportValidationResult | null>(null);
+
+  // One-Time Credentials Modal State
+  const [oneTimeCredentials, setOneTimeCredentials] = useState<{
+    title: string;
+    type: "single" | "bulk" | "reset";
+    singleUser?: { name: string; email: string; role: string; tempPassword: string };
+    bulkItems?: BulkImportCredential[];
+  } | null>(null);
+  const [showOneTimePass, setShowOneTimePass] = useState(false);
+  const [credentialsCopied, setCredentialsCopied] = useState(false);
+  const [credentialsDownloaded, setCredentialsDownloaded] = useState(false);
+  const [unsavedWarningOpen, setUnsavedWarningOpen] = useState(false);
+  const [resettingUserPasswordId, setResettingUserPasswordId] = useState<string | null>(null);
+
+  const handleCopySinglePassword = (password: string) => {
+    try {
+      navigator.clipboard.writeText(password);
+      setCredentialsCopied(true);
+      toast.success("Temporary password copied to clipboard!");
+    } catch {
+      toast.error("Failed to copy password to clipboard.");
+    }
+  };
+
+  const handleCopyBulkCredentials = (items: BulkImportCredential[]) => {
+    try {
+      const text = items
+        .map((i) => `Roll No: ${i.rollNumber} | Name: ${i.name} | Email: ${i.email} | Temp Password: ${i.tempPassword}`)
+        .join("\n");
+      navigator.clipboard.writeText(text);
+      setCredentialsCopied(true);
+      toast.success("All temporary credentials copied to clipboard!");
+    } catch {
+      toast.error("Failed to copy credentials.");
+    }
+  };
+
+  const handleDownloadBulkCredentials = (items: BulkImportCredential[]) => {
+    try {
+      const rows = ["Name,Roll Number,Email,Role,Temporary Password"];
+      items.forEach((item) => {
+        rows.push(`"${item.name}","${item.rollNumber}","${item.email}","${item.role}","${item.tempPassword}"`);
+      });
+      const csvData = rows.join("\n");
+      const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "CMADMS_Temporary_Credentials.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setCredentialsDownloaded(true);
+      toast.success("Temporary credentials CSV downloaded!");
+    } catch {
+      toast.error("Failed to download credentials CSV.");
+    }
+  };
+
+  const attemptCloseOneTimeCredentials = () => {
+    if (!credentialsCopied && !credentialsDownloaded) {
+      setUnsavedWarningOpen(true);
+    } else {
+      forceCloseOneTimeCredentials();
+    }
+  };
+
+  const forceCloseOneTimeCredentials = () => {
+    setUnsavedWarningOpen(false);
+    setOneTimeCredentials(null);
+    setShowOneTimePass(false);
+    setCredentialsCopied(false);
+    setCredentialsDownloaded(false);
+  };
+
+  const handleResetUserPassword = async (user: AdminUserRecord) => {
+    if (!confirm(`Generate a new temporary password for user '${user.name}' (${user.email})?`)) return;
+    setResettingUserPasswordId(user.id);
+    try {
+      const res = await resetUserPasswordAdminApi({ data: { userId: user.id } });
+      if (res.success && res.tempPassword) {
+        setOneTimeCredentials({
+          title: "Temporary Password Reset Successful",
+          type: "reset",
+          singleUser: {
+            name: res.name || user.name,
+            email: res.email || user.email,
+            role: res.role || user.role.toUpperCase(),
+            tempPassword: res.tempPassword,
+          },
+        });
+        setCredentialsCopied(false);
+        setCredentialsDownloaded(false);
+        toast.success(`Temporary password reset for ${user.name}`);
+      } else {
+        toast.error(res.error || "Failed to reset temporary password.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to reset temporary password.");
+    } finally {
+      setResettingUserPasswordId(null);
+    }
+  };
 
   const handleReassignGate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -324,14 +432,28 @@ function AdminUsersPage() {
       });
 
       if (res.success) {
-        toast.success(`${newRole.toUpperCase()} account created successfully!`, {
-          description: `Initial default password assigned with forced first-login change requirement.`,
-        });
+        toast.success(`${newRole.toUpperCase()} account created successfully!`);
         setAddUserOpen(false);
         setNewCode("");
         setNewName("");
         setNewEmail("");
         setNewPhone("");
+
+        if (res.tempPassword) {
+          setOneTimeCredentials({
+            title: "User Account Created Successfully",
+            type: "single",
+            singleUser: {
+              name: res.name || newName,
+              email: res.email || newEmail,
+              role: res.role || newRole.toUpperCase(),
+              tempPassword: res.tempPassword,
+            },
+          });
+          setCredentialsCopied(false);
+          setCredentialsDownloaded(false);
+        }
+
         await loadUsers();
       } else {
         toast.error(res.error || "Failed to create user account.");
@@ -403,12 +525,21 @@ function AdminUsersPage() {
     try {
       const res = await commitStudentBulkImportApi({ data: { validItems } });
       if (res.success) {
-        toast.success(`Successfully imported ${res.importedCount} student accounts!`, {
-          description: `All accounts assigned dynamic college email and mandatory first-login password change.`,
-        });
+        toast.success(`Successfully imported ${res.importedCount} student accounts!`);
         setBulkImportOpen(false);
         setCsvContent("");
         setImportResult(null);
+
+        if (res.credentials && res.credentials.length > 0) {
+          setOneTimeCredentials({
+            title: "Bulk Student Import Completed",
+            type: "bulk",
+            bulkItems: res.credentials,
+          });
+          setCredentialsCopied(false);
+          setCredentialsDownloaded(false);
+        }
+
         await loadUsers();
       } else {
         toast.error(res.error || "Bulk import transaction failed.");
@@ -666,6 +797,17 @@ function AdminUsersPage() {
                                 Reassign Gate
                               </Button>
                             )}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={resettingUserPasswordId === u.id}
+                              onClick={() => handleResetUserPassword(u)}
+                              className="h-8 text-xs font-bold px-2.5 rounded-xl border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                            >
+                              <RefreshCcw className={cn("size-3 mr-1", resettingUserPasswordId === u.id && "animate-spin")} />
+                              {resettingUserPasswordId === u.id ? "Resetting..." : "Reset Password"}
+                            </Button>
                             <Select
                               value={u.role.toLowerCase()}
                               onValueChange={(val) => handleRoleChange(u.id, val as any)}
@@ -1267,6 +1409,218 @@ function AdminUsersPage() {
                 </Button>
               </DialogFooter>
             </form>
+          </DialogContent>
+        </Dialog>
+        {/* MODAL: ONE-TIME CREDENTIALS RESULT */}
+        <Dialog open={!!oneTimeCredentials} onOpenChange={(open) => { if (!open) attemptCloseOneTimeCredentials(); }}>
+          <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto bg-slate-950 text-slate-100 border-slate-800 p-6 rounded-2xl shadow-2xl">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
+                  <KeyRound className="h-6 w-6" />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-bold text-slate-100">
+                    {oneTimeCredentials?.title}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-slate-400">
+                    One-time initial credentials generated securely. Passwords will <strong className="text-rose-400">NEVER</strong> be shown again.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            {/* SINGLE USER OR RESET CREDENTIALS */}
+            {oneTimeCredentials?.singleUser && (
+              <div className="space-y-4 my-2">
+                <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-slate-400 block text-[11px]">Full Name</span>
+                      <span className="font-bold text-slate-200">{oneTimeCredentials.singleUser.name}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[11px]">Assigned Role</span>
+                      <span className="font-extrabold text-cyan-400 uppercase">{oneTimeCredentials.singleUser.role}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-xs">
+                    <span className="text-slate-400 block text-[11px]">Login Email / Roll Number</span>
+                    <span className="font-mono font-semibold text-slate-200">{oneTimeCredentials.singleUser.email}</span>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800">
+                    <span className="text-slate-400 block text-[11px] font-semibold mb-1">Temporary Password</span>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          readOnly
+                          type={showOneTimePass ? "text" : "password"}
+                          value={oneTimeCredentials.singleUser.tempPassword}
+                          className="font-mono text-sm font-bold bg-slate-950 border-slate-800 text-amber-400 pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowOneTimePass(!showOneTimePass)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                        >
+                          {showOneTimePass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={() => handleCopySinglePassword(oneTimeCredentials.singleUser!.tempPassword)}
+                        className={cn(
+                          "h-10 px-4 text-xs font-bold gap-1.5 transition-all",
+                          credentialsCopied
+                            ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                            : "bg-amber-600 hover:bg-amber-500 text-white"
+                        )}
+                      >
+                        {credentialsCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {credentialsCopied ? "Copied" : "Copy Password"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-amber-300 text-xs flex items-start gap-2.5">
+                  <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <p className="font-bold">Security Notice:</p>
+                    <p className="text-[11px] leading-relaxed opacity-90">
+                      Save or share this temporary password with the user immediately. Plaintext passwords are not stored in the system and cannot be retrieved later.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* BULK IMPORT CREDENTIALS */}
+            {oneTimeCredentials?.bulkItems && (
+              <div className="space-y-3 my-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-300">
+                    Created Accounts ({oneTimeCredentials.bulkItems.length}):
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => handleCopyBulkCredentials(oneTimeCredentials.bulkItems!)}
+                      className={cn(
+                        "h-8 text-xs font-bold gap-1.5",
+                        credentialsCopied
+                          ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                          : "bg-slate-800 hover:bg-slate-700 text-slate-200"
+                      )}
+                    >
+                      {credentialsCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                      {credentialsCopied ? "Copied All" : "Copy Credentials"}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => handleDownloadBulkCredentials(oneTimeCredentials.bulkItems!)}
+                      className={cn(
+                        "h-8 text-xs font-bold gap-1.5",
+                        credentialsDownloaded
+                          ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                          : "bg-cyan-600 hover:bg-cyan-500 text-white"
+                      )}
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      {credentialsDownloaded ? "Downloaded CSV" : "Download Credentials CSV"}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="max-h-60 overflow-y-auto rounded-xl border border-slate-800 bg-slate-900/60 p-2">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead className="border-b border-slate-800 text-[10px] text-slate-400 uppercase">
+                      <tr>
+                        <th className="p-2">Roll No / Name</th>
+                        <th className="p-2">Email</th>
+                        <th className="p-2">Temp Password</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                      {oneTimeCredentials.bulkItems.map((item, idx) => (
+                        <tr key={idx} className="hover:bg-slate-800/40">
+                          <td className="p-2">
+                            <span className="font-bold text-slate-100 block">{item.rollNumber}</span>
+                            <span className="text-[10px] font-sans text-slate-400">{item.name}</span>
+                          </td>
+                          <td className="p-2 text-slate-300">{item.email}</td>
+                          <td className="p-2 font-bold text-amber-400">{item.tempPassword}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-amber-300 text-xs flex items-start gap-2.5">
+                  <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-[11px] leading-relaxed opacity-90">
+                    Temporary passwords are shown only once. Save or download credentials before closing this screen. Plaintext temporary passwords cannot be retrieved from the database.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter className="pt-3 border-t border-slate-800">
+              <Button
+                type="button"
+                onClick={attemptCloseOneTimeCredentials}
+                className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold text-xs h-10 px-6 rounded-xl"
+              >
+                Done / Close Credentials
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* MODAL: UNSAVED CREDENTIAL WARNING */}
+        <Dialog open={unsavedWarningOpen} onOpenChange={setUnsavedWarningOpen}>
+          <DialogContent className="sm:max-w-md bg-slate-950 border-rose-900/50 text-slate-100 p-6 rounded-2xl shadow-2xl">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-bold text-slate-100">
+                    Are you sure?
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-rose-300/80">
+                    Unsaved temporary credentials warning.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="my-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-slate-200 text-xs leading-relaxed">
+              These temporary passwords will <strong className="text-rose-400">NOT be shown again</strong> after closing this screen. Please copy or download them before proceeding.
+            </div>
+
+            <DialogFooter className="gap-2 pt-2 border-t border-slate-800">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setUnsavedWarningOpen(false)}
+                className="border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 text-xs rounded-xl"
+              >
+                Go Back & Copy
+              </Button>
+              <Button
+                type="button"
+                onClick={forceCloseOneTimeCredentials}
+                className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl"
+              >
+                Close Anyway
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

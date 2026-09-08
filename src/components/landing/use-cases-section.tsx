@@ -127,16 +127,6 @@ export function LandingUseCasesSection() {
                     </ul>
                   </div>
                 </div>
-
-                {/* Footer Link */}
-                <div className="p-5 pt-0">
-                  <Link
-                    to={r.link as any}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline group-hover:translate-x-0.5 transition-transform"
-                  >
-                    Access Portal <ArrowRight className="size-3.5" />
-                  </Link>
-                </div>
               </div>
             );
           })}

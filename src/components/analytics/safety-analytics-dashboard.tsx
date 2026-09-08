@@ -19,6 +19,7 @@ import {
   Flame,
   GraduationCap,
   Layers,
+  MapPin,
   Printer,
   RefreshCw,
   RotateCcw,
@@ -530,92 +531,93 @@ export function SafetyAnalyticsDashboard({
         ))}
       </div>
 
-      {/* ─── 2. EMERGENCY RESPONSE METRICS ─────────────────────────────────── */}
+      {/* ─── 2. TOP 3 HIGH-REPORTING AREAS IN CAMPUS ──────────────────────── */}
       <div className="card-surface p-5 rounded-2xl border border-border shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-divider pb-3">
           <div className="flex items-center gap-2.5">
-            <span className="grid size-8 place-items-center rounded-xl bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300">
-              <ShieldAlert className="size-4.5" />
+            <span className="grid size-8 place-items-center rounded-xl bg-primary/10 text-primary shrink-0">
+              <MapPin className="size-4.5" />
             </span>
             <div>
               <h2 className="text-sm font-bold text-foreground">
-                Campus Emergency Response Benchmarks
+                Top 3 High-Reporting Areas in Campus
               </h2>
               <p className="text-[11px] text-muted-foreground">
-                Actual time-stamped quick-response security milestones (measured from PostgreSQL lifecycle timestamps).
+                Campus locations with highest volume of reported violations & incidents
               </p>
             </div>
           </div>
-
-          <span className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-950/80 px-2.5 py-1 rounded-full w-fit">
-            {analytics?.emergency.total || 0} Total Emergencies
-          </span>
+          {analytics?.topLocations && analytics.topLocations.length > 0 && (
+            <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full w-fit">
+              {analytics.topLocations.length} Area{analytics.topLocations.length > 1 ? "s" : ""} Identified
+            </span>
+          )}
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-          {[
-            {
-              title: "Avg Triage Response",
-              subtitle: "Reported → Acknowledged",
-              seconds: analytics?.emergency.avgResponseSeconds || 0,
-              icon: Clock,
-              color: "text-blue-600 dark:text-blue-400",
-            },
-            {
-              title: "Avg Patrol Dispatch",
-              subtitle: "Acknowledged → Responder Assigned",
-              seconds: analytics?.emergency.avgDispatchSeconds || 0,
-              icon: UserCheck,
-              color: "text-amber-600 dark:text-amber-400",
-            },
-            {
-              title: "Avg Scene Control",
-              subtitle: "Responding → Situation Controlled",
-              seconds: analytics?.emergency.avgControlSeconds || 0,
-              icon: ShieldCheck,
-              color: "text-emerald-600 dark:text-emerald-400",
-            },
-            {
-              title: "Avg Total Incident Closure",
-              subtitle: "Reported → Fully Resolved",
-              seconds: analytics?.emergency.avgResolutionSeconds || 0,
-              icon: CheckCircle2,
-              color: "text-purple-600 dark:text-purple-400",
-            },
-          ].map((m) => {
-            const mins = Math.floor(m.seconds / 60);
-            const secs = m.seconds % 60;
-            const display = m.seconds > 0 ? (mins > 0 ? `${mins}m ${secs}s` : `${secs}s`) : "— (No Data)";
+        {loading ? (
+          <div className="py-8 text-center text-xs text-muted-foreground animate-pulse">
+            Loading area analysis...
+          </div>
+        ) : !analytics?.topLocations || analytics.topLocations.length === 0 ? (
+          <div className="py-8 text-center text-xs text-muted-foreground">
+            No location-based reports available.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {analytics.topLocations.slice(0, 3).map((loc, index) => {
+              const maxCount = analytics.topLocations[0]?.count || 1;
+              const percentage = Math.min(100, Math.max(0, Math.round((loc.count / maxCount) * 100)));
 
-            return (
-              <div key={m.title} className="p-3.5 rounded-xl bg-muted/40 border border-divider">
-                <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
-                  <span>{m.title}</span>
-                  <m.icon className={cn("size-3.5", m.color)} />
+              const rankColor =
+                index === 0
+                  ? "bg-red-500/10 text-red-600 border-red-500/20 dark:bg-red-950/50 dark:text-red-400"
+                  : index === 1
+                    ? "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:bg-amber-950/50 dark:text-amber-400"
+                    : "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:bg-blue-950/50 dark:text-blue-400";
+
+              const barColor =
+                index === 0
+                  ? "bg-red-500"
+                  : index === 1
+                    ? "bg-amber-500"
+                    : "bg-blue-500";
+
+              return (
+                <div
+                  key={loc.area}
+                  className="p-4 rounded-xl bg-muted/30 border border-border/70 space-y-3 flex flex-col justify-between"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className={`text-xs font-black px-2.5 py-0.5 rounded-md border ${rankColor}`}>
+                      #{index + 1}
+                    </span>
+                    <div className="text-right">
+                      <span className="text-base font-extrabold text-foreground">{loc.count}</span>
+                      <span className="text-[11px] text-muted-foreground ml-1 font-semibold">Reports</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs font-bold text-foreground truncate" title={loc.area}>
+                      {loc.area}
+                    </h3>
+                  </div>
+
+                  {/* Relative Progress Bar */}
+                  <div className="space-y-1">
+                    <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${barColor} transition-all duration-500 rounded-full`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground text-right font-medium">
+                      {percentage}% of peak area
+                    </p>
+                  </div>
                 </div>
-                <p className={`mt-1.5 text-xl font-extrabold ${m.color}`}>{display}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{m.subtitle}</p>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Emergency Status Breakdown */}
-        {analytics?.emergency.byStatus && (
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-2 border-t border-divider text-center">
-            {[
-              { label: "Reported", count: analytics.emergency.byStatus.reported, color: "text-blue-600" },
-              { label: "Acknowledged", count: analytics.emergency.byStatus.acknowledged, color: "text-amber-600" },
-              { label: "Dispatched", count: analytics.emergency.byStatus.responder_assigned, color: "text-purple-600" },
-              { label: "Responding", count: analytics.emergency.byStatus.responding, color: "text-orange-600" },
-              { label: "Controlled", count: analytics.emergency.byStatus.controlled, color: "text-teal-600" },
-              { label: "Resolved", count: analytics.emergency.byStatus.resolved, color: "text-emerald-600" },
-            ].map((st) => (
-              <div key={st.label} className="p-2 rounded-lg bg-background border border-divider">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">{st.label}</p>
-                <p className={`text-sm font-extrabold ${st.color}`}>{st.count}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

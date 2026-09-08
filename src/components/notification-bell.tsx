@@ -42,8 +42,8 @@ function resolveNotifRoute(
     case "emergency_responder_assigned":
     case "emergency_controlled":
     case "emergency_resolved":
-      if (role === "security") return "/security/passes";
-      if (role === "admin") return "/admin/emergency";
+      if (role === "security") return "/security/check";
+      if (role === "admin") return "/admin/violations";
       if (role === "hod") return "/hod/violations";
       if (role === "student") return "/student/violations";
       return "/notifications";
@@ -116,8 +116,8 @@ function timeAgo(isoDate: string): string {
 // ─── Notification Bell Component ───────────────────────────────────────────
 
 interface NotificationBellProps {
-  role?: string;
-  className?: string;
+  role?: string | undefined;
+  className?: string | undefined;
 }
 
 export function NotificationBell({ role, className }: NotificationBellProps) {

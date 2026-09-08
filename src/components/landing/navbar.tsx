@@ -25,12 +25,12 @@ export function LandingNavbar() {
   };
 
   const navLinks = [
-    { label: "Home", href: "#hero" },
-    { label: "Features", href: "#features" },
-    { label: "How It Works", href: "#how-it-works" },
-    { label: "Modules", href: "#modules" },
-    { label: "About", href: "#about" },
-    { label: "Security", href: "#security" },
+    { label: "Home", to: "/" },
+    { label: "Features", to: "/features" },
+    { label: "How It Works", to: "/how-it-works" },
+    { label: "Modules", to: "/modules" },
+    { label: "About", to: "/about" },
+    { label: "Security", to: "/security" },
   ];
 
   return (
@@ -53,18 +53,20 @@ export function LandingNavbar() {
 
         {/* Center Desktop Links */}
         <nav className="hidden md:flex items-center gap-1 lg:gap-2 rounded-full border border-border/60 bg-card/60 px-4 py-1.5 backdrop-blur-xs">
-          {navLinks.map((link, idx) => (
-            <a
+          {navLinks.map((link) => (
+            <Link
               key={link.label}
-              href={link.href}
-              className={`px-3 py-1 text-xs font-semibold transition-colors rounded-full ${
-                idx === 0
-                  ? "text-primary font-bold bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}
+              to={link.to as any}
+              activeProps={{
+                className: "text-primary font-bold bg-primary/10",
+              }}
+              inactiveProps={{
+                className: "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+              }}
+              className="px-3 py-1 text-xs font-semibold transition-colors rounded-full"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -96,14 +98,14 @@ export function LandingNavbar() {
       {mobileOpen && (
         <div className="md:hidden border-b border-border bg-card p-4 space-y-2 animate-in slide-in-from-top-2">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.label}
-              href={link.href}
+              to={link.to as any}
               onClick={() => setMobileOpen(false)}
               className="block rounded-xl px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
           <div className="pt-2 border-t border-border flex flex-col gap-2">
             <Button asChild size="sm" className="w-full rounded-xl font-semibold bg-primary text-primary-foreground">

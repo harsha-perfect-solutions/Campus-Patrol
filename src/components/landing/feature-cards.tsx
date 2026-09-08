@@ -48,13 +48,6 @@ export function LandingFeatureCards() {
                 ACTIVE
               </span>
             </div>
-
-            <Link
-              to="/check"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline group-hover:translate-x-0.5 transition-transform"
-            >
-              Learn more <ArrowRight className="size-3.5" />
-            </Link>
           </div>
 
           {/* Card 2 — Dark Purple Card */}
@@ -73,12 +66,6 @@ export function LandingFeatureCards() {
 
             <div className="pt-4 border-t border-white/10 flex items-center justify-between">
               <span className="text-[11px] font-semibold text-purple-300">Live SSE Feed</span>
-              <Link
-                to="/notifications"
-                className="inline-flex items-center gap-1 text-xs font-bold text-purple-300 hover:text-white transition-colors"
-              >
-                Learn more <ArrowRight className="size-3.5" />
-              </Link>
             </div>
           </div>
 
@@ -98,12 +85,6 @@ export function LandingFeatureCards() {
 
             <div className="pt-4 border-t border-white/10 flex items-center justify-between">
               <span className="text-[11px] font-semibold text-purple-300">HOD Workflow</span>
-              <Link
-                to="/auth"
-                className="inline-flex items-center gap-1 text-xs font-bold text-purple-300 hover:text-white transition-colors"
-              >
-                Learn more <ArrowRight className="size-3.5" />
-              </Link>
             </div>
           </div>
         </div>

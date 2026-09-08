@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Bell, Moon, ShieldCheck, Sun, UserRound } from "lucide-react";
+import { Bell, Moon, ShieldCheck, Sun, UserRound, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { faculty } from "@/lib/cmadms-data";
 import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
 import { RoleGuard } from "@/components/role-guard";
+import { ChangePasswordDialog } from "@/components/change-password-dialog";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -64,6 +66,7 @@ function Card({
 export function SettingsPage() {
   const { theme, setTheme } = useCmadms();
   const { profile, role } = useAuth();
+  const [changePassOpen, setChangePassOpen] = useState(false);
 
   const fullName = profile?.full_name || faculty.name;
   const staffCode = profile?.staff_code || faculty.id;
@@ -136,6 +139,25 @@ export function SettingsPage() {
           </Card>
 
           <Card
+            title="Security & Password"
+            icon={KeyRound}
+            description="Manage your account password and security settings"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground">Change Password</p>
+                <p className="text-xs text-muted-foreground">
+                  Update your password regularly to maintain account security.
+                </p>
+              </div>
+              <Button onClick={() => setChangePassOpen(true)} variant="outline" className="shrink-0 gap-2">
+                <KeyRound className="size-4 text-cyan-500" />
+                Change Password
+              </Button>
+            </div>
+          </Card>
+
+          <Card
             title="Verification Policy"
             icon={ShieldCheck}
             description="How CMADMS handles your reports"
@@ -148,6 +170,8 @@ export function SettingsPage() {
           </Card>
         </div>
       </div>
+
+      <ChangePasswordDialog open={changePassOpen} onOpenChange={setChangePassOpen} />
     </>
   );
 }

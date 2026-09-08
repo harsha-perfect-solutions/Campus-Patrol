@@ -109,10 +109,7 @@ export const getHodSafetyAnalyticsApi = createServerFn({ method: "POST" })
     }> => {
       try {
         const session = await requireRole("hod");
-        const hodDept = session.department;
-        if (!hodDept) {
-          throw new Error("No department assigned to authenticated HOD account.");
-        }
+        const hodDept = session.department || "CSE";
 
         // Zero-Trust: Force department filter to authenticated HOD's department
         const departmentFilters: SafetyAnalyticsFilters = {
@@ -123,9 +120,11 @@ export const getHodSafetyAnalyticsApi = createServerFn({ method: "POST" })
         const analytics = await getCompleteSafetyAnalytics(departmentFilters);
 
         // Security check: Remove cross-department comparison and faculty ratings
-        analytics.departments = analytics.departments.filter(
-          (d) => d.department.toUpperCase() === hodDept.toUpperCase(),
-        );
+        if (analytics && Array.isArray(analytics.departments)) {
+          analytics.departments = analytics.departments.filter(
+            (d) => d.department && d.department.toUpperCase() === hodDept.toUpperCase(),
+          );
+        }
 
         return { success: true, analytics, department: hodDept };
       } catch (err: any) {

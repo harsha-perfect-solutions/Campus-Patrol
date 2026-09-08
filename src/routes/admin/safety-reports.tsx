@@ -279,14 +279,149 @@ function AdminSafetyReportsContent() {
   };
 
   const handlePrint = async () => {
-    await logReportExportApi({
-      data: {
-        exportFormat: "PRINT",
-        scope: deptFilter,
-      },
-    });
-    window.print();
+    if (!data) { toast.error("No data loaded yet. Please wait and try again."); return; }
+
+    await logReportExportApi({ data: { exportFormat: "PRINT", scope: deptFilter } });
+
+    const kpisD = data.kpis;
+    const emgD  = data.emergencyBenchmarks;
+    const resD  = data.disciplinaryMetrics;
+    const dateLabel = startDate && endDate ? `${startDate} to ${endDate}` : "All Available History";
+    const scopeLabel = deptFilter === "ALL" ? "Institution-Wide" : `${deptFilter} Department`;
+    const generatedAt = new Date().toLocaleString("en-IN", { dateStyle: "long", timeStyle: "short" });
+
+    const hotspotRows = (data.hotspots || []).map((h, i) => `
+      <tr style="background:${i % 2 === 0 ? "#f8fafc" : "#fff"}">
+        <td style="padding:6px 10px;border:1px solid #e2e8f0">${h.locationName || "—"}</td>
+        <td style="padding:6px 10px;border:1px solid #e2e8f0">${h.buildingBlock || "—"} ${h.room || ""}</td>
+        <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${h.totalIncidents ?? 0}</td>
+        <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${h.criticalIncidents ?? 0}</td>
+        <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${h.violenceIncidents ?? 0}</td>
+        <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center;font-weight:700">${h.riskScore ?? 0}</td>
+        <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">
+          <span style="background:${h.frequencyLevel === "CRITICAL_HOTSPOT" ? "#fee2e2" : h.frequencyLevel === "ELEVATED_WATCH" ? "#fef3c7" : "#f0fdf4"};color:${h.frequencyLevel === "CRITICAL_HOTSPOT" ? "#dc2626" : h.frequencyLevel === "ELEVATED_WATCH" ? "#d97706" : "#16a34a"};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${(h.frequencyLevel || "").replace(/_/g," ")}</span>
+        </td>
+      </tr>`).join("");
+
+    const kpiCard = (label: string, value: string | number, sub?: string) => `
+      <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;background:#f8fafc;min-width:140px">
+        <div style="font-size:11px;color:#64748b;font-weight:600;margin-bottom:4px">${label}</div>
+        <div style="font-size:26px;font-weight:900;color:#0f172a;line-height:1">${value}</div>
+        ${sub ? `<div style="font-size:10px;color:#94a3b8;margin-top:4px">${sub}</div>` : ""}
+      </div>`;
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CMADMS — Safety Intelligence Report</title>
+  <style>
+    @page { size: A4 portrait; margin: 12mm 14mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #0f172a; background: #fff; }
+    h2 { font-size: 18px; font-weight: 900; color: #1e293b; margin-bottom: 4px; }
+    h3 { font-size: 13px; font-weight: 800; color: #1e293b; margin-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { background: #1e3a5f; color: #fff; padding: 8px 10px; text-align: left; font-size: 11px; font-weight: 700; }
+    .section { margin-bottom: 20px; page-break-inside: avoid; }
+    .badge { display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700 }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:2px solid #1e3a5f;margin-bottom:18px">
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">CMADMS · Campus Guard Pro</div>
+      <h2>Safety Intelligence &amp; Executive Report</h2>
+      <div style="font-size:12px;color:#475569;margin-top:3px">Scope: <strong>${scopeLabel}</strong> &nbsp;|&nbsp; Period: <strong>${dateLabel}</strong></div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:10px;color:#94a3b8">GENERATED</div>
+      <div style="font-size:12px;font-weight:700;color:#0f172a">${generatedAt}</div>
+      <div style="margin-top:6px;background:#1e3a5f;color:#fff;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700">CONFIDENTIAL</div>
+    </div>
+  </div>
+
+  <!-- KPI SUMMARY -->
+  <div class="section">
+    <h3>Executive KPI Summary</h3>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+      ${kpiCard("Total Reports", kpisD.totalIncidents, "Cumulative")}
+      ${kpiCard("Open Cases", kpisD.openIncidents, "Pending resolution")}
+      ${kpiCard("Under HOD Review", kpisD.underHodReview, "Dept. hearings")}
+      ${kpiCard("Escalated", kpisD.escalatedIncidents, "Admin committee")}
+      ${kpiCard("Resolved", kpisD.resolvedIncidents, `${resD.resolutionRate?.toFixed(1) ?? 0}% resolution`)}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:10px">
+      ${kpiCard("Dismissed", kpisD.dismissedIncidents, "Verified passes")}
+      ${kpiCard("High Severity", kpisD.highSeverityIncidents, "Escalation risk")}
+      ${kpiCard("Critical", kpisD.criticalIncidents, "Institutional alerts")}
+      ${kpiCard("Violence / Fight", kpisD.violenceReports, "Physical misconduct")}
+      ${kpiCard("Emergency Calls", emgD.totalEmergencies, `${emgD.unresolvedCount} unresolved`)}
+    </div>
+  </div>
+
+  <!-- EMERGENCY RESPONSE -->
+  <div class="section">
+    <h3>Emergency Response Benchmarks</h3>
+    <table>
+      <thead><tr>
+        <th>Avg Triage Time</th><th>Fastest</th><th>Slowest</th><th>Median</th><th>Avg Dispatch</th><th>Avg Resolution</th>
+      </tr></thead>
+      <tbody><tr style="background:#f8fafc">
+        <td style="padding:8px 10px;border:1px solid #e2e8f0;font-weight:700">${emgD.avgResponseSeconds ?? 0}s</td>
+        <td style="padding:8px 10px;border:1px solid #e2e8f0;color:#16a34a;font-weight:700">${emgD.fastestResponseSeconds ?? 0}s</td>
+        <td style="padding:8px 10px;border:1px solid #e2e8f0;color:#dc2626;font-weight:700">${emgD.slowestResponseSeconds ?? 0}s</td>
+        <td style="padding:8px 10px;border:1px solid #e2e8f0">${emgD.medianResponseSeconds ?? 0}s</td>
+        <td style="padding:8px 10px;border:1px solid #e2e8f0">${emgD.avgDispatchSeconds ?? 0}s</td>
+        <td style="padding:8px 10px;border:1px solid #e2e8f0">${emgD.avgResolutionSeconds ?? 0}s</td>
+      </tr></tbody>
+    </table>
+  </div>
+
+  <!-- DISCIPLINARY METRICS -->
+  <div class="section">
+    <h3>Disciplinary Performance Metrics</h3>
+    <table>
+      <thead><tr>
+        <th>Avg Resolution Time</th><th>Resolution Rate</th><th>Escalation Rate</th>
+      </tr></thead>
+      <tbody><tr style="background:#f8fafc">
+        <td style="padding:8px 10px;border:1px solid #e2e8f0;font-weight:700">${resD.avgResolutionHours?.toFixed(1) ?? 0} hrs</td>
+        <td style="padding:8px 10px;border:1px solid #e2e8f0;font-weight:700;color:#16a34a">${resD.resolutionRate?.toFixed(1) ?? 0}%</td>
+        <td style="padding:8px 10px;border:1px solid #e2e8f0;font-weight:700;color:#dc2626">${resD.escalationRate?.toFixed(1) ?? 0}%</td>
+      </tr></tbody>
+    </table>
+  </div>
+
+  <!-- HOTSPOTS -->
+  ${(data.hotspots || []).length > 0 ? `
+  <div class="section">
+    <h3>Historical Safety Hotspot Detection (${data.hotspots.length} zones flagged)</h3>
+    <table>
+      <thead><tr>
+        <th>Location</th><th>Building / Room</th><th>Total Incidents</th><th>Critical</th><th>Violence</th><th>Risk Score</th><th>Level</th>
+      </tr></thead>
+      <tbody>${hotspotRows}</tbody>
+    </table>
+  </div>` : ""}
+
+  <!-- FOOTER -->
+  <div style="margin-top:24px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:10px;color:#94a3b8">
+    <span>CMADMS · Campus Movement &amp; Administration Digital Management System</span>
+    <span>Report generated ${generatedAt} · ${scopeLabel}</span>
+  </div>
+
+  <script>window.onload = function(){ window.print(); window.onafterprint = function(){ window.close(); }; }</script>
+</body>
+</html>`;
+
+    const printWin = window.open("", "_blank", "width=900,height=700");
+    if (!printWin) { toast.error("Popup was blocked. Please allow popups and try again."); return; }
+    printWin.document.write(html);
+    printWin.document.close();
   };
+
 
   const kpis = data?.kpis || {
     totalIncidents: 0,
@@ -631,73 +766,8 @@ function AdminSafetyReportsContent() {
         )}
       </div>
 
-      {/* ─── 3. EMERGENCY BENCHMARKS & DISCIPLINARY PERFORMANCE ──────────────── */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Emergency Benchmarks */}
-        <div className="card-surface p-5 rounded-2xl border border-border shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-divider pb-3">
-            <div className="flex items-center gap-2">
-              <Zap className="size-4.5 text-red-600" />
-              <h2 className="text-xs font-bold text-foreground uppercase tracking-wide">
-                Campus Security Emergency Latency Benchmarks
-              </h2>
-            </div>
-            <span className="text-[11px] font-bold text-red-600">
-              {emg.totalEmergencies} Total Emergencies
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-            <div className="p-3 rounded-xl bg-muted/40 border border-divider">
-              <p className="text-[9px] font-bold text-muted-foreground uppercase">Fastest Triage</p>
-              <p className="mt-1 text-lg font-black text-emerald-600">
-                {emg.fastestResponseSeconds > 0 ? `${emg.fastestResponseSeconds}s` : "—"}
-              </p>
-            </div>
-
-            <div className="p-3 rounded-xl bg-muted/40 border border-divider">
-              <p className="text-[9px] font-bold text-muted-foreground uppercase">Median Triage</p>
-              <p className="mt-1 text-lg font-black text-blue-600">
-                {emg.medianResponseSeconds > 0 ? `${emg.medianResponseSeconds}s` : "—"}
-              </p>
-            </div>
-
-            <div className="p-3 rounded-xl bg-muted/40 border border-divider">
-              <p className="text-[9px] font-bold text-muted-foreground uppercase">Average Triage</p>
-              <p className="mt-1 text-lg font-black text-purple-600">
-                {emg.avgResponseSeconds > 0 ? `${emg.avgResponseSeconds}s` : "—"}
-              </p>
-            </div>
-
-            <div className="p-3 rounded-xl bg-muted/40 border border-divider">
-              <p className="text-[9px] font-bold text-muted-foreground uppercase">Slowest Triage</p>
-              <p className="mt-1 text-lg font-black text-amber-600">
-                {emg.slowestResponseSeconds > 0 ? `${emg.slowestResponseSeconds}s` : "—"}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2 pt-2 border-t border-divider">
-            <div className="flex items-center justify-between text-xs font-semibold p-2 rounded-lg bg-muted/20">
-              <span className="text-muted-foreground">Average Dispatch Latency (Triage &rarr; Assigned)</span>
-              <span className="font-bold text-foreground">
-                {emg.avgDispatchSeconds > 0 ? `${emg.avgDispatchSeconds}s` : "Immediate"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs font-semibold p-2 rounded-lg bg-muted/20">
-              <span className="text-muted-foreground">Average Scene Control Duration (Arrival &rarr; Controlled)</span>
-              <span className="font-bold text-foreground">
-                {emg.avgControlSeconds > 0 ? `${Math.floor(emg.avgControlSeconds / 60)}m ${emg.avgControlSeconds % 60}s` : "—"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs font-semibold p-2 rounded-lg bg-muted/20">
-              <span className="text-muted-foreground">Average Total Emergency Resolution</span>
-              <span className="font-bold text-foreground">
-                {emg.avgResolutionSeconds > 0 ? `${Math.floor(emg.avgResolutionSeconds / 60)}m` : "—"}
-              </span>
-            </div>
-          </div>
-        </div>
+      {/* ─── 3. DISCIPLINARY PERFORMANCE ──────────────── */}
+      <div>
 
         {/* Disciplinary Performance */}
         <div className="card-surface p-5 rounded-2xl border border-border shadow-xs space-y-4">

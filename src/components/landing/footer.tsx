@@ -40,7 +40,7 @@ export function LandingFooter() {
               variant="outline"
               className="h-12 rounded-2xl border-white/40 bg-transparent text-white hover:bg-white/10 px-6 font-bold shadow-2xs text-xs sm:text-sm"
             >
-              <a href="#features">Explore Features</a>
+              <Link to="/features">Explore Features</Link>
             </Button>
           </div>
         </div>
@@ -71,12 +71,12 @@ export function LandingFooter() {
               Navigation
             </h4>
             <ul className="space-y-2 text-xs font-semibold text-muted-foreground">
-              <li><a href="#hero" className="hover:text-primary transition-colors">Home</a></li>
-              <li><a href="#features" className="hover:text-primary transition-colors">Features</a></li>
-              <li><a href="#how-it-works" className="hover:text-primary transition-colors">How It Works</a></li>
-              <li><a href="#modules" className="hover:text-primary transition-colors">Modules</a></li>
-              <li><a href="#about" className="hover:text-primary transition-colors">About</a></li>
-              <li><a href="#security" className="hover:text-primary transition-colors">Security</a></li>
+              <li><Link to="/" className="hover:text-primary transition-colors">Home</Link></li>
+              <li><Link to="/features" className="hover:text-primary transition-colors">Features</Link></li>
+              <li><Link to="/how-it-works" className="hover:text-primary transition-colors">How It Works</Link></li>
+              <li><Link to="/modules" className="hover:text-primary transition-colors">Modules</Link></li>
+              <li><Link to="/about" className="hover:text-primary transition-colors">About</Link></li>
+              <li><Link to="/security" className="hover:text-primary transition-colors">Security</Link></li>
             </ul>
           </div>
 
@@ -119,9 +119,7 @@ export function LandingFooter() {
           <div className="flex items-center gap-4 text-[11px]">
             <Link to="/auth" className="hover:underline">Sign In</Link>
             <span>&bull;</span>
-            <a href="#security" className="hover:underline">Privacy & Security</a>
-            <span>&bull;</span>
-            <a href="#hero" className="hover:underline">Back to Top ↑</a>
+            <Link to="/security" className="hover:underline">Privacy & Security</Link>
           </div>
         </div>
       </div>

@@ -554,6 +554,26 @@ export async function submitHodDecision(
 
     await db.query(auditQuery, [hodName, cleanId, metadata]);
 
+    // Dispatch notification to student regarding decision
+    try {
+      const studentUserId = await findStudentUserIdByCode(updatedReport.student_code);
+      if (studentUserId) {
+        await createNotificationServer({
+          recipientUserId: studentUserId,
+          recipientRole: "student",
+          department: updatedReport.department,
+          type: "violation_decision_updated",
+          title: `Violation Case Updated: ${statusValue.toUpperCase()} 📋`,
+          detail: `HOD (${hodName}) updated case ${cleanId} status to '${statusValue}'. ${remarks || ""}`,
+          tone: decision === "exonerate" ? "resolved" : "violation",
+          relatedId: cleanId,
+          relatedType: "violation_report",
+        });
+      }
+    } catch (notifErr) {
+      console.warn("[Violation Notification Notice] Failed to notify student of decision:", notifErr);
+    }
+
     await db.query("COMMIT");
     return updatedReport;
   } catch (error) {
@@ -626,6 +646,24 @@ export async function submitStudentExplanation(
     });
 
     await db.query(auditQuery, [cleanCode || updatedReport.student_code, cleanId, metadata]);
+
+    // Dispatch notification to HOD
+    try {
+      const hodUserId = await findHodUserIdForStudentCode(updatedReport.student_code);
+      await createNotificationServer({
+        recipientUserId: hodUserId,
+        recipientRole: "hod",
+        department: updatedReport.department,
+        type: "student_explanation_submitted",
+        title: "Student Explanation Submitted 📝",
+        detail: `Student ${updatedReport.student_name} (${updatedReport.student_code}) submitted an explanation for case ${cleanId}.`,
+        tone: "pending",
+        relatedId: cleanId,
+        relatedType: "violation_report",
+      });
+    } catch (notifErr) {
+      console.warn("[Violation Notification Notice] Failed to notify HOD of student explanation:", notifErr);
+    }
 
     await db.query("COMMIT");
     return updatedReport;

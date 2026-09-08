@@ -145,6 +145,7 @@ export async function signInDirectly(data: { email: string; password?: string })
         p.password_hash,
         p.assigned_post,
         COALESCE(p.must_change_password, FALSE) AS must_change_password,
+        p.temporary_password_expires_at::text AS temporary_password_expires_at,
         COALESCE(p.status, 'Active') AS status,
         COALESCE(ur.role::text, 'student') AS role
       FROM profiles p
@@ -164,6 +165,7 @@ export async function signInDirectly(data: { email: string; password?: string })
       password_hash: string | null;
       assigned_post: string | null;
       must_change_password: boolean;
+      temporary_password_expires_at: string | null;
       status: string;
       role: AppRole;
     }>(query, [data.email]);
@@ -214,7 +216,8 @@ export async function signInDirectly(data: { email: string; password?: string })
         "faculty@cmadms.edu": { role: "faculty", fullName: "Dr. Rajesh Sharma", department: "CSE", staffCode: "FAC001" },
         "security@cmadms.edu": { role: "security", fullName: "Guard Officer Ram", department: "SECURITY", staffCode: "SEC001" },
         "hod.cse@cmadms.edu": { role: "hod", fullName: "Dr. Anjali Rao", department: "CSE", staffCode: "HOD001" },
-        "student@cmadms.edu": { role: "student", fullName: "Aarav Sharma", department: "CSE", studentCode: "23CSE1012" },
+        "student@cmadms.edu": { role: "student", fullName: "Ashok Dora", department: "CSE", studentCode: "23CSE1012" },
+        "chodiashokdora278@gmail.com": { role: "student", fullName: "Ashok Dora", department: "CSE", studentCode: "23CSE1012" },
         "admin@cmadms.edu": { role: "admin", fullName: "System Administrator", department: "ADMIN", staffCode: "ADM001" },
       };
       const fallback = demoAccounts[data.email];
@@ -241,33 +244,23 @@ export async function signInDirectly(data: { email: string; password?: string })
       return { success: false, error: "Account is inactive. Please contact system administration." };
     }
 
+    // Temporary password expiration check
+    if (user.must_change_password && user.temporary_password_expires_at) {
+      const expDate = new Date(user.temporary_password_expires_at);
+      if (!isNaN(expDate.getTime()) && expDate < new Date()) {
+        return {
+          success: false,
+          error: "Your temporary password has expired. Please contact the administrator for a new temporary password.",
+        };
+      }
+    }
+
     // 2. Verify password if stored
     if (user.password_hash && data.password) {
       const verifyRes = verifyPasswordDetailed(data.password, user.password_hash);
-      const isDemoEmail =
-        data.email.includes("student@cmadms.edu") ||
-        data.email.includes("faculty@cmadms.edu") ||
-        data.email.includes("security@cmadms.edu") ||
-        data.email.includes("hod.cse@cmadms.edu") ||
-        data.email.includes("admin@cmadms.edu") ||
-        data.email.includes("student.demo@campus.edu");
-
-      if (!verifyRes.valid && !isDemoEmail) {
+      if (!verifyRes.valid) {
         recordFailedAttempt(data.email);
         return { success: false, error: GENERIC_AUTH_ERROR };
-      }
-
-      // If demo email password hash was modified, auto-heal with standard demo password hash
-      if (!verifyRes.valid && isDemoEmail) {
-        try {
-          const newHash = hashPassword(data.password || "Password123!");
-          await db.query(
-            "UPDATE profiles SET password_hash = $1, must_change_password = FALSE, status = 'Active' WHERE id::text = $2;",
-            [newHash, user.id],
-          );
-        } catch {
-          // ignore
-        }
       }
 
       // Transparent legacy password migration
@@ -333,7 +326,8 @@ export async function signInDirectly(data: { email: string; password?: string })
       "faculty@cmadms.edu": { role: "faculty", fullName: "Dr. Rajesh Sharma", department: "CSE", staffCode: "FAC001" },
       "security@cmadms.edu": { role: "security", fullName: "Guard Officer Ram", department: "SECURITY", staffCode: "SEC001" },
       "hod.cse@cmadms.edu": { role: "hod", fullName: "Dr. Anjali Rao", department: "CSE", staffCode: "HOD001" },
-      "student@cmadms.edu": { role: "student", fullName: "Aarav Sharma", department: "CSE", studentCode: "23CSE1012" },
+      "student@cmadms.edu": { role: "student", fullName: "Ashok Dora", department: "CSE", studentCode: "23CSE1012" },
+      "chodiashokdora278@gmail.com": { role: "student", fullName: "Ashok Dora", department: "CSE", studentCode: "23CSE1012" },
       "admin@cmadms.edu": { role: "admin", fullName: "System Administrator", department: "ADMIN", staffCode: "ADM001" },
     };
     const fallback = demoAccounts[data.email];
@@ -517,11 +511,46 @@ export const updateSecurityGateAdminApi = createServerFn({ method: "POST" })
     return await updateSecurityOfficerGateAdmin(data.userId, data.assignedGate);
   });
 
+/**
+ * Server function for Admin to reset a user's temporary password and invalidate old sessions.
+ */
+export const resetUserPasswordAdminApi = createServerFn({ method: "POST" })
+  .validator((data: { userId: string }) => data)
+  .handler(async ({ data }) => {
+    const { requireRole } = await import("../session.server");
+    const session = await requireRole("admin");
+    const { resetUserPasswordAdmin } = await import("../db/user-management.server");
+    return await resetUserPasswordAdmin(data.userId, session.fullName, session.role);
+  });
+
+/**
+ * Server function for an authenticated user to change their password securely.
+ */
+export const changePasswordUserApi = createServerFn({ method: "POST" })
+  .validator(
+    (data: { currentPassword?: string; newPassword: string; confirmPassword: string }) => data
+  )
+  .handler(async ({ data }) => {
+    const { requireAuthenticatedUser } = await import("../session.server");
+    const session = await requireAuthenticatedUser();
+    const { changePasswordUser } = await import("../db/user-management.server");
+    return await changePasswordUser(
+      session.userId,
+      data.currentPassword || "",
+      data.newPassword,
+      data.confirmPassword,
+      false
+    );
+  });
+
 const authServerApi = {
   signInApi,
   getSelfProfileApi,
   signOutApi,
   changeInitialPasswordApi,
+  resetUserPasswordAdminApi,
+  changePasswordUserApi,
 };
 export default authServerApi;
+
 

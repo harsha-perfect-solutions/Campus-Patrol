@@ -4,6 +4,7 @@ import { Bell, ChevronDown, Clock, Menu, Search, Settings, ShieldCheck, User } f
 import { faculty, students } from "@/lib/cmadms-data";
 import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
+import { NotificationBell } from "@/components/notification-bell";
 import { Button } from "@/components/ui/button";
 import { LiveClock } from "@/components/live-clock";
 import {
@@ -30,7 +31,6 @@ export function Topbar({
   onToggleSidebar: () => void;
   onOpenMobileNav: () => void;
 }) {
-  const { unreadCount } = useCmadms();
   const { profile, role, signOut } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -86,20 +86,8 @@ export function Topbar({
 
         {/* Right Section */}
         <div className="flex items-center gap-3">
-          {/* Time Badge */}
-          <LiveClock />
-
-          {/* Notifications Button */}
-          <Button variant="ghost" size="icon-sm" asChild aria-label="Notifications">
-            <Link to="/notifications" className="relative">
-              <Bell className="size-4" />
-              {unreadCount > 0 && (
-                <span className="absolute right-1 top-1 grid size-4 place-items-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
-                  {unreadCount}
-                </span>
-              )}
-            </Link>
-          </Button>
+          {/* Real-time Notifications Bell */}
+          <NotificationBell {...(role ? { role } : {})} />
 
           {/* User Profile Menu */}
           <DropdownMenu>
