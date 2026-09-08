@@ -223,8 +223,6 @@ function AdminViolationsPage() {
     );
   }, [reports, searchQuery]);
 
-  const hasCriticalIncidents = (stats?.critical ?? 0) > 0 || (stats?.violenceReports ?? 0) > 0;
-
   return (
     <RoleGuard allowedRoles={["admin"]}>
       <div className="space-y-6">
@@ -251,35 +249,6 @@ function AdminViolationsPage() {
             </div>
           }
         />
-
-        {/* Critical & Violence Incidents Institutional Alert Section */}
-        {hasCriticalIncidents && (
-          <div className="rounded-2xl border-2 border-red-500/90 bg-red-50/90 dark:bg-red-950/40 p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs">
-            <div className="flex items-center gap-3.5">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-red-600 text-white shadow-xs">
-                <ShieldAlert className="size-6" />
-              </span>
-              <div>
-                <h3 className="text-sm font-bold text-red-900 dark:text-red-300 uppercase tracking-wide">
-                  🚨 CRITICAL & SUSPECTED VIOLENCE REPORTS — INSTITUTIONAL MONITORING
-                </h3>
-                <p className="text-xs text-red-700 dark:text-red-400 mt-0.5">
-                  Institutional compliance alert: <strong>{stats?.critical}</strong> critical incident(s) and{" "}
-                  <strong>{stats?.violenceReports}</strong> suspected violence report(s) active across department HOD queues.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
-              <Button
-                size="sm"
-                className="bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white font-bold rounded-xl text-xs flex-1 md:flex-initial shadow-sm transition-all cursor-pointer"
-                onClick={handleInspectCritical}
-              >
-                Inspect Critical Incidents
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* 8-Metric KPI Grid */}
         <div className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-4 lg:grid-cols-8">
