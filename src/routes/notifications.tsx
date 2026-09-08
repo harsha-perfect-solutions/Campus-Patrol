@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   AlertTriangle,
@@ -8,20 +8,15 @@ import {
   Clock,
   Info,
   Loader2,
+  Sparkles,
 } from "lucide-react";
-import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
-import {
-  getMyNotificationsApi,
-  markNotificationReadApi,
-  markAllNotificationsReadApi,
-} from "@/lib/api/notifications.server";
+import { useRealtimeNotifications } from "@/hooks/use-realtime-notifications";
 import type { DBNotification } from "@/lib/db/notifications.server";
-
 import { RoleGuard } from "@/components/role-guard";
 
 export const Route = createFileRoute("/notifications")({
@@ -159,35 +154,19 @@ function timeAgo(isoDate: string): string {
 export function NotificationsPage() {
   const { role } = useAuth();
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<DBNotification[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
+  const [sendingTest, setSendingTest] = useState(false);
 
-  // ── Load notifications from server ────────────────────────────────────
-
-  const loadNotifications = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await getMyNotificationsApi();
-      if (res.success) {
-        setNotifications(res.notifications);
-      } else {
-        toast.error("Failed to load notifications.");
-      }
-    } catch (err: any) {
-      toast.error("Failed to load notifications.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]);
+  const {
+    unreadCount,
+    notifications,
+    loading,
+    markRead,
+    markAllRead,
+    sendTestNotification,
+  } = useRealtimeNotifications();
 
   // ── Derived ───────────────────────────────────────────────────────────
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const filtered =
     filter === "unread"
@@ -196,44 +175,22 @@ export function NotificationsPage() {
       ? notifications.filter((n) => n.read)
       : notifications;
 
-  // ── Mark single read ──────────────────────────────────────────────────
-
-  const handleMarkRead = async (notif: DBNotification) => {
-    if (notif.read) return;
-    try {
-      const res = await markNotificationReadApi({ data: { notifId: notif.id } });
-      if (res.success) {
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n)),
-        );
-      }
-    } catch {
-      toast.error("Failed to mark notification as read.");
-    }
-  };
-
-  // ── Mark all read ─────────────────────────────────────────────────────
-
-  const handleMarkAllRead = async () => {
-    try {
-      const res = await markAllNotificationsReadApi();
-      if (res.success) {
-        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-        toast.success("All notifications marked as read.");
-      }
-    } catch {
-      toast.error("Failed to mark all as read.");
-    }
-  };
-
   // ── Click notification ────────────────────────────────────────────────
 
   const handleClick = async (n: DBNotification) => {
-    await handleMarkRead(n);
+    if (!n.read) {
+      await markRead(n.id);
+    }
     const route = resolveRoute(n, role ?? undefined);
     if (route !== "#") {
       navigate({ to: route as any });
     }
+  };
+
+  const handleSendTest = async () => {
+    setSendingTest(true);
+    await sendTestNotification();
+    setSendingTest(false);
   };
 
   // ── Render ────────────────────────────────────────────────────────────
@@ -249,17 +206,29 @@ export function NotificationsPage() {
         }
         breadcrumb={[{ label: "Home", to: "/" }, { label: "System" }, { label: "Notifications" }]}
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleMarkAllRead}
-            disabled={unreadCount === 0 || loading}
-            id="mark-all-read-btn"
-            className="w-full sm:w-auto text-xs"
-          >
-            <CheckCheck className="size-3.5 mr-1" />
-            Mark all as read
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSendTest}
+              disabled={sendingTest}
+              className="text-xs h-8 gap-1.5 cursor-pointer"
+            >
+              <Sparkles className="size-3.5 text-primary" />
+              {sendingTest ? "Sending..." : "Send test alert"}
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => markAllRead()}
+              disabled={unreadCount === 0 || loading}
+              id="mark-all-read-btn"
+              className="text-xs h-8 gap-1.5 cursor-pointer"
+            >
+              <CheckCheck className="size-3.5" />
+              Mark all as read
+            </Button>
+          </div>
         }
       />
 
@@ -270,15 +239,15 @@ export function NotificationsPage() {
             key={f}
             onClick={() => setFilter(f)}
             className={cn(
-              "rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-colors flex-1 sm:flex-initial text-center",
+              "rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-colors flex-1 sm:flex-initial text-center cursor-pointer",
               filter === f
-                ? "bg-primary text-primary-foreground"
+                ? "bg-primary text-primary-foreground font-bold shadow-2xs"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
             {f}
             {f === "unread" && unreadCount > 0 && (
-              <span className="ml-1.5 rounded-full bg-destructive px-1 py-0.5 text-[9px] font-bold text-destructive-foreground">
+              <span className="ml-1.5 rounded-full bg-destructive px-1.5 py-0.5 text-[9px] font-bold text-destructive-foreground">
                 {unreadCount}
               </span>
             )}
@@ -293,13 +262,27 @@ export function NotificationsPage() {
             <Loader2 className="size-6 animate-spin text-primary" />
           </div>
         ) : filtered.length === 0 ? (
-          <EmptyState
-            icon={Bell}
-            title={filter === "unread" ? "No unread notifications" : "You're all caught up"}
-            description="New case updates, gate pass decisions, and violation alerts will appear here."
-          />
+          <div className="py-12 px-4">
+            <EmptyState
+              icon={Bell}
+              title={filter === "unread" ? "No unread notifications" : "You're all caught up"}
+              description="New case updates, gate pass decisions, and violation alerts will appear here."
+            />
+            <div className="mt-4 flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs gap-1.5"
+                onClick={handleSendTest}
+                disabled={sendingTest}
+              >
+                <Sparkles className="size-3.5 text-primary" />
+                Send a live test notification
+              </Button>
+            </div>
+          </div>
         ) : (
-          <ul className="divide-y divide-divider" role="list" aria-label="Notifications">
+          <ul className="divide-y divide-border/60" role="list" aria-label="Notifications">
             {filtered.map((n) => {
               const { cls, Icon, label } = toneConfig(n.tone);
               const route = resolveRoute(n, role ?? undefined);
@@ -319,14 +302,18 @@ export function NotificationsPage() {
                   }}
                 >
                   {/* Tone Icon */}
-                  <span className={cn("mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl", cls)}>
+                  <span className={cn("mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl shadow-2xs", cls)}>
                     <Icon className="size-[18px]" aria-hidden />
                   </span>
 
                   {/* Content */}
                   <div className="min-w-0 flex-1">
-                    <p className={cn("text-xs text-foreground", !n.read && "font-semibold")}>{n.title}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{n.detail}</p>
+                    <p className={cn("text-xs text-foreground leading-snug", !n.read && "font-semibold")}>
+                      {n.title}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                      {n.detail}
+                    </p>
                     <p className="mt-1 text-[10px] text-subtle-foreground font-medium">
                       {label} • {timeAgo(n.createdAt)}
                     </p>
@@ -340,11 +327,11 @@ export function NotificationsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-xs h-7"
+                          className="text-xs h-7 cursor-pointer"
                           id={`mark-read-${n.id}`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleMarkRead(n);
+                            markRead(n.id);
                           }}
                         >
                           Mark read
@@ -361,3 +348,4 @@ export function NotificationsPage() {
     </>
   );
 }
+

@@ -67,6 +67,80 @@ export type CreateNotificationInput = {
   recipientId?: string | null;
 };
 
+export type UserRecipientContext = {
+  userId: string;
+  role?: string;
+  department?: string | null;
+  staffCode?: string | null;
+  studentCode?: string | null;
+  fullName?: string | null;
+  email?: string | null;
+};
+
+// ─── Schema Auto-Initialization ─────────────────────────────────────────────
+
+let schemaEnsured = false;
+
+export async function ensureNotificationsSchema(): Promise<void> {
+  if (schemaEnsured) return;
+  try {
+    // 1. Ensure app_role enum contains 'security'
+    await db.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_enum JOIN pg_type ON pg_enum.enumtypid = pg_type.oid 
+          WHERE pg_type.typname = 'app_role' AND pg_enum.enumlabel = 'security'
+        ) THEN
+          ALTER TYPE app_role ADD VALUE 'security';
+        END IF;
+      END$$;
+    `);
+
+    // 2. Ensure profiles columns
+    await db.query(`
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS password_hash TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT TRUE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'Active';
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT '';
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS assigned_post TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS role TEXT;
+    `);
+
+    // 3. Ensure user_sessions table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS user_sessions (
+        session_id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        role TEXT NOT NULL,
+        email TEXT NOT NULL,
+        department TEXT NOT NULL DEFAULT 'GENERAL',
+        staff_code TEXT,
+        student_code TEXT,
+        full_name TEXT NOT NULL,
+        assigned_post TEXT,
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+      CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);
+      CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
+    `);
+
+    // 4. Ensure notifications indices
+    await db.query(`
+      CREATE INDEX IF NOT EXISTS idx_notifications_recipient_user_id ON notifications(recipient_user_id);
+      CREATE INDEX IF NOT EXISTS idx_notifications_recipient_id ON notifications(recipient_id);
+      CREATE INDEX IF NOT EXISTS idx_notifications_recipient_role ON notifications(recipient_role);
+      CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
+      CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
+    `);
+
+    schemaEnsured = true;
+  } catch (err) {
+    console.warn("[Notifications DB Warning] Schema initialization notice:", err);
+  }
+}
+
 // ─── Recipient Lookup Helpers ──────────────────────────────────────────────
 
 /**
@@ -77,6 +151,7 @@ export type CreateNotificationInput = {
 export async function findHodUserIdForStudentCode(
   studentCode: string,
 ): Promise<string | null> {
+  await ensureNotificationsSchema();
   const cleanCode = studentCode.trim().toUpperCase();
 
   try {
@@ -111,6 +186,7 @@ export async function findHodUserIdForStudentCode(
 export async function findHodUserIdForDepartment(
   department: string,
 ): Promise<string | null> {
+  await ensureNotificationsSchema();
   const cleanDept = department.trim().toUpperCase();
 
   try {
@@ -125,9 +201,9 @@ export async function findHodUserIdForDepartment(
     );
     if (res.rows[0]?.id) return res.rows[0].id;
 
-    // Fallback: search profile directly
+    // Fallback: search profile directly by staff code or email
     const fallback = await db.query<{ id: string }>(
-      `SELECT id FROM profiles WHERE UPPER(department) = $1 AND role = 'hod' LIMIT 1`,
+      `SELECT id FROM profiles WHERE UPPER(department) = $1 AND (staff_code LIKE 'HOD%' OR email LIKE 'hod%') LIMIT 1`,
       [cleanDept]
     );
     return fallback.rows[0]?.id ?? null;
@@ -144,6 +220,7 @@ export async function findHodUserIdForDepartment(
  * Server-side: Finds a faculty user ID by name or email.
  */
 export async function findFacultyUserIdByName(facultyName: string): Promise<string | null> {
+  await ensureNotificationsSchema();
   const clean = facultyName.trim();
   if (!clean) return null;
 
@@ -166,6 +243,7 @@ export async function findFacultyUserIdByName(facultyName: string): Promise<stri
 export async function findStudentUserIdByCode(
   studentCode: string,
 ): Promise<string> {
+  await ensureNotificationsSchema();
   const cleanCode = studentCode.trim().toUpperCase();
 
   try {
@@ -187,6 +265,7 @@ export async function findStudentUserIdByCode(
  * Server-side: Retrieves all active Admin user profile IDs.
  */
 export async function findAllAdminUserIds(): Promise<string[]> {
+  await ensureNotificationsSchema();
   try {
     const res = await db.query<{ id: string }>(
       `SELECT p.id 
@@ -198,7 +277,7 @@ export async function findAllAdminUserIds(): Promise<string[]> {
       return res.rows.map((r: any) => r.id);
     }
     const fallbackRes = await db.query<{ id: string }>(
-      `SELECT id FROM profiles WHERE role = 'admin' OR staff_code = 'ADM-001'`
+      `SELECT id FROM profiles WHERE staff_code LIKE 'ADM%' OR email LIKE 'admin%'`
     );
     return fallbackRes.rows.map((r: any) => r.id);
   } catch (err) {
@@ -211,6 +290,7 @@ export async function findAllAdminUserIds(): Promise<string[]> {
  * Server-side: Retrieves all active Security officer profile IDs.
  */
 export async function findAllSecurityUserIds(): Promise<string[]> {
+  await ensureNotificationsSchema();
   try {
     const res = await db.query<{ id: string }>(
       `SELECT p.id 
@@ -222,7 +302,7 @@ export async function findAllSecurityUserIds(): Promise<string[]> {
       return res.rows.map((r: any) => r.id);
     }
     const fallbackRes = await db.query<{ id: string }>(
-      `SELECT id FROM profiles WHERE role = 'security' OR staff_code LIKE 'SEC-%'`
+      `SELECT id FROM profiles WHERE staff_code LIKE 'SEC%' OR email LIKE 'security%'`
     );
     return fallbackRes.rows.map((r: any) => r.id);
   } catch (err) {
@@ -243,6 +323,7 @@ const isUuid = (str: string) =>
 export async function createNotificationServer(
   input: CreateNotificationInput,
 ): Promise<void> {
+  await ensureNotificationsSchema();
   const {
     recipientUserId,
     type,
@@ -256,15 +337,20 @@ export async function createNotificationServer(
     recipientId = null,
   } = input;
 
-  if (!recipientUserId && !recipientId) {
+  const recRole = recipientRole || "user";
+  const recId =
+    recipientId ||
+    recipientUserId ||
+    (recRole !== "user" ? recRole.toUpperCase() : null);
+  const effectiveUserId = recipientUserId || recId;
+
+  if (!effectiveUserId && !recId) {
     console.warn(
       "[Notification] createNotificationServer called without recipientUserId or recipientId — skipping",
     );
     return;
   }
 
-  const effectiveUserId = recipientUserId || recipientId;
-  const recId = recipientId || recipientUserId;
   const uuidUserId = recipientUserId && isUuid(recipientUserId) ? recipientUserId : null;
 
   // Idempotency: Prevent duplicate notifications for the same recipient, type, entity, and event title
@@ -302,7 +388,7 @@ export async function createNotificationServer(
     RETURNING id::text;`,
     [
       uuidUserId,
-      recipientRole,
+      recRole,
       recId,
       department,
       type,
@@ -322,7 +408,7 @@ export async function createNotificationServer(
     publishNotificationRealtime({
       id: newNotifId,
       recipientUserId: uuidUserId,
-      recipientRole: recipientRole ?? "user",
+      recipientRole: recRole,
       recipientId: recId ?? null,
       department: department ?? null,
       type,
@@ -341,17 +427,125 @@ export async function createNotificationServer(
   }
 }
 
+// ─── Recipient Query SQL Builder ───────────────────────────────────────────
+
+function buildRecipientMatchCondition(params: {
+  userId: string;
+  role?: string;
+  department?: string | null;
+  staffCode?: string | null;
+  studentCode?: string | null;
+  fullName?: string | null;
+  email?: string | null;
+}): { sql: string; values: any[] } {
+  const cleanUserId = (params.userId || "").trim();
+  const cleanRole = (params.role || "").trim().toLowerCase();
+  const cleanDept = (params.department || "").trim().toUpperCase();
+  const cleanStudentCode = (params.studentCode || "").trim().toUpperCase();
+  const cleanStaffCode = (params.staffCode || "").trim().toUpperCase();
+  const cleanFullName = (params.fullName || "").trim();
+  const cleanEmail = (params.email || "").trim().toLowerCase();
+
+  const clauses: string[] = [];
+  const values: any[] = [];
+  let idx = 1;
+
+  // 1. Direct user ID match (UUID or string ID)
+  if (cleanUserId) {
+    clauses.push(`(recipient_user_id::text = $${idx} OR recipient_id = $${idx})`);
+    values.push(cleanUserId);
+    idx++;
+  }
+
+  // 2. Student code match
+  if (cleanStudentCode) {
+    clauses.push(`UPPER(recipient_id) = UPPER($${idx})`);
+    values.push(cleanStudentCode);
+    idx++;
+  }
+
+  // 3. Staff code match
+  if (cleanStaffCode) {
+    clauses.push(`UPPER(recipient_id) = UPPER($${idx})`);
+    values.push(cleanStaffCode);
+    idx++;
+  }
+
+  // 4. Faculty / Reporter name match
+  if (cleanFullName) {
+    clauses.push(`LOWER(recipient_id) = LOWER($${idx})`);
+    values.push(cleanFullName);
+    idx++;
+  }
+
+  // 5. Email match
+  if (cleanEmail) {
+    clauses.push(`LOWER(recipient_id) = LOWER($${idx})`);
+    values.push(cleanEmail);
+    idx++;
+  }
+
+  // 6. Role-based matching
+  if (cleanRole === "admin") {
+    clauses.push(`(recipient_role = 'admin' OR UPPER(recipient_id) = 'ADMIN')`);
+  } else if (cleanRole === "security") {
+    clauses.push(`(recipient_role = 'security' OR UPPER(recipient_id) = 'SECURITY')`);
+  } else if (cleanRole === "hod") {
+    if (cleanDept) {
+      clauses.push(`(recipient_role = 'hod' AND (department IS NULL OR UPPER(department) = UPPER($${idx})))`);
+      values.push(cleanDept);
+      idx++;
+    } else {
+      clauses.push(`recipient_role = 'hod'`);
+    }
+  }
+
+  const sql = clauses.length > 0 ? `(${clauses.join(" OR ")})` : "1=0";
+  return { sql, values };
+}
+
+function resolveContext(
+  userArg: string | UserRecipientContext,
+  roleArg?: string,
+  studentCodeArg?: string | null,
+  staffCodeArg?: string | null,
+  departmentArg?: string | null,
+  fullNameArg?: string | null,
+  emailArg?: string | null,
+): UserRecipientContext {
+  if (typeof userArg === "object" && userArg !== null) {
+    return userArg;
+  }
+  return {
+    userId: userArg,
+    role: roleArg,
+    studentCode: studentCodeArg,
+    staffCode: staffCodeArg,
+    department: departmentArg,
+    fullName: fullNameArg,
+    email: emailArg,
+  };
+}
+
 // ─── Query Functions ───────────────────────────────────────────────────────
 
 /**
  * Returns all notifications for a specific user.
- * Strictly filtered by recipient_user_id / recipient_id — never returns other users' notifications.
+ * Strictly filtered by recipient identity and role scope.
  */
 export async function getNotificationsForUser(
-  userId: string,
+  userArg: string | UserRecipientContext,
   userRole?: string,
   studentCode?: string | null,
+  staffCode?: string | null,
+  department?: string | null,
+  fullName?: string | null,
+  email?: string | null,
 ): Promise<DBNotification[]> {
+  await ensureNotificationsSchema();
+  const ctx = resolveContext(userArg, userRole, studentCode, staffCode, department, fullName, email);
+  const { sql, values } = buildRecipientMatchCondition(ctx);
+
   const query = `
     SELECT
        id::text,
@@ -369,13 +563,10 @@ export async function getNotificationsForUser(
        related_report_id AS "relatedReportId",
        created_at::text AS "createdAt"
      FROM notifications
-     WHERE recipient_user_id::text = $1 
-        OR recipient_id = $1
-        ${studentCode ? `OR UPPER(recipient_id) = UPPER($2)` : ""}
+     WHERE ${sql}
      ORDER BY created_at DESC
      LIMIT 100
   `;
-  const values = studentCode ? [userId, studentCode] : [userId];
   const res = await db.query<DBNotification>(query, values);
   return res.rows;
 }
@@ -384,16 +575,22 @@ export async function getNotificationsForUser(
  * Returns count of unread notifications for a specific user.
  */
 export async function getUnreadCountForUser(
-  userId: string,
+  userArg: string | UserRecipientContext,
   studentCode?: string | null,
+  staffCode?: string | null,
+  department?: string | null,
+  fullName?: string | null,
+  email?: string | null,
 ): Promise<number> {
+  await ensureNotificationsSchema();
+  const ctx = resolveContext(userArg, undefined, studentCode, staffCode, department, fullName, email);
+  const { sql, values } = buildRecipientMatchCondition(ctx);
+
   const query = `
     SELECT COUNT(*)::text AS count 
     FROM notifications 
-    WHERE (recipient_user_id::text = $1 OR recipient_id = $1 ${studentCode ? `OR UPPER(recipient_id) = UPPER($2)` : ""})
-      AND read = false
+    WHERE ${sql} AND read = false
   `;
-  const values = studentCode ? [userId, studentCode] : [userId];
   const res = await db.query<{ count: string }>(query, values);
   return parseInt(res.rows[0]?.count ?? "0", 10);
 }
@@ -404,18 +601,25 @@ export async function getUnreadCountForUser(
  */
 export async function markNotificationRead(
   notifId: string,
-  userId: string,
+  userArg: string | UserRecipientContext,
   studentCode?: string | null,
+  staffCode?: string | null,
+  department?: string | null,
+  fullName?: string | null,
+  email?: string | null,
 ): Promise<boolean> {
+  await ensureNotificationsSchema();
+  const ctx = resolveContext(userArg, undefined, studentCode, staffCode, department, fullName, email);
+  const { sql, values } = buildRecipientMatchCondition(ctx);
+
   const query = `
     UPDATE notifications
     SET read = true
-    WHERE id = $1::uuid 
-      AND (recipient_user_id::text = $2 OR recipient_id = $2 ${studentCode ? `OR UPPER(recipient_id) = UPPER($3)` : ""})
+    WHERE id::text = $${values.length + 1}
+      AND ${sql}
     RETURNING id
   `;
-  const values = studentCode ? [notifId, userId, studentCode] : [notifId, userId];
-  const res = await db.query(query, values);
+  const res = await db.query(query, [...values, notifId]);
   return (res.rowCount ?? 0) > 0;
 }
 
@@ -424,17 +628,24 @@ export async function markNotificationRead(
  * Strictly scoped to the authenticated user.
  */
 export async function markAllNotificationsRead(
-  userId: string,
+  userArg: string | UserRecipientContext,
   studentCode?: string | null,
+  staffCode?: string | null,
+  department?: string | null,
+  fullName?: string | null,
+  email?: string | null,
 ): Promise<number> {
+  await ensureNotificationsSchema();
+  const ctx = resolveContext(userArg, undefined, studentCode, staffCode, department, fullName, email);
+  const { sql, values } = buildRecipientMatchCondition(ctx);
+
   const query = `
     UPDATE notifications
     SET read = true
-    WHERE (recipient_user_id::text = $1 OR recipient_id = $1 ${studentCode ? `OR UPPER(recipient_id) = UPPER($2)` : ""})
-      AND read = false
+    WHERE ${sql} AND read = false
   `;
-  const values = studentCode ? [userId, studentCode] : [userId];
   const res = await db.query(query, values);
   return res.rowCount ?? 0;
 }
+
 
