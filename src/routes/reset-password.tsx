@@ -141,46 +141,46 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-950 px-4 py-12 text-slate-100">
+    <main className="min-h-screen flex items-center justify-center bg-white px-4 py-12 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-lg">
-            <KeyRound className="size-7 text-indigo-400" />
+          <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm">
+            <KeyRound className="size-7 text-indigo-600" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             Account Password Reset
           </h1>
-          <p className="text-xs text-slate-400 max-w-xs mx-auto">
+          <p className="text-xs text-slate-500 max-w-xs mx-auto">
             Secure 3-step password recovery via registered college email OTP verification.
           </p>
         </div>
 
         {/* Stepper Progress */}
-        <div className="flex items-center justify-between px-3 sm:px-6 py-2 rounded-xl border border-slate-800 bg-slate-900/60 text-xs">
-          <span className={`font-semibold flex items-center gap-1 ${step >= 1 ? "text-indigo-400" : "text-slate-600"}`}>
+        <div className="flex items-center justify-between px-3 sm:px-6 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs shadow-sm">
+          <span className={`font-semibold flex items-center gap-1 ${step >= 1 ? "text-indigo-600 font-bold" : "text-slate-400"}`}>
             1. Email
           </span>
-          <span className="text-slate-700">&gt;</span>
-          <span className={`font-semibold flex items-center gap-1 ${step >= 2 ? "text-indigo-400" : "text-slate-600"}`}>
+          <span className="text-slate-300">&gt;</span>
+          <span className={`font-semibold flex items-center gap-1 ${step >= 2 ? "text-indigo-600 font-bold" : "text-slate-400"}`}>
             2. OTP Code
           </span>
-          <span className="text-slate-700">&gt;</span>
-          <span className={`font-semibold flex items-center gap-1 ${step >= 3 ? "text-indigo-400" : "text-slate-600"}`}>
+          <span className="text-slate-300">&gt;</span>
+          <span className={`font-semibold flex items-center gap-1 ${step >= 3 ? "text-indigo-600 font-bold" : "text-slate-400"}`}>
             3. New Password
           </span>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-4 sm:p-6 shadow-2xl backdrop-blur-xl">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-7 shadow-xl shadow-slate-100/80">
           {errorMessage && (
-            <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-300">
-              <AlertTriangle className="size-4 shrink-0 text-red-400 mt-0.5" />
+            <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
+              <AlertTriangle className="size-4 shrink-0 text-red-500 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {infoMessage && (
-            <div className="mb-4 flex items-start gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 p-3.5 text-xs text-indigo-300">
-              <CheckCircle2 className="size-4 shrink-0 text-indigo-400 mt-0.5" />
+            <div className="mb-4 flex items-start gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-3.5 text-xs text-indigo-700">
+              <CheckCircle2 className="size-4 shrink-0 text-indigo-600 mt-0.5" />
               <span>{infoMessage}</span>
             </div>
           )}
@@ -189,7 +189,7 @@ function ForgotPasswordPage() {
           {step === 1 && (
             <form onSubmit={handleRequestOtp} className="space-y-4">
               <div>
-                <Label htmlFor="req-email" className="text-xs font-semibold text-slate-300">
+                <Label htmlFor="req-email" className="text-xs font-semibold text-slate-700">
                   Registered College Email / Roll Number
                 </Label>
                 <div className="relative mt-1.5">
@@ -199,19 +199,19 @@ function ForgotPasswordPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="e.g. 23CSE1012@college.edu.in"
-                    className="h-11 rounded-xl bg-slate-950 border-slate-800 text-xs text-slate-100 placeholder:text-slate-600 focus:border-indigo-500"
+                    className="h-11 rounded-xl bg-white border-slate-300 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 shadow-sm"
                   />
-                  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-slate-600" />
+                  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
                 </div>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  For students, enter your official college email (<code className="text-indigo-300">23CSE1012@college.edu.in</code>).
+                <p className="mt-1.5 text-[11px] text-slate-500">
+                  For students, enter your official college email (<code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded font-mono">23CSE1012@college.edu.in</code>).
                 </p>
               </div>
 
               <Button
                 type="submit"
                 disabled={busy}
-                className="w-full h-11 rounded-xl bg-indigo-600 font-bold text-white hover:bg-indigo-500 shadow-lg mt-2"
+                className="w-full h-11 rounded-xl bg-indigo-600 font-bold text-white hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all mt-2"
               >
                 {busy ? "Sending Security OTP..." : "Send Verification OTP"}
                 {!busy && <ArrowRight className="size-4 ml-1.5" />}
@@ -223,7 +223,7 @@ function ForgotPasswordPage() {
           {step === 2 && (
             <form onSubmit={handleVerifyOtp} className="space-y-4">
               <div>
-                <Label htmlFor="otp-input" className="text-xs font-semibold text-slate-300">
+                <Label htmlFor="otp-input" className="text-xs font-semibold text-slate-700">
                   Enter 6-Digit Verification OTP
                 </Label>
                 <Input
@@ -233,10 +233,10 @@ function ForgotPasswordPage() {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                   placeholder="e.g. 849201"
-                  className="mt-1.5 h-12 text-center font-mono text-lg tracking-widest rounded-xl bg-slate-950 border-slate-800 text-indigo-400 placeholder:text-slate-700 focus:border-indigo-500"
+                  className="mt-1.5 h-12 text-center font-mono text-lg font-bold tracking-widest rounded-xl bg-white border-slate-300 text-indigo-700 placeholder:text-slate-300 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 shadow-sm"
                 />
-                <p className="mt-1.5 text-[11px] text-slate-400 text-center">
-                  Sent to <strong className="text-slate-200">{email}</strong>. Code valid for 10 minutes.
+                <p className="mt-1.5 text-[11px] text-slate-500 text-center">
+                  Sent to <strong className="text-slate-800">{email}</strong>. Code valid for 10 minutes.
                 </p>
               </div>
 
@@ -245,14 +245,14 @@ function ForgotPasswordPage() {
                   type="button"
                   variant="outline"
                   onClick={() => setStep(1)}
-                  className="flex-1 h-11 rounded-xl border-slate-800 text-xs font-semibold text-slate-300 hover:bg-slate-800"
+                  className="flex-1 h-11 rounded-xl border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                 >
                   <ArrowLeft className="size-3.5 mr-1" /> Change Email
                 </Button>
                 <Button
                   type="submit"
                   disabled={busy || otp.length !== 6}
-                  className="flex-1 h-11 rounded-xl bg-indigo-600 font-bold text-white hover:bg-indigo-500"
+                  className="flex-1 h-11 rounded-xl bg-indigo-600 font-bold text-white hover:bg-indigo-700 shadow-md shadow-indigo-200"
                 >
                   {busy ? "Verifying..." : "Verify OTP Code"}
                 </Button>
@@ -264,41 +264,41 @@ function ForgotPasswordPage() {
           {step === 3 && (
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div>
-                <Label className="text-xs font-semibold text-slate-300">New Password</Label>
+                <Label className="text-xs font-semibold text-slate-700">New Password</Label>
                 <Input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Enter new password (min 8 chars)"
-                  className="mt-1.5 h-11 rounded-xl bg-slate-950 border-slate-800 text-xs text-slate-100 placeholder:text-slate-600 focus:border-indigo-500"
+                  className="mt-1.5 h-11 rounded-xl bg-white border-slate-300 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 shadow-sm"
                 />
               </div>
 
               <div>
-                <Label className="text-xs font-semibold text-slate-300">Confirm New Password</Label>
+                <Label className="text-xs font-semibold text-slate-700">Confirm New Password</Label>
                 <Input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-enter new password"
-                  className="mt-1.5 h-11 rounded-xl bg-slate-950 border-slate-800 text-xs text-slate-100 placeholder:text-slate-600 focus:border-indigo-500"
+                  className="mt-1.5 h-11 rounded-xl bg-white border-slate-300 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 shadow-sm"
                 />
               </div>
 
               <Button
                 type="submit"
                 disabled={busy}
-                className="w-full h-11 rounded-xl bg-emerald-600 font-bold text-white hover:bg-emerald-500 shadow-lg mt-2"
+                className="w-full h-11 rounded-xl bg-emerald-600 font-bold text-white hover:bg-emerald-700 shadow-md shadow-emerald-200 mt-2"
               >
                 {busy ? "Resetting Password..." : "Update Password & Return to Login"}
               </Button>
             </form>
           )}
 
-          <div className="mt-6 border-t border-slate-800 pt-4 text-center">
+          <div className="mt-6 border-t border-slate-100 pt-4 text-center">
             <Link
               to="/auth"
-              className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
             >
               <ArrowLeft className="size-3.5" /> Back to Sign In
             </Link>

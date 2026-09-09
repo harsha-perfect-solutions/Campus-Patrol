@@ -1,11 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -13,14 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Sheet,
   SheetContent,
@@ -34,7 +24,6 @@ import {
   getMyViolationReportsApi,
   getMyViolationStatsApi,
   getMyViolationTimelineApi,
-  submitViolationExplanationApi,
 } from "@/lib/api/student.server";
 import type { DBViolationReport } from "@/lib/db/violations.server";
 import type {
@@ -55,13 +44,12 @@ import {
   MapPin,
   XCircle,
   Eye,
-  Send,
   History,
   Lock,
   MessageSquare,
   FileText,
   AlertCircle,
-  FileCheck,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -89,12 +77,6 @@ function StudentViolationsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [timeline, setTimeline] = useState<StudentTimelineEvent[]>([]);
   const [timelineLoading, setTimelineLoading] = useState(false);
-
-  // Explanation Submission Form State
-  const [explanationText, setExplanationText] = useState("");
-  const [supportingNote, setSupportingNote] = useState("");
-  const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   async function loadData() {
     setLoading(true);
@@ -146,8 +128,6 @@ function StudentViolationsPage() {
     setSelectedReport(report);
     setDrawerOpen(true);
     setTimelineLoading(true);
-    setExplanationText("");
-    setSupportingNote("");
     try {
       const res = await getMyViolationTimelineApi({ data: { reportId: report.id } });
       if (res.success) {
@@ -157,37 +137,6 @@ function StudentViolationsPage() {
       console.error("Error loading incident timeline:", err);
     } finally {
       setTimelineLoading(false);
-    }
-  }
-
-  async function handleSubmitExplanation() {
-    if (!selectedReport || explanationText.trim().length < 10) {
-      toast.error("Please provide an explanation of at least 10 characters.");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const res = await submitViolationExplanationApi({
-        data: {
-          reportId: selectedReport.id,
-          explanation: explanationText.trim(),
-          evidence: supportingNote.trim() || undefined,
-        },
-      });
-      if (res.success && res.report) {
-        toast.success("Explanation Submitted", {
-          description: `Your explanation for Incident #${selectedReport.id} has been submitted to your Counselor for review.`,
-        });
-        setConfirmSubmitOpen(false);
-        setSelectedReport(res.report);
-        loadData();
-      } else {
-        toast.error(res.error || "Failed to submit explanation.");
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to submit explanation.");
-    } finally {
-      setSubmitting(false);
     }
   }
 
@@ -212,7 +161,7 @@ function StudentViolationsPage() {
       <div className="space-y-6">
         <PageHeader
           title="My Incidents & Disciplinary Records"
-          description="View reported attendance/movement observations, submit official explanations, and track case resolution"
+          description="View reported attendance/movement observations, disciplinary records, and track case resolution"
           breadcrumb={[
             { label: "Student Portal", to: "/student/dashboard" },
             { label: "My Incidents" },
@@ -231,16 +180,18 @@ function StudentViolationsPage() {
                   ⚠️ EXPLANATION STATEMENT REQUIRED
                 </h3>
                 <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
-                  You have <strong>{awaitingResponseCount}</strong> incident report(s) awaiting your official response statement. Please submit your explanation before the deadline.
+                  You have <strong>{awaitingResponseCount}</strong> incident report(s) awaiting your official response statement.
                 </p>
               </div>
             </div>
             <Button
+              asChild
               size="sm"
               className="bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shrink-0 text-xs w-full sm:w-auto"
-              onClick={() => setSelectedQueue("AWAITING_RESPONSE")}
             >
-              Respond Now
+              <Link to="/student/explanations">
+                Go to Submit Explanation <ArrowRight className="size-3.5 ml-1" />
+              </Link>
             </Button>
           </div>
         )}
@@ -463,15 +414,12 @@ function StudentViolationsPage() {
                         <td className="py-3.5 px-4 text-right">
                           <Button
                             size="sm"
-                            variant={isAwaitingResponse ? "default" : "outline"}
-                            className={cn(
-                              "h-8 text-xs font-semibold rounded-xl",
-                              isAwaitingResponse && "bg-amber-600 hover:bg-amber-700 text-white font-bold",
-                            )}
+                            variant="outline"
+                            className="h-8 text-xs font-semibold rounded-xl"
                             onClick={() => handleOpenDetails(report)}
                           >
                             <Eye className="size-3.5 mr-1" />
-                            {isAwaitingResponse ? "Submit Response" : "View Details"}
+                            View Details
                           </Button>
                         </td>
                       </tr>
@@ -606,7 +554,7 @@ function StudentViolationsPage() {
                   </div>
                 </div>
 
-                {/* Section D: Student Explanation Statement (Submission / Display) */}
+                {/* Section D: Student Explanation Statement (Read-Only) */}
                 {selectedReport.explanation ? (
                   <div className="p-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-2">
                     <div className="flex items-center justify-between border-b border-emerald-200 pb-2">
@@ -617,7 +565,7 @@ function StudentViolationsPage() {
                         </span>
                       </div>
                       <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1">
-                        <Lock className="size-3" /> Locked
+                        <Lock className="size-3" /> Read Only
                       </span>
                     </div>
                     <p className="text-xs text-foreground font-medium bg-background p-2.5 rounded-xl border border-emerald-200 mt-1 leading-relaxed">
@@ -637,56 +585,25 @@ function StudentViolationsPage() {
                     This incident has been finalized and closed by the Department HOD.
                   </div>
                 ) : (
-                  <div className="p-4 rounded-2xl border border-amber-200/80 bg-amber-50/40 dark:bg-amber-950/20 space-y-3">
-                    <div className="flex items-center justify-between border-b border-amber-200 pb-2">
+                  <div className="p-4 rounded-2xl border border-border bg-muted/20 space-y-2 text-xs">
+                    <div className="flex items-center justify-between border-b border-divider pb-2">
                       <div className="flex items-center gap-2">
-                        <MessageSquare className="size-4 text-amber-600" />
-                        <span className="text-xs font-bold uppercase text-amber-700 dark:text-amber-300">
-                          SUBMIT YOUR OFFICIAL EXPLANATION
+                        <MessageSquare className="size-4 text-muted-foreground" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                          STUDENT EXPLANATION RECORD
                         </span>
                       </div>
-                      {selectedReport.explanation_deadline && (
-                        <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">
-                          Due: {new Date(selectedReport.explanation_deadline).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                        </span>
-                      )}
+                      <span className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1">
+                        <Lock className="size-3" /> Read Only
+                      </span>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="std-exp" className="text-xs font-medium">
-                        Explanation Statement * (min 10 characters)
-                      </Label>
-                      <Textarea
-                        id="std-exp"
-                        rows={4}
-                        value={explanationText}
-                        onChange={(e) => setExplanationText(e.target.value)}
-                        placeholder="Provide an accurate, honest statement explaining your presence outside class during this scheduled period..."
-                        className="text-xs rounded-xl"
-                      />
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                        <span>Min 10 characters required</span>
-                        <span>{explanationText.length} / 2000 chars</span>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="std-note" className="text-xs font-medium">
-                        Optional Supporting Note / Permission Reference
-                      </Label>
-                      <Input
-                        id="std-note"
-                        value={supportingNote}
-                        onChange={(e) => setSupportingNote(e.target.value)}
-                        placeholder="e.g. Lab permission slip signed by Prof. Sharma"
-                        className="text-xs h-9 rounded-xl"
-                      />
-                    </div>
-                    <Button
-                      className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs h-10 mt-2"
-                      onClick={() => setConfirmSubmitOpen(true)}
-                      disabled={explanationText.trim().length < 10}
-                    >
-                      <Send className="size-3.5 mr-1.5" /> Submit Explanation to Counselor
-                    </Button>
+                    <p className="text-muted-foreground">
+                      No explanation submitted yet for this case. To submit an official 24-hour statement, use the dedicated{" "}
+                      <Link to="/student/explanations" className="text-primary font-bold underline hover:text-primary/80">
+                        Submit Explanation
+                      </Link>{" "}
+                      page.
+                    </p>
                   </div>
                 )}
 
@@ -740,33 +657,6 @@ function StudentViolationsPage() {
             )}
           </SheetContent>
         </Sheet>
-
-        {/* Confirmation Modal */}
-        <Dialog open={confirmSubmitOpen} onOpenChange={setConfirmSubmitOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-primary">
-                <FileCheck className="size-5" /> Confirm Explanation Submission
-              </DialogTitle>
-              <DialogDescription>
-                Once submitted, your explanation statement cannot be edited or overwritten. It will be sent directly to your assigned Counselor for review.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="p-3 bg-muted/30 rounded-xl border border-border text-xs text-foreground font-medium">
-              &ldquo;{explanationText}&rdquo;
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setConfirmSubmitOpen(false)}>Cancel</Button>
-              <Button
-                className="bg-primary font-bold"
-                onClick={handleSubmitExplanation}
-                loading={submitting}
-              >
-                Confirm & Submit
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </RoleGuard>
   );

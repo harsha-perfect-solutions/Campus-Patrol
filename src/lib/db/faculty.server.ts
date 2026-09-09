@@ -157,7 +157,13 @@ function mapRowToFacultyMember(row: any): DBFacultyMember {
 export async function getAdminFacultyList(filters: FacultyFilterOptions = {}): Promise<DBFacultyMember[]> {
   await ensureFacultySchema();
 
-  const conditions: string[] = ["p.staff_code IS NOT NULL AND p.staff_code != ''"];
+  const conditions: string[] = [
+    "p.staff_code IS NOT NULL AND p.staff_code != ''",
+    "p.email NOT ILIKE 'admin%'",
+    "COALESCE(p.role, '') != 'admin'",
+    "NOT EXISTS (SELECT 1 FROM user_roles ur_admin WHERE ur_admin.user_id = p.id AND ur_admin.role = 'admin')",
+    "EXISTS (SELECT 1 FROM user_roles ur_fac WHERE ur_fac.user_id = p.id AND ur_fac.role IN ('faculty', 'hod'))"
+  ];
   const values: any[] = [];
   let idx = 1;
 
@@ -181,11 +187,11 @@ export async function getAdminFacultyList(filters: FacultyFilterOptions = {}): P
   }
 
   const query = `
-    SELECT p.id::text, p.full_name, p.staff_code, p.department, p.email, COALESCE(p.phone, '') AS phone, COALESCE(p.status, 'Active') AS status, p.created_at, p.updated_at
+    SELECT DISTINCT ON (p.email)
+      p.id::text, p.full_name, p.staff_code, p.department, p.email, COALESCE(p.phone, '') AS phone, COALESCE(p.status, 'Active') AS status, p.created_at, p.updated_at
     FROM profiles p
-    LEFT JOIN user_roles ur ON ur.user_id = p.id
     WHERE ${conditions.join(" AND ")}
-    ORDER BY p.department ASC, p.full_name ASC;
+    ORDER BY p.email, p.department ASC, p.full_name ASC;
   `;
 
   const res = await db.query(query, values);

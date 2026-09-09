@@ -807,14 +807,14 @@ export function ReportDetail() {
                 <p className="text-xs text-muted-foreground font-medium">
                   An explanation is required for this movement incident. Please submit your
                   statement and attach any supporting documents (e.g. Lab Slip, Medical Pass) via
-                  the <strong>Submit 24-Hour Explanation</strong> portal section.
+                  the <strong>Submit Explanation</strong> portal section.
                 </p>
                 <Button
                   asChild
                   size="sm"
                   className="rounded-xl text-xs font-semibold bg-primary text-primary-foreground shadow-xs"
                 >
-                  <Link to="/student/explanations">Go to Submit 24-Hour Explanation &rarr;</Link>
+                  <Link to="/student/explanations">Go to Submit Explanation &rarr;</Link>
                 </Button>
               </div>
             ) : (

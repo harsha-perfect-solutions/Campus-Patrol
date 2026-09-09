@@ -197,8 +197,8 @@ function StudentExplanationsPage() {
     <RoleGuard allowedRoles={["student"]}>
       <div className="space-y-6 pt-2">
         <PageHeader
-          title="Submit 24-Hour Explanation"
-          description="Provide your official statement and supporting evidence before the 24-hour response deadline expires."
+          title="Submit Explanation"
+          description="Provide your official statement and supporting evidence before the response deadline expires."
           breadcrumb={[{ label: "Student Portal", to: "/student/dashboard" }, { label: "Submit Explanation" }]}
         />
 

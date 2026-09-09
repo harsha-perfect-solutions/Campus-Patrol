@@ -63,6 +63,8 @@ import {
   Lock,
   FileText,
   Download,
+  ChevronLeft,
+  ChevronRight,
   Image as ImageIcon,
 } from "lucide-react";
 import { downloadEvidenceImage } from "@/lib/download-evidence";
@@ -208,6 +210,10 @@ function AdminViolationsPage() {
     }
   }
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // Client-side search filtering
   const filteredReports = useMemo(() => {
     if (!searchQuery.trim()) return reports;
@@ -222,6 +228,20 @@ function AdminViolationsPage() {
         r.reported_by.toLowerCase().includes(q),
     );
   }, [reports, searchQuery]);
+
+  // Reset page when any filter or queue changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedQueue, departmentFilter, severityFilter, violationTypeFilter, yearFilter, searchQuery]);
+
+  const totalFilteredCount = filteredReports.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredCount / pageSize));
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const paginatedReports = useMemo(() => {
+    const startIdx = (validCurrentPage - 1) * pageSize;
+    return filteredReports.slice(startIdx, startIdx + pageSize);
+  }, [filteredReports, validCurrentPage, pageSize]);
 
   return (
     <RoleGuard allowedRoles={["admin"]}>
@@ -404,7 +424,7 @@ function AdminViolationsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-divider">
-                  {filteredReports.map((report) => {
+                  {paginatedReports.map((report) => {
                     const isCritical =
                       report.severity === "Critical" ||
                       report.violation_type.toLowerCase().includes("violence");
@@ -506,6 +526,103 @@ function AdminViolationsPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {filteredReports.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border px-4 sm:px-6 py-3 bg-muted/20">
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span>
+                  Showing <strong className="text-foreground font-bold">{Math.min((validCurrentPage - 1) * pageSize + 1, totalFilteredCount)}</strong>–<strong className="text-foreground font-bold">{Math.min(validCurrentPage * pageSize, totalFilteredCount)}</strong> of{" "}
+                  <strong className="text-foreground font-bold">{totalFilteredCount}</strong> records
+                </span>
+                <span className="text-border">|</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-medium">Per page:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="h-7 px-2 rounded-lg bg-background border border-border text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 rounded-xl text-xs font-semibold gap-1.5 border-border hover:bg-muted"
+                  disabled={validCurrentPage <= 1}
+                  onClick={() => {
+                    setCurrentPage((p) => Math.max(1, p - 1));
+                    document.getElementById("violations-table-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  <ChevronLeft className="size-3.5" />
+                  <span>Previous</span>
+                </Button>
+
+                {/* Page Numbers */}
+                <div className="hidden sm:flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((p) => p === 1 || p === totalPages || Math.abs(p - validCurrentPage) <= 1)
+                    .reduce((acc: (number | string)[], p, idx, arr) => {
+                      if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) {
+                        acc.push("...");
+                      }
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((p, idx) =>
+                      p === "..." ? (
+                        <span key={`ellipsis-${idx}`} className="px-1.5 text-xs text-muted-foreground">...</span>
+                      ) : (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => {
+                            setCurrentPage(Number(p));
+                            document.getElementById("violations-table-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }}
+                          className={cn(
+                            "size-8 rounded-xl text-xs font-bold transition-all cursor-pointer",
+                            validCurrentPage === p
+                              ? "bg-primary text-primary-foreground shadow-xs"
+                              : "hover:bg-muted text-muted-foreground hover:text-foreground border border-border"
+                          )}
+                        >
+                          {p}
+                        </button>
+                      )
+                    )}
+                </div>
+
+                <span className="sm:hidden text-xs font-semibold text-muted-foreground px-2">
+                  {validCurrentPage} / {totalPages}
+                </span>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 rounded-xl text-xs font-semibold gap-1.5 border-border hover:bg-muted"
+                  disabled={validCurrentPage >= totalPages}
+                  onClick={() => {
+                    setCurrentPage((p) => Math.min(totalPages, p + 1));
+                    document.getElementById("violations-table-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  <span>Next</span>
+                  <ChevronRight className="size-3.5" />
+                </Button>
+              </div>
             </div>
           )}
         </div>

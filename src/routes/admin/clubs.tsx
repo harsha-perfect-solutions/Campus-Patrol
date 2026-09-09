@@ -108,13 +108,20 @@ function AdminClubsPage() {
       const { getAdminFacultyListApi } = await import("@/lib/api/faculty.server");
       const res = await getAdminFacultyListApi();
       if (res.success && res.facultyList) {
-        setFacultyList(res.facultyList.map((f: any) => ({
-          id: f.id,
-          full_name: f.full_name || f.name || "Faculty",
-          email: f.email,
-          staff_code: f.staff_code || "",
-          department: f.department || "",
-        })));
+        const unique = new Map<string, any>();
+        for (const f of res.facultyList) {
+          if (!f.email || f.email.toLowerCase().startsWith("admin")) continue;
+          if (!unique.has(f.id) && !unique.has(f.email.toLowerCase())) {
+            unique.set(f.id, {
+              id: f.id,
+              full_name: f.name || (f as any).full_name || "Faculty Member",
+              email: f.email,
+              staff_code: f.staffCode || (f as any).staff_code || "",
+              department: f.department || "General",
+            });
+          }
+        }
+        setFacultyList(Array.from(unique.values()));
       }
     } catch (e) {
       console.warn("Failed to load faculty list:", e);
@@ -576,17 +583,26 @@ function AdminClubsPage() {
               </p>
 
               <div className="space-y-2">
-                <Label>Select Faculty Member *</Label>
+                <Label className="text-xs font-bold text-foreground">Select Faculty Member *</Label>
                 <Select value={selectedFacultyId} onValueChange={setSelectedFacultyId}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10 rounded-xl">
                     <SelectValue placeholder="-- Select Faculty Member --" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-60">
-                    {facultyList.map((f) => (
-                      <SelectItem key={f.id} value={f.id}>
-                        {f.full_name} ({f.department}) &bull; {f.email}
-                      </SelectItem>
-                    ))}
+                  <SelectContent className="max-h-64 rounded-xl">
+                    {facultyList.length === 0 ? (
+                      <div className="p-3 text-center text-xs text-muted-foreground">
+                        No active faculty members available
+                      </div>
+                    ) : (
+                      facultyList.map((f) => (
+                        <SelectItem key={f.id} value={f.id} className="cursor-pointer py-2 text-xs">
+                          <span className="font-semibold text-foreground">{f.full_name}</span>{" "}
+                          <span className="text-[11px] text-muted-foreground font-mono">
+                            ({f.department}) &bull; {f.email}
+                          </span>
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
