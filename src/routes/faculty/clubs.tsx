@@ -213,15 +213,13 @@ function FacultyClubsPage() {
     try {
       const clubs = await getMyCoordinatedClubsApi();
       setMyClubs(clubs);
-      if (clubs.length > 0 && !selectedClub && clubs[0]) {
-        setSelectedClub(clubs[0]);
-      }
+      setSelectedClub((curr) => curr || clubs[0] || null);
     } catch (err: any) {
       toast.error(err.message || "Failed to load faculty clubs");
     } finally {
       setLoading(false);
     }
-  }, [selectedClub]);
+  }, []);
 
   useEffect(() => {
     initData();

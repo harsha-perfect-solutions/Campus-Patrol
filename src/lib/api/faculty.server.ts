@@ -94,13 +94,15 @@ export const submitViolationReportApi = createServerFn({ method: "POST" })
       !data?.studentName ||
       !data?.department ||
       !data?.className ||
-      !data?.incidentTime ||
-      !data?.location ||
-      !data?.remarks
+      !data?.incidentTime
     ) {
       throw new Error("Missing required violation report fields.");
     }
-    return data;
+    return {
+      ...data,
+      location: data?.location || "Campus Grounds",
+      remarks: data?.remarks?.trim() || "the student is at outside",
+    };
   })
   .handler(
     async ({

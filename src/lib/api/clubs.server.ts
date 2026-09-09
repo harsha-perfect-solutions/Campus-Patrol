@@ -83,7 +83,7 @@ export const removeClubCoordinatorApi = createServerFn({ method: "POST" })
   });
 
 export const getMyCoordinatedClubsApi = createServerFn({ method: "GET" }).handler(async () => {
-  const session = await requireRole("faculty");
+  const session = await requireAnyRole(["faculty", "hod", "admin"]);
   return await getCoordinatedClubsForFaculty(session.userId);
 });
 

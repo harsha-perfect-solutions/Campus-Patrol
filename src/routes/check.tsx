@@ -234,7 +234,7 @@ export function CheckStudentPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [location, setLocation] = useState("");
-  const [remarks, setRemarks] = useState("");
+  const [remarks, setRemarks] = useState("the student is at outside");
   const [evidence, setEvidence] = useState("");
   const [cameraOpen, setCameraOpen] = useState(false);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
@@ -506,6 +506,7 @@ export function CheckStudentPage() {
       hour12: true,
     });
     setIncidentTime(nowStr);
+    if (!remarks) setRemarks("the student is at outside");
     if (!location) setLocation("Corridor");
     if (!violationType) {
       setViolationType(slot ? "Unauthorized Class Movement" : "Suspected Violence / Physical Altercation");
@@ -540,7 +541,7 @@ export function CheckStudentPage() {
           location: location || "Corridor",
           violationType,
           severity,
-          remarks: remarks.trim() || "No additional observation description provided.",
+          remarks: remarks.trim() || "the student is at outside",
           witnessNotes: witnessNotes || undefined,
           evidence: photoPreview || evidence || null,
           semester: result.student.semester || 6,
@@ -1030,7 +1031,7 @@ export function CheckStudentPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label htmlFor="sev" className="text-xs font-medium">
-                          Severity Level *
+                          Severity Level (optional)
                         </Label>
                         <Select
                           value={severity}
@@ -1050,7 +1051,7 @@ export function CheckStudentPage() {
 
                       <div>
                         <Label htmlFor="loc" className="text-xs font-medium">
-                          Observed Location *
+                          Observed Location (optional)
                         </Label>
                         <Select value={location} onValueChange={setLocation}>
                           <SelectTrigger id="loc" className="mt-1.5 h-11 rounded-xl">
@@ -1113,7 +1114,7 @@ export function CheckStudentPage() {
                         rows={3}
                         value={remarks}
                         onChange={(e) => setRemarks(e.target.value)}
-                        placeholder="Describe what you observed, including what the student was doing, where it occurred, and any relevant circumstances."
+                        placeholder="the student is at outside"
                         className="mt-1.5 text-xs rounded-xl"
                       />
                     </div>
@@ -1244,13 +1245,8 @@ export function CheckStudentPage() {
                   variant="destructive"
                   className="bg-red-600 hover:bg-red-700 rounded-xl font-bold px-6 w-full sm:w-auto text-xs sm:text-sm"
                   onClick={() => {
-                    if (!location) {
-                      toast.error("Please select or specify observed location.");
-                      return;
-                    }
                     setConfirmOpen(true);
                   }}
-                  disabled={!location}
                 >
                   <AlertTriangle className="size-4 mr-2" /> [ SUBMIT INCIDENT TO COUNSELOR ]
                 </Button>

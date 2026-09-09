@@ -1,50 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { ShieldCheck, ArrowRight, Github, Lock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth";
+import { ShieldCheck } from "lucide-react";
 
 export function LandingFooter() {
-  const { session } = useAuth();
-
   return (
     <footer className="w-full border-t border-border/80 bg-card pt-12 pb-8 text-foreground">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* Final CTA Container */}
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-primary/30 bg-gradient-to-r from-primary via-indigo-700 to-purple-800 p-5 sm:p-12 text-white shadow-xl text-center space-y-6">
-          <div className="pointer-events-none absolute -top-24 -left-24 size-72 rounded-full bg-white/10 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-24 -right-24 size-72 rounded-full bg-white/10 blur-2xl" />
-
-          <div className="relative z-10 max-w-2xl mx-auto space-y-3">
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-              Ready to simplify campus movement?
-            </h2>
-            <p className="text-xs sm:text-sm text-purple-100/90 font-normal leading-relaxed">
-              Secure student movement. Faster verification. Better campus discipline across all departments.
-            </p>
-          </div>
-
-          <div className="relative z-10 flex flex-wrap items-center justify-center gap-3 pt-2">
-            <Button
-              asChild
-              size="lg"
-              className="h-12 rounded-2xl bg-white text-primary hover:bg-white/90 px-7 font-extrabold shadow-md transition-all hover:scale-[1.02] text-xs sm:text-sm"
-            >
-              <Link to={session ? ("/admin/dashboard" as any) : "/auth"}>
-                {session ? "Access Dashboard" : "Sign In to CMADMS"} <ArrowRight className="size-4 ml-1.5" />
-              </Link>
-            </Button>
-
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="h-12 rounded-2xl border-white/40 bg-transparent text-white hover:bg-white/10 px-6 font-bold shadow-2xs text-xs sm:text-sm"
-            >
-              <Link to="/features">Explore Features</Link>
-            </Button>
-          </div>
-        </div>
-
         {/* Footer Navigation Columns */}
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-12 pt-4">
           {/* Brand Info */}

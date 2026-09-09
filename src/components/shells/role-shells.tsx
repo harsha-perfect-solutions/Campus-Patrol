@@ -314,7 +314,7 @@ export function FacultyShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Desktop Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-[240px] shrink-0 border-r border-border bg-card flex-col justify-between lg:flex">
+      <aside className="sticky top-0 z-20 hidden h-screen w-[240px] shrink-0 border-r border-border bg-card flex-col justify-between lg:flex">
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-5">
           <span className="grid size-9 place-items-center rounded-xl bg-blue-600 text-white shadow-xs">
             <ShieldCheck className="size-5" />
@@ -565,7 +565,7 @@ export function HODShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Desktop Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-[240px] shrink-0 border-r border-border bg-card flex-col justify-between lg:flex">
+      <aside className="sticky top-0 z-20 hidden h-screen w-[240px] shrink-0 border-r border-border bg-card flex-col justify-between lg:flex">
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-5">
           <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-xs">
             <Building2 className="size-5" />
@@ -842,7 +842,7 @@ export function StudentShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Desktop Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-[240px] shrink-0 border-r border-border bg-card flex-col justify-between lg:flex">
+      <aside className="sticky top-0 z-20 hidden h-screen w-[240px] shrink-0 border-r border-border bg-card flex-col justify-between lg:flex">
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-5">
           <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-xs">
             <GraduationCap className="size-5" />
@@ -1120,7 +1120,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Desktop Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-[240px] shrink-0 border-r border-border bg-card flex-col justify-between lg:flex">
+      <aside className="sticky top-0 z-20 hidden h-screen w-[240px] shrink-0 border-r border-border bg-card flex-col justify-between lg:flex">
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-5">
           <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-xs">
             <Key className="size-5" />
@@ -1378,7 +1378,7 @@ export function SecurityShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Desktop Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-[240px] shrink-0 border-r border-border bg-card flex-col justify-between lg:flex">
+      <aside className="sticky top-0 z-20 hidden h-screen w-[240px] shrink-0 border-r border-border bg-card flex-col justify-between lg:flex">
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-5">
           <span className="grid size-9 place-items-center rounded-xl bg-amber-500 text-amber-950 font-bold shadow-xs">
             <Shield className="size-5" />

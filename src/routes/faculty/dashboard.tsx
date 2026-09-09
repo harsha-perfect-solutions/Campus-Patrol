@@ -169,36 +169,8 @@ function FacultyDashboardContent() {
         )}
       </section>
 
-      {/* Main Two Column Section */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Quick Check Shortcut Card */}
-        <section className="card-surface p-6 rounded-2xl border border-border shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2 border-b border-divider pb-3">
-              <UserSearch className="size-4 text-primary" />
-              <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                STUDENT VERIFICATION ENGINE
-              </span>
-            </div>
-            <h3 className="mt-4 text-xl font-bold text-foreground">Verify Student Movement</h3>
-            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Check identity, timetable schedule, and active gate permissions for any student roll
-              number before reporting unauthorized movement.
-            </p>
-          </div>
-
-          <div className="mt-6">
-            <Button
-              asChild
-              className="w-full h-11 rounded-xl font-semibold bg-primary text-primary-foreground shadow-xs"
-            >
-              <Link to="/faculty/check">Open Verification Workspace &rarr;</Link>
-            </Button>
-          </div>
-        </section>
-
-        {/* Today's Teaching Schedule */}
-        <section className="card-surface p-6 rounded-2xl border border-border shadow-xs">
+      {/* Today's Teaching Schedule */}
+      <section className="card-surface p-6 rounded-2xl border border-border shadow-xs">
           <div className="flex items-center gap-2 border-b border-divider pb-3">
             <BookOpen className="size-4 text-primary" />
             <span className="text-xs font-bold uppercase tracking-wider text-primary">
@@ -250,7 +222,6 @@ function FacultyDashboardContent() {
             ))}
           </div>
         </section>
-      </div>
 
       {/* Recent Violation Reports Filed by Faculty */}
       <section className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs">

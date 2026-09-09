@@ -1,16 +1,13 @@
-import { Link } from "@tanstack/react-router";
 import {
   User,
   ShieldCheck,
   Building2,
   Settings,
-  ArrowRight,
   CheckCircle2,
   QrCode,
   FileText,
   UserCog,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export function LandingUseCasesSection() {
   const roles = [
@@ -79,16 +76,6 @@ export function LandingUseCasesSection() {
               CMADMS adapts to the unique needs of every campus role, ensuring secure, organized, and efficient campus movement.
             </p>
           </div>
-
-          <Button
-            asChild
-            size="sm"
-            className="rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 px-5 shadow-2xs shrink-0"
-          >
-            <Link to="/auth">
-              View All Modules <ArrowRight className="size-3.5 ml-1.5" />
-            </Link>
-          </Button>
         </div>
 
         {/* 4 Role Cards Grid Matching Reference */}

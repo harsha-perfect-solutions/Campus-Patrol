@@ -1,5 +1,4 @@
-import { ArrowRight, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ShieldCheck } from "lucide-react";
 
 export function LandingAboutSection() {
   return (
@@ -15,17 +14,6 @@ export function LandingAboutSection() {
               <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight leading-tight">
                 What is CMADMS?
               </h2>
-              <div className="pt-2">
-                <Button
-                  asChild
-                  size="sm"
-                  className="rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 px-5 shadow-2xs"
-                >
-                  <a href="#features">
-                    Explore Now <ArrowRight className="size-3.5 ml-1.5" />
-                  </a>
-                </Button>
-              </div>
             </div>
 
             {/* Right Explanation */}
