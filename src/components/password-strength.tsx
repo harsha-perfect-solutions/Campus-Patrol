@@ -35,8 +35,8 @@ export function PasswordStrengthMeter({ password }: { password: string }) {
   const score = getPasswordStrengthScore(checklist);
 
   let label = "Very Weak";
-  let colorClass = "bg-rose-500";
-  let textClass = "text-rose-600 dark:text-rose-400";
+  let colorClass = "bg-destructive";
+  let textClass = "text-destructive";
 
   if (score === 5) {
     label = "Strong";
@@ -48,8 +48,8 @@ export function PasswordStrengthMeter({ password }: { password: string }) {
     textClass = "text-amber-600 dark:text-amber-400";
   } else if (score >= 1) {
     label = "Weak";
-    colorClass = "bg-rose-400";
-    textClass = "text-rose-500 dark:text-rose-400";
+    colorClass = "bg-destructive/80";
+    textClass = "text-destructive";
   }
 
   const items = [

@@ -5,12 +5,25 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * CMADMS Design System — Signature Royal Purple / Indigo Campus Theme.
+ * CMADMS Design System — Signature Executive Corporate Navy & Slate Campus Theme.
  * All UI elements, portals, cards, and buttons inherit a unified color palette.
  */
 
 @theme inline {
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Elevated typography scale for improved readability */
+  --text-2xs: 0.8125rem;
+  --text-xs: 0.875rem;
+  --text-sm: 0.96875rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.1875rem;
+  --text-xl: 1.3125rem;
+  --text-2xl: 1.625rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.375rem;
+
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 4px);
   --radius-lg: calc(var(--radius) - 2px);
@@ -165,6 +178,12 @@
     border-color: var(--color-border);
   }
 
+  html {
+    font-size: 16.5px;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   html,
   body {
     overflow-x: clip;
@@ -177,11 +196,58 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
     background: color-mix(in oklab, var(--color-primary) 22%, transparent);
+  }
+
+  /*
+   * Uniform Font Typography:
+   * Map all monospace elements (roll numbers, pass tokens, audit codes, timestamps)
+   * to the clean Inter font with tabular figures so fonts are 100% consistent across all pages.
+   */
+  .font-mono,
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-sans) !important;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.015em;
+  }
+
+  /*
+   * Increase microscopic arbitrary font size utilities across all components
+   * to ensure clear, high-contrast, comfortable legibility across all displays.
+   */
+  .text-\[10px\],
+  [class*="text-[10px]"] {
+    font-size: 0.8125rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .text-\[11px\],
+  [class*="text-[11px]"] {
+    font-size: 0.85rem !important;
+    line-height: 1.3rem !important;
+  }
+
+  .text-\[12px\],
+  [class*="text-[12px]"] {
+    font-size: 0.9rem !important;
+    line-height: 1.35rem !important;
+  }
+
+  .text-\[13px\],
+  [class*="text-[13px]"] {
+    font-size: 0.95rem !important;
+    line-height: 1.4rem !important;
   }
 }
 

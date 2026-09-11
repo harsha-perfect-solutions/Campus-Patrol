@@ -290,7 +290,7 @@ export function AdminPermissionsPage() {
                                 Outside Campus
                               </span>
                             ) : isLate ? (
-                              <span className="rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 px-2 py-0.5 text-[10px] font-bold uppercase flex items-center gap-1 justify-end ml-auto w-fit">
+                              <span className="rounded-md bg-destructive/10 text-destructive border border-destructive/20 px-2 py-0.5 text-[10px] font-bold uppercase flex items-center gap-1 justify-end ml-auto w-fit">
                                 <AlertTriangle className="size-3" /> Late Return
                               </span>
                             ) : isOnTime ? (

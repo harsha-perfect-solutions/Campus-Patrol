@@ -458,7 +458,7 @@ export function SafetyAnalyticsDashboard({
             label: "Escalated to Admin",
             value: kpis.escalatedIncidents,
             icon: ArrowUpRight,
-            color: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300",
+            color: "bg-primary/10 text-primary border border-primary/20",
             drillType: "status",
             drillKey: "escalated",
           },
@@ -498,7 +498,7 @@ export function SafetyAnalyticsDashboard({
             label: "Violence / Misconduct",
             value: kpis.violenceReports,
             icon: Flame,
-            color: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 ring-1 ring-rose-400/40",
+            color: "bg-destructive/10 text-destructive border border-destructive/20",
             drillType: "category",
             drillKey: "Suspected Violence / Physical Altercation",
           },
@@ -661,7 +661,7 @@ export function SafetyAnalyticsDashboard({
                       className={cn(
                         "h-full rounded-full transition-all duration-500",
                         cat.category.toLowerCase().includes("violence")
-                          ? "bg-rose-500"
+                          ? "bg-destructive"
                           : "bg-primary",
                       )}
                       style={{ width: `${Math.max(cat.percentage, 4)}%` }}
@@ -769,7 +769,7 @@ export function SafetyAnalyticsDashboard({
                       </td>
                       <td className="py-3 px-4">
                         {dept.violenceIncidents > 0 ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-destructive/10 text-destructive border border-destructive/20">
                             {dept.violenceIncidents}
                           </span>
                         ) : (
@@ -824,11 +824,11 @@ export function SafetyAnalyticsDashboard({
               <p className="text-[10px] text-muted-foreground mt-0.5">Absent / Left Room</p>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
-              <p className="text-[10px] font-bold text-purple-700 dark:text-purple-300 uppercase">
+            <div className="p-3.5 rounded-xl bg-primary/10 border border-primary/20 text-center">
+              <p className="text-[10px] font-bold text-primary uppercase">
                 Free / Corridor Period
               </p>
-              <p className="mt-1 text-2xl font-black text-purple-700 dark:text-purple-300">
+              <p className="mt-1 text-2xl font-black text-primary">
                 {analytics?.timetable.freePeriodIncidents || 0}
               </p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Hallway / Common Area</p>
@@ -947,7 +947,7 @@ export function SafetyAnalyticsDashboard({
 
           <div className="p-3.5 rounded-xl bg-muted/40 border border-divider">
             <p className="text-[10px] font-bold text-muted-foreground uppercase">Escalation Rate</p>
-            <p className="mt-1 text-2xl font-black text-purple-600">
+            <p className="mt-1 text-2xl font-black text-primary">
               {analytics?.resolution.escalationRate || 0}%
             </p>
             <p className="text-[10px] text-muted-foreground mt-0.5">Referred to Disciplinary Committee</p>

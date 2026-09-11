@@ -50,41 +50,41 @@ export function LandingFeatureCards() {
             </div>
           </div>
 
-          {/* Card 2 — Dark Purple Card */}
-          <div className="md:col-span-1 lg:col-span-3 rounded-2xl sm:rounded-3xl border border-purple-900/40 bg-gradient-to-b from-[#1e1b4b] to-[#120e2e] p-5 sm:p-7 text-white flex flex-col justify-between space-y-6 shadow-md hover:shadow-xl transition-shadow">
+          {/* Card 2 — Executive Navy Feature Card */}
+          <div className="md:col-span-1 lg:col-span-3 rounded-2xl sm:rounded-3xl border border-border/80 bg-card p-5 sm:p-7 text-card-foreground flex flex-col justify-between space-y-6 shadow-xs hover:border-primary/40 transition-colors">
             <div className="space-y-4">
-              <span className="grid size-11 place-items-center rounded-2xl bg-white/10 text-purple-200 backdrop-blur-xs">
+              <span className="grid size-11 place-items-center rounded-2xl bg-primary/10 text-primary">
                 <Activity className="size-6" />
               </span>
-              <h3 className="text-xl font-extrabold tracking-tight text-white">
+              <h3 className="text-xl font-extrabold tracking-tight text-foreground">
                 Real-Time Monitoring
               </h3>
-              <p className="text-xs text-purple-200/80 leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Monitor student movement, gate activity, and verification events in real time across all institutional checkpoints.
               </p>
             </div>
 
-            <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-purple-300">Live SSE Feed</span>
+            <div className="pt-4 border-t border-border/60 flex items-center justify-between">
+              <span className="text-[11px] font-bold text-primary">Live SSE Feed</span>
             </div>
           </div>
 
-          {/* Card 3 — Dark Purple Card */}
-          <div className="md:col-span-1 lg:col-span-3 rounded-2xl sm:rounded-3xl border border-purple-900/40 bg-gradient-to-b from-[#181028] to-[#0f091c] p-5 sm:p-7 text-white flex flex-col justify-between space-y-6 shadow-md hover:shadow-xl transition-shadow">
+          {/* Card 3 — Executive Navy Feature Card */}
+          <div className="md:col-span-1 lg:col-span-3 rounded-2xl sm:rounded-3xl border border-border/80 bg-card p-5 sm:p-7 text-card-foreground flex flex-col justify-between space-y-6 shadow-xs hover:border-primary/40 transition-colors">
             <div className="space-y-4">
-              <span className="grid size-11 place-items-center rounded-2xl bg-white/10 text-purple-200 backdrop-blur-xs">
+              <span className="grid size-11 place-items-center rounded-2xl bg-primary/10 text-primary">
                 <CheckCircle2 className="size-6" />
               </span>
-              <h3 className="text-xl font-extrabold tracking-tight text-white">
+              <h3 className="text-xl font-extrabold tracking-tight text-foreground">
                 Automated Authorization
               </h3>
-              <p className="text-xs text-purple-200/80 leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Digital passes, QR verification, and HOD approvals simplify campus movement management without paperwork.
               </p>
             </div>
 
-            <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-purple-300">HOD Workflow</span>
+            <div className="pt-4 border-t border-border/60 flex items-center justify-between">
+              <span className="text-[11px] font-bold text-primary">HOD Workflow</span>
             </div>
           </div>
         </div>

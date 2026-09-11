@@ -124,11 +124,20 @@ function FacultyCounselorContent() {
 
   const filteredPasses = useMemo(() => {
     if (passStatusFilter === "ALL") return passes;
+    if (passStatusFilter.toLowerCase() === "pending") {
+      return passes.filter(
+        (p: DBCounselorPass) =>
+          p.status.toLowerCase() === "pending" && (p.target_role || "counselor").toLowerCase() === "counselor"
+      );
+    }
     return passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === passStatusFilter.toLowerCase());
   }, [passes, passStatusFilter]);
 
   const pendingPassesCount = useMemo(() => {
-    return passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === "pending").length;
+    return passes.filter(
+      (p: DBCounselorPass) =>
+        p.status.toLowerCase() === "pending" && (p.target_role || "counselor").toLowerCase() === "counselor"
+    ).length;
   }, [passes]);
 
   const filteredStudents = useMemo(() => {
@@ -209,10 +218,10 @@ function FacultyCounselorContent() {
           </div>
 
           <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-2xs">
-            <span className="text-[10px] sm:text-[11px] font-bold text-purple-600 uppercase tracking-wider block">
+            <span className="text-[10px] sm:text-[11px] font-bold text-primary uppercase tracking-wider block">
               UNDER REVIEW
             </span>
-            <p className="mt-1.5 text-xl sm:text-2xl font-extrabold text-purple-600">{stats.underReview}</p>
+            <p className="mt-1.5 text-xl sm:text-2xl font-extrabold text-primary">{stats.underReview}</p>
           </div>
 
           <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-2xs">
@@ -223,10 +232,10 @@ function FacultyCounselorContent() {
           </div>
 
           <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-border shadow-2xs">
-            <span className="text-[10px] sm:text-[11px] font-bold text-red-600 uppercase tracking-wider block">
+            <span className="text-[10px] sm:text-[11px] font-bold text-destructive uppercase tracking-wider block">
               ESCALATED (HOD)
             </span>
-            <p className="mt-1.5 text-xl sm:text-2xl font-extrabold text-red-600">{stats.escalated}</p>
+            <p className="mt-1.5 text-xl sm:text-2xl font-extrabold text-destructive">{stats.escalated}</p>
           </div>
         </div>
       )}
@@ -366,9 +375,9 @@ function FacultyCounselorContent() {
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-border">
                   <SelectItem value="ALL">All Passes ({passes.length})</SelectItem>
-                  <SelectItem value="pending">⏳ Pending ({passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === "pending").length})</SelectItem>
-                  <SelectItem value="approved">✅ Approved ({passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === "approved").length})</SelectItem>
-                  <SelectItem value="rejected">❌ Rejected ({passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === "rejected").length})</SelectItem>
+                  <SelectItem value="pending">Pending ({pendingPassesCount})</SelectItem>
+                  <SelectItem value="approved">Approved ({passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === "approved").length})</SelectItem>
+                  <SelectItem value="rejected">Rejected ({passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === "rejected").length})</SelectItem>
                 </SelectContent>
               </Select>
               <Button variant="ghost" size="sm" onClick={loadData} className="text-xs">
@@ -385,7 +394,7 @@ function FacultyCounselorContent() {
                   <th className="px-4 py-3">Student Name</th>
                   <th className="px-4 py-3">Reason</th>
                   <th className="px-4 py-3">Date & Time Window</th>
-                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Status & Routing</th>
                   <th className="px-4 py-3">Issued / Approved By</th>
                   <th className="px-4 py-3 text-right">Acceptance Action</th>
                 </tr>
@@ -411,17 +420,22 @@ function FacultyCounselorContent() {
                         <div className="text-[11px] font-mono text-primary">{p.valid_from} - {p.valid_until}</div>
                       </td>
                       <td className="px-4 py-3">
-                        <ToneBadge
-                          tone={
-                            p.status === "approved"
-                              ? "success"
-                              : p.status === "rejected"
-                              ? "danger"
-                              : "warning"
-                          }
-                        >
-                          {p.status.toUpperCase()}
-                        </ToneBadge>
+                        <div className="flex flex-col gap-1 items-start">
+                          <ToneBadge
+                            tone={
+                              p.status === "approved"
+                                ? "success"
+                                : p.status === "rejected"
+                                ? "danger"
+                                : "warning"
+                            }
+                          >
+                            {p.status.toUpperCase()}
+                          </ToneBadge>
+                          <span className="text-[9px] font-bold text-muted-foreground px-1.5 py-0.5 rounded bg-muted/60 border border-border">
+                            {(p.target_role || "counselor").toLowerCase() === "counselor" ? "To: Counselor" : "To: HOD"}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{p.issued_by || "—"}</td>
                       <td className="px-4 py-3 text-right">
@@ -438,7 +452,7 @@ function FacultyCounselorContent() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleApprovePass(p.id, "rejected")}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-xs font-bold px-3 h-8"
+                              className="text-destructive hover:bg-destructive/10 border-destructive/30 rounded-xl text-xs font-bold px-3 h-8"
                             >
                               Reject
                             </Button>

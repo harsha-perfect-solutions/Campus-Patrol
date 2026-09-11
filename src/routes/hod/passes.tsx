@@ -109,7 +109,9 @@ function HodPassesPage() {
     }
   };
 
-  const pendingPasses = passes.filter((p) => p.status.toLowerCase() === "pending");
+  const pendingPasses = passes.filter(
+    (p) => p.status.toLowerCase() === "pending" && (p.target_role || "hod").toLowerCase() === "hod",
+  );
   const approvedPasses = passes.filter((p) => p.status.toLowerCase() === "approved");
   const rejectedPasses = passes.filter((p) => p.status.toLowerCase() === "rejected");
 
@@ -387,6 +389,9 @@ function HodPassesPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold border border-border bg-muted text-muted-foreground">
+                        To: {(pass.target_role || "hod").toLowerCase() === "counselor" ? "Counselor" : "HOD"}
+                      </span>
                       <span
                         className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider ${
                           isPending

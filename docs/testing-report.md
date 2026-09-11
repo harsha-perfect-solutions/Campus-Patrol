@@ -73,7 +73,7 @@ The Security Gate Verification portal (`/security/check`) is configured as a sta
 - **Manifest (`public/manifest.json`)**: Configured with `CMADMS Security Gate` name, `standalone` display mode, portrait orientation, and `#0f172a` dark theme color.
 - **Service Worker (`public/sw.js`)**: Caches static app shell assets (`/`, `/security/check`, `/favicon.svg`, `/manifest.json`).
 - **Cache Isolation Rule**: Service Worker explicitly bypasses `/api/` endpoints to prevent caching pass validity decisions on the client device.
-- **Offline Connection Banner**: Monitors `navigator.onLine`. Displays a high-contrast red warning (`⚠️ CONNECTION LOST`) and disables submit actions during internet outages.
+- **Offline Connection Banner**: Monitors `navigator.onLine`. Displays a high-contrast red warning (`CONNECTION LOST`) and disables submit actions during internet outages.
 
 ---
 

@@ -177,7 +177,7 @@ function StudentViolationsPage() {
               </span>
               <div>
                 <h3 className="text-sm font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wide">
-                  ⚠️ EXPLANATION STATEMENT REQUIRED
+                  EXPLANATION STATEMENT REQUIRED
                 </h3>
                 <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
                   You have <strong>{awaitingResponseCount}</strong> incident report(s) awaiting your official response statement.
@@ -203,7 +203,7 @@ function StudentViolationsPage() {
             { label: "Open Cases", value: stats?.openCases ?? 0, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50/60 dark:bg-blue-950/20" },
             { label: "Awaiting Response", value: stats?.awaitingMyResponse ?? 0, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50/60 dark:bg-amber-950/20" },
             { label: "Under Counselor Review", value: stats?.underHodReview ?? 0, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50/60 dark:bg-indigo-950/20" },
-            { label: "Escalated to HOD", value: stats?.escalated ?? 0, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50/60 dark:bg-purple-950/20" },
+            { label: "Escalated to HOD", value: stats?.escalated ?? 0, color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-50/60 dark:bg-amber-950/20" },
             { label: "Resolved", value: stats?.resolved ?? 0, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50/60 dark:bg-emerald-950/20" },
             { label: "Dismissed", value: stats?.dismissed ?? 0, color: "text-muted-foreground", bg: "bg-muted/30" },
           ].map((kpi) => (
@@ -362,7 +362,7 @@ function StudentViolationsPage() {
                               report.severity === "Low" && "bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300",
                             )}
                           >
-                            {report.severity === "Critical" && "🚨 "}
+                            {report.severity === "Critical" && ""}
                             {report.severity}
                           </span>
                         </td>
@@ -390,7 +390,7 @@ function StudentViolationsPage() {
                               report.status === "dismissed" && "bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300",
                               report.status === "under_review" && "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
                               report.status === "reported" && "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-                              report.status === "escalated" && "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300",
+                              report.status === "escalated" && "bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30",
                             )}
                           >
                             {report.status.replace("_", " ")}
@@ -448,7 +448,7 @@ function StudentViolationsPage() {
                         selectedReport.status === "dismissed" && "bg-zinc-200 text-zinc-800",
                         selectedReport.status === "under_review" && "bg-blue-100 text-blue-800",
                         selectedReport.status === "reported" && "bg-amber-100 text-amber-800",
-                        selectedReport.status === "escalated" && "bg-purple-100 text-purple-800",
+                        selectedReport.status === "escalated" && "bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30",
                       )}
                     >
                       {selectedReport.status.replace("_", " ")}

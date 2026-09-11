@@ -4,6 +4,7 @@ import type { DBPermission } from "./permissions.server";
 import type { DBViolationReport } from "./violations.server";
 import {
   findHodUserIdForStudentCode,
+  findCounselorUserIdForStudentCode,
   findStudentUserIdByCode,
   createNotificationServer,
 } from "./notifications.server";
@@ -81,6 +82,7 @@ export async function getMyMovementPermissions(studentCode: string): Promise<DBP
         valid_until::text,
         status::text,
         issued_by,
+        COALESCE(target_role, 'hod')::text AS target_role,
         exit_at::text,
         entry_at::text,
         checkpoint,
@@ -102,6 +104,7 @@ export async function getMyMovementPermissions(studentCode: string): Promise<DBP
 
 /**
  * Requests a new movement permission for the student with status = 'pending'.
+ * Targets either 'counselor' or 'hod', alerting only the selected authority.
  * Includes atomic audit log creation.
  */
 export async function requestMovementPermission(
@@ -110,12 +113,14 @@ export async function requestMovementPermission(
   date: string,
   validFrom: string,
   validUntil: string,
+  targetRole: "counselor" | "hod" = "counselor",
 ): Promise<DBPermission> {
   const cleanCode = studentCode.trim().toUpperCase();
   const cleanReason = reason.trim();
   const cleanDate = date.trim();
   const cleanFrom = validFrom.trim();
   const cleanUntil = validUntil.trim();
+  const cleanTargetRole = (targetRole || "counselor").toLowerCase() === "hod" ? "hod" : "counselor";
 
   if (!cleanCode || !cleanReason || !cleanDate || !cleanFrom || !cleanUntil) {
     throw new Error("Invalid or incomplete movement permission request arguments.");
@@ -124,7 +129,10 @@ export async function requestMovementPermission(
   try {
     await db.query("BEGIN");
 
-    // Insert new movement permission request with forced status = 'pending'
+    // Ensure target_role column exists
+    await db.query("ALTER TABLE movement_permissions ADD COLUMN IF NOT EXISTS target_role TEXT DEFAULT 'hod';");
+
+    // Insert new movement permission request with forced status = 'pending' and chosen target_role
     const insertQuery = `
       INSERT INTO movement_permissions (
         student_code,
@@ -133,8 +141,9 @@ export async function requestMovementPermission(
         valid_from,
         valid_until,
         status,
-        issued_by
-      ) VALUES ($1, $2, $3::date, $4::time, $5::time, 'pending', 'Student Requested')
+        issued_by,
+        target_role
+      ) VALUES ($1, $2, $3::date, $4::time, $5::time, 'pending', 'Student Requested', $6)
       RETURNING
         id::text,
         student_code,
@@ -144,6 +153,7 @@ export async function requestMovementPermission(
         valid_until::text,
         status::text,
         issued_by,
+        target_role::text,
         exit_at::text,
         entry_at::text,
         checkpoint,
@@ -157,6 +167,7 @@ export async function requestMovementPermission(
       cleanDate,
       cleanFrom,
       cleanUntil,
+      cleanTargetRole,
     ]);
 
     const createdPermission = result.rows[0];
@@ -182,47 +193,80 @@ export async function requestMovementPermission(
       date: cleanDate,
       valid_from: cleanFrom,
       valid_until: cleanUntil,
+      target_role: cleanTargetRole,
       status: "pending",
       timestamp: new Date().toISOString(),
     });
 
     await db.query(auditQuery, [cleanCode, cleanCode, String(createdPermission.id), auditMetadata]);
 
-    // 1. Notify Student: confirmation that request was submitted
+    // Look up student details for personalized notifications
+    const stRes = await db.query<{ department: string; name: string }>(
+      "SELECT department, name FROM students WHERE UPPER(student_code) = UPPER($1) LIMIT 1",
+      [cleanCode],
+    );
+    const dept = stRes.rows[0]?.department ?? "Unknown";
+    const studentName = stRes.rows[0]?.name ?? cleanCode;
     const studentUserId = await findStudentUserIdByCode(cleanCode);
-    await createNotificationServer({
-      recipientUserId: studentUserId,
-      recipientId: cleanCode,
-      recipientRole: "student",
-      type: "movement_pass_requested",
-      title: "Movement Pass Submitted",
-      detail: "Your movement pass request is pending HOD approval.",
-      tone: "pending",
-      relatedId: String(createdPermission.id),
-      relatedType: "movement_permission",
-    });
 
-    // 2. Notify HOD of student's actual department about the movement pass request
-    const hodUserId = await findHodUserIdForStudentCode(cleanCode);
-    if (hodUserId) {
-      // Look up student's department for notification context
-      const stRes = await db.query<{ department: string; name: string }>(
-        "SELECT department, name FROM students WHERE UPPER(student_code) = UPPER($1) LIMIT 1",
-        [cleanCode],
-      );
-      const dept = stRes.rows[0]?.department ?? "Unknown";
-      const studentName = stRes.rows[0]?.name ?? cleanCode;
+    if (cleanTargetRole === "counselor") {
+      // 1. Notify Student: confirmation for Counselor routing
       await createNotificationServer({
-        recipientUserId: hodUserId,
-        recipientRole: "hod",
-        department: dept,
-        type: "gate_pass_requested",
-        title: "New Movement Pass Request",
-        detail: `${studentName} (${cleanCode}) has requested permission to leave campus. Reason: ${cleanReason.slice(0, 80)}`,
+        recipientUserId: studentUserId,
+        recipientId: cleanCode,
+        recipientRole: "student",
+        type: "movement_pass_requested",
+        title: "Movement Pass Submitted",
+        detail: "Your movement pass request has been sent to your Faculty Counselor for review.",
         tone: "pending",
         relatedId: String(createdPermission.id),
         relatedType: "movement_permission",
       });
+
+      // 2. Notify ONLY Counselor (HOD will not receive this notification)
+      const counselorUserId = await findCounselorUserIdForStudentCode(cleanCode);
+      if (counselorUserId) {
+        await createNotificationServer({
+          recipientUserId: counselorUserId,
+          recipientRole: "faculty",
+          department: dept,
+          type: "movement_pass_requested",
+          title: "New Movement Pass Request (Counselor Review)",
+          detail: `${studentName} (${cleanCode}) has requested a movement pass for your counselor review. Reason: ${cleanReason.slice(0, 80)}`,
+          tone: "pending",
+          relatedId: String(createdPermission.id),
+          relatedType: "movement_permission",
+        });
+      }
+    } else {
+      // 1. Notify Student: confirmation for HOD routing
+      await createNotificationServer({
+        recipientUserId: studentUserId,
+        recipientId: cleanCode,
+        recipientRole: "student",
+        type: "movement_pass_requested",
+        title: "Movement Pass Submitted",
+        detail: "Your movement pass request is pending Department HOD authorization.",
+        tone: "pending",
+        relatedId: String(createdPermission.id),
+        relatedType: "movement_permission",
+      });
+
+      // 2. Notify ONLY HOD (Counselor will not receive this notification)
+      const hodUserId = await findHodUserIdForStudentCode(cleanCode);
+      if (hodUserId) {
+        await createNotificationServer({
+          recipientUserId: hodUserId,
+          recipientRole: "hod",
+          department: dept,
+          type: "gate_pass_requested",
+          title: "New Movement Pass Request (HOD Authorization)",
+          detail: `${studentName} (${cleanCode}) has requested permission to leave campus. Reason: ${cleanReason.slice(0, 80)}`,
+          tone: "pending",
+          relatedId: String(createdPermission.id),
+          relatedType: "movement_permission",
+        });
+      }
     }
 
     await db.query("COMMIT");
@@ -625,7 +669,7 @@ export async function submitViolationExplanation(
         recipientRole: "faculty",
         department: report.department,
         type: "student_explanation_submitted",
-        title: "Student Explanation Submitted 📝",
+        title: "Student Explanation Submitted",
         detail: `${report.student_name} (${cleanCode}) has submitted an explanation for incident #${cleanId}.`,
         tone: "info",
         relatedId: cleanId,

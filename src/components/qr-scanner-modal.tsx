@@ -659,7 +659,7 @@ export function QRScannerModal({
               variant="outline"
               className="w-fit text-[10px] font-mono font-bold bg-primary/5 text-primary border-primary/30 px-2 py-0.5 rounded-lg shrink-0"
             >
-              ⚡ {scanEngine}
+              {scanEngine}
             </Badge>
           </div>
         </DialogHeader>

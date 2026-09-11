@@ -85,10 +85,10 @@ function getSemestersForYear(year: string): number[] {
 const PERIOD_DEFINITIONS = [
   { period: "1", name: "Period 1", start: "09:00", end: "10:00", label: "09:00 - 10:00", isBreak: false },
   { period: "2", name: "Period 2", start: "10:00", end: "11:00", label: "10:00 - 11:00", isBreak: false },
-  { period: "--", name: "Morning Break", start: "11:00", end: "11:10", label: "11:00 - 11:10", isBreak: true, breakType: "BREAK", title: "☕ BREAK (10 Minutes)" },
+  { period: "--", name: "Morning Break", start: "11:00", end: "11:10", label: "11:00 - 11:10", isBreak: true, breakType: "BREAK", title: "BREAK (10 Minutes)" },
   { period: "3", name: "Period 3", start: "11:10", end: "12:10", label: "11:10 - 12:10", isBreak: false },
   { period: "4", name: "Period 4", start: "12:10", end: "13:10", label: "12:10 - 01:10", isBreak: false },
-  { period: "--", name: "Lunch Break", start: "13:10", end: "14:10", label: "01:10 - 02:10", isBreak: true, breakType: "LUNCH", title: "🍱 LUNCH BREAK (1 Hour)" },
+  { period: "--", name: "Lunch Break", start: "13:10", end: "14:10", label: "01:10 - 02:10", isBreak: true, breakType: "LUNCH", title: "LUNCH BREAK (1 Hour)" },
   { period: "5", name: "Period 5", start: "14:10", end: "15:10", label: "02:10 - 03:10", isBreak: false },
   { period: "6", name: "Period 6", start: "15:10", end: "16:10", label: "03:10 - 04:10", isBreak: false },
 ];
@@ -816,11 +816,11 @@ function AdminTimetableContent() {
                                     periodTypeClean === "LAB"
                                       ? "bg-emerald-500/15 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-100"
                                       : periodTypeClean === "SPORTS"
-                                      ? "bg-rose-500/15 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-950 dark:text-rose-100"
+                                      ? "bg-amber-500/10 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-950 dark:text-amber-100"
                                       : periodTypeClean === "LIBRARY"
-                                      ? "bg-purple-500/15 dark:bg-purple-950/50 border-purple-300 dark:border-purple-800 text-purple-950 dark:text-purple-100"
+                                      ? "bg-blue-500/10 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-950 dark:text-blue-100"
                                       : periodTypeClean === "ACTIVITY"
-                                      ? "bg-indigo-500/15 dark:bg-indigo-950/50 border-indigo-300 dark:border-indigo-800 text-indigo-950 dark:text-indigo-100"
+                                      ? "bg-primary/10 dark:bg-primary/20 border-primary/20 text-primary"
                                       : periodTypeClean === "NO_CLASS"
                                       ? "bg-slate-500/10 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
                                       : "bg-blue-500/10 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-950 dark:text-blue-100"
@@ -832,9 +832,9 @@ function AdminTimetableContent() {
                                         {slot.subject}
                                       </span>
                                       {periodTypeClean === "LAB" && <FlaskConical className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
-                                      {periodTypeClean === "SPORTS" && <Trophy className="w-3.5 h-3.5 text-rose-600 shrink-0" />}
-                                      {periodTypeClean === "LIBRARY" && <BookMarked className="w-3.5 h-3.5 text-purple-600 shrink-0" />}
-                                      {periodTypeClean === "ACTIVITY" && <Palette className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
+                                      {periodTypeClean === "SPORTS" && <Trophy className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
+                                      {periodTypeClean === "LIBRARY" && <BookMarked className="w-3.5 h-3.5 text-blue-600 shrink-0" />}
+                                      {periodTypeClean === "ACTIVITY" && <Palette className="w-3.5 h-3.5 text-primary shrink-0" />}
                                       {periodTypeClean === "NO_CLASS" && <MinusCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
                                     </div>
 
@@ -873,19 +873,19 @@ function AdminTimetableContent() {
             {/* Bottom Legend Bar */}
             <div className="bg-muted/40 p-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-300 text-emerald-800 dark:text-emerald-200 font-bold text-[11px]">
+                <span className="px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-200 text-blue-800 dark:text-blue-200 font-bold text-[11px]">
                   CLASS (1 Hr)
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/25 border border-emerald-400 text-emerald-900 dark:text-emerald-100 font-bold text-[11px] flex items-center gap-1">
+                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-300 text-emerald-900 dark:text-emerald-100 font-bold text-[11px] flex items-center gap-1">
                   <FlaskConical className="w-3 h-3" /> LAB (2 Hrs)
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-purple-500/15 border border-purple-300 text-purple-800 dark:text-purple-200 font-bold text-[11px] flex items-center gap-1">
+                <span className="px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-200 text-blue-800 dark:text-blue-200 font-bold text-[11px] flex items-center gap-1">
                   <BookMarked className="w-3 h-3" /> LIBRARY
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-rose-500/15 border border-rose-300 text-rose-800 dark:text-rose-200 font-bold text-[11px] flex items-center gap-1">
+                <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-200 text-amber-800 dark:text-amber-200 font-bold text-[11px] flex items-center gap-1">
                   <Trophy className="w-3 h-3" /> SPORTS
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-300 text-indigo-800 dark:text-indigo-200 font-bold text-[11px]">
+                <span className="px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold text-[11px]">
                   ACTIVITY
                 </span>
                 <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-300 text-amber-800 dark:text-amber-200 font-bold text-[11px]">

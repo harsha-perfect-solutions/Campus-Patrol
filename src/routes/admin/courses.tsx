@@ -292,7 +292,7 @@ function AdminCoursesContent() {
             label: "Electives / Projects",
             value: stats.elective,
             icon: GraduationCap,
-            color: "bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300",
+            color: "bg-primary/10 text-primary",
           },
         ].map((s) => (
           <div
@@ -443,7 +443,7 @@ function AdminCoursesContent() {
                           "inline-block px-2 py-0.5 rounded-full text-[10px] font-bold",
                           c.courseType === "Theory" && "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
                           c.courseType === "Practical / Lab" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-                          c.courseType === "Elective" && "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
+                          c.courseType === "Elective" && "bg-primary/10 text-primary border border-primary/20",
                           c.courseType === "Project" && "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
                         )}
                       >

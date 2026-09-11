@@ -168,7 +168,7 @@ function HODDashboardContent() {
         <div className="grid gap-2.5 sm:gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
           {[
             { dept: "CSE", name: "Computer Science", count: 15, isUserDept: userDept === "CSE", color: "border-primary/40 bg-primary/5 text-primary" },
-            { dept: "ECE", name: "Electronics & Comm", count: 8, isUserDept: userDept === "ECE", color: "border-purple-300 bg-purple-50/40 text-purple-700 dark:bg-purple-950/20 dark:text-purple-300" },
+            { dept: "ECE", name: "Electronics & Comm", count: 8, isUserDept: userDept === "ECE", color: "border-sky-300 bg-sky-50/40 text-sky-700 dark:bg-sky-950/20 dark:text-sky-300" },
             { dept: "EEE", name: "Electrical & Elect", count: 4, isUserDept: userDept === "EEE", color: "border-amber-300 bg-amber-50/40 text-amber-700 dark:bg-amber-950/20 dark:text-amber-300" },
             { dept: "IT", name: "Information Tech", count: 6, isUserDept: userDept === "IT", color: "border-blue-300 bg-blue-50/40 text-blue-700 dark:bg-blue-950/20 dark:text-blue-300" },
             { dept: "MECH", name: "Mechanical Engg", count: 5, isUserDept: userDept === "MECH", color: "border-emerald-300 bg-emerald-50/40 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300" },
@@ -263,7 +263,7 @@ function HODDashboardContent() {
               </div>
               <div>
                 <h4 className="text-sm font-extrabold text-red-900 dark:text-red-300 break-words">
-                  🚨 HIGH VIOLATION ALERT: 3rd Year Section A requires HOD Intervention
+                  HIGH VIOLATION ALERT: 3rd Year Section A requires HOD Intervention
                 </h4>
                 <p className="text-xs text-red-700 dark:text-red-400 mt-0.5 font-medium">
                   Increased unexcused movement detected during lab & lecture hours (3 active violations in Section A). Proactive HOD precautions recommended to prevent escalation.

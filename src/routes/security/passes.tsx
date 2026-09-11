@@ -123,7 +123,7 @@ function SecurityPassesPage() {
                             <span>{item.resultStatus || "EXIT AUTHORIZED"}</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-[11px]">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/20 font-bold text-[11px]">
                             <XCircle className="size-3" />
                             <span>{item.resultStatus || "EXIT NOT AUTHORIZED"}</span>
                           </span>

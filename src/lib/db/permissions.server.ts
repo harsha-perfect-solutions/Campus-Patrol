@@ -14,6 +14,7 @@ export type DBPermission = {
   valid_until: string;
   status: "pending" | "approved" | "rejected";
   issued_by: string;
+  target_role?: string | null;
   created_at: string;
   exit_at?: string | null;
   entry_at?: string | null;
@@ -115,7 +116,7 @@ export async function createMovementPermission(input: NewPermissionInput): Promi
         recipientUserId: hodUserId,
         recipientRole: "hod",
         type: "movement_pass_requested",
-        title: "New Movement Pass Issued 🎟️",
+        title: "New Movement Pass Issued",
         detail: `Pass ID #${created.id} issued for ${cleanCode}. Reason: ${created.reason?.slice(0, 60) ?? ""}`,
         tone: "info",
         relatedId: created.id,
@@ -186,7 +187,7 @@ export async function approveMovementPermission(
         recipientRole: "student",
         recipientId: updated.student_code,
         type: isApproved ? "gate_pass_approved" : "gate_pass_rejected",
-        title: isApproved ? "Gate Pass Approved ✅" : "Gate Pass Rejected ❌",
+        title: isApproved ? "Gate Pass Approved" : "Gate Pass Rejected",
         detail: isApproved
           ? `Your gate pass request has been approved by ${approverName}. Reason: ${updated.reason?.slice(0, 80) ?? ""}`
           : `Your gate pass request has been rejected by ${approverName}. Please contact your HOD for further information.`,
@@ -202,7 +203,7 @@ export async function approveMovementPermission(
         await createNotificationServer({
           recipientRole: "security",
           type: "gate_pass_approved",
-          title: "Approved Movement Pass Available 🚪",
+          title: "Approved Movement Pass Available",
           detail: `Pass #${updated.id} approved for student ${updated.student_code} (${updated.valid_from} - ${updated.valid_until}).`,
           tone: "resolved",
           relatedId: cleanId,

@@ -79,17 +79,19 @@ export const getMyMovementPermissionsApi = createServerFn({ method: "GET" }).han
 );
 
 export const requestMovementPermissionApi = createServerFn({ method: "POST" })
-  .validator((data: { reason: string; date?: string; validFrom: string; validUntil: string }) => {
+  .validator((data: { reason: string; date?: string; validFrom: string; validUntil: string; targetRole?: "counselor" | "hod" }) => {
     if (!data?.reason || !data?.validFrom || !data?.validUntil) {
       throw new Error("Reason, start time, and end time are required.");
     }
     const today = new Date().toISOString().split("T")[0];
+    const targetRole = (data.targetRole || "counselor").toLowerCase() === "hod" ? "hod" : "counselor";
     return {
       reason: String(data.reason),
       date: String(data.date || today),
       validFrom: String(data.validFrom),
       validUntil: String(data.validUntil),
-    } as { reason: string; date: string; validFrom: string; validUntil: string };
+      targetRole,
+    } as { reason: string; date: string; validFrom: string; validUntil: string; targetRole: "counselor" | "hod" };
   })
   .handler(
     async ({
@@ -109,6 +111,7 @@ export const requestMovementPermissionApi = createServerFn({ method: "POST" })
           dateStr,
           data.validFrom,
           data.validUntil,
+          data.targetRole,
         );
         return { success: true, permission };
       } catch (err: any) {

@@ -796,7 +796,7 @@ export async function requestPasswordResetOtp(
     await createNotificationServer({
       recipientUserId: user.id,
       type: "info",
-      title: "Password Reset Security OTP 🔑",
+      title: "Password Reset Security OTP",
       detail: `Your CMADMS account password reset verification code is ${otp}. Valid for 10 minutes.`,
       tone: "info",
     });

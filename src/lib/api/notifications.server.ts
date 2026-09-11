@@ -174,7 +174,7 @@ export const sendTestNotificationApi = createServerFn({ method: "POST" })
         recipientId: identity.studentCode || identity.staffCode || identity.userId,
         department: identity.department,
         type: "info",
-        title: data?.title || `Live System Alert (${identity.role.toUpperCase()}) 🔔`,
+        title: data?.title || `Live System Alert (${identity.role.toUpperCase()})`,
         detail:
           data?.detail ||
           `Real-time notification test dispatched at ${timeStr}. Connected and operating normally.`,

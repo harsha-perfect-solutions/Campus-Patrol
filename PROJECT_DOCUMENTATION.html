@@ -20,17 +20,17 @@
     }
 
     body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: #1e293b;
       background-color: #ffffff;
-      line-height: 1.6;
-      font-size: 13.5px;
+      line-height: 1.65;
+      font-size: 15px;
       margin: 0;
       padding: 0;
     }
 
     h1 {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 800;
       color: #0f172a;
       border-bottom: 3px solid #3b82f6;
@@ -41,7 +41,7 @@
     }
 
     h2 {
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 700;
       color: #1e3a8a;
       border-bottom: 1px solid #e2e8f0;
@@ -52,7 +52,7 @@
     }
 
     h3 {
-      font-size: 15.5px;
+      font-size: 17px;
       font-weight: 600;
       color: #2563eb;
       margin-top: 20px;
@@ -62,18 +62,20 @@
 
     p, ul, ol {
       margin-top: 0;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
+      font-size: 15px;
     }
 
     li {
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+      font-size: 15px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 16px 0;
-      font-size: 12.5px;
+      margin: 18px 0;
+      font-size: 14px;
       page-break-inside: avoid;
     }
 
@@ -82,12 +84,13 @@
       color: #ffffff;
       font-weight: 600;
       text-align: left;
-      padding: 8px 12px;
+      padding: 10px 14px;
+      font-size: 13.5px;
       border: 1px solid #334155;
     }
 
     td {
-      padding: 7px 12px;
+      padding: 9px 14px;
       border: 1px solid #cbd5e1;
     }
 
@@ -212,786 +215,753 @@
   </style>
 </head>
 <body>
-  <h1>🛡️ Campus Guard Pro (CMADMS) — Comprehensive Technical System Documentation</h1>
-<h3><em>Campus Movement &amp; Absence Detection Management System</em></h3>
+  <h1>Campus Guard Pro — System Documentation &amp; Technical Guide</h1>
+<h3><em>A Smart College Gate Pass, Attendance &amp; Campus Safety System</em></h3>
 <hr>
-<blockquote class="alert alert-important"><p><strong>⚡ IMPORTANT</strong>
-<strong>Production Standard Codebase Documentation</strong></p>
-<p><strong>Project Name</strong>: Campus Guard Pro<br><strong>System Identifier</strong>: CMADMS (Campus Movement &amp; Absence Detection Management System)<br><strong>Architecture Style</strong>: Server-Authoritative Full-Stack Web Application<br><strong>Framework Stack</strong>: TanStack Start (Vite + React 19 + TypeScript) + Tailwind CSS v4 + PostgreSQL (<code>pg</code>)<br><strong>Document Version</strong>: 2.4.0 (Production Release)<br><strong>Last Updated</strong>: September 2026  </p>
+<blockquote class="alert alert-note"><p><strong>NOTE</strong>
+<strong>Who is this guide for?</strong><br>This guide is written in plain, everyday English. Whether you are a student, teacher, college principal, or software developer, this document explains <strong>what Campus Guard Pro does, how it works, and why it makes campus life much easier and safer for everyone</strong>.</p>
 </blockquote>
 <hr>
-<h2>📋 Table of Contents</h2>
+<h2>Table of Contents</h2>
 <ol>
-<li><a href="#-1-executive-summary--project-abstract">📌 1. Executive Summary &amp; Project Abstract</a></li>
-<li><a href="#-2-problem-statement-objectives--project-scope">🎯 2. Problem Statement, Objectives &amp; Project Scope</a></li>
-<li><a href="#-3-user-personas--role-based-access-control-rbac-matrix">👥 3. User Personas &amp; Role-Based Access Control (RBAC) Matrix</a></li>
-<li><a href="#-4-technical-system-architecture--technology-stack">🏗️ 4. Technical System Architecture &amp; Technology Stack</a></li>
-<li><a href="#-5-system-flowcharts--diagrams-with-in-depth-explanations">🔄 5. System Flowcharts &amp; Diagrams (With In-Depth Explanations)</a><ul>
-<li><a href="#51-high-level-system-architecture-diagram">5.1 High-Level System Architecture Diagram</a></li>
-<li><a href="#52-data-flow-diagram-dfd-level-0--level-1">5.2 Data Flow Diagram (DFD Level 0 &amp; Level 1)</a></li>
-<li><a href="#53-real-time-qr-gate-verification-lifecycle-flowchart">5.3 Real-Time QR Gate Verification Lifecycle Flowchart</a></li>
-<li><a href="#54-counselor-first-violation-routing-sequence-diagram">5.4 Counselor-First Violation Routing Sequence Diagram</a></li>
-<li><a href="#55-entity-relationship-diagram-erd--database-schema">5.5 Entity-Relationship Diagram (ERD) &amp; Database Schema</a></li>
-<li><a href="#56-security-gate-multi-scan-state-machine">5.6 Security Gate Multi-Scan State Machine</a></li>
+<li><a href="#1-executive-summary-what-is-campus-guard-pro">1. Executive Summary: What is Campus Guard Pro?</a></li>
+<li><a href="#2-operational-problem-statement--solutions">2. Operational Problem Statement &amp; Solutions</a></li>
+<li><a href="#3-role-based-access-control--user-roles">3. Role-Based Access Control &amp; User Roles</a></li>
+<li><a href="#4-technology-stack--architecture">4. Technology Stack &amp; Architecture</a></li>
+<li><a href="#5-visual-architecture--workflow-diagrams">5. Visual Architecture &amp; Workflow Diagrams</a><ul>
+<li><a href="#51-the-big-picture-how-everything-connects">5.1 The Big Picture (How Everything Connects)</a></li>
+<li><a href="#52-how-information-moves-in-the-app">5.2 How Information Moves in the App</a></li>
+<li><a href="#53-what-happens-when-a-guard-scans-a-students-qr-code">5.3 What Happens When a Guard Scans a Student&#39;s QR Code</a></li>
+<li><a href="#54-how-rule-violations-are-handled-the-counselor-first-rule">5.4 How Rule Violations are Handled (The &quot;Counselor-First&quot; Rule)</a></li>
+<li><a href="#55-how-the-database-tables-connect-together">5.5 How the Database Tables Connect Together</a></li>
+<li><a href="#56-the-complete-journey-of-a-gate-pass">5.6 The Complete Journey of a Gate Pass</a></li>
 </ul>
 </li>
-<li><a href="#-6-functional-modules-breakdown--ui-screenshots">🧩 6. Functional Modules Breakdown &amp; UI Screenshots</a><ul>
-<li><a href="#61-authentication--session-management-module">6.1 Authentication &amp; Session Management Module</a></li>
-<li><a href="#62-real-time-qr-gate-pass-engine--security-ui">6.2 Real-Time QR Gate Pass Engine &amp; Security UI</a></li>
-<li><a href="#63-student-dashboard--digital-pass-portal">6.3 Student Dashboard &amp; Digital Pass Portal</a></li>
-<li><a href="#64-counselor-workspace--student-roster-system">6.4 Counselor Workspace &amp; Student Roster System</a></li>
-<li><a href="#65-hod-governance-console--analytics">6.5 HOD Governance Console &amp; Analytics</a></li>
-<li><a href="#66-violation-routing--resolution-workflow-engine">6.6 Violation Routing &amp; Resolution Workflow Engine</a></li>
+<li><a href="#6-core-functional-modules--application-interface">6. Core Functional Modules &amp; Application Interface</a><ul>
+<li><a href="#61-the-login-screen">6.1 The Login Screen</a></li>
+<li><a href="#62-the-gate-security-scanner-for-guards">6.2 The Gate Security Scanner (For Guards)</a></li>
+<li><a href="#63-the-student-dashboard--live-qr-pass">6.3 The Student Dashboard &amp; Live QR Pass</a></li>
+<li><a href="#64-the-counselor-workspace-for-mentors--teachers">6.4 The Counselor Workspace (For Mentors &amp; Teachers)</a></li>
+<li><a href="#65-the-department-head-hod-control-room">6.5 The Department Head (HOD) Control Room</a></li>
+<li><a href="#66-checking-attendance--reporting-roaming-students">6.6 Checking Attendance &amp; Reporting Roaming Students</a></li>
 </ul>
 </li>
-<li><a href="#-7-database-schema--data-models">🗄️ 7. Database Schema &amp; Data Models</a></li>
-<li><a href="#-8-uiux-design-system--micro-interactions">🎨 8. UI/UX Design System &amp; Micro-Interactions</a></li>
-<li><a href="#-9-security-cryptography--audit-trail">🔐 9. Security, Cryptography &amp; Audit Trail</a></li>
-<li><a href="#-10-testing-quality-assurance--verification">🧪 10. Testing, Quality Assurance &amp; Verification</a></li>
-<li><a href="#-11-installation-setup--operations-manual">🚀 11. Installation, Setup &amp; Operations Manual</a></li>
-<li><a href="#-12-strategic-roadmap--conclusion">🔮 12. Strategic Roadmap &amp; Conclusion</a></li>
+<li><a href="#7-database-schema--data-models">7. Database Schema &amp; Data Models</a></li>
+<li><a href="#8-user-interface--design-specifications">8. User Interface &amp; Design Specifications</a></li>
+<li><a href="#9-security-architecture--cryptographic-controls">9. Security Architecture &amp; Cryptographic Controls</a></li>
+<li><a href="#10-quality-assurance--verification-testing">10. Quality Assurance &amp; Verification Testing</a></li>
+<li><a href="#11-installation--deployment-guide">11. Installation &amp; Deployment Guide</a></li>
+<li><a href="#12-strategic-roadmap--conclusion">12. Strategic Roadmap &amp; Conclusion</a></li>
 </ol>
 <hr>
-<h2>📌 1. Executive Summary &amp; Project Abstract</h2>
-<h3>Executive Summary</h3>
-<p><strong>Campus Guard Pro (CMADMS)</strong> is an enterprise-grade, server-authoritative web platform built to automate, monitor, and govern student movement across educational campuses while dynamically calculating class absence against live academic timetables. Modern academic institutions face significant operational challenges managing student movement permissions, gate entry/exit verification, unauthorized campus absences, and multi-tier administrative governance.</p>
-<p>CMADMS unifies gate security personnel, class counselors, heads of departments (HODs), college administrators, and students into a single integrated digital ecosystem. Powered by <strong>TanStack Start</strong>, <strong>React 19</strong>, <strong>Tailwind CSS v4</strong>, and <strong>PostgreSQL</strong>, Campus Guard Pro provides sub-second QR code verification at campus gates, cryptographic token isolation, counselor-first violation routing, and automated absence detection.</p>
-<blockquote class="alert alert-note"><p><strong>ℹ️ NOTE</strong>
-<strong>Core Value Proposition</strong>: By transitioning from legacy paper gate passes and manual sign-in registers to cryptographically verified QR passes synchronized with live course schedules, CMADMS reduces gate verification latency by 85% and eliminates unverified student absences across institutional campuses.</p>
-</blockquote>
-<hr>
-<h2>🎯 2. Problem Statement, Objectives &amp; Project Scope</h2>
-<h3>2.1 The Problem Statement</h3>
-<p>Traditional educational institutions rely on fragmented, paper-based, or manual gate sign-out logs. This leads to critical vulnerabilities:</p>
+<h2>1. Executive Summary: What is Campus Guard Pro?</h2>
+<p>Think about what usually happens when a college student needs to leave campus in the afternoon:</p>
 <ol>
-<li><strong>Unverifiable Gate Movement</strong>: Security personnel cannot instantly verify whether a student has legitimate permission to leave campus during academic hours.</li>
-<li><strong>Disconnected Attendance &amp; Absence Tracking</strong>: Class absence records are disconnected from physical gate movement, preventing faculty from knowing if an absent student is on campus or off-site.</li>
-<li><strong>Delayed Disciplinary Action</strong>: Violations (e.g., late returns or unauthorized exits) are processed days after the event, overloading HODs with minor administrative reviews.</li>
-<li><strong>Lack of Student-Counselor Visibility</strong>: Students often do not know their assigned counselor, and counselors lack real-time visibility into their assigned students&#39; active passes and violation cases.</li>
+<li>The student runs around searching for a teacher or department head to sign a paper gate pass.</li>
+<li>The teacher might not be in their office, wasting 30 minutes.</li>
+<li>Once signed, the student walks to the main gate.</li>
+<li>The security guard manually writes the student&#39;s name, roll number, and departure time in a heavy paper logbook.</li>
+<li>In the evening, when the student returns, the guard has to flip through pages to find the original entry.</li>
 </ol>
-<h3>2.2 Project Objectives</h3>
+<p><strong>This old method has huge flaws:</strong></p>
 <ul>
-<li>⏱️ <strong>Sub-Second Gate Scan</strong>: Provide security officers with a high-performance web-based QR scanner capable of decoding passes in under 500ms on mobile browser cameras.</li>
-<li>🔒 <strong>Cryptographic Opaque Tokens</strong>: Replace raw student database IDs in QR passes with secure, non-predictable token strings linked to server-side permission records.</li>
-<li>🧑‍🏫 <strong>Counselor-First Governance</strong>: Automatically route incoming student violation reports to their assigned Class Counselor for 1st-level resolution before escalating to the HOD.</li>
-<li>🔄 <strong>Multi-Scan Pass Lifecycle</strong>: Support passes that remain valid for dual physical transactions (<code>EXIT</code> at gate -&gt; <code>ENTRY</code> at gate) during authorized time windows.</li>
-<li>📱 <strong>Role-Tailored Dashboards</strong>: Deliver optimized workspaces tailored specifically for Students, Security Guards, Faculty Counselors, HODs, and Super Admins.</li>
+<li>Paper slips get lost, damaged, or even forged.</li>
+<li>Guards at busy gates get tired of writing and stop checking carefully.</li>
+<li>Teachers taking afternoon attendance have no clue if an absent student is sick, on official college duty, or simply skipping class.</li>
+<li>If a student sneaks out or returns hours late, nobody notices until days later.</li>
+</ul>
+<p><strong>Campus Guard Pro fixes all of this with a simple phone app:</strong></p>
+<ul>
+<li><strong>Students ask for a pass online</strong> in 10 seconds.</li>
+<li><strong>Teachers or Department Heads approve it</strong> with one tap on their phone or laptop.</li>
+<li><strong>The student gets a clean QR code</strong> on their phone screen.</li>
+<li><strong>Guards scan the QR code with their camera</strong> in less than half a second.</li>
+<li><strong>If a student is missing without permission</strong>, teachers can check the live schedule and report it.</li>
+<li><strong>Instead of punishing students right away</strong>, the issue goes straight to the student&#39;s own <strong>Class Counselor</strong> first so they can talk, understand what happened, and solve it calmly.</li>
 </ul>
 <hr>
-<h2>👥 3. User Personas &amp; Role-Based Access Control (RBAC) Matrix</h2>
-<p>CMADMS enforces strict server-authoritative Role-Based Access Control (RBAC). Session validation is executed on every server procedure (<code>requireRole</code>), ensuring zero unauthorized client-side access.</p>
-<pre><code class="language-">       ┌─────────────────────────────────────────────────────────┐
-       │                   Super Admin / Principal               │
-       └────────────────────────────┬────────────────────────────┘
-                                    │
-       ┌────────────────────────────┴────────────────────────────┐
-       │                       Department HOD                    │
-       └────────────────────────────┬────────────────────────────┘
-                                    │
-       ┌────────────────────────────┴────────────────────────────┐
-       │                  Faculty / Class Counselor              │
-       └────────────────────────────┬────────────────────────────┘
-                                    │
-           ┌────────────────────────┴────────────────────────┐
-           │                                                 │
-┌──────────┴──────────┐                           ┌──────────┴──────────┐
-│    Security Guard   │                           │       Student       │
-└─────────────────────┘                           └─────────────────────┘</code></pre><h3>RBAC Permission Matrix</h3>
+<h2>2. Operational Problem Statement &amp; Solutions</h2>
+<p>Here is a quick look at the four biggest daily headaches in colleges and how Campus Guard Pro solves each one:</p>
+<h3>Problem 1: Guards Can&#39;t Tell Who Has Real Permission</h3>
+<ul>
+<li><strong>Before</strong>: Students show handwritten notes or old paper slips. Guards can&#39;t verify signatures in the middle of a crowd.</li>
+<li><strong>Now</strong>: Guards simply point their phone camera at the student&#39;s QR pass. The screen instantly turns <strong>Green</strong> (Allowed to Exit) or <strong>Red</strong> (Denied/Fake).</li>
+</ul>
+<h3>Problem 2: Teachers Don&#39;t Know Why Students Are Missing</h3>
+<ul>
+<li><strong>Before</strong>: An instructor marks a student absent. They don&#39;t know if the student is in the library with permission, at a doctor&#39;s clinic, or roaming the hallways.</li>
+<li><strong>Now</strong>: The system connects gate passes directly to the class schedule. Teachers can see right away if an absent student has an active approved out-pass.</li>
+</ul>
+<h3>Problem 3: Department Heads (HODs) Get Swamped With Minor Issues</h3>
+<ul>
+<li><strong>Before</strong>: Every time a student comes back 10 minutes late, the paperwork lands on the Head of Department&#39;s desk, wasting valuable time.</li>
+<li><strong>Now</strong>: The system uses a <strong>Counselor-First</strong> approach. Minor issues go to the student&#39;s class mentor first. Only serious, repeated offenses reach the Department Head.</li>
+</ul>
+<h3>Problem 4: Students Don&#39;t Know Who Their Mentor Is</h3>
+<ul>
+<li><strong>Before</strong>: Many students don&#39;t even know which teacher is assigned as their personal academic advisor or counselor.</li>
+<li><strong>Now</strong>: Every student&#39;s dashboard displays a friendly card showing their counselor&#39;s photo, name, office room, and email address.</li>
+</ul>
+<hr>
+<h2>3. Role-Based Access Control &amp; User Roles</h2>
+<p>Different people have different jobs in a college. Campus Guard Pro gives each group their own tailored workspace:</p>
+<div class="mermaid-container"><pre class="mermaid">graph TD
+    Admin["1. College Principal & Super Admin<br/><i>In charge of the whole campus, master timetables & safety</i>"]
+    HOD["2. Department Head (HOD)<br/><i>Approves department passes & handles serious cases</i>"]
+    Teacher["3. Class Counselor & Teachers<br/><i>Takes attendance, guides students & solves minor issues</i>"]
+    Guard["4. Security Guard<br/><i>Scans QR codes at the gate</i>"]
+    Student["5. Student<br/><i>Applies for passes & shows QR code</i>"]
+
+    Admin --> HOD
+    HOD --> Teacher
+    Teacher --> Student
+    Guard -.->|Checks at the Gate| Student</pre></div><h3>Quick Permissions Cheat-Sheet</h3>
 <table>
 <thead>
 <tr>
-<th align="left">Feature / Module</th>
+<th align="left">Action</th>
 <th align="center">Student</th>
-<th align="center">Security</th>
-<th align="center">Counselor / Faculty</th>
-<th align="center">HOD</th>
+<th align="center">Guard</th>
+<th align="center">Teacher / Counselor</th>
+<th align="center">Dept Head (HOD)</th>
 <th align="center">Admin</th>
 </tr>
 </thead>
 <tbody><tr>
-<td align="left"><strong>View Personal QR Pass</strong></td>
-<td align="center">✅</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
+<td align="left"><strong>Apply for an out-pass</strong></td>
+<td align="center">Yes</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">No</td>
 </tr>
 <tr>
-<td align="left"><strong>Request Out Pass / Movement</strong></td>
-<td align="center">✅</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
+<td align="left"><strong>Show personal QR pass on phone</strong></td>
+<td align="center">Yes</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">No</td>
 </tr>
 <tr>
-<td align="left"><strong>Scan &amp; Verify Gate QR Code</strong></td>
-<td align="center">❌</td>
-<td align="center">✅</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
+<td align="left"><strong>Scan QR codes at campus gates</strong></td>
+<td align="center">No</td>
+<td align="center">Yes</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">No</td>
 </tr>
 <tr>
-<td align="left"><strong>Manual Student Gate Entry/Exit</strong></td>
-<td align="center">❌</td>
-<td align="center">✅</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
+<td align="left"><strong>Grant an early exit override</strong></td>
+<td align="center">No</td>
+<td align="center">Yes</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">No</td>
 </tr>
 <tr>
-<td align="left"><strong>View Assigned Student Roster</strong></td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">✅</td>
-<td align="center">✅</td>
-<td align="center">✅</td>
+<td align="left"><strong>Check which class a student has now</strong></td>
+<td align="center">No</td>
+<td align="center">Yes</td>
+<td align="center">Yes</td>
+<td align="center">Yes</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
-<td align="left"><strong>Approve/Reject Movement Pass</strong></td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">✅ (Assigned)</td>
-<td align="center">✅ (Dept)</td>
-<td align="center">✅</td>
+<td align="left"><strong>View assigned student roster</strong></td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">Assigned Students</td>
+<td align="center">Entire Dept</td>
+<td align="center">All Students</td>
 </tr>
 <tr>
-<td align="left"><strong>Resolve Violation (1st Level)</strong></td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">✅ (Assigned)</td>
-<td align="center">✅</td>
-<td align="center">✅</td>
+<td align="left"><strong>Approve or reject a pass</strong></td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">Assigned Students</td>
+<td align="center">Entire Dept</td>
+<td align="center">Any Pass</td>
 </tr>
 <tr>
-<td align="left"><strong>Escalate Violation to HOD</strong></td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">✅</td>
-<td align="center">❌</td>
-<td align="center">✅</td>
+<td align="left"><strong>Resolve a student violation report</strong></td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">1st Level</td>
+<td align="center">Final Level</td>
+<td align="center">Final Level</td>
 </tr>
 <tr>
-<td align="left"><strong>Manage Timetables &amp; Courses</strong></td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">✅</td>
-<td align="center">✅</td>
+<td align="left"><strong>Launch a campus emergency alert</strong></td>
+<td align="center">No</td>
+<td align="center">Yes</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
-<td align="left"><strong>User &amp; Role Administration</strong></td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">✅</td>
+<td align="left"><strong>Edit the master timetable</strong></td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">Yes</td>
 </tr>
 <tr>
-<td align="left"><strong>View System Audit Logs</strong></td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">✅</td>
+<td align="left"><strong>View system audit logs</strong></td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">No</td>
+<td align="center">Yes</td>
 </tr>
 </tbody></table>
-<blockquote class="alert alert-tip"><p><strong>💡 TIP</strong>
-<strong>Counselor Scope Isolation</strong>: Class Counselors can strictly view and act upon students assigned to their specific counseling group. If a student has no assigned counselor, violation routing automatically falls back to the Department HOD.</p>
-</blockquote>
 <hr>
-<h2>🏗️ 4. Technical System Architecture &amp; Technology Stack</h2>
-<p>CMADMS is engineered as a modern, full-stack monorepo powered by <strong>TanStack Start</strong>, leveraging server functions (<code>createServerFn</code>) to bridge React frontend components with PostgreSQL backend queries seamlessly.</p>
-<pre><code class="language-">┌─────────────────────────────────────────────────────────────────────────┐
-│                           CLIENT LAYER (Browser)                        │
-│   React 19  │  TanStack Router  │  Tailwind CSS v4  │  Radix UI         │
-│   Lucide Icons  │  Recharts  │  jsQR Mobile Camera Decoder              │
-└────────────────────────────────────┬────────────────────────────────────┘
-                                     │ HTTPS / RPC (Server Functions)
-┌────────────────────────────────────▼────────────────────────────────────┐
-│                        SERVER LAYER (TanStack Start)                    │
-│   Server-Side Rendering (SSR)  │  Server-Authoritative Action Guards     │
-│   Auth &amp; Session Engine (`auth.server.ts`)                              │
-│   Zod Input Schema Validation  │  QR Cryptographic Token Engine         │
-└────────────────────────────────────┬────────────────────────────────────┘
-                                     │ SQL Queries / Connection Pool
-┌────────────────────────────────────▼────────────────────────────────────┐
-│                         DATABASE LAYER (PostgreSQL)                     │
-│   `users` │ `movement_permissions` │ `movement_logs` │ `violations`     │
-│   `counselor_assignments` │ `timetables` │ `event_participants`         │
-└─────────────────────────────────────────────────────────────────────────┘</code></pre><h3>Technology Stack Details</h3>
-<ul>
-<li><strong>Frontend Core</strong>: React 19, TypeScript 5.8, TanStack Router (File-based routing).</li>
-<li><strong>Styling &amp; UI</strong>: Tailwind CSS v4, Radix UI primitives, Lucide Icons, Sonner toasts.</li>
-<li><strong>Server Framework</strong>: TanStack Start + Nitro server backend engine.</li>
-<li><strong>Database Architecture</strong>: PostgreSQL with <code>pg</code> connection pooling and raw parameterized SQL queries for optimal speed.</li>
-<li><strong>QR Engine</strong>: <code>jsqr</code> (high-performance canvas decode with Otsu binarization) + <code>qrcode</code> (SVG/Canvas string generator).</li>
-<li><strong>Form &amp; Data Validation</strong>: <code>react-hook-form</code> + <code>@hookform/resolvers</code> + <code>zod</code>.</li>
+<h2>4. Technology Stack &amp; Architecture</h2>
+<p>We built Campus Guard Pro with modern, reliable, and free open-source tools:</p>
+<div class="mermaid-container"><pre class="mermaid">graph LR
+    Screen["Client Web Interface<br/><i>Responsive Web Application & QR Scanner</i>"]
+    Server["Application Server Logic<br/><i>Authentication, Authorization & Business Logic</i>"]
+    Database["Relational Database Storage<br/><i>Encrypted Storage, Audits & Time-Series Logs</i>"]
+
+    Screen -->|Sends your click or scan| Server
+    Server -->|Checks and saves records| Database
+    Database -->|Returns information| Server
+    Server -->|Shows green pass or results| Screen</pre></div><ul>
+<li><strong>React 19 &amp; Vite</strong>: Makes the website load fast, feel snappy, and work smoothly like a native smartphone app.</li>
+<li><strong>Tailwind CSS v4</strong>: Gives the app its clean dark-mode look, smooth buttons, and legible text.</li>
+<li><strong>jsQR</strong>: A super-fast camera reader that scans QR codes in real time from mobile phone browsers.</li>
+<li><strong>TanStack Start</strong>: The backend engine that connects our user screens directly to our server code safely.</li>
+<li><strong>PostgreSQL</strong>: A rock-solid database that stores all user accounts, passes, gate logs, and class timetables.</li>
+<li><strong>Node.js Password Scrambling (<code>scrypt</code>)</strong>: Protects passwords by mixing each one with random secret codes so they can never be stolen or guessed.</li>
 </ul>
 <hr>
-<h2>🔄 5. System Flowcharts &amp; Diagrams (With In-Depth Explanations)</h2>
+<h2>5. Visual Architecture &amp; Workflow Diagrams</h2>
 <hr>
-<h3>5.1 High-Level System Architecture Diagram</h3>
+<h3>5.1 The Big Picture (How Everything Connects)</h3>
+<p>This diagram shows how everyone interacts with the system:</p>
 <div class="mermaid-container"><pre class="mermaid">graph TD
-    subgraph ClientLayer ["Client Layer (Web & Mobile Browser)"]
-        ST["Student Mobile UI"]
-        SG["Security Guard Scanner UI"]
-        FC["Faculty / Counselor Workspace"]
-        HD["HOD Dashboard"]
-        AD["Admin Console"]
+    subgraph CampusPeople ["1. People on Campus"]
+        Student["Student Device"]
+        Guard["Security Guard at Gate"]
+        Teacher["Teacher / Class Mentor"]
+        HOD["Department Head (HOD)"]
+        Admin["Institutional Administrator"]
     end
 
-    subgraph MiddlewareLayer ["Application Engine (TanStack Start Server)"]
-        AUTH["Auth & Session Guard"]
-        RPC["Server RPC Handlers"]
-        QRE["QR Verification Engine"]
-        VROU["Counselor Violation Router"]
-        NOTIF["Notification Dispatcher"]
+    subgraph AppBrain ["2. Campus Guard Pro Brain"]
+        LoginCheck["Authentication & Session Validation"]
+        PassChecker["Pass Verification Engine"]
+        CounselorHelper["Counselor-First Routing Engine"]
+        AlertSender["Real-time Notification Dispatcher"]
     end
 
-    subgraph DataLayer ["Database Layer (PostgreSQL)"]
-        DB_U[("users & roles")]
-        DB_P[("movement_permissions")]
-        DB_L[("movement_logs")]
-        DB_V[("violations")]
-        DB_C[("counselor_assignments")]
-        DB_T[("timetables")]
+    subgraph SafeStorage ["3. Secure Database Records"]
+        UsersList[("User Accounts")]
+        PassesList[("Movement Passes")]
+        GateLogsList[("Gate Scan History")]
+        IssuesList[("Violation Records")]
+        TimetableList[("Master Class Schedule")]
     end
 
-    ST -->|Pass Request / QR Display| AUTH
-    SG -->|QR Camera Scan Token| QRE
-    FC -->|Roster / Resolve Violation| RPC
-    HD -->|Overrule / Approve Dept Pass| RPC
-    AD -->|User / System Config| RPC
+    Student -->|Applies for pass or shows QR| LoginCheck
+    Guard -->|Scans student QR code| PassChecker
+    Teacher -->|Checks classroom or student| CounselorHelper
+    HOD -->|Reviews serious department issues| CounselorHelper
+    Admin -->|Manages college safety| LoginCheck
 
-    AUTH -->|Validate Session| DB_U
-    QRE -->|Verify Token & Expiry| DB_P
-    QRE -->|Insert Gate Event| DB_L
-    QRE -->|Check Timetable Conflict| DB_T
-    QRE -->|Flag Violation if Late| DB_V
-    DB_V -->|Find Active Counselor| DB_C
-    VROU -->|Route Case to Counselor| DB_C
-    RPC -->|Execute Query| DataLayer</pre></div><h4>🔍 Technical Explanation of Architecture Diagram</h4>
+    LoginCheck --> UsersList
+    PassChecker --> PassesList
+    PassChecker --> GateLogsList
+    PassChecker --> TimetableList
+    CounselorHelper --> IssuesList
+    AlertSender -.->|Sends instant popups| CampusPeople</pre></div><h4>Architectural Summary:</h4>
 <ol>
-<li><strong>Client Layer</strong>: Users interact through role-specific route pages (<code>/student/dashboard</code>, <code>/security/check</code>, <code>/faculty/counselor</code>, <code>/hod/passes</code>, <code>/admin/users</code>). Requests are dispatched via TanStack Start RPC server functions.</li>
-<li><strong>Middleware Layer</strong>:<ul>
-<li><code>AUTH</code>: Evaluates cookie HTTP-only sessions against user role requirements.</li>
-<li><code>QRE</code>: Decodes incoming QR token payloads, queries <code>movement_permissions</code>, compares current timestamp against permission time windows (<code>valid_from</code> to <code>valid_until</code>), and checks if the transaction is an <code>EXIT</code> or <code>ENTRY</code>.</li>
-<li><code>VROU</code>: Triggers when a pass is late or unauthorized; calls <code>findActiveCounselorForStudent</code> to direct the infraction to the counselor ledger.</li>
-</ul>
-</li>
-<li><strong>Data Layer</strong>: PostgreSQL handles ACID transactions, enforcing relational integrity via foreign key constraints between <code>users</code>, <code>counselor_assignments</code>, and <code>violations</code>.</li>
+<li>When <strong>Students</strong> request a pass, it goes through the server to the database.</li>
+<li>When <strong>Guards</strong> scan a pass, the server instantly checks the time window and marks whether the student is leaving (<code>EXIT</code>) or returning (<code>ENTRY</code>).</li>
+<li>When <strong>Teachers</strong> check an empty desk, the server checks the timetable database to see who should be there.</li>
+<li>If a rule is broken, the server looks up the student&#39;s <strong>Counselor</strong> so the right mentor is notified.</li>
+<li>Instant popups (notifications) tell users right away when their pass is approved or checked.</li>
 </ol>
 <hr>
-<h3>5.2 Data Flow Diagram (DFD Level 0 &amp; Level 1)</h3>
-<h4>DFD Level 0 (Context Diagram)</h4>
+<h3>5.2 How Information Moves in the App</h3>
+<h4>Simple Overview (Where Data Goes)</h4>
 <div class="mermaid-container"><pre class="mermaid">graph LR
     Student(("Student"))
-    Security(("Security Guard"))
-    Counselor(("Faculty Counselor"))
-    HOD(("Department HOD"))
+    Guard(("Guard"))
+    Counselor(("Counselor"))
+    HOD(("Dept Head"))
 
-    System[["Campus Guard Pro Engine (CMADMS)"]]
+    System[["Campus Guard Pro System"]]
 
-    Student -->|1. Pass Request Data| System
-    System -->|2. Generated QR Code Token| Student
+    Student -->|1. Asks for a pass on phone| System
+    System -->|2. Gives digital QR pass| Student
     
-    Security -->|3. Scanned QR Token Data| System
-    System -->|4. Gate Verification Status (Allow/Deny)| Security
+    Guard -->|3. Scans student QR code| System
+    System -->|4. Shows Green Allow or Red Stop| Guard
 
-    System -->|5. Violation Infraction Report| Counselor
-    Counselor -->|6. Resolution Action (Resolve/Escalate)| System
+    System -->|5. Alerts mentor if student is missing| Counselor
+    Counselor -->|6. Listens to student & helps resolve| System
 
-    System -->|7. Escalated Violation / Dept Stats| HOD
-    HOD -->|8. Departmental Approval / Policy Override| System</pre></div><h4>DFD Level 1 (Detailed Sub-System Data Flow)</h4>
+    System -->|7. Forwards repeated serious issues| HOD
+    HOD -->|8. Issues official college decision| System</pre></div><h4>Step-by-Step Data Flow</h4>
 <div class="mermaid-container"><pre class="mermaid">flowchart TD
-    subgraph P1 ["Process 1.0: Authentication & Session"]
-        P1_1["Verify Credentials"]
-        P1_2["Issue Session Cookie"]
+    subgraph Step1 ["Step 1: Logging In"]
+        A1["Enter your email & password"]
+        A2["App keeps you securely signed in"]
     end
 
-    subgraph P2 ["Process 2.0: QR Pass Generation & Lifecycle"]
-        P2_1["Validate Request Rules"]
-        P2_2["Generate Cryptographic Token"]
-        P2_3["Store Permission Record"]
+    subgraph Step2 ["Step 2: Getting an Out-Pass"]
+        B1["Student fills out why they need to leave"]
+        B2["Teacher or Head taps 'Approve'"]
+        B3["A special QR code appears on phone"]
     end
 
-    subgraph P3 ["Process 3.0: Gate Scanning & Verification"]
-        P3_1["Decode QR Frame"]
-        P3_2["Validate Token Expiry & Type"]
-        P3_3["Log Entry/Exit Transaction"]
+    subgraph Step3 ["Step 3: At the Campus Gate"]
+        C1["Guard points camera at the QR code"]
+        C2["System checks: Is it today? Is it the right hour?"]
+        C3["Logs the exact second the student walks through"]
     end
 
-    subgraph P4 ["Process 4.0: Counselor Violation Workflow"]
-        P4_1["Lookup Student Counselor"]
-        P4_2["Create Violation Case Record"]
-        P4_3["Process Counselor Resolution"]
+    subgraph Step4 ["Step 4: If Rules are Broken"]
+        D1["System finds student's assigned counselor"]
+        D2["Sends ticket to counselor's workspace"]
+        D3["Student explains, counselor listens & resolves"]
     end
 
-    D1[("D1: Users Store")]
-    D2[("D2: Movement Permissions")]
-    D3[("D3: Gate Movement Logs")]
-    D4[("D4: Violations Store")]
-    D5[("D5: Counselor Assignments")]
-
-    P1_1 --> D1
-    P1_2 --> P1_1
-    P2_1 --> D1
-    P2_2 --> P2_3
-    P2_3 --> D2
-    P3_1 --> P3_2
-    P3_2 --> D2
-    P3_2 --> P3_3
-    P3_3 --> D3
-    P3_3 -- "Late / Invalid" --> P4_1
-    P4_1 --> D5
-    P4_1 --> P4_2
-    P4_2 --> D4
-    P4_3 --> D4</pre></div><h4>🔍 Technical Explanation of DFD Diagrams</h4>
+    A1 --> A2
+    B1 --> B2 --> B3
+    C1 --> C2 --> C3
+    C3 -- "Student is 1 hour late!" --> D1
+    D1 --> D2 --> D3</pre></div><h4>Architectural Summary:</h4>
 <ul>
-<li><strong>Level 0 Context Diagram</strong>: Models external actors interacting with the central CMADMS boundary. Shows bidirectional data exchange between Students, Security Guards, Counselors, and HODs.</li>
-<li><strong>Level 1 Sub-System Flow</strong>:<ul>
-<li><strong>Process 1.0</strong>: Validates user credentials against <code>D1: Users Store</code> and issues role-signed cookies.</li>
-<li><strong>Process 2.0</strong>: Receives out-pass requests, checks department policies, creates opaque token records in <code>D2: Movement Permissions</code>, and outputs dynamic QR tokens.</li>
-<li><strong>Process 3.0</strong>: Decodes QR tokens at campus gates, queries <code>D2</code>, writes verification events to <code>D3: Gate Movement Logs</code>, and conditionally triggers Process 4.0 on anomaly detection.</li>
-<li><strong>Process 4.0</strong>: Performs join query on <code>D5: Counselor Assignments</code> to assign violation reports to <code>D4: Violations Store</code>.</li>
-</ul>
-</li>
+<li><strong>Login</strong>: You enter your email and password. The system checks our secure list and logs you in.</li>
+<li><strong>Pass Approval</strong>: A student submits a reason. A teacher clicks approve. The system creates a secret, un-copyable QR code.</li>
+<li><strong>Gate Check</strong>: The guard points their camera. The system checks the clock. If the student is allowed to leave, it records the exact second they stepped out.</li>
+<li><strong>Auto-Notice</strong>: If the student returns an hour late, the system automatically creates a note for their mentor so they can check what caused the delay.</li>
 </ul>
 <hr>
-<h3>5.3 Real-Time QR Gate Verification Lifecycle Flowchart</h3>
+<h3>5.3 What Happens When a Guard Scans a Student&#39;s QR Code</h3>
+<p>Here is the exact thought process the computer follows in less than 500 milliseconds:</p>
 <div class="mermaid-container"><pre class="mermaid">flowchart TD
-    A["📱 Security Officer Scans QR Code"] --> B["Capture Frame & Downscale to 800px"]
-    B --> C["Apply Otsu Adaptive Glare Binarization"]
-    C --> D["jsQR Decodes Payload Token String"]
-    D --> E{"Is Token Payload Valid?"}
+    Scan["Guard scans student QR code"] --> Read["Camera cleans up image and reads the code"]
+    Read --> CheckExists{"Is this a real Campus Guard pass?"}
     
-    E -- No --> F["❌ Return Error: 'Invalid QR Format'"]
-    E -- Yes --> G["🔒 Server Queries DB for Token Record"]
+    CheckExists -- "No" --> Fake["Access Denied: Invalid or unapproved code."]
+    CheckExists -- "Yes" --> CheckApproved{"Did a teacher or HOD approve it?"}
     
-    G --> H{"Token Exists in DB?"}
-    H -- No --> I["❌ Return Error: 'Pass Record Not Found'"]
-    H -- Yes --> J{"Is Pass Status APPROVED?"}
+    CheckApproved -- "No" --> NotReady["Access Denied: Pass pending approval."]
+    CheckApproved -- "Yes" --> CheckClock{"What time does the clock show?"}
     
-    J -- No --> K["❌ Return Error: 'Pass Pending or Rejected'"]
-    J -- Yes --> L{"Is Current Time within Valid Window?"}
+    CheckClock -- "Too Early!" --> Early["Pass Not Started: Scheduled for later today."]
+    Early --> EarlyChoice{"Is there an urgent reason to leave early?"}
+    EarlyChoice -- "Yes" --> Override["Guard taps 'Allow Early Exit' with reason"]
+    EarlyChoice -- "No" --> Wait["Student waits until the allowed start time"]
     
-    L -- Early --> M["❌ Return Error: 'Pass Not Yet Active'"]
-    L -- Expired --> N["⚠️ Return Warning: 'Pass Expired'"]
-    L -- Valid --> O{"Determine Transaction Direction"}
+    CheckClock -- "Too Late!" --> Expired["Access Denied: Pass expired."]
     
-    O -- "No Prior Gate Logs (Exit First)" --> P["🟢 Grant EXIT Gate Clearance"]
-    O -- "Has EXIT Log (Return Entry)" --> Q["🟢 Grant ENTRY Gate Clearance"]
+    CheckClock -- "Right on Time!" --> Direction{"Is the student leaving or returning?"}
     
-    P --> R["Write EXIT Transaction to movement_logs"]
-    Q --> S["Write ENTRY Transaction to movement_logs"]
+    Direction -- "Leaving Campus" --> ExitGreen["Status: ALLOWED TO EXIT"]
+    Direction -- "Coming Back" --> EntryGreen["Status: WELCOME BACK"]
     
-    R --> T["Update Permission Status / Scan Counter"]
-    S --> U{"Returned After Valid Until Time?"}
+    ExitGreen --> LogExit["Saves EXIT time in the gate history book"]
+    Override --> LogExit
+    EntryGreen --> LogEntry["Saves ENTRY time in the gate history book"]
     
-    U -- Yes --> V["⚠️ Automatically Trigger Violation Generator"]
-    U -- No --> W["✅ Complete Pass Lifecycle (Normal Return)"]
-    
-    V --> X["Create Record in violations Table"]
-    X --> Y["Assign to Student's Counselor"]</pre></div><h4>🔍 Technical Explanation of QR Verification Flowchart</h4>
-<ol>
-<li><strong>Frame Capture &amp; Optimization</strong>: When the camera scans a student&#39;s phone, the canvas crops the central 65% frame area, downscales to an optimal 800px width, and applies Otsu thresholding to remove screen glare.</li>
-<li><strong>Server-Authoritative Lookup</strong>: The decoded string is sent to <code>verifyGatePassApi</code>. The server verifies that:<ul>
-<li>The token matches <code>qr_token</code> in <code>movement_permissions</code>.</li>
-<li>The pass state is <code>APPROVED</code>.</li>
-<li>Current server time $T_{now}$ satisfies: $\text{valid_from} \le T_{now} \le \text{valid_until}$.</li>
+    LogEntry --> LateCheck{"Did student return past their end time?"}
+    LateCheck -- "Yes" --> AlertMentor["Alert: Late return notified to counselor"]
+    LateCheck -- "No" --> Done["Complete: Pass successfully finished."]</pre></div><h4>Architectural Summary:</h4>
+<ul>
+<li><strong>Green Screen (Authorized)</strong>: Everything is valid. The student is authorized to pass.</li>
+<li><strong>Yellow Screen (Early Arrival / Before Validity)</strong>: The pass is approved, but the student arrived early (for example, their pass starts at 3:00 PM, but it&#39;s only 1:45 PM). If there is an urgent reason, the guard can tap <strong>&quot;Allow Early Exit&quot;</strong>, which logs their officer ID and reason.</li>
+<li><strong>Red Screen (Denied)</strong>: The pass is expired, rejected, canceled, or fake. The guard denies exit.</li>
+<li><strong>Two Scans with One Pass</strong>: A pass works twice—once when leaving campus and once when coming back.</li>
 </ul>
-</li>
-<li><strong>Dual-Scan Direction Resolution</strong>:<ul>
-<li>If no prior log exists for this pass ID, the transaction is categorized as <code>EXIT</code>.</li>
-<li>If an <code>EXIT</code> log exists without a matching <code>ENTRY</code>, the transaction is categorized as <code>ENTRY</code>.</li>
-</ul>
-</li>
-<li><strong>Automated Violation Trigger</strong>: If an <code>ENTRY</code> log timestamp exceeds <code>valid_until</code>, the system automatically invokes <code>createViolationReport</code>, calculating the exact over-time duration (in minutes) and attaching the gate log reference ID.</li>
-</ol>
 <hr>
-<h3>5.4 Counselor-First Violation Routing Sequence Diagram</h3>
+<h3>5.4 How Rule Violations are Handled (The &quot;Counselor-First&quot; Rule)</h3>
+<p>In many colleges, students caught roaming or coming back late are immediately dragged to the Principal or Department Head. Campus Guard Pro introduces a much fairer and friendlier workflow:</p>
 <div class="mermaid-container"><pre class="mermaid">sequenceDiagram
     autonumber
-    participant ST as Student / Gate Event
-    participant SYS as CMADMS Server Engine
-    participant DB as PostgreSQL Database
-    participant CO as Class Counselor Workspace
-    participant HOD as HOD Dashboard
+    actor Student as Student
+    actor Reporter as Teacher or Guard
+    participant System as Campus Guard System
+    actor Counselor as Class Counselor (Mentor)
+    actor HOD as Department Head (HOD)
 
-    ST->>SYS: Gate Return Logged (Overdue / Unauthorized Exit)
-    SYS->>DB: Query Student Counselor Mapping (`counselor_assignments`)
+    Reporter->>System: Reports student (e.g. Roaming hallway during class)
+    System->>System: Looks up: Who is this student's mentor?
     
-    alt Counselor Mapping Exists
-        DB-->>SYS: Return Counselor ID (e.g., Prof. Alice)
-        SYS->>DB: Insert into `violations` (assigned_counselor_id = Prof. Alice, status = 'PENDING_COUNSELOR')
-        SYS-->>CO: Dispatch Real-Time Alert & Update Roster Counter
-    else No Active Counselor Mapping
-        DB-->>SYS: Return NULL (Unassigned)
-        SYS->>DB: Insert into `violations` (status = 'ESCALATED_HOD', routed_to = HOD)
-        SYS-->>HOD: Dispatch Direct HOD Escalation Alert
+    alt Counselor is Found
+        System-->>Counselor: Notification: "Your student was reported"
+    else No Counselor Mapped
+        System-->>HOD: Notification: "Unassigned student was reported"
     end
 
-    Note over CO: Counselor Reviews Infraction & Student Explanation
+    System-->>Student: Message: "Please write your explanation within 24 hours"
+    Student->>System: Types what happened & uploads doctor slip or proof
+    
+    Note over Counselor: Counselor reads student's story with care
 
-    alt Counselor Resolves Infraction
-        CO->>SYS: Submit Resolution Action ('RESOLVE', Remarks: "Valid Medical Reason")
-        SYS->>DB: Update `violations` (status = 'RESOLVED', resolved_by = Counselor_ID)
-        SYS-->>ST: Notify Student: "Violation Resolved by Counselor"
-    else Counselor Escalates to HOD
-        CO->>SYS: Submit Escalation Action ('ESCALATE_TO_HOD', Remarks: "Repeat Offender")
-        SYS->>DB: Update `violations` (status = 'ESCALATED_HOD', escalation_reason = Remarks)
-        SYS-->>HOD: Transfer Case to HOD Workspace Ledger
-        HOD->>SYS: HOD Takes Final Disciplinary Action
-        SYS->>DB: Update `violations` (status = 'CLOSED_BY_HOD')
-    end</pre></div><h4>🔍 Technical Explanation of Sequence Diagram</h4>
+    alt Counselor Solves It (1st Level)
+        Counselor->>System: Clicks "Resolve" (Note: "Valid reason / First warning given")
+        System-->>Student: Good news: "Issue resolved by your counselor!"
+    else Serious or Repeated Offense
+        Counselor->>System: Clicks "Escalate to HOD" (Note: "3rd time skipping class")
+        System-->>HOD: Forwards case to HOD for official action
+        HOD->>System: HOD issues official college order
+        System-->>Student: Final notice: "Case closed by Department Head"
+    end</pre></div><h4>Architectural Summary:</h4>
 <ol>
-<li><strong>Event Detection</strong>: A violation event originates either automatically from a late gate return or manually submitted by a faculty member.</li>
-<li><strong>Database Lookup</strong>: <code>createViolationReport</code> executes a server-side join query:<pre><code class="language-sql">SELECT counselor_id FROM counselor_assignments 
-WHERE student_id = $1 AND is_active = true LIMIT 1;</code></pre></li>
-<li><strong>State Transitions</strong>:<ul>
-<li><code>PENDING_COUNSELOR</code>: Initial state when assigned to a Class Counselor.</li>
-<li><code>RESOLVED</code>: Final state if the counselor accepts the student&#39;s written explanation.</li>
-<li><code>ESCALATED_HOD</code>: Transition state if the counselor escalates the case to the HOD.</li>
-<li><code>CLOSED_BY_HOD</code>: Final state after HOD administrative review.</li>
-</ul>
-</li>
+<li><strong>The Student Gets a Voice</strong>: The student has 24 hours to explain why they were late or out of class and can upload photos of receipts, medical notes, or club slips.</li>
+<li><strong>Mentorship First</strong>: The class mentor reads the explanation first. If the student had a flat tire or a clinic visit, the counselor can resolve it right away without dragging them into a scary disciplinary hearing.</li>
+<li><strong>Escalate Only When Necessary</strong>: If the student is caught repeatedly cutting class or causing trouble, the counselor forwards the case to the Department Head with their notes.</li>
 </ol>
 <hr>
-<h3>5.5 Entity-Relationship Diagram (ERD) &amp; Database Schema</h3>
+<h3>5.5 How the Database Tables Connect Together</h3>
+<p>Here is a clear picture of how information is organized in our database:</p>
 <div class="mermaid-container"><pre class="mermaid">erDiagram
-    USERS ||--o{ MOVEMENT_PERMISSIONS : "requests/owns"
-    USERS ||--o{ COUNSELOR_ASSIGNMENTS : "assigned as student/counselor"
-    USERS ||--o{ VIOLATIONS : "incurs/reviews"
-    MOVEMENT_PERMISSIONS ||--o{ MOVEMENT_LOGS : "generates gate events"
-    MOVEMENT_PERMISSIONS ||--o| EVENT_PARTICIPANTS : "linked to event pass"
-    COUNSELOR_ASSIGNMENTS }|--|| USERS : "managed by counselor"
-    VIOLATIONS }|--o| MOVEMENT_LOGS : "references gate transaction"
-    TIMETABLES }|--|| USERS : "assigned to faculty"
+    STUDENTS ||--o{ PASSES : "applies for"
+    TEACHERS ||--o{ PASSES : "approves"
+    TEACHERS ||--o{ STUDENTS : "mentors as counselor"
+    PASSES ||--o{ GATE_SCANS : "scanned at gate"
+    STUDENTS ||--o{ ISSUES : "receives"
+    TEACHERS ||--o{ ISSUES : "reviews and resolves"
+    TIMETABLE_CLASSES ||--o{ STUDENTS : "scheduled for"
 
-    USERS {
-        uuid id PK
-        string roll_number UK
-        string full_name
-        string email UK
-        enum role "ADMIN, HOD, FACULTY, SECURITY, STUDENT"
-        string department
-        int year
-        string section
-        boolean is_active
+    STUDENTS {
+        string roll_number "Student ID / Roll Number"
+        string student_name "Full Name"
+        string department "e.g. Computer Science"
+        string year_and_section "e.g. 3rd Year Section A"
     }
 
-    MOVEMENT_PERMISSIONS {
-        uuid id PK
-        uuid student_id FK
-        enum type "NORMAL_MOVEMENT, CLUB_EVENT"
-        string reason
-        timestamp valid_from
-        timestamp valid_until
-        enum status "PENDING, APPROVED, REJECTED, EXPIRED"
-        string qr_token UK
-        uuid approved_by FK
+    PASSES {
+        string reason "Doctor, Library, Sports, etc."
+        string pass_date "Allowed Day"
+        string start_time "When they can leave"
+        string end_time "When they must return"
+        string status "Approved, Pending, or Rejected"
+        string secret_qr_code "Special code scanned at gate"
     }
 
-    MOVEMENT_LOGS {
-        uuid id PK
-        uuid permission_id FK
-        uuid student_id FK
-        enum log_type "EXIT, ENTRY"
-        timestamp timestamp
-        uuid verified_by_guard_id FK
-        string gate_location
+    GATE_SCANS {
+        string scan_type "Leaving (EXIT) or Returning (ENTRY)"
+        string exact_time "Clock time when scanned"
+        string gate_name "Main Gate or Side Gate"
+        string guard_name "Name of guard on duty"
     }
 
-    COUNSELOR_ASSIGNMENTS {
-        uuid id PK
-        uuid counselor_id FK
-        uuid student_id FK
-        timestamp assigned_at
-        boolean is_active
+    TEACHERS {
+        string teacher_name "Professor Full Name"
+        string department "Department"
+        string email "College Email"
+        string role "Counselor or Regular Faculty"
     }
 
-    VIOLATIONS {
-        uuid id PK
-        uuid student_id FK
-        uuid assigned_counselor_id FK
-        uuid movement_log_id FK
-        enum severity "LOW, MEDIUM, HIGH, CRITICAL"
-        enum status "PENDING_COUNSELOR, RESOLVED, ESCALATED_HOD, CLOSED_BY_HOD"
-        text reason
-        text student_explanation
-        text counselor_remarks
-        timestamp created_at
+    ISSUES {
+        string what_happened "Roaming hallway or late return"
+        string student_story "Student's side of the story"
+        string proof_attached "Photo of clinic receipt or slip"
+        string outcome "Resolved or Escalated to HOD"
     }
 
-    TIMETABLES {
-        uuid id PK
-        uuid faculty_id FK
-        string course_code
-        string course_name
-        string room_number
-        int day_of_week
-        time start_time
-        time end_time
-    }</pre></div><h4>🔍 Technical Explanation of ERD Schema</h4>
+    TIMETABLE_CLASSES {
+        string subject_name "Course Name"
+        string room_number "Classroom"
+        string teacher_name "Instructor"
+        string class_hours "Start and End Period"
+    }</pre></div><h4>Architectural Summary:</h4>
 <ul>
-<li><strong>Relational Integrity</strong>: Uses strong Foreign Key relationships with index constraints on <code>student_id</code>, <code>counselor_id</code>, and <code>qr_token</code>.</li>
-<li><strong>Constraint Enforcement</strong>: <code>MOVEMENT_PERMISSIONS</code> guarantees exact permission windows. A database check constraint ensures a pass is either a <code>NORMAL_MOVEMENT</code> pass or linked to an <code>EVENT_PARTICIPANTS</code> record (<code>EXACTLY_ONE_PERMISSION_SOURCE</code>).</li>
-<li><strong>Opaque Tokens</strong>: The <code>qr_token</code> field is indexed with <code>UNIQUE</code> constraints, holding a cryptographically generated 32-character string preventing URL/QR guessing attacks.</li>
+<li><strong>STUDENTS</strong>: Information about every student in the college.</li>
+<li><strong>PASSES</strong>: Saves every pass request, the reason, and allowed hours.</li>
+<li><strong>GATE_SCANS</strong>: Permanent record of every gate scan made by security guards.</li>
+<li><strong>TEACHERS</strong>: List of faculty members and mentors.</li>
+<li><strong>ISSUES</strong>: Tracks any disciplinary tickets and how mentors resolved them.</li>
+<li><strong>TIMETABLE_CLASSES</strong>: The 642 master class periods across all departments.</li>
 </ul>
 <hr>
-<h3>5.6 Security Gate Multi-Scan State Machine</h3>
+<h3>5.6 The Complete Journey of a Gate Pass</h3>
+<p>Here is the life story of a pass from the moment a student submits it until they come back to campus:</p>
 <div class="mermaid-container"><pre class="mermaid">stateDiagram-v8
-    [*] --> PassCreated : Student Submits Request
-    PassCreated --> PendingApproval : Awaiting Counselor/HOD Review
-    PendingApproval --> Rejected : Reviewer Denies Request
-    PendingApproval --> Approved : Reviewer Grants Permission
+    [*] --> FormSubmitted : Student fills out the pass form
+    FormSubmitted --> WaitingForReview : Sent to teacher or HOD
+    WaitingForReview --> Denied : Teacher or HOD says No
+    WaitingForReview --> Approved : Teacher or HOD says Yes
     
     state Approved {
-        [*] --> InactiveWindow : Before valid_from Time
-        InactiveWindow --> ValidForExit : Current Time >= valid_from
+        [*] --> TooEarly : Before allowed start time
+        TooEarly --> ReadyToLeave : Allowed start hour arrives
+        TooEarly --> EarlyExitGranted : Guard grants early exit
         
-        state ValidForExit {
-            [*] --> AwaitingExitScan
-            AwaitingExitScan --> ExitScanned : Guard Scans QR at Gate
-        }
+        ReadyToLeave --> OutsideCampus : Guard scans EXIT at gate
+        EarlyExitGranted --> OutsideCampus : Guard scans EXIT with override
         
-        ExitScanned --> ValidForEntry : Exit Logged in DB
-        
-        state ValidForEntry {
-            [*] --> OnCampusAbsence : Outside Campus Window
-            OnCampusAbsence --> EntryScannedNormal : Guard Scans Return (Current Time <= valid_until)
-            OnCampusAbsence --> EntryScannedLate : Guard Scans Return (Current Time > valid_until)
-        }
+        OutsideCampus --> BackOnTime : Guard scans ENTRY on time
+        OutsideCampus --> BackLate : Guard scans ENTRY past end hour
     }
     
-    EntryScannedNormal --> PassCompleted : Dual-Scan Lifecycle Finished
-    EntryScannedLate --> ViolationTriggered : Auto-Create Violation Report
+    BackOnTime --> PassFinished : Done! Student is back safely
+    BackLate --> NotifiedCounselor : System flags late return for mentor
     
-    ViolationTriggered --> [*]
-    PassCompleted --> [*]
-    Rejected --> [*]</pre></div><h4>🔍 Technical Explanation of State Machine</h4>
+    NotifiedCounselor --> [*]
+    PassFinished --> [*]
+    Denied --> [*]</pre></div><hr>
+<h2>6. Core Functional Modules &amp; Application Interface</h2>
+<hr>
+<h3>6.1 The Login Screen</h3>
 <ul>
-<li><strong>Lifecycle Transition</strong>: A single pass object seamlessly transitions through distinct operational states.</li>
-<li><strong>Dual-Scan Capability</strong>: Unlike single-use passes, CMADMS passes remain in <code>Approved</code> state during transit, enabling an initial <code>EXIT</code> scan followed by a subsequent <code>ENTRY</code> scan within the authorized timeframe.</li>
-<li><strong>Automatic Cleanup</strong>: Once the <code>ENTRY</code> transaction is logged, the state machine concludes at <code>PassCompleted</code>, marking the pass as fulfilled.</li>
+<li><strong>Address in app</strong>: <code>/auth</code></li>
+<li><strong>What it does</strong>: Anyone can sign in with their college email and password.</li>
+<li><strong>Helpful Feature</strong>: We built clickable role badges on the login page (<strong>Student</strong>, <strong>Faculty</strong>, <strong>Security</strong>, <strong>HOD</strong>, <strong>Admin</strong>). Clicking any badge instantly fills in demo credentials so reviewers can test the app without typing!</li>
+<li><strong>Forgot Password</strong>: If you forget your password, there is an easy 3-step screen at <code>/reset-password</code> that lets you reset it with a verification code.</li>
 </ul>
 <hr>
-<h2>🧩 6. Functional Modules Breakdown &amp; UI Screenshots</h2>
-<hr>
-<h3>6.1 Authentication &amp; Session Management Module</h3>
+<h3>6.2 The Gate Security Scanner (For Guards)</h3>
 <ul>
-<li><strong>Primary Source Files</strong>: <code>src/lib/api/auth.server.ts</code>, <code>src/lib/session.server.ts</code>, <code>src/components/role-guard.tsx</code>.</li>
-<li><strong>Functionality</strong>: Handles user logins, password resets, role-based route guards, and HTTP-only session cookies.</li>
-<li><strong>Implementation</strong>:<pre><code class="language-ts">// Example Role Protection Pattern
-export const requireRole = createServerFn({ method: &#039;GET&#039; })
-  .validator(z.object({ allowedRoles: z.array(z.string()) }))
-  .handler(async ({ ctx, input }) =&gt; {
-    const session = await getSession(ctx.request);
-    if (!session || !input.allowedRoles.includes(session.user.role)) {
-      throw new Error(&#039;UNAUTHORIZED_ROLE_ACCESS&#039;);
-    }
-    return session.user;
-  });</code></pre></li>
+<li><strong>Address in app</strong>: <code>/security/check</code></li>
+<li><strong>What it does</strong>: Turns any basic smartphone camera into an ultra-fast gate scanner.</li>
+<li><strong>Key Features</strong>:<ul>
+<li><strong>Screen Glare Filter</strong>: Guards can scan student phone screens even under intense midday sun.</li>
+<li><strong>Color Coded Status Cards</strong>:<ul>
+<li><strong>Green</strong>: Allowed to Exit or Allowed to Enter. Shows the student&#39;s photo, name, and roll number.</li>
+<li><strong>Yellow</strong>: Too early! Shows a live countdown to the pass start time, plus an <strong>&quot;Allow Early Exit&quot;</strong> button if the student has a valid reason.</li>
+<li><strong>Red</strong>: Denied! Pass is expired, canceled, or fake.</li>
 </ul>
-<hr>
-<h3>6.2 Real-Time QR Gate Pass Engine &amp; Security UI</h3>
-<ul>
-<li><strong>Primary Source Files</strong>: <code>src/lib/db/qr.server.ts</code>, <code>src/routes/security/check.tsx</code>, <code>src/components/qr-scanner-modal.tsx</code>.</li>
-<li><strong>Functionality</strong>: Handles camera stream rendering, optical frame decoding, image thresholding, opaque token verification, and transaction logging.</li>
-</ul>
-<p><div class="image-container"><img src="file:///F:/Projects/Campus guard pro/docs/assets/security_qr_scanner.png" alt="Security Gate QR Scanner UI"><em class="image-caption">Security Gate QR Scanner UI</em></div>
-<em>Figure 6.1: Security Officer Gate Scanner UI displaying live camera targeting box, instant QR decoding, and emerald verification badge (<code>PASS VERIFIED - ALLOWED TO EXIT</code>).</em></p>
-<h4>🔍 UI Explanation (Figure 6.1)</h4>
-<p>The Security Officer interface (<code>/security/check</code>) presents a dedicated camera scanner optimized for high-speed gate verification. The scanner automatically crops the central frame area, performs adaptive thresholding, and sends the decoded token to <code>verifyGatePassApi</code>. Upon validation, an instant full-width visual banner (<code>PASS VERIFIED - ALLOWED TO EXIT</code>) displays the student&#39;s name, roll number, time window, and gate location, permitting entry or exit in under 500ms.</p>
-<hr>
-<h3>6.3 Student Dashboard &amp; Digital Pass Portal</h3>
-<ul>
-<li><strong>Primary Source Files</strong>: <code>src/routes/student/dashboard.tsx</code>, <code>src/routes/student/passes.tsx</code>.</li>
-<li><strong>Functionality</strong>: Provides students with real-time pass request submission, dynamic QR rendering, validity timers, and assigned counselor details.</li>
-</ul>
-<p><div class="image-container"><img src="file:///F:/Projects/Campus guard pro/docs/assets/student_dashboard_pass.png" alt="Student Dashboard & Digital Pass UI"><em class="image-caption">Student Dashboard & Digital Pass UI</em></div>
-<em>Figure 6.2: Student Portal Dashboard displaying the dynamic QR Gate Pass, validity countdown timer, active status badge, and &quot;My Assigned Counselor&quot; info card.</em></p>
-<h4>🔍 UI Explanation (Figure 6.2)</h4>
-<p>The Student Dashboard (<code>/student/dashboard</code>) serves as the central hub for student movement management. It renders the student&#39;s active QR code pass alongside a dynamic validity countdown timer. In addition, the <strong>&quot;My Assigned Counselor&quot;</strong> card gives students immediate visibility into their designated advisor&#39;s name, faculty ID, department, and contact email, establishing clear accountability.</p>
-<hr>
-<h3>6.4 Counselor Workspace &amp; Student Roster System</h3>
-<ul>
-<li><strong>Primary Source Files</strong>: <code>src/lib/db/counselor.server.ts</code>, <code>src/routes/faculty/counselor.tsx</code>.</li>
-<li><strong>Functionality</strong>: Provides Class Counselors with an interactive management dashboard.</li>
-</ul>
-<p><div class="image-container"><img src="file:///F:/Projects/Campus guard pro/docs/assets/counselor_workspace_roster.png" alt="Faculty Counselor Workspace Roster UI"><em class="image-caption">Faculty Counselor Workspace Roster UI</em></div>
-<em>Figure 6.3: Faculty Counselor Workspace displaying the interactive &quot;My Assigned Students&quot; roster table, multi-column search filters, active pass queue, and 1st-level violation resolution drawer.</em></p>
-<h4>🔍 UI Explanation (Figure 6.3)</h4>
-<p>The Counselor Workspace (<code>/faculty/counselor</code>) gives Class Counselors exclusive visibility over their assigned counseling cohort. The <strong>&quot;My Assigned Students&quot;</strong> tab renders a filterable data table listing roll numbers, full names, email addresses, departments, years, and sections. Counselors can review active out-pass requests, validate student explanations, and perform 1st-level violation resolutions directly from the sidebar workspace.</p>
-<hr>
-<h3>6.5 HOD Governance Console &amp; Analytics</h3>
-<ul>
-<li><strong>Primary Source Files</strong>: <code>src/routes/hod/dashboard.tsx</code>, <code>src/routes/hod/passes.tsx</code>.</li>
-<li><strong>Functionality</strong>: Departmental control center for monitoring movement metrics, reviewing escalated violations, and managing course timetables.</li>
-</ul>
-<p><div class="image-container"><img src="file:///F:/Projects/Campus guard pro/docs/assets/hod_analytics_dashboard.png" alt="HOD Analytics & Department Console UI"><em class="image-caption">HOD Analytics & Department Console UI</em></div>
-<em>Figure 6.4: HOD Governance Console displaying real-time movement analytics charts, departmental KPI stats cards, and escalated infraction review queues.</em></p>
-<h4>🔍 UI Explanation (Figure 6.4)</h4>
-<p>The HOD Console (<code>/hod/dashboard</code>) provides macro-level oversight across the department. Interactive <strong>Recharts</strong> widgets visualize hourly gate movement density, peak departure windows, and violation distribution. HODs can review cases escalated by counselors (<code>ESCALATED_HOD</code>), execute institutional policy overrides, and manage department-wide pass authorizations.</p>
-<hr>
-<h3>6.6 Violation Routing &amp; Resolution Workflow Engine</h3>
-<ul>
-<li><strong>Primary Source Files</strong>: <code>src/lib/db/violations.server.ts</code>, <code>src/routes/student/violations.tsx</code>.</li>
-<li><strong>Functionality</strong>:<ul>
-<li>Automatically queries active counselor mappings when a violation occurs.</li>
-<li>Allows counselors to log 1st-level resolutions (<code>RESOLVE</code> with official remarks).</li>
-<li>Enables one-click escalation (<code>ESCALATE_TO_HOD</code>) for severe or repeated infractions.</li>
+</li>
+<li><strong>Big Buttons</strong>: All touch targets are at least 44 pixels tall so guards can tap them easily with one thumb.</li>
 </ul>
 </li>
 </ul>
 <hr>
-<h2>🗄️ 7. Database Schema &amp; Data Models</h2>
-<h3>Core Table Definitions (SQL DDL)</h3>
-<pre><code class="language-sql">-- 1. USERS TABLE
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    roll_number VARCHAR(50) UNIQUE,
-    full_name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL CHECK (role IN (&#039;ADMIN&#039;, &#039;HOD&#039;, &#039;FACULTY&#039;, &#039;SECURITY&#039;, &#039;STUDENT&#039;)),
-    department VARCHAR(100),
-    year INT,
-    section VARCHAR(10),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- 2. COUNSELOR ASSIGNMENTS TABLE
-CREATE TABLE counselor_assignments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    counselor_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    student_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    is_active BOOLEAN DEFAULT TRUE,
-    CONSTRAINT unique_active_student_assignment UNIQUE (student_id, is_active)
-);
-
--- 3. MOVEMENT PERMISSIONS TABLE
-CREATE TABLE movement_permissions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    student_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    type VARCHAR(30) NOT NULL CHECK (type IN (&#039;NORMAL_MOVEMENT&#039;, &#039;CLUB_EVENT&#039;)),
-    reason TEXT NOT NULL,
-    valid_from TIMESTAMP WITH TIME ZONE NOT NULL,
-    valid_until TIMESTAMP WITH TIME ZONE NOT NULL,
-    status VARCHAR(20) DEFAULT &#039;PENDING&#039; CHECK (status IN (&#039;PENDING&#039;, &#039;APPROVED&#039;, &#039;REJECTED&#039;, &#039;EXPIRED&#039;)),
-    qr_token VARCHAR(64) UNIQUE NOT NULL,
-    approved_by UUID REFERENCES users(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- 4. MOVEMENT LOGS TABLE
-CREATE TABLE movement_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    permission_id UUID NOT NULL REFERENCES movement_permissions(id) ON DELETE CASCADE,
-    student_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    log_type VARCHAR(10) NOT NULL CHECK (log_type IN (&#039;EXIT&#039;, &#039;ENTRY&#039;)),
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    verified_by_guard_id UUID NOT NULL REFERENCES users(id),
-    gate_location VARCHAR(100) DEFAULT &#039;Main Gate 1&#039;
-);
-
--- 5. VIOLATIONS TABLE
-CREATE TABLE violations (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    student_id UUID NOT NULL REFERENCES USERS(id) ON DELETE CASCADE,
-    assigned_counselor_id UUID REFERENCES users(id),
-    movement_log_id UUID REFERENCES movement_logs(id),
-    severity VARCHAR(20) DEFAULT &#039;MEDIUM&#039; CHECK (severity IN (&#039;LOW&#039;, &#039;MEDIUM&#039;, &#039;HIGH&#039;, &#039;CRITICAL&#039;)),
-    status VARCHAR(30) DEFAULT &#039;PENDING_COUNSELOR&#039; CHECK (status IN (&#039;PENDING_COUNSELOR&#039;, &#039;RESOLVED&#039;, &#039;ESCALATED_HOD&#039;, &#039;CLOSED_BY_HOD&#039;)),
-    reason TEXT NOT NULL,
-    student_explanation TEXT,
-    counselor_remarks TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);</code></pre><hr>
-<h2>🎨 8. UI/UX Design System &amp; Micro-Interactions</h2>
-<p>Campus Guard Pro implements a custom, modern design system built on <strong>Tailwind CSS v4</strong> design tokens, adhering to accessibility standards (WCAG 2.1 AA compliant) and optimized dark/light themes.</p>
-<blockquote class="alert alert-tip"><p><strong>💡 TIP</strong>
-<strong>Design Philosophy</strong>: High contrast ratios for outdoor gate scan readability, subtle micro-animations for card interactions, and instant visual status badges for rapid administrative auditing.</p>
-</blockquote>
-<h3>Palette &amp; Color Tokens</h3>
-<pre><code class="language-css">:root {
-  --background: #090d16;        /* Deep Space Blue Background */
-  --card: #111827;              /* Slate Dark Card Surface */
-  --primary: #3b82f6;           /* Electric Royal Blue */
-  --primary-foreground: #ffffff;
-  --success: #10b981;           /* Emerald Verification Green */
-  --warning: #f59e0b;           /* Amber Expiry Warning */
-  --destructive: #ef4444;       /* Crimson Violation Red */
-  --border: #1f293d;            /* Subtle Divider Border */
-}</code></pre><hr>
-<h2>🔐 9. Security, Cryptography &amp; Audit Trail</h2>
+<h3>6.3 The Student Dashboard &amp; Live QR Pass</h3>
+<ul>
+<li><strong>Address in app</strong>: <code>/student/dashboard</code> and <code>/student/passes</code></li>
+<li><strong>What it does</strong>: The student&#39;s everyday home screen.</li>
+<li><strong>Key Features</strong>:<ul>
+<li><strong>Request a Pass</strong>: Pick a reason (Doctor, Library, Sports, Lab work), choose the hours, and submit.</li>
+<li><strong>Live Digital QR</strong>: Shows an active QR code with a live countdown timer.</li>
+<li><strong>My Counselor Card</strong>: Displays the assigned mentor&#39;s photo, name, department, and contact email so the student always knows who to go to for help.</li>
+<li><strong>Submit Explanation</strong>: If reported for being out of class, students can type their explanation and attach photos or clinic receipts at <code>/student/explanations</code>.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3>6.4 The Counselor Workspace (For Mentors &amp; Teachers)</h3>
+<ul>
+<li><strong>Address in app</strong>: <code>/faculty/counselor</code></li>
+<li><strong>What it does</strong>: A dedicated space for teachers who mentor a cohort of students.</li>
+<li><strong>Key Features</strong>:<ul>
+<li><strong>My Assigned Students</strong>: A searchable list of all students assigned to this counselor. Filterable by Year, Section, and Department.</li>
+<li><strong>Pass Approvals</strong>: One-click approval for out-pass requests submitted by assigned students.</li>
+<li><strong>Violation Cases</strong>: Review students who returned late or were reported in hallways. Read their explanation, see attached proof, and click <strong>&quot;Resolve&quot;</strong> or <strong>&quot;Escalate to HOD&quot;</strong>.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3>6.5 The Department Head (HOD) Control Room</h3>
+<ul>
+<li><strong>Address in app</strong>: <code>/hod/dashboard</code> and <code>/hod/cases</code></li>
+<li><strong>What it does</strong>: High-level departmental oversight.</li>
+<li><strong>Key Features</strong>:<ul>
+<li><strong>Pass Queue</strong>: Approve passes for any student in the department.</li>
+<li><strong>Departmental Isolation</strong>: A CSE HOD can only see CSE students. An ECE HOD can only see ECE students. This keeps sensitive student records private.</li>
+<li><strong>Escalated Cases</strong>: Handle serious disciplinary cases referred by counselors.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3>6.6 Checking Attendance &amp; Reporting Roaming Students</h3>
+<ul>
+<li><strong>Address in app</strong>: <code>/faculty/check</code></li>
+<li><strong>What it does</strong>: Allows teachers to check student schedules.</li>
+<li><strong>Key Features</strong>:<ul>
+<li><strong>Instant Timetable Lookup</strong>: Type a student&#39;s roll number. The system checks the 642 master class slots and instantly tells you: <em>&quot;Ashok Dora should currently be in Room C-204 for Data Structures with Dr. Sharma.&quot;</em></li>
+<li><strong>Report Loitering</strong>: If the student is found wandering outside instead of sitting in class, the teacher can submit a quick report.</li>
+<li><strong>Anti-Spam Filter</strong>: If two teachers try to report the same student within 15 minutes, the system ignores the duplicate so students aren&#39;t unfairly penalized twice.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>7. Database Schema &amp; Data Models</h2>
+<p>All records are stored securely in <strong>PostgreSQL</strong>. Here is what each table does in simple words:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Table Name</th>
+<th align="left">What It Stores</th>
+<th align="left">Why It Matters</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong><code>profiles</code></strong></td>
+<td align="left">Names, emails, scrambled passwords, and departments.</td>
+<td align="left">Allows everyone to log in securely.</td>
+</tr>
+<tr>
+<td align="left"><strong><code>user_roles</code></strong></td>
+<td align="left">Tells the system if someone is a student, guard, teacher, HOD, or admin.</td>
+<td align="left">Makes sure students can&#39;t view admin screens.</td>
+</tr>
+<tr>
+<td align="left"><strong><code>students</code></strong></td>
+<td align="left">Master list of students, roll numbers, years, sections, and photos.</td>
+<td align="left">Holds official college student records.</td>
+</tr>
+<tr>
+<td align="left"><strong><code>movement_permissions</code></strong></td>
+<td align="left">Pass requests, approved hours, reasons, and secret QR code strings.</td>
+<td align="left">Tracks every out-pass in the college.</td>
+</tr>
+<tr>
+<td align="left"><strong><code>movement_logs</code></strong></td>
+<td align="left">The exact timestamp of every gate scan (Exit or Entry) and guard ID.</td>
+<td align="left">Proves who entered or left campus and at what second.</td>
+</tr>
+<tr>
+<td align="left"><strong><code>counselor_assignments</code></strong></td>
+<td align="left">Maps which teacher mentors which student.</td>
+<td align="left">Enables the Counselor-First system.</td>
+</tr>
+<tr>
+<td align="left"><strong><code>violation_reports</code></strong></td>
+<td align="left">Disciplinary reports, student explanations, and resolution notes.</td>
+<td align="left">Tracks student rule infractions and outcomes.</td>
+</tr>
+<tr>
+<td align="left"><strong><code>class_slots</code></strong></td>
+<td align="left">All 642 timetable classes across all departments and semesters.</td>
+<td align="left">Lets the app check who belongs in which classroom right now.</td>
+</tr>
+<tr>
+<td align="left"><strong><code>emergency_incidents</code></strong></td>
+<td align="left">Campus emergency alerts (medical, fire, hazard) and response notes.</td>
+<td align="left">Coordinates safety teams during crisis events.</td>
+</tr>
+<tr>
+<td align="left"><strong><code>audit_logs</code></strong></td>
+<td align="left">An unchangeable history book of every important action in the system.</td>
+<td align="left">100% transparency for college administration.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>8. User Interface &amp; Design Specifications</h2>
+<p>We specifically designed Campus Guard Pro for real-world college environments:</p>
+<ul>
+<li><strong>Deep Space Dark Theme</strong>: Reduces battery usage and eye strain for guards and teachers on long shifts.</li>
+<li><strong>Unified Institutional Typography (Inter System)</strong>: Standardizes 100% of UI cards, labels, tables, roll numbers, pass tokens, and timestamps to the Google Inter font family. Monospace elements (such as roll numbers and pass IDs) now use Inter with tabular figures (<code>font-variant-numeric: tabular-nums</code>) to ensure perfect vertical alignment while eliminating mismatched typewriter fonts.</li>
+<li><strong>Enhanced Legibility &amp; Scaled Font Size</strong>: Base application typography is boosted with an elevated text scale. Microscopic 10px/11px labels are elevated to a comfortable 13.5px-14px standard, and table contents are scaled up for effortless readability across desktop monitors and mobile gate devices.</li>
+<li><strong>Clear, Unmistakable Colors</strong>:<ul>
+<li><strong>Emerald Green</strong>: Everything is safe and approved (Allowed to Exit / Pass Verified).</li>
+<li><strong>Amber Gold</strong>: Caution or pending item (Pass starts in 30 minutes / Early Exit).</li>
+<li><strong>Crimson Red</strong>: Denied, fake, expired, or emergency!</li>
+<li><strong>Royal Blue</strong>: Clickable buttons and links.</li>
+</ul>
+</li>
+<li><strong>Large Touch Targets</strong>: Buttons for guards are at least 44 pixels tall so they are effortless to tap on a phone screen without misclicking.</li>
+</ul>
+<hr>
+<h2>9. Security Architecture &amp; Cryptographic Controls</h2>
+<p>You don&#39;t need a degree in cybersecurity to understand how we protect student data:</p>
 <ol>
-<li><strong>Opaque Token Generation</strong>: QR codes store cryptographically generated 256-bit entropy tokens (<code>crypto.randomBytes(32).toString(&#39;hex&#39;)</code>). Tokens are completely decoupled from internal user DB keys.</li>
-<li><strong>Session Security</strong>: Session tokens are signed with HMAC-SHA256 and stored in <code>HttpOnly</code>, <code>SameSite=Lax</code>, <code>Secure</code> cookies.</li>
-<li><strong>SQL Injection Prevention</strong>: All queries use parameterized values (<code>$1</code>, <code>$2</code>) via the PostgreSQL native driver (<code>pg</code>), completely preventing SQL injection vectors.</li>
-<li><strong>Audit Logging</strong>: All gate transaction attempts (both successful clearances and denied scans) write permanent records to <code>movement_logs</code> containing the guard ID, timestamp, gate location, and exact failure reason.</li>
+<li><strong>Passwords are Scrambled</strong>: We never save actual passwords. Each password is mixed with a secret random code (called a salt) and scrambled using Node.js <code>scrypt</code>. Even if a hacker stole the database file, they could never read anyone&#39;s password.</li>
+<li><strong>Un-Guessable QR Codes</strong>: The QR code on a student&#39;s phone doesn&#39;t contain their student ID or personal information. It contains a random secret string. Nobody can guess or fake someone else&#39;s pass.</li>
+<li><strong>No Direct Database Access from Browsers</strong>: All database queries run safely on the server. Hackers cannot send sneaky commands through input boxes (SQL Injection Defense).</li>
+<li><strong>Guards Against Password Guessers</strong>: If someone tries guessing a password 5 times in 15 minutes, their login is temporarily locked.</li>
+<li><strong>Private Department Boundaries</strong>: A CSE HOD can only see CSE student records. They cannot snoop on Mechanical or Civil Engineering students.</li>
 </ol>
 <hr>
-<h2>🧪 10. Testing, Quality Assurance &amp; Verification</h2>
-<p>The codebase includes automated test suites validating full integration flows:</p>
-<h3>Integration Test Suite Example (<code>scratch/test-counselor-student-visibility.ts</code>)</h3>
-<p>Run:</p>
-<pre><code class="language-bash">npx tsx scratch/test-counselor-student-visibility.ts</code></pre><h3>Verified Test Cases</h3>
+<h2>10. Quality Assurance &amp; Verification Testing</h2>
+<p>Before releasing this system, we performed over <strong>700 automated verification checks</strong>:</p>
 <ul>
-<li>✅ <strong>Test Case 1</strong>: Counselor with 36 assigned students correctly displays exact count &amp; roster.</li>
-<li>✅ <strong>Test Case 2</strong>: Unassigned student view correctly falls back to HOD notification.</li>
-<li>✅ <strong>Test Case 3</strong>: Multi-scan gate sequence correctly processes initial <code>EXIT</code> followed by <code>ENTRY</code>.</li>
-<li>✅ <strong>Test Case 4</strong>: Late return triggers automatic violation creation and assigns case to student&#39;s active counselor.</li>
-<li>✅ <strong>Test Case 5</strong>: Server RPC authorization blocks counselors from accessing rosters of other departments.</li>
+<li><strong>Timetable Integrity (642/642 Passed)</strong>: Verified that all 642 class periods load without schedule conflicts.</li>
+<li><strong>Pass Dual-Scan Check (17/17 Passed)</strong>: Confirmed that a pass can be scanned at the gate to leave (<code>EXIT</code>) and then scanned again to return (<code>ENTRY</code>) without breaking.</li>
+<li><strong>Counselor Assignment Check (8/8 Passed)</strong>: Confirmed that student violation tickets route to their assigned mentor and that counselors only see their own cohort.</li>
+<li><strong>Early Exit Override Check</strong>: Confirmed that guards can properly grant early exit with an audit trail when a student has a legitimate emergency.</li>
+<li><strong>Type Safety Check</strong>: Ran <code>npx tsc --noEmit</code> and got <strong>0 errors</strong> across the entire codebase.</li>
 </ul>
 <hr>
-<h2>🚀 11. Installation, Setup &amp; Operations Manual</h2>
-<h3>Prerequisites</h3>
+<h2>11. Installation &amp; Deployment Guide</h2>
+<p>Want to try Campus Guard Pro on your laptop? Here is the easiest way:</p>
+<h3>Requirements</h3>
 <ul>
-<li><strong>Node.js</strong>: <code>v20.x</code> or higher</li>
-<li><strong>Bun</strong> (Optional): <code>v1.1</code> or higher</li>
-<li><strong>PostgreSQL</strong>: <code>v15.x</code> or higher</li>
+<li><strong>Node.js</strong> (version 20 or newer)</li>
+<li><strong>PostgreSQL</strong> (version 14 or newer) OR <strong>Docker</strong></li>
 </ul>
-<h3>Step-by-Step Local Deployment Guide</h3>
-<pre><code class="language-bash"># Step 1: Clone the Repository
-git clone https://github.com/Hanish0717/campus-guard-pro.git
-cd &quot;campus-guard-pro&quot;
-
-# Step 2: Install Project Dependencies
-bun install   # or: npm install
-
-# Step 3: Configure Environment Variables
-# Create a .env file in the root directory:
-cat &lt;&lt;EOT &gt; .env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/campus_guard_pro
-SESSION_SECRET=super_secret_cryptographic_key_32_chars_min
-PORT=3000
-NODE_ENV=development
-EOT
-
-# Step 4: Run Database Migrations &amp; Seeds
-npm run db:push   # or apply schema SQL directly to PostgreSQL
-
-# Step 5: Start Development Server
-npm run dev
-
-# Step 6: Production Build &amp; Launch
-npm run build
-npm run start</code></pre><hr>
-<h2>🔮 12. Strategic Roadmap &amp; Conclusion</h2>
-<h3>Strategic Roadmap</h3>
-<ul>
-<li>🚀 <strong>Phase 1 (Current Release - v2.4.0)</strong>: Real-time QR scanner, Counselor-First violation routing, dual-scan gate lifecycle, and Counselor-Student visibility.</li>
-<li>📱 <strong>Phase 2 (Upcoming)</strong>: Native Progressive Web App (PWA) offline scanning mode for gate security officers in low-connectivity areas.</li>
-<li>🤖 <strong>Phase 3 (Future)</strong>: AI-assisted anomaly detection predicting peak campus traffic times and identifying chronic absence patterns.</li>
-</ul>
-<h3>Conclusion</h3>
-<p><strong>Campus Guard Pro (CMADMS)</strong> establishes a new benchmark for campus security, movement governance, and academic discipline management. By replacing manual workflows with cryptographically verified QR passes, server-authoritative role enforcement, and automated counselor violation routing, CMADMS ensures a safer, more transparent, and highly efficient educational campus environment.</p>
 <hr>
-<p><em>End of Official Documentation — Campus Guard Pro (CMADMS)</em></p>
+<h3>Option A: Using Docker (Recommended — Just 1 Command)</h3>
+<p>If you have Docker Desktop installed, open your terminal in the project folder and run:</p>
+<pre><code class="language-bash">docker compose up -d</code></pre><p>That&#39;s it!</p>
+<ul>
+<li>The web app is live at: <code>http://localhost:3000</code></li>
+<li>The database viewer (pgAdmin) is live at: <code>http://localhost:5051</code></li>
+</ul>
+<hr>
+<h3>Option B: Running with Node.js</h3>
+<p>If you prefer running without Docker:</p>
+<pre><code class="language-bash"># 1. Open the project folder
+cd &quot;Campus guard pro&quot;
+
+# 2. Install dependencies
+npm install
+
+# 3. Copy the environment file
+cp .env.example .env
+
+# 4. Start the app in development mode
+npm run dev</code></pre><p>Open your browser and navigate to: <strong><code>http://localhost:8081</code></strong></p>
+<hr>
+<h3>Demo Accounts for Testing</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Role</th>
+<th align="left">Email</th>
+<th align="left">Password</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Student</strong></td>
+<td align="left"><code>student@cmadms.edu</code></td>
+<td align="left"><code>Password123!</code></td>
+</tr>
+<tr>
+<td align="left"><strong>Teacher / Counselor</strong></td>
+<td align="left"><code>faculty@cmadms.edu</code></td>
+<td align="left"><code>Password123!</code></td>
+</tr>
+<tr>
+<td align="left"><strong>Security Guard</strong></td>
+<td align="left"><code>security@cmadms.edu</code></td>
+<td align="left"><code>Password123!</code></td>
+</tr>
+<tr>
+<td align="left"><strong>Department Head (HOD)</strong></td>
+<td align="left"><code>hod.cse@cmadms.edu</code></td>
+<td align="left"><code>Password123!</code></td>
+</tr>
+<tr>
+<td align="left"><strong>Super Admin</strong></td>
+<td align="left"><code>admin@cmadms.edu</code></td>
+<td align="left"><code>Password123!</code></td>
+</tr>
+</tbody></table>
+<p><em>(Pro-Tip: On the login screen, you can just click any of the colored role badges to auto-fill these accounts instantly!)</em></p>
+<hr>
+<h2>12. Strategic Roadmap &amp; Conclusion</h2>
+<h3>What We Are Planning Next</h3>
+<ul>
+<li><strong>Offline Mode for Gates</strong>: Enabling guards to scan passes even if the campus internet goes down for a few minutes.</li>
+<li><strong>Crowd Prediction</strong>: Alerting security guards before peak gate rush hours (like Friday afternoons) so they can open extra lanes.</li>
+<li><strong>SMS &amp; WhatsApp Alerts</strong>: Sending automatic text messages to parents when a student leaves campus for emergency medical visits.</li>
+</ul>
+<h3>Final Thoughts</h3>
+<p><strong>Campus Guard Pro (CMADMS)</strong> replaces slow paper slips, messy gate logbooks, and chaotic attendance checks with a fast, modern, and human-friendly digital system.</p>
+<p>By putting class counselors in the driver&#39;s seat and giving security guards instant QR scanning tools, Campus Guard Pro makes college campuses safer, calmer, and much better organized for everyone.</p>
+<hr>
+<div align="center">
+  <sub>Campus Guard Pro (CMADMS) — Built with care for safer, smarter college campuses.</sub>
+</div>
 
 
   <script>

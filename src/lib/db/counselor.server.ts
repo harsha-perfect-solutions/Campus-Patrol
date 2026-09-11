@@ -774,7 +774,7 @@ export async function resolveViolationByCounselor(
       recipientRole: "student",
       department: report.department,
       type: "violation_resolved",
-      title: "Violation Case Resolved by Counselor ✅",
+      title: "Violation Case Resolved by Counselor",
       detail: `Your violation case (${violationId}) was reviewed and resolved by your Counselor ${counselorName}. Note: ${cleanNote}`,
       tone: "resolved",
       relatedId: violationId,
@@ -855,7 +855,7 @@ export async function escalateViolationToHod(
       recipientRole: "hod",
       department: report.department,
       type: "violation_escalated",
-      title: "Violation Case Escalated by Counselor 🚨",
+      title: "Violation Case Escalated by Counselor",
       detail: `Counselor ${counselorName} escalated violation (${violationId}) for ${report.student_name} (${report.student_code}). Reason: ${cleanReason}`,
       tone: "violation",
       relatedId: violationId,
@@ -871,7 +871,7 @@ export async function escalateViolationToHod(
       recipientRole: "student",
       department: report.department,
       type: "violation_escalated",
-      title: "Case Escalated to HOD ⚠️",
+      title: "Case Escalated to HOD",
       detail: `Your violation case (${violationId}) has been escalated to HOD by Counselor ${counselorName} for formal review.`,
       tone: "violation",
       relatedId: violationId,
@@ -894,6 +894,7 @@ export type DBCounselorPass = {
   valid_until: string;
   status: string;
   issued_by?: string | null;
+  target_role?: string | null;
   created_at: string;
 };
 
@@ -912,13 +913,26 @@ export async function getCounselorPasses(
       FROM counselor_students cs
       JOIN counselor_assignments ca ON ca.id = cs.counselor_assignment_id
       WHERE ca.faculty_id = $1 AND ca.status = 'ACTIVE' AND cs.status = 'ACTIVE'
+      UNION
+      SELECT UPPER(s.student_code)
+      FROM students s
+      JOIN counselor_assignments ca ON UPPER(ca.department) = UPPER(s.department)
+        AND UPPER(ca.year) = UPPER(s.year)
+        AND UPPER(ca.section) = UPPER(s.section)
+      WHERE ca.faculty_id = $1 AND ca.status = 'ACTIVE'
     )`,
   ];
   const params: any[] = [facultyId];
 
   if (statusFilter && statusFilter !== "ALL") {
-    params.push(statusFilter.toLowerCase());
-    conditions.push(`LOWER(mp.status) = $${params.length}`);
+    const filter = statusFilter.toLowerCase();
+    params.push(filter);
+    if (filter === "pending") {
+      // Pending passes must be directed to Counselor (not HOD)
+      conditions.push(`LOWER(mp.status) = $${params.length} AND (LOWER(COALESCE(mp.target_role, 'counselor')) = 'counselor')`);
+    } else {
+      conditions.push(`LOWER(mp.status) = $${params.length}`);
+    }
   }
 
   const query = `
@@ -934,6 +948,7 @@ export async function getCounselorPasses(
       mp.valid_until::text,
       mp.status,
       mp.issued_by,
+      COALESCE(mp.target_role, 'counselor')::text AS target_role,
       mp.created_at::text
     FROM movement_permissions mp
     LEFT JOIN students s ON UPPER(s.student_code) = UPPER(mp.student_code)

@@ -1,4 +1,4 @@
-# 🛡️ Campus Guard Pro — Simple & Friendly Project Guide
+# Campus Guard Pro — System Documentation & Technical Guide
 ### *A Smart College Gate Pass, Attendance & Campus Safety System*
 
 ---
@@ -9,36 +9,36 @@
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
-1. [🌟 1. The Big Idea: What is Campus Guard Pro?](#-1-the-big-idea-what-is-campus-guard-pro)
-2. [🛑 2. The Real Problems in Colleges Today (And How We Fix Them)](#-2-the-real-problems-in-colleges-today-and-how-we-fix-them)
-3. [👥 3. The 5 Types of Users (Who Can Do What?)](#-3-the-5-types-of-users-who-can-do-what)
-4. [🛠️ 4. What Tools Did We Use to Build It?](#️-4-what-tools-did-we-use-to-build-it)
-5. [🔄 5. Visual Flowcharts & Diagrams (Explained in Plain English)](#-5-visual-flowcharts--diagrams-explained-in-plain-english)
+1. [1. Executive Summary: What is Campus Guard Pro?](#1-executive-summary-what-is-campus-guard-pro)
+2. [2. Operational Problem Statement & Solutions](#2-operational-problem-statement--solutions)
+3. [3. Role-Based Access Control & User Roles](#3-role-based-access-control--user-roles)
+4. [4. Technology Stack & Architecture](#4-technology-stack--architecture)
+5. [5. Visual Architecture & Workflow Diagrams](#5-visual-architecture--workflow-diagrams)
    - [5.1 The Big Picture (How Everything Connects)](#51-the-big-picture-how-everything-connects)
    - [5.2 How Information Moves in the App](#52-how-information-moves-in-the-app)
    - [5.3 What Happens When a Guard Scans a Student's QR Code](#53-what-happens-when-a-guard-scans-a-students-qr-code)
    - [5.4 How Rule Violations are Handled (The "Counselor-First" Rule)](#54-how-rule-violations-are-handled-the-counselor-first-rule)
    - [5.5 How the Database Tables Connect Together](#55-how-the-database-tables-connect-together)
    - [5.6 The Complete Journey of a Gate Pass](#56-the-complete-journey-of-a-gate-pass)
-6. [📱 6. A Tour of Every Screen in the App](#-6-a-tour-of-every-screen-in-the-app)
+6. [6. Core Functional Modules & Application Interface](#6-core-functional-modules--application-interface)
    - [6.1 The Login Screen](#61-the-login-screen)
    - [6.2 The Gate Security Scanner (For Guards)](#62-the-gate-security-scanner-for-guards)
    - [6.3 The Student Dashboard & Live QR Pass](#63-the-student-dashboard--live-qr-pass)
    - [6.4 The Counselor Workspace (For Mentors & Teachers)](#64-the-counselor-workspace-for-mentors--teachers)
    - [6.5 The Department Head (HOD) Control Room](#65-the-department-head-hod-control-room)
    - [6.6 Checking Attendance & Reporting Roaming Students](#66-checking-attendance--reporting-roaming-students)
-7. [🗄️ 7. Database Tables (What We Store & Why)](#-7-database-tables-what-we-store--why)
-8. [🎨 8. Look and Feel: Colors, Themes, and Big Buttons](#-8-look-and-feel-colors-themes-and-big-buttons)
-9. [🔒 9. Security Made Simple (How We Keep Data Safe)](#-9-security-made-simple-how-we-keep-data-safe)
-10. [🧪 10. How We Tested the System to Ensure Zero Bugs](#-10-how-we-tested-the-system-to-ensure-zero-bugs)
-11. [🚀 11. How to Run This on Your Computer (Step-by-Step)](#-11-how-to-run-this-on-your-computer-step-by-step)
-12. [🔮 12. Future Plans & Wrap-Up](#-12-future-plans--wrap-up)
+7. [7. Database Schema & Data Models](#7-database-schema--data-models)
+8. [8. User Interface & Design Specifications](#8-user-interface--design-specifications)
+9. [9. Security Architecture & Cryptographic Controls](#9-security-architecture--cryptographic-controls)
+10. [10. Quality Assurance & Verification Testing](#10-quality-assurance--verification-testing)
+11. [11. Installation & Deployment Guide](#11-installation--deployment-guide)
+12. [12. Strategic Roadmap & Conclusion](#12-strategic-roadmap--conclusion)
 
 ---
 
-## 🌟 1. The Big Idea: What is Campus Guard Pro?
+## 1. Executive Summary: What is Campus Guard Pro?
 
 Think about what usually happens when a college student needs to leave campus in the afternoon:
 
@@ -64,7 +64,7 @@ Think about what usually happens when a college student needs to leave campus in
 
 ---
 
-## 🛑 2. The Real Problems in Colleges Today (And How We Fix Them)
+## 2. Operational Problem Statement & Solutions
 
 Here is a quick look at the four biggest daily headaches in colleges and how Campus Guard Pro solves each one:
 
@@ -86,17 +86,17 @@ Here is a quick look at the four biggest daily headaches in colleges and how Cam
 
 ---
 
-## 👥 3. The 5 Types of Users (Who Can Do What?)
+## 3. Role-Based Access Control & User Roles
 
 Different people have different jobs in a college. Campus Guard Pro gives each group their own tailored workspace:
 
 ```mermaid
 graph TD
-    Admin["👑 1. College Principal & Super Admin<br/><i>In charge of the whole campus, master timetables & safety</i>"]
-    HOD["🏛️ 2. Department Head (HOD)<br/><i>Approves department passes & handles serious cases</i>"]
-    Teacher["🧑‍🏫 3. Class Counselor & Teachers<br/><i>Takes attendance, guides students & solves minor issues</i>"]
-    Guard["🛡️ 4. Security Guard<br/><i>Scans QR codes at the gate</i>"]
-    Student["🎒 5. Student<br/><i>Applies for passes & shows QR code</i>"]
+    Admin["1. College Principal & Super Admin<br/><i>In charge of the whole campus, master timetables & safety</i>"]
+    HOD["2. Department Head (HOD)<br/><i>Approves department passes & handles serious cases</i>"]
+    Teacher["3. Class Counselor & Teachers<br/><i>Takes attendance, guides students & solves minor issues</i>"]
+    Guard["4. Security Guard<br/><i>Scans QR codes at the gate</i>"]
+    Student["5. Student<br/><i>Applies for passes & shows QR code</i>"]
 
     Admin --> HOD
     HOD --> Teacher
@@ -108,29 +108,29 @@ graph TD
 
 | Action | Student | Guard | Teacher / Counselor | Dept Head (HOD) | Admin |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Apply for an out-pass** | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
-| **Show personal QR pass on phone** | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
-| **Scan QR codes at campus gates** | ❌ No | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| **Grant an early exit override** | ❌ No | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| **Check which class a student has now** | ❌ No | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
-| **View assigned student roster** | ❌ No | ❌ No | ✅ My Students | ✅ Entire Dept | ✅ All Students |
-| **Approve or reject a pass** | ❌ No | ❌ No | ✅ My Students | ✅ Entire Dept | ✅ Any Pass |
-| **Resolve a student violation report** | ❌ No | ❌ No | ✅ 1st Level | ✅ Final Level | ✅ Final Level |
-| **Launch a campus emergency alert** | ❌ No | ✅ Yes | ❌ No | ❌ No | ✅ Yes |
-| **Edit the master timetable** | ❌ No | ❌ No | ❌ No | ❌ No | ✅ Yes |
-| **View system audit logs** | ❌ No | ❌ No | ❌ No | ❌ No | ✅ Yes |
+| **Apply for an out-pass** | Yes | No | No | No | No |
+| **Show personal QR pass on phone** | Yes | No | No | No | No |
+| **Scan QR codes at campus gates** | No | Yes | No | No | No |
+| **Grant an early exit override** | No | Yes | No | No | No |
+| **Check which class a student has now** | No | Yes | Yes | Yes | Yes |
+| **View assigned student roster** | No | No | Assigned Students | Entire Dept | All Students |
+| **Approve or reject a pass** | No | No | Assigned Students | Entire Dept | Any Pass |
+| **Resolve a student violation report** | No | No | 1st Level | Final Level | Final Level |
+| **Launch a campus emergency alert** | No | Yes | No | No | Yes |
+| **Edit the master timetable** | No | No | No | No | Yes |
+| **View system audit logs** | No | No | No | No | Yes |
 
 ---
 
-## 🛠️ 4. What Tools Did We Use to Build It?
+## 4. Technology Stack & Architecture
 
 We built Campus Guard Pro with modern, reliable, and free open-source tools:
 
 ```mermaid
 graph LR
-    Screen["📱 What You See on Your Phone<br/><i>Buttons, forms & camera scanner</i>"]
-    Server["🧠 The System Brain<br/><i>Checks permissions, clocks & rules</i>"]
-    Database["🗄️ The Secure File Cabinet<br/><i>Safely saves students, passes & logs</i>"]
+    Screen["Client Web Interface<br/><i>Responsive Web Application & QR Scanner</i>"]
+    Server["Application Server Logic<br/><i>Authentication, Authorization & Business Logic</i>"]
+    Database["Relational Database Storage<br/><i>Encrypted Storage, Audits & Time-Series Logs</i>"]
 
     Screen -->|Sends your click or scan| Server
     Server -->|Checks and saves records| Database
@@ -147,7 +147,7 @@ graph LR
 
 ---
 
-## 🔄 5. Visual Flowcharts & Diagrams (Explained in Plain English)
+## 5. Visual Architecture & Workflow Diagrams
 
 ---
 
@@ -158,26 +158,26 @@ This diagram shows how everyone interacts with the system:
 ```mermaid
 graph TD
     subgraph CampusPeople ["1. People on Campus"]
-        Student["🎒 Student with Phone"]
-        Guard["🛡️ Security Guard at Gate"]
-        Teacher["🧑‍🏫 Teacher / Class Mentor"]
-        HOD["🏛️ Department Head (HOD)"]
-        Admin["👑 College Principal / Admin"]
+        Student["Student Device"]
+        Guard["Security Guard at Gate"]
+        Teacher["Teacher / Class Mentor"]
+        HOD["Department Head (HOD)"]
+        Admin["Institutional Administrator"]
     end
 
     subgraph AppBrain ["2. Campus Guard Pro Brain"]
-        LoginCheck["🔑 Checks who is logged in"]
-        PassChecker["🎟️ Checks if QR pass is valid & on time"]
-        CounselorHelper["🤝 Routes problems to student's mentor"]
-        AlertSender["🔔 Sends instant popup notices"]
+        LoginCheck["Authentication & Session Validation"]
+        PassChecker["Pass Verification Engine"]
+        CounselorHelper["Counselor-First Routing Engine"]
+        AlertSender["Real-time Notification Dispatcher"]
     end
 
     subgraph SafeStorage ["3. Secure Database Records"]
-        UsersList[("👤 User Accounts")]
-        PassesList[("🎫 Out-Passes")]
-        GateLogsList[("🚪 Gate Scan History")]
-        IssuesList[("⚠️ Rule Infractions")]
-        TimetableList[("📅 College Class Schedule")]
+        UsersList[("User Accounts")]
+        PassesList[("Movement Passes")]
+        GateLogsList[("Gate Scan History")]
+        IssuesList[("Violation Records")]
+        TimetableList[("Master Class Schedule")]
     end
 
     Student -->|Applies for pass or shows QR| LoginCheck
@@ -194,7 +194,7 @@ graph TD
     AlertSender -.->|Sends instant popups| CampusPeople
 ```
 
-#### 🔍 In Plain English:
+#### Architectural Summary:
 1. When **Students** request a pass, it goes through the server to the database.
 2. When **Guards** scan a pass, the server instantly checks the time window and marks whether the student is leaving (`EXIT`) or returning (`ENTRY`).
 3. When **Teachers** check an empty desk, the server checks the timetable database to see who should be there.
@@ -209,10 +209,10 @@ graph TD
 
 ```mermaid
 graph LR
-    Student(("🎒 Student"))
-    Guard(("🛡️ Guard"))
-    Counselor(("🧑‍🏫 Counselor"))
-    HOD(("🏛️ Dept Head"))
+    Student(("Student"))
+    Guard(("Guard"))
+    Counselor(("Counselor"))
+    HOD(("Dept Head"))
 
     System[["Campus Guard Pro System"]]
 
@@ -263,7 +263,7 @@ flowchart TD
     D1 --> D2 --> D3
 ```
 
-#### 🔍 In Plain English:
+#### Architectural Summary:
 - **Login**: You enter your email and password. The system checks our secure list and logs you in.
 - **Pass Approval**: A student submits a reason. A teacher clicks approve. The system creates a secret, un-copyable QR code.
 - **Gate Check**: The guard points their camera. The system checks the clock. If the student is allowed to leave, it records the exact second they stepped out.
@@ -277,40 +277,40 @@ Here is the exact thought process the computer follows in less than 500 millisec
 
 ```mermaid
 flowchart TD
-    Scan["📱 Guard points phone camera at student's QR code"] --> Read["Camera cleans up image and reads the code"]
+    Scan["Guard scans student QR code"] --> Read["Camera cleans up image and reads the code"]
     Read --> CheckExists{"Is this a real Campus Guard pass?"}
     
-    CheckExists -- "No" --> Fake["❌ Red Screen: Fake or invalid code! Exit denied."]
+    CheckExists -- "No" --> Fake["Access Denied: Invalid or unapproved code."]
     CheckExists -- "Yes" --> CheckApproved{"Did a teacher or HOD approve it?"}
     
-    CheckApproved -- "No" --> NotReady["❌ Red Screen: Pass is still waiting for approval."]
+    CheckApproved -- "No" --> NotReady["Access Denied: Pass pending approval."]
     CheckApproved -- "Yes" --> CheckClock{"What time does the clock show?"}
     
-    CheckClock -- "Too Early!" --> Early["🟡 Yellow Screen: Pass starts later today."]
+    CheckClock -- "Too Early!" --> Early["Pass Not Started: Scheduled for later today."]
     Early --> EarlyChoice{"Is there an urgent reason to leave early?"}
     EarlyChoice -- "Yes" --> Override["Guard taps 'Allow Early Exit' with reason"]
     EarlyChoice -- "No" --> Wait["Student waits until the allowed start time"]
     
-    CheckClock -- "Too Late!" --> Expired["🔴 Red Screen: Pass expired! Return to department."]
+    CheckClock -- "Too Late!" --> Expired["Access Denied: Pass expired."]
     
     CheckClock -- "Right on Time!" --> Direction{"Is the student leaving or returning?"}
     
-    Direction -- "Leaving Campus" --> ExitGreen["🟢 Green Screen: ALLOWED TO EXIT"]
-    Direction -- "Coming Back" --> EntryGreen["🟢 Green Screen: WELCOME BACK"]
+    Direction -- "Leaving Campus" --> ExitGreen["Status: ALLOWED TO EXIT"]
+    Direction -- "Coming Back" --> EntryGreen["Status: WELCOME BACK"]
     
     ExitGreen --> LogExit["Saves EXIT time in the gate history book"]
     Override --> LogExit
     EntryGreen --> LogEntry["Saves ENTRY time in the gate history book"]
     
     LogEntry --> LateCheck{"Did student return past their end time?"}
-    LateCheck -- "Yes" --> AlertMentor["⚠️ Automatically lets their counselor know they were late"]
-    LateCheck -- "No" --> Done["✅ All done! Pass successfully completed."]
+    LateCheck -- "Yes" --> AlertMentor["Alert: Late return notified to counselor"]
+    LateCheck -- "No" --> Done["Complete: Pass successfully finished."]
 ```
 
-#### 🔍 In Plain English:
-- **🟢 Green Screen**: Everything is valid. The student is authorized to pass.
-- **🟡 Yellow Screen**: The pass is approved, but the student arrived early (for example, their pass starts at 3:00 PM, but it's only 1:45 PM). If there is an urgent reason, the guard can tap **"Allow Early Exit"**, which logs their officer ID and reason.
-- **🔴 Red Screen**: The pass is expired, rejected, canceled, or fake. The guard denies exit.
+#### Architectural Summary:
+- **Green Screen (Authorized)**: Everything is valid. The student is authorized to pass.
+- **Yellow Screen (Early Arrival / Before Validity)**: The pass is approved, but the student arrived early (for example, their pass starts at 3:00 PM, but it's only 1:45 PM). If there is an urgent reason, the guard can tap **"Allow Early Exit"**, which logs their officer ID and reason.
+- **Red Screen (Denied)**: The pass is expired, rejected, canceled, or fake. The guard denies exit.
 - **Two Scans with One Pass**: A pass works twice—once when leaving campus and once when coming back.
 
 ---
@@ -322,11 +322,11 @@ In many colleges, students caught roaming or coming back late are immediately dr
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Student as 🎒 Student
-    actor Reporter as 🧑‍🏫 Teacher or Guard
-    participant System as 💻 Campus Guard System
-    actor Counselor as 🤝 Class Counselor (Mentor)
-    actor HOD as 🏛️ Department Head (HOD)
+    actor Student as Student
+    actor Reporter as Teacher or Guard
+    participant System as Campus Guard System
+    actor Counselor as Class Counselor (Mentor)
+    actor HOD as Department Head (HOD)
 
     Reporter->>System: Reports student (e.g. Roaming hallway during class)
     System->>System: Looks up: Who is this student's mentor?
@@ -353,7 +353,7 @@ sequenceDiagram
     end
 ```
 
-#### 🔍 In Plain English:
+#### Architectural Summary:
 1. **The Student Gets a Voice**: The student has 24 hours to explain why they were late or out of class and can upload photos of receipts, medical notes, or club slips.
 2. **Mentorship First**: The class mentor reads the explanation first. If the student had a flat tire or a clinic visit, the counselor can resolve it right away without dragging them into a scary disciplinary hearing.
 3. **Escalate Only When Necessary**: If the student is caught repeatedly cutting class or causing trouble, the counselor forwards the case to the Department Head with their notes.
@@ -419,7 +419,7 @@ erDiagram
     }
 ```
 
-#### 🔍 In Plain English:
+#### Architectural Summary:
 - **STUDENTS**: Information about every student in the college.
 - **PASSES**: Saves every pass request, the reason, and allowed hours.
 - **GATE_SCANS**: Permanent record of every gate scan made by security guards.
@@ -462,7 +462,7 @@ stateDiagram-v8
 
 ---
 
-## 📱 6. A Tour of Every Screen in the App
+## 6. Core Functional Modules & Application Interface
 
 ---
 
@@ -480,9 +480,9 @@ stateDiagram-v8
 - **Key Features**:
   - **Screen Glare Filter**: Guards can scan student phone screens even under intense midday sun.
   - **Color Coded Status Cards**:
-    - 🟢 **Green**: Allowed to Exit or Allowed to Enter. Shows the student's photo, name, and roll number.
-    - 🟡 **Yellow**: Too early! Shows a live countdown to the pass start time, plus an **"Allow Early Exit"** button if the student has a valid reason.
-    - 🔴 **Red**: Denied! Pass is expired, canceled, or fake.
+    - **Green**: Allowed to Exit or Allowed to Enter. Shows the student's photo, name, and roll number.
+    - **Yellow**: Too early! Shows a live countdown to the pass start time, plus an **"Allow Early Exit"** button if the student has a valid reason.
+    - **Red**: Denied! Pass is expired, canceled, or fake.
   - **Big Buttons**: All touch targets are at least 44 pixels tall so guards can tap them easily with one thumb.
 
 ---
@@ -528,7 +528,7 @@ stateDiagram-v8
 
 ---
 
-## 🗄️ 7. Database Tables (What We Store & Why)
+## 7. Database Schema & Data Models
 
 All records are stored securely in **PostgreSQL**. Here is what each table does in simple words:
 
@@ -546,22 +546,23 @@ All records are stored securely in **PostgreSQL**. Here is what each table does 
 | **`audit_logs`** | An unchangeable history book of every important action in the system. | 100% transparency for college administration. |
 
 ---
-
-## 🎨 8. Look and Feel: Colors, Themes, and Big Buttons
+## 8. User Interface & Design Specifications
 
 We specifically designed Campus Guard Pro for real-world college environments:
 
 - **Deep Space Dark Theme**: Reduces battery usage and eye strain for guards and teachers on long shifts.
+- **Unified Institutional Typography (Inter System)**: Standardizes 100% of UI cards, labels, tables, roll numbers, pass tokens, and timestamps to the Google Inter font family. Monospace elements (such as roll numbers and pass IDs) now use Inter with tabular figures (`font-variant-numeric: tabular-nums`) to ensure perfect vertical alignment while eliminating mismatched typewriter fonts.
+- **Enhanced Legibility & Scaled Font Size**: Base application typography is boosted with an elevated text scale. Microscopic 10px/11px labels are elevated to a comfortable 13.5px-14px standard, and table contents are scaled up for effortless readability across desktop monitors and mobile gate devices.
 - **Clear, Unmistakable Colors**:
-  - 🟢 **Emerald Green**: Everything is safe and approved (Allowed to Exit / Pass Verified).
-  - 🟡 **Amber Gold**: Caution or pending item (Pass starts in 30 minutes / Early Exit).
-  - 🔴 **Crimson Red**: Denied, fake, expired, or emergency!
-  - 🔵 **Royal Blue**: Clickable buttons and links.
+  - **Emerald Green**: Everything is safe and approved (Allowed to Exit / Pass Verified).
+  - **Amber Gold**: Caution or pending item (Pass starts in 30 minutes / Early Exit).
+  - **Crimson Red**: Denied, fake, expired, or emergency!
+  - **Royal Blue**: Clickable buttons and links.
 - **Large Touch Targets**: Buttons for guards are at least 44 pixels tall so they are effortless to tap on a phone screen without misclicking.
 
 ---
 
-## 🔒 9. Security Made Simple (How We Keep Data Safe)
+## 9. Security Architecture & Cryptographic Controls
 
 You don't need a degree in cybersecurity to understand how we protect student data:
 
@@ -573,19 +574,19 @@ You don't need a degree in cybersecurity to understand how we protect student da
 
 ---
 
-## 🧪 10. How We Tested the System to Ensure Zero Bugs
+## 10. Quality Assurance & Verification Testing
 
 Before releasing this system, we performed over **700 automated verification checks**:
 
-- ✅ **Timetable Integrity (642/642 Passed)**: Verified that all 642 class periods load without schedule conflicts.
-- ✅ **Pass Dual-Scan Check (17/17 Passed)**: Confirmed that a pass can be scanned at the gate to leave (`EXIT`) and then scanned again to return (`ENTRY`) without breaking.
-- ✅ **Counselor Assignment Check (8/8 Passed)**: Confirmed that student violation tickets route to their assigned mentor and that counselors only see their own cohort.
-- ✅ **Early Exit Override Check**: Confirmed that guards can properly grant early exit with an audit trail when a student has a legitimate emergency.
-- ✅ **Type Safety Check**: Ran `npx tsc --noEmit` and got **0 errors** across the entire codebase.
+- **Timetable Integrity (642/642 Passed)**: Verified that all 642 class periods load without schedule conflicts.
+- **Pass Dual-Scan Check (17/17 Passed)**: Confirmed that a pass can be scanned at the gate to leave (`EXIT`) and then scanned again to return (`ENTRY`) without breaking.
+- **Counselor Assignment Check (8/8 Passed)**: Confirmed that student violation tickets route to their assigned mentor and that counselors only see their own cohort.
+- **Early Exit Override Check**: Confirmed that guards can properly grant early exit with an audit trail when a student has a legitimate emergency.
+- **Type Safety Check**: Ran `npx tsc --noEmit` and got **0 errors** across the entire codebase.
 
 ---
 
-## 🚀 11. How to Run This on Your Computer (Step-by-Step)
+## 11. Installation & Deployment Guide
 
 Want to try Campus Guard Pro on your laptop? Here is the easiest way:
 
@@ -641,12 +642,12 @@ Open your browser and navigate to: **`http://localhost:8081`**
 
 ---
 
-## 🔮 12. Future Plans & Wrap-Up
+## 12. Strategic Roadmap & Conclusion
 
 ### What We Are Planning Next
-- 📱 **Offline Mode for Gates**: Enabling guards to scan passes even if the campus internet goes down for a few minutes.
-- 🤖 **Crowd Prediction**: Alerting security guards before peak gate rush hours (like Friday afternoons) so they can open extra lanes.
-- 💬 **SMS & WhatsApp Alerts**: Sending automatic text messages to parents when a student leaves campus for emergency medical visits.
+- **Offline Mode for Gates**: Enabling guards to scan passes even if the campus internet goes down for a few minutes.
+- **Crowd Prediction**: Alerting security guards before peak gate rush hours (like Friday afternoons) so they can open extra lanes.
+- **SMS & WhatsApp Alerts**: Sending automatic text messages to parents when a student leaves campus for emergency medical visits.
 
 ### Final Thoughts
 **Campus Guard Pro (CMADMS)** replaces slow paper slips, messy gate logbooks, and chaotic attendance checks with a fast, modern, and human-friendly digital system.

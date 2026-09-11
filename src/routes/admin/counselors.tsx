@@ -367,7 +367,7 @@ function AdminCounselorsContent() {
               </div>
 
               <div className="p-3 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground">
-                📌 Note: Existing student assignments remain unchanged. Click <strong>Redistribute Students</strong> after adding if you wish to re-balance students evenly.
+                Note: Existing student assignments remain unchanged. Click <strong>Redistribute Students</strong> after adding if you wish to re-balance students evenly.
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
@@ -401,7 +401,7 @@ function AdminCounselorsContent() {
             </p>
 
             <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs">
-              ⚠️ Historical violation ownership remains attached to their historical Counselors. Only future violations will route to the new Counselor assignments.
+              Historical violation ownership remains attached to their historical Counselors. Only future violations will route to the new Counselor assignments.
             </div>
 
             <div className="flex justify-end gap-2 pt-2">

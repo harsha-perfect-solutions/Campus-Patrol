@@ -237,6 +237,66 @@ export async function findFacultyUserIdByName(facultyName: string): Promise<stri
 }
 
 /**
+ * Server-side: Given a student_code, resolves the student's assigned Faculty Counselor user ID.
+ * Returns null if no counselor assigned.
+ */
+export async function findCounselorUserIdForStudentCode(
+  studentCode: string,
+): Promise<string | null> {
+  await ensureNotificationsSchema();
+  const cleanCode = studentCode.trim().toUpperCase();
+  if (!cleanCode) return null;
+
+  try {
+    // 1. Direct student assignment check
+    const directRes = await db.query<{ id: string }>(
+      `SELECT p.id
+       FROM counselor_students cs
+       JOIN counselor_assignments ca ON ca.id = cs.counselor_assignment_id
+       JOIN profiles p ON p.id = ca.faculty_id
+       WHERE UPPER(cs.student_code) = $1
+         AND cs.status = 'ACTIVE'
+         AND ca.status = 'ACTIVE'
+       LIMIT 1;`,
+      [cleanCode]
+    );
+    if (directRes.rows[0]?.id) return directRes.rows[0].id;
+
+    // 2. Class-level assignment check (dept, year, section)
+    const classRes = await db.query<{ id: string }>(
+      `SELECT p.id
+       FROM students s
+       JOIN counselor_assignments ca ON UPPER(ca.department) = UPPER(s.department)
+         AND UPPER(ca.year) = UPPER(s.year)
+         AND UPPER(ca.section) = UPPER(s.section)
+       JOIN profiles p ON p.id = ca.faculty_id
+       WHERE UPPER(s.student_code) = $1
+         AND ca.status = 'ACTIVE'
+       LIMIT 1;`,
+      [cleanCode]
+    );
+    if (classRes.rows[0]?.id) return classRes.rows[0].id;
+
+    // 3. Department faculty fallback
+    const facultyRes = await db.query<{ id: string }>(
+      `SELECT p.id
+       FROM students s
+       JOIN profiles p ON UPPER(p.department) = UPPER(s.department)
+       JOIN user_roles ur ON ur.user_id = p.id
+       WHERE UPPER(s.student_code) = $1
+         AND ur.role = 'faculty'
+       LIMIT 1;`,
+      [cleanCode]
+    );
+    return facultyRes.rows[0]?.id ?? null;
+  } catch (err) {
+    console.error("[Notification] Error looking up counselor user ID for student code:", err);
+    return null;
+  }
+}
+
+
+/**
  * Server-side: Given a student_code, finds the student's profile.id (user account id).
  * If no profile account exists yet, falls back to student_code so student can receive notifications.
  */

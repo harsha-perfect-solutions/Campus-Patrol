@@ -638,42 +638,46 @@ export function CheckStudentPage() {
               {query && (
                 <button
                   type="button"
-                  onClick={() => setQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full"
+                  onClick={handleClear}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition-colors"
                   aria-label="Clear input"
                 >
                   <X className="size-4" />
                 </button>
               )}
             </div>
-            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <Button
                 type="button"
+                variant="outline"
                 onClick={() => setQrScannerOpen(true)}
-                className="h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 rounded-xl shadow-xs gap-2 w-full sm:w-auto justify-center"
+                className="h-11 border-border/80 text-foreground hover:bg-accent hover:border-primary/40 px-4 font-semibold rounded-xl shadow-2xs gap-2 w-full sm:w-auto justify-center transition-all"
               >
-                <QrCode className="size-4" />
-                <span>[ 📷 Scan Student ID ]</span>
+                <QrCode className="size-4 text-primary" />
+                <span>Scan Student ID</span>
               </Button>
               <Button
                 type="submit"
                 size="lg"
                 loading={loading}
-                disabled={loading}
-                className="h-11 bg-primary text-primary-foreground hover:bg-primary/90 px-6 font-semibold rounded-xl shadow-xs w-full sm:w-auto justify-center"
+                disabled={loading || !query.trim()}
+                className="h-11 bg-primary text-primary-foreground hover:bg-primary/90 px-5 font-bold rounded-xl shadow-xs gap-2 w-full sm:w-auto justify-center"
               >
-                {!loading && <Search className="size-4 mr-1.5" />}
-                {loading ? "Checking Student..." : "Check Student"}
+                {!loading && <Search className="size-4" />}
+                <span>{loading ? "Checking..." : "Check Student"}</span>
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={handleClear}
-                className="h-11 border-border text-foreground hover:bg-accent px-5 font-semibold rounded-xl w-full sm:w-auto justify-center"
-              >
-                <RotateCcw className="size-4 mr-1.5" /> Clear
-              </Button>
+              {(query || result) && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleClear}
+                  className="h-11 text-muted-foreground hover:text-foreground hover:bg-accent/60 px-3.5 font-medium rounded-xl gap-1.5 w-full sm:w-auto justify-center"
+                  title="Clear input and reset status"
+                >
+                  <RotateCcw className="size-3.5" />
+                  <span>Clear</span>
+                </Button>
+              )}
             </div>
           </div>
           <p className="mt-2.5 text-xs text-muted-foreground">
@@ -710,7 +714,7 @@ export function CheckStudentPage() {
             className={cn(
               "flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between shadow-xs",
               state === "unauthorized" &&
-                "border-l-4 border-l-red-600 border-red-200/80 bg-red-50/50 dark:bg-red-950/20 dark:border-red-900/50",
+                "border-l-4 border-l-destructive border-destructive/30 bg-destructive/5 dark:bg-destructive/10",
               state === "authorized" &&
                 "border-l-4 border-l-emerald-600 border-emerald-200/80 bg-emerald-50/50 dark:bg-emerald-950/20 dark:border-emerald-900/50",
               state === "no-class" &&
@@ -721,7 +725,7 @@ export function CheckStudentPage() {
               <span
                 className={cn(
                   "grid size-10 shrink-0 place-items-center rounded-full text-white shadow-xs",
-                  state === "unauthorized" && "bg-red-600",
+                  state === "unauthorized" && "bg-destructive",
                   state === "authorized" && "bg-emerald-600",
                   state === "no-class" && "bg-blue-600",
                 )}
@@ -736,7 +740,7 @@ export function CheckStudentPage() {
                 <h2
                   className={cn(
                     "text-sm font-bold uppercase tracking-wider",
-                    state === "unauthorized" && "text-red-700 dark:text-red-400",
+                    state === "unauthorized" && "text-destructive",
                     state === "authorized" && "text-emerald-700 dark:text-emerald-400",
                     state === "no-class" && "text-blue-700 dark:text-blue-400",
                   )}
@@ -885,11 +889,11 @@ export function CheckStudentPage() {
                   <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/30 px-3 py-1 rounded-xl text-primary font-black text-xs">
                     {sessionTab === "AFTERNOON" ? (
                       <>
-                        <span>🌇 Afternoon Session (01:10 PM — 04:10 PM)</span>
+                        <span>Afternoon Session (01:10 PM — 04:10 PM)</span>
                       </>
                     ) : (
                       <>
-                        <span>🌅 Morning Session (09:00 AM — 01:10 PM)</span>
+                        <span>Morning Session (09:00 AM — 01:10 PM)</span>
                       </>
                     )}
                   </div>
@@ -921,16 +925,16 @@ export function CheckStudentPage() {
 
           {/* Movement Permission Card */}
           {slot && !permission && (
-            <section className="rounded-2xl border border-l-4 border-l-red-600 border-red-200/80 bg-red-50/40 dark:bg-red-950/20 dark:border-red-900/50 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
+            <section className="rounded-2xl border border-l-4 border-l-destructive border-destructive/30 bg-destructive/5 dark:bg-destructive/10 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
               <div className="flex items-start gap-3.5">
-                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/60 dark:text-red-300 mt-0.5">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-destructive/15 text-destructive mt-0.5">
                   <XCircle className="size-6" />
                 </span>
                 <div>
                   <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                     MOVEMENT PERMISSION
                   </span>
-                  <h3 className="text-base font-bold text-red-700 dark:text-red-400 mt-0.5">
+                  <h3 className="text-base font-bold text-destructive mt-0.5">
                     No active movement permission
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1 max-w-xl">
@@ -971,7 +975,7 @@ export function CheckStudentPage() {
           {!formOpen && (
             <section className="card-surface p-4 sm:p-6 rounded-2xl border border-border shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3.5">
-                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-destructive/15 text-destructive">
                   <AlertTriangle className="size-5" />
                 </span>
                 <div>
@@ -983,11 +987,12 @@ export function CheckStudentPage() {
               </div>
               <Button
                 type="button"
+                variant="destructive"
                 onClick={handleOpenReportForm}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold h-11 px-6 rounded-xl shadow-xs gap-2 shrink-0 w-full sm:w-auto"
+                className="font-bold h-11 px-6 rounded-xl shadow-xs gap-2 shrink-0 w-full sm:w-auto"
               >
                 <AlertTriangle className="size-4" />
-                <span>[ REPORT INCIDENT ]</span>
+                <span>Report Incident</span>
               </Button>
             </section>
           )}
@@ -1059,7 +1064,7 @@ export function CheckStudentPage() {
                           </SelectTrigger>
                           <SelectContent className="max-h-80">
                             <div className="px-2 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-primary bg-primary/5 rounded-md my-1">
-                              📍 Campus Roaming & Common Locations (Students Roaming)
+                              Campus Roaming & Common Locations (Students Roaming)
                             </div>
                             {roamingLocations.map((l) => (
                               <SelectItem key={l} value={l}>
@@ -1072,7 +1077,7 @@ export function CheckStudentPage() {
                             {buildingRooms.length > 0 && (
                               <>
                                 <div className="px-2 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground bg-muted/60 rounded-md my-1.5 mt-3">
-                                  🏫 Building Classrooms & Laboratories
+                                  Building Classrooms & Laboratories
                                 </div>
                                 {buildingRooms.map((r) => (
                                   <SelectItem key={r} value={r}>
@@ -1243,12 +1248,12 @@ export function CheckStudentPage() {
                 </Button>
                 <Button
                   variant="destructive"
-                  className="bg-red-600 hover:bg-red-700 rounded-xl font-bold px-6 w-full sm:w-auto text-xs sm:text-sm"
+                  className="rounded-xl font-bold px-6 w-full sm:w-auto text-xs sm:text-sm"
                   onClick={() => {
                     setConfirmOpen(true);
                   }}
                 >
-                  <AlertTriangle className="size-4 mr-2" /> [ SUBMIT INCIDENT TO COUNSELOR ]
+                  <AlertTriangle className="size-4 mr-2" /> Submit Incident to Counselor
                 </Button>
               </div>
             </section>
@@ -1260,7 +1265,7 @@ export function CheckStudentPage() {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600 font-black">
+            <DialogTitle className="flex items-center gap-2 text-destructive font-black">
               <AlertTriangle className="size-5" />
               Submit Incident Report?
             </DialogTitle>
@@ -1294,7 +1299,7 @@ export function CheckStudentPage() {
               loading={submitting}
               disabled={submitting}
               onClick={submitReport}
-              className="bg-red-600 hover:bg-red-700 font-bold"
+              className="font-bold"
             >
               {submitting ? "Submitting Report..." : "Submit Report"}
             </Button>
@@ -1502,11 +1507,11 @@ export function CheckStudentPage() {
                           </div>
 
                           {/* Reported Violation Box */}
-                          <div className="rounded-xl bg-red-50/80 dark:bg-red-950/40 p-3.5 border border-red-200/80 dark:border-red-900/50">
-                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-red-700 dark:text-red-400 flex items-center gap-1.5">
+                          <div className="rounded-xl bg-destructive/10 p-3.5 border border-destructive/20">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-destructive flex items-center gap-1.5">
                               <AlertTriangle className="size-3.5" /> Reported Infraction (Why Reported)
                             </span>
-                            <p className="mt-1.5 font-extrabold text-red-700 dark:text-red-400 text-sm">
+                            <p className="mt-1.5 font-extrabold text-destructive text-sm">
                               {item.violation_type || "Unauthorized Class Movement"}
                             </p>
                             <p className="text-[11px] text-muted-foreground mt-1">
@@ -1577,7 +1582,7 @@ export function CheckStudentPage() {
                             "rounded-xl p-4 border text-xs space-y-2",
                             isExcused && "bg-emerald-50/80 border-emerald-200 text-emerald-950 dark:bg-emerald-950/40 dark:border-emerald-900/60 dark:text-emerald-200",
                             isWarned && "bg-amber-50/80 border-amber-200 text-amber-950 dark:bg-amber-950/40 dark:border-amber-900/60 dark:text-amber-200",
-                            isEscalated && "bg-red-50/80 border-red-200 text-red-950 dark:bg-red-950/40 dark:border-red-900/60 dark:text-red-200",
+                            isEscalated && "bg-destructive/10 border-destructive/20 text-destructive",
                             !isExcused && !isWarned && !isEscalated && "bg-blue-50/80 border-blue-200 text-blue-950 dark:bg-blue-950/40 dark:border-blue-900/60 dark:text-blue-200"
                           )}
                         >
@@ -1585,7 +1590,7 @@ export function CheckStudentPage() {
                             <span className="flex items-center gap-2 text-sm font-extrabold">
                               {isExcused && <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />}
                               {isWarned && <AlertCircle className="size-4 text-amber-600 dark:text-amber-400" />}
-                              {isEscalated && <ShieldAlert className="size-4 text-red-600 dark:text-red-400" />}
+                              {isEscalated && <ShieldAlert className="size-4 text-destructive" />}
                               {!isExcused && !isWarned && !isEscalated && <Clock className="size-4 text-blue-600 dark:text-blue-400" />}
                               
                               {isExcused && "HOD EXCUSED: YES — Student Exonerated"}
@@ -1681,7 +1686,7 @@ function getFilteredSlots(allSlots: any[], session: "MORNING" | "AFTERNOON", cur
       return [
         { id: "m1", time: "09:00 — 10:00", name: "Period 1: Programming in C (CS101)", room: "Room C-204", faculty: "Prof. S. Sharma", type: "CLASS", isCurrent: nowMins >= 540 && nowMins < 600 },
         { id: "m2", time: "10:00 — 11:00", name: "Period 2: Data Structures (CS301)", room: "Room C-205", faculty: "Dr. K. Rao", type: "CLASS", isCurrent: nowMins >= 600 && nowMins < 660 },
-        { id: "mb", time: "11:00 — 11:10", name: "☕ Morning Tea Break", room: "Campus Foyer", faculty: "N/A", type: "BREAK", isCurrent: nowMins >= 660 && nowMins < 670 },
+        { id: "mb", time: "11:00 — 11:10", name: "Morning Tea Break", room: "Campus Foyer", faculty: "N/A", type: "BREAK", isCurrent: nowMins >= 660 && nowMins < 670 },
         { id: "m3", time: "11:10 — 12:10", name: "Period 3: C Programming & Physics Lab", room: "Computer Lab 3", faculty: "Prof. R. Varma", type: "LAB", isCurrent: nowMins >= 670 && nowMins < 730 },
         { id: "m4", time: "12:10 — 13:10", name: "Period 4: Engineering Physics (PH101)", room: "Room E-102", faculty: "Dr. A. Verma", type: "CLASS", isCurrent: nowMins >= 730 && nowMins < 790 },
       ];
@@ -1706,7 +1711,7 @@ function getFilteredSlots(allSlots: any[], session: "MORNING" | "AFTERNOON", cur
         result.push({
           id: "mb",
           time: "11:00 — 11:10",
-          name: "☕ Morning Tea Break",
+          name: "Morning Tea Break",
           room: "Campus Foyer",
           faculty: "N/A",
           type: "BREAK",
@@ -1724,14 +1729,14 @@ function getFilteredSlots(allSlots: any[], session: "MORNING" | "AFTERNOON", cur
 
     if (aSlots.length === 0) {
       return [
-        { id: "lb", time: "13:10 — 14:10", name: "🍱 Lunch Break", room: "Canteen & Cafeteria", faculty: "N/A", type: "BREAK", isCurrent: nowMins >= 790 && nowMins < 850 },
+        { id: "lb", time: "13:10 — 14:10", name: "Lunch Break", room: "Canteen & Cafeteria", faculty: "N/A", type: "BREAK", isCurrent: nowMins >= 790 && nowMins < 850 },
         { id: "a5", time: "14:10 — 15:10", name: "Period 5: Operating Systems (CS403)", room: "Room C-204", faculty: "Prof. N. Patel", type: "CLASS", isCurrent: nowMins >= 850 && nowMins < 910 },
         { id: "a6", time: "15:10 — 16:10", name: "Period 6: Database Management Systems (CS401)", room: "Room C-205", faculty: "Dr. P. Roy", type: "CLASS", isCurrent: nowMins >= 910 && nowMins < 970 },
       ];
     }
 
     const result: any[] = [
-      { id: "lb", time: "13:10 — 14:10", name: "🍱 Lunch Break", room: "Canteen & Cafeteria", faculty: "N/A", type: "BREAK", isCurrent: nowMins >= 790 && nowMins < 850 }
+      { id: "lb", time: "13:10 — 14:10", name: "Lunch Break", room: "Canteen & Cafeteria", faculty: "N/A", type: "BREAK", isCurrent: nowMins >= 790 && nowMins < 850 }
     ];
 
     aSlots.forEach((s) => {
@@ -1801,7 +1806,7 @@ function TimetableSlotRow({ slot }: { slot: any }) {
               slot.type === "LAB"
                 ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200"
                 : slot.type === "SPORTS"
-                ? "bg-purple-500/15 text-purple-800 dark:text-purple-200"
+                ? "bg-amber-500/15 text-amber-800 dark:text-amber-200"
                 : slot.type === "LIBRARY"
                 ? "bg-blue-500/15 text-blue-800 dark:text-blue-200"
                 : "bg-muted text-muted-foreground"

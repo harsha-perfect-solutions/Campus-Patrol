@@ -780,13 +780,13 @@ export function ReportDetail() {
                           className="max-h-60 w-auto rounded-lg object-contain border border-border shadow-2xs"
                         />
                         <span className="text-[10px] font-semibold text-muted-foreground">
-                          📷 Official Supporting Attachment submitted by Student
+                          Official Supporting Attachment submitted by Student
                         </span>
                       </div>
                     ) : (
                       <div className="flex items-center justify-between p-3 rounded-xl bg-background border border-border">
                         <span className="text-xs font-semibold text-foreground truncate">
-                          📎 Attached: {report.evidence}
+                          Attached: {report.evidence}
                         </span>
                         <Button
                           type="button"
@@ -829,7 +829,7 @@ export function ReportDetail() {
             <Section title="Counselor Review & Escalation Notes" icon={ShieldCheck}>
               <div className="p-4 rounded-xl border border-red-200/80 bg-red-50/40 dark:bg-red-950/20 space-y-2 text-xs">
                 <span className="font-bold text-red-800 dark:text-red-300 uppercase tracking-wider block border-b border-red-200/60 pb-1">
-                  🚨 ESCALATED TO HOD BY COUNSELOR
+                  ESCALATED TO HOD BY COUNSELOR
                 </span>
                 {report.escalationReason && (
                   <p className="text-foreground font-semibold">

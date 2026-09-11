@@ -318,13 +318,13 @@ function AdminSafetyReportsContent() {
   <style>
     @page { size: A4 portrait; margin: 12mm 14mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #0f172a; background: #fff; }
-    h2 { font-size: 18px; font-weight: 900; color: #1e293b; margin-bottom: 4px; }
-    h3 { font-size: 13px; font-weight: 800; color: #1e293b; margin-bottom: 10px; }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th { background: #1e3a5f; color: #fff; padding: 8px 10px; text-align: left; font-size: 11px; font-weight: 700; }
-    .section { margin-bottom: 20px; page-break-inside: avoid; }
-    .badge { display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700 }
+    body { font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14.5px; color: #0f172a; background: #fff; }
+    h2 { font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 6px; }
+    h3 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th { background: #1e3a5f; color: #fff; padding: 10px 12px; text-align: left; font-size: 12.5px; font-weight: 700; }
+    .section { margin-bottom: 22px; page-break-inside: avoid; }
+    .badge { display:inline-block;padding:4px 12px;border-radius:99px;font-size:12.5px;font-weight:700 }
   </style>
 </head>
 <body>
@@ -616,7 +616,7 @@ function AdminSafetyReportsContent() {
             value: kpis.escalatedIncidents,
             sub: "Disciplinary committee",
             icon: ArrowUpRight,
-            color: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300",
+            color: "bg-primary/10 text-primary border border-primary/20",
           },
           {
             label: "Resolved Cases",
@@ -651,7 +651,7 @@ function AdminSafetyReportsContent() {
             value: kpis.violenceReports,
             sub: "Physical misconduct cases",
             icon: Flame,
-            color: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 ring-1 ring-rose-400/50",
+            color: "bg-destructive/10 text-destructive border border-destructive/20",
           },
           {
             label: "Emergency Dispatches",
@@ -752,7 +752,7 @@ function AdminSafetyReportsContent() {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Violence</span>
-                    <p className="font-extrabold text-rose-600">{h.violenceIncidents}</p>
+                    <p className="font-extrabold text-destructive">{h.violenceIncidents}</p>
                   </div>
                 </div>
 
@@ -805,9 +805,9 @@ function AdminSafetyReportsContent() {
                 {data?.disciplinaryMetrics.resolutionRate || 0}%
               </p>
             </div>
-            <div className="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
-              <p className="text-[10px] font-bold text-purple-700 dark:text-purple-300 uppercase">Escalation Rate</p>
-              <p className="text-lg font-black text-purple-700 dark:text-purple-300">
+            <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20">
+              <p className="text-[10px] font-bold text-primary uppercase">Escalation Rate</p>
+              <p className="text-lg font-black text-primary">
                 {data?.disciplinaryMetrics.escalationRate || 0}%
               </p>
             </div>
@@ -859,7 +859,7 @@ function AdminSafetyReportsContent() {
                       <td className="py-2.5 px-3.5 font-bold text-foreground">{d.department}</td>
                       <td className="py-2.5 px-3.5 font-extrabold">{d.totalIncidents}</td>
                       <td className="py-2.5 px-3.5 text-amber-600 font-bold">{d.criticalIncidents}</td>
-                      <td className="py-2.5 px-3.5 text-rose-600 font-bold">{d.violenceIncidents}</td>
+                      <td className="py-2.5 px-3.5 text-destructive font-bold">{d.violenceIncidents}</td>
                       <td className="py-2.5 px-3.5 text-emerald-600 font-bold">{d.resolvedCases}</td>
                       <td className="py-2.5 px-3.5 text-muted-foreground">
                         {d.avgResolutionHours > 0 ? `${d.avgResolutionHours}h` : "—"}
@@ -1115,11 +1115,11 @@ function AdminSafetyReportsContent() {
                   </div>
                   <div className="p-3 rounded-lg border border-divider bg-background">
                     <span className="text-[10px] font-bold text-muted-foreground uppercase">Critical Severity</span>
-                    <p className="text-xl font-extrabold text-red-600">{selectedSnapshot.kpis.criticalIncidents}</p>
+                    <p className="text-xl font-extrabold text-destructive">{selectedSnapshot.kpis.criticalIncidents}</p>
                   </div>
                   <div className="p-3 rounded-lg border border-divider bg-background">
                     <span className="text-[10px] font-bold text-muted-foreground uppercase">Violence Cases</span>
-                    <p className="text-xl font-extrabold text-rose-600">{selectedSnapshot.kpis.violenceReports}</p>
+                    <p className="text-xl font-extrabold text-destructive">{selectedSnapshot.kpis.violenceReports}</p>
                   </div>
                   <div className="p-3 rounded-lg border border-divider bg-background">
                     <span className="text-[10px] font-bold text-muted-foreground uppercase">Resolution Rate</span>

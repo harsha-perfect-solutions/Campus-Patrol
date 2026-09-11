@@ -1,4 +1,4 @@
-# 📋 CampusGuard Pro (CMADMS) — Software Requirements Specification (SRS)
+# CampusGuard Pro (CMADMS) — Software Requirements Specification (SRS)
 ### *Campus Movement & Absence Detection Management System*
 
 **Document Version**: 2.4.0 (Production Release)  
@@ -9,7 +9,7 @@
 
 ---
 
-## 📑 Table of Contents
+## Table of Contents
 
 - [1. Introduction & Project Scope](#1-introduction--project-scope)
   - [1.1 Document Purpose](#11-document-purpose)
@@ -192,9 +192,9 @@ CMADMS operates as a centralized web platform connecting five distinct instituti
   1. **First Scan (`EXIT`)**: Logs gate departure timestamp and changes active pass state to `OUT_OF_CAMPUS`.
   2. **Second Scan (`ENTRY`)**: Logs campus return timestamp and closes the pass lifecycle as `COMPLETED`.
 - **FR-03.3 (Server-Authoritative Time Check)**:
-  - If current time is within `valid_from` and `valid_until`: Displays 🟢 **ACTIVE / AUTHORIZED** card with student photo, name, and roll number.
-  - If current time is prior to `valid_from`: Displays 🟡 **BEFORE_VALIDITY** golden card with dynamic minutes countdown.
-  - If current time exceeds `valid_until`: Displays 🔴 **EXPIRED** crimson card denying exit.
+  - If current time is within `valid_from` and `valid_until`: Displays **ACTIVE / AUTHORIZED** card with student photo, name, and roll number.
+  - If current time is prior to `valid_from`: Displays **BEFORE_VALIDITY** golden card with dynamic minutes countdown.
+  - If current time exceeds `valid_until`: Displays **EXPIRED** crimson card denying exit.
 - **FR-03.4 (Security Early Exit Override)**: In `BEFORE_VALIDITY` state, a security officer shall be authorized to execute an **"Allow Early Exit"** override through a confirmation dialog, recording the officer ID, timestamp, and justification into `movement_logs` and `audit_logs`.
 
 ### FR-04: Counselor-First Disciplinary Violation Routing
@@ -316,16 +316,16 @@ The following matrix maps each functional requirement to its implementation file
 
 | Requirement ID | Requirement Name | Implementation Files | Verification Test / Method | Status |
 | :---: | :--- | :--- | :--- | :---: |
-| **FR-01** | Salted Scrypt Cryptography & Session Auth | `session.server.ts`, `auth.server.ts` | Security Hardening Suite (16/16 PASS) | **VERIFIED** ✅ |
-| **FR-02** | Digital Movement Pass & Opaque Tokens | `passes.server.ts`, `student/passes.tsx` | End-to-End Workflow Audit (28/28 PASS) | **VERIFIED** ✅ |
-| **FR-03** | Gate QR Multi-Scan & Before-Validity | `qr-scanner-modal.tsx`, `security/check.tsx` | Gate Lifecycle Suite (17/17 PASS) | **VERIFIED** ✅ |
-| **FR-04** | Counselor-First Violation Routing | `violations.server.ts`, `counselor.tsx` | Counselor-Student Visibility Suite (8/8 PASS) | **VERIFIED** ✅ |
-| **FR-05** | Counselor-Student Assignment Roster | `counselor.server.ts`, `dashboard.tsx` | Counselor Visibility Suite (8/8 PASS) | **VERIFIED** ✅ |
-| **FR-06** | 642 Master Timetable Engine | `timetable.server.ts`, `faculty/check.tsx`| Timetable Integrity Audit (642/642 PASS) | **VERIFIED** ✅ |
-| **FR-07** | 6-Stage Emergency Command System | `emergency.server.ts`, `emergency.tsx` | Emergency Response Audit | **VERIFIED** ✅ |
-| **FR-08** | Security Gate Mobile PWA | `public/manifest.json`, `service-worker.js`| PWA Cache Bypass & Touch Target Test | **VERIFIED** ✅ |
-| **FR-09** | Real-Time Notification Bus | `notifications-bus.server.ts` | Real-Time Notification Suite (15/15 PASS)| **VERIFIED** ✅ |
-| **FR-10** | Institutional Immutable Audit Logs | `audit_logs` DDL, `admin/audit-logs.tsx` | Real-World Edge Case Suite (15/15 PASS) | **VERIFIED** ✅ |
+| **FR-01** | Salted Scrypt Cryptography & Session Auth | `session.server.ts`, `auth.server.ts` | Security Hardening Suite (16/16 PASS) | **VERIFIED** |
+| **FR-02** | Digital Movement Pass & Opaque Tokens | `passes.server.ts`, `student/passes.tsx` | End-to-End Workflow Audit (28/28 PASS) | **VERIFIED** |
+| **FR-03** | Gate QR Multi-Scan & Before-Validity | `qr-scanner-modal.tsx`, `security/check.tsx` | Gate Lifecycle Suite (17/17 PASS) | **VERIFIED** |
+| **FR-04** | Counselor-First Violation Routing | `violations.server.ts`, `counselor.tsx` | Counselor-Student Visibility Suite (8/8 PASS) | **VERIFIED** |
+| **FR-05** | Counselor-Student Assignment Roster | `counselor.server.ts`, `dashboard.tsx` | Counselor Visibility Suite (8/8 PASS) | **VERIFIED** |
+| **FR-06** | 642 Master Timetable Engine | `timetable.server.ts`, `faculty/check.tsx`| Timetable Integrity Audit (642/642 PASS) | **VERIFIED** |
+| **FR-07** | 6-Stage Emergency Command System | `emergency.server.ts`, `emergency.tsx` | Emergency Response Audit | **VERIFIED** |
+| **FR-08** | Security Gate Mobile PWA | `public/manifest.json`, `service-worker.js`| PWA Cache Bypass & Touch Target Test | **VERIFIED** |
+| **FR-09** | Real-Time Notification Bus | `notifications-bus.server.ts` | Real-Time Notification Suite (15/15 PASS)| **VERIFIED** |
+| **FR-10** | Institutional Immutable Audit Logs | `audit_logs` DDL, `admin/audit-logs.tsx` | Real-World Edge Case Suite (15/15 PASS) | **VERIFIED** |
 
 ---
 

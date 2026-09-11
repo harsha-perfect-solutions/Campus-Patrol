@@ -198,14 +198,14 @@ function AdminMovementPassesPage() {
     }
     if (pass.revokedAt) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-destructive/10 text-destructive border border-destructive/25">
           <XCircle className="size-3" /> Revoked
         </span>
       );
     }
     if (pass.completed) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary border border-primary/20">
           <CheckCircle2 className="size-3" /> Completed
         </span>
       );
@@ -226,7 +226,7 @@ function AdminMovementPassesPage() {
     }
     if (pass.status === "rejected") {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-destructive/10 text-destructive border border-destructive/25">
           <XCircle className="size-3" /> Rejected
         </span>
       );
@@ -273,11 +273,11 @@ function AdminMovementPassesPage() {
             <p className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-300">{stats?.approved ?? 0}</p>
           </div>
 
-          <div className="card-surface p-3 sm:p-4 rounded-2xl border border-rose-500/30 bg-rose-500/5 space-y-1 shadow-xs">
-            <span className="text-[10px] sm:text-[11px] font-semibold text-rose-700 dark:text-rose-400 uppercase flex items-center gap-1 truncate">
+          <div className="card-surface p-3 sm:p-4 rounded-2xl border border-destructive/30 bg-destructive/5 space-y-1 shadow-xs">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-destructive uppercase flex items-center gap-1 truncate">
               <XCircle className="size-3 shrink-0" /> Rejected
             </span>
-            <p className="text-xl sm:text-2xl font-black text-rose-700 dark:text-rose-300">{stats?.rejected ?? 0}</p>
+            <p className="text-xl sm:text-2xl font-black text-destructive">{stats?.rejected ?? 0}</p>
           </div>
 
           <div className="card-surface p-3 sm:p-4 rounded-2xl border border-cyan-500/40 bg-cyan-500/10 space-y-1 shadow-xs">
@@ -287,18 +287,18 @@ function AdminMovementPassesPage() {
             <p className="text-xl sm:text-2xl font-black text-cyan-700 dark:text-cyan-300">{stats?.currentlyOutside ?? 0}</p>
           </div>
 
-          <div className="card-surface p-3 sm:p-4 rounded-2xl border border-purple-500/30 bg-purple-500/5 space-y-1 shadow-xs">
-            <span className="text-[10px] sm:text-[11px] font-semibold text-purple-700 dark:text-purple-400 uppercase flex items-center gap-1 truncate">
+          <div className="card-surface p-3 sm:p-4 rounded-2xl border border-primary/30 bg-primary/5 space-y-1 shadow-xs">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-primary uppercase flex items-center gap-1 truncate">
               <CheckCircle2 className="size-3 shrink-0" /> Completed
             </span>
-            <p className="text-xl sm:text-2xl font-black text-purple-700 dark:text-purple-300">{stats?.completed ?? 0}</p>
+            <p className="text-xl sm:text-2xl font-black text-primary">{stats?.completed ?? 0}</p>
           </div>
 
-          <div className="card-surface p-3 sm:p-4 rounded-2xl border border-red-500/40 bg-red-500/10 space-y-1 shadow-xs">
-            <span className="text-[10px] sm:text-[11px] font-bold text-red-700 dark:text-red-400 uppercase flex items-center gap-1 truncate">
+          <div className="card-surface p-3 sm:p-4 rounded-2xl border border-destructive/30 bg-destructive/5 space-y-1 shadow-xs">
+            <span className="text-[10px] sm:text-[11px] font-bold text-destructive uppercase flex items-center gap-1 truncate">
               <ShieldAlert className="size-3 shrink-0" /> Denials
             </span>
-            <p className="text-xl sm:text-2xl font-black text-red-700 dark:text-red-300">{stats?.unauthorizedAttempts ?? 0}</p>
+            <p className="text-xl sm:text-2xl font-black text-destructive">{stats?.unauthorizedAttempts ?? 0}</p>
           </div>
         </div>
 
@@ -412,7 +412,7 @@ function AdminMovementPassesPage() {
                   : "bg-muted/60 text-muted-foreground hover:bg-accent hover:text-foreground"
               }`}
             >
-              📅 Today Only
+              Today Only
             </button>
 
             {/* Department filter */}
@@ -506,7 +506,7 @@ function AdminMovementPassesPage() {
                                 Exit: {new Date(pass.exitAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                               </p>
                               {pass.entryAt ? (
-                                <p className="text-purple-700 dark:text-purple-400 font-semibold">
+                                <p className="text-primary font-semibold">
                                   Entry: {new Date(pass.entryAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                                 </p>
                               ) : (
@@ -542,7 +542,7 @@ function AdminMovementPassesPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleOpenActionModal("revoke", pass)}
-                                className="rounded-xl text-xs h-8 px-2.5 border-rose-500/40 text-rose-700 dark:text-rose-300 hover:bg-rose-500/15"
+                                className="rounded-xl text-xs h-8 px-2.5 border-destructive/30 text-destructive hover:bg-destructive/10"
                                 title="Emergency Revocation (Before Exit)"
                               >
                                 <Ban className="size-3.5 mr-1" /> Revoke
@@ -610,10 +610,10 @@ function AdminMovementPassesPage() {
                     {/* STEP 2: HOD DECISION */}
                     {selectedPass.status === "rejected" ? (
                       <div className="flex-1 space-y-1">
-                        <span className="grid size-7 mx-auto place-items-center rounded-full bg-rose-500 text-white font-bold text-xs shadow-xs">
+                        <span className="grid size-7 mx-auto place-items-center rounded-full bg-destructive text-destructive-foreground font-bold text-xs shadow-xs">
                           <XCircle className="size-3.5" />
                         </span>
-                        <p className="text-[10px] font-bold text-rose-600">HOD REJECTED</p>
+                        <p className="text-[10px] font-bold text-destructive">HOD REJECTED</p>
                       </div>
                     ) : selectedPass.cancelledAt ? (
                       <div className="flex-1 space-y-1">
@@ -643,10 +643,10 @@ function AdminMovementPassesPage() {
                     {/* STEP 3: EXIT / REVOKED */}
                     {selectedPass.revokedAt ? (
                       <div className="flex-1 space-y-1">
-                        <span className="grid size-7 mx-auto place-items-center rounded-full bg-rose-600 text-white font-bold text-xs shadow-xs">
+                        <span className="grid size-7 mx-auto place-items-center rounded-full bg-destructive text-destructive-foreground font-bold text-xs shadow-xs">
                           <XCircle className="size-3.5" />
                         </span>
-                        <p className="text-[10px] font-bold text-rose-600">ADMIN REVOKED</p>
+                        <p className="text-[10px] font-bold text-destructive">ADMIN REVOKED</p>
                       </div>
                     ) : selectedPass.exitAt ? (
                       <div className="flex-1 space-y-1">
@@ -669,10 +669,10 @@ function AdminMovementPassesPage() {
                     {/* STEP 4: ENTRY / COMPLETED */}
                     {selectedPass.entryAt ? (
                       <div className="flex-1 space-y-1">
-                        <span className="grid size-7 mx-auto place-items-center rounded-full bg-purple-600 text-white font-bold text-xs shadow-xs">
+                        <span className="grid size-7 mx-auto place-items-center rounded-full bg-primary text-primary-foreground font-bold text-xs shadow-xs">
                           <Check className="size-3.5" />
                         </span>
-                        <p className="text-[10px] font-bold text-purple-600">COMPLETED</p>
+                        <p className="text-[10px] font-bold text-primary">COMPLETED</p>
                       </div>
                     ) : (
                       <div className="flex-1 space-y-1">
@@ -687,7 +687,7 @@ function AdminMovementPassesPage() {
 
                 {/* REVOCATION / CANCELLATION NOTICE BANNER */}
                 {selectedPass.revokedAt && (
-                  <div className="p-3.5 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-800 dark:text-rose-300 space-y-1">
+                  <div className="p-3.5 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive space-y-1">
                     <p className="font-bold flex items-center gap-1.5">
                       <Ban className="size-4" /> Revoked by {selectedPass.revokedBy}
                     </p>
@@ -759,9 +759,9 @@ function AdminMovementPassesPage() {
                   )}
 
                   {selectedPass.entryAt && (
-                    <div className="p-3 rounded-xl border border-purple-500/30 bg-purple-500/5 space-y-1">
-                      <span className="text-[10px] uppercase font-bold text-purple-700 dark:text-purple-400">Return Entry Time</span>
-                      <p className="font-bold text-purple-800 dark:text-purple-300">
+                    <div className="p-3 rounded-xl border border-primary/30 bg-primary/5 space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-primary">Return Entry Time</span>
+                      <p className="font-bold text-primary">
                         {new Date(selectedPass.entryAt).toLocaleString()}
                       </p>
                     </div>
@@ -820,12 +820,12 @@ function AdminMovementPassesPage() {
             <form onSubmit={handleExecuteEmergencyAction} className="space-y-4 text-xs">
               <DialogHeader>
                 <DialogTitle className="text-base font-bold text-foreground flex items-center gap-2">
-                  <AlertTriangle className="size-5 text-rose-500" />
+                  <AlertTriangle className="size-5 text-destructive" />
                   {actionModal.type === "revoke" ? "Emergency Pass Revocation" : "Cancel Pass Request"}
                 </DialogTitle>
               </DialogHeader>
 
-              <div className="p-3.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-900 dark:text-rose-200 text-xs space-y-1">
+              <div className="p-3.5 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-xs space-y-1">
                 <p className="font-bold">
                   Student: {actionModal.pass?.studentName} ({actionModal.pass?.studentCode})
                 </p>
@@ -838,7 +838,7 @@ function AdminMovementPassesPage() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="adminActionReason" className="text-xs font-semibold">
-                  Mandatory Administrator Reason <span className="text-rose-500">*</span>
+                  Mandatory Administrator Reason <span className="text-destructive">*</span>
                 </Label>
                 <Textarea
                   id="adminActionReason"
@@ -866,7 +866,7 @@ function AdminMovementPassesPage() {
                   loading={actionSubmitting}
                   disabled={!actionReason.trim()}
                   size="sm"
-                  className="rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white"
+                  className="rounded-xl text-xs font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                 >
                   {actionModal.type === "revoke" ? "Confirm Revocation" : "Confirm Cancellation"}
                 </Button>

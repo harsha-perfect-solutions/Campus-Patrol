@@ -108,7 +108,7 @@ function AdminDashboardContent() {
               </span>
               <div>
                 <h3 className="text-sm font-bold text-red-900 dark:text-red-200 uppercase tracking-wide break-words">
-                  🚨 CRITICAL INCIDENT ALERT — {criticalReports.length} Active Case(s)
+                  CRITICAL INCIDENT ALERT — {criticalReports.length} Active Case(s)
                 </h3>
                 <p className="text-xs text-red-700 dark:text-red-400">
                   Critical severity or physical altercation reports requiring institutional triage.

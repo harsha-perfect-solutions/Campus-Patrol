@@ -327,7 +327,7 @@ function HODViolationsPage() {
               </span>
               <div>
                 <h3 className="text-sm font-bold text-red-900 dark:text-red-300 uppercase tracking-wide">
-                  🚨 CRITICAL INCIDENTS REQUIRE IMMEDIATE HOD ATTENTION
+                  CRITICAL INCIDENTS REQUIRE IMMEDIATE HOD ATTENTION
                 </h3>
                 <p className="text-xs text-red-700 dark:text-red-400 mt-0.5">
                   There are <strong>{stats?.criticalIncidents}</strong> critical or suspected violence report(s) awaiting your final review in the {userDept} department queue.
@@ -520,7 +520,7 @@ function HODViolationsPage() {
                               report.severity === "Low" && "bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300",
                             )}
                           >
-                            {report.severity === "Critical" && "🚨 "}
+                            {report.severity === "Critical" && ""}
                             {report.severity}
                           </span>
                         </td>
@@ -754,7 +754,7 @@ function HODViolationsPage() {
                       </div>
                     )}
                     <p className="text-[10px] text-muted-foreground italic pt-1 border-t border-blue-200/50">
-                      🔒 Verified snapshot captured automatically at the time of reporting. Retains exact historical timetable identity.
+                      Verified snapshot captured automatically at the time of reporting. Retains exact historical timetable identity.
                     </p>
                   </div>
 
@@ -821,7 +821,7 @@ function HODViolationsPage() {
                                 className="max-h-64 w-auto rounded-lg object-contain border border-border shadow-2xs"
                               />
                               <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                <span>📷 Captured Evidence Photo</span>
+                                <span>Captured Evidence Photo</span>
                                 <span>•</span>
                                 <button
                                   type="button"
@@ -835,7 +835,7 @@ function HODViolationsPage() {
                           ) : (
                             <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/40 border border-border">
                               <span className="text-xs font-semibold text-foreground truncate">
-                                📎 Attached: {selectedReport.evidence}
+                                Attached: {selectedReport.evidence}
                               </span>
                               <Button
                                 type="button"

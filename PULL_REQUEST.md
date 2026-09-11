@@ -1,15 +1,15 @@
-# 🛡️ Pull Request: Enterprise Campus Movement, Absence Detection & Security Governance Platform (CMADMS Release)
+# Pull Request: Enterprise Campus Movement, Absence Detection & Security Governance Platform (CMADMS Release)
 
 **PR Title**: `feat(core): Enterprise Full-Stack CMADMS Architecture, Real-Time QR Gate Engine, Counselor-First Violation Routing & Security Hardening`  
 **Target Branch**: `main` ⟵ `feature/cmadms-enterprise-release`  
 **PR Type**: `feat` | `security` | `refactor` | `perf` | `docs`  
-**Status**: `Ready for Review` 🚀  
+**Status**: `Ready for Review`  
 
 ---
 
-## 📑 Table of Contents
-- [📌 1. Executive Summary & Problem Statement](#-1-executive-summary--problem-statement)
-- [🚀 2. Major Systems & Features Delivered](#-2-major-systems--features-delivered)
+## Table of Contents
+- [1. Executive Summary & Problem Statement](#-1-executive-summary--problem-statement)
+- [2. Major Systems & Features Delivered](#-2-major-systems--features-delivered)
   - [2.1 Real-Time QR Gate Pass Engine & Multi-Scan Lifecycle](#21-real-time-qr-gate-pass-engine--multi-scan-lifecycle)
   - [2.2 Counselor-First Violation Routing & Resolution Workflow](#22-counselor-first-violation-routing--resolution-workflow)
   - [2.3 Counselor–Student Assignment Visibility System](#23-counselorstudent-assignment-visibility-system)
@@ -18,18 +18,18 @@
   - [2.6 Enterprise Cryptography, Auth & Security Hardening](#26-enterprise-cryptography-auth--security-hardening)
   - [2.7 Real-Time Notification Bus & Immutable Audit Trail](#27-real-time-notification-bus--immutable-audit-trail)
   - [2.8 Mobile PWA Security Gate Operations](#28-mobile-pwa-security-gate-operations)
-- [🏛️ 3. Full-Stack Architecture & Data Flow](#️-3-full-stack-architecture--data-flow)
-- [👥 4. Role-Based Access Control (RBAC) Matrix](#-4-role-based-access-control-rbac-matrix)
-- [🗄️ 5. Relational Database Schema & Migration Changes](#️-5-relational-database-schema--migration-changes)
-- [📂 6. Comprehensive File Inventory & Changed Files](#-6-comprehensive-file-inventory--changed-files)
-- [🧪 7. Quality Assurance, Testing & Verification Results](#-7-quality-assurance-testing--verification-results)
-- [🎬 8. Reviewer Verification Guide & Demo Walkthrough](#-8-reviewer-verification-guide--demo-walkthrough)
-- [⚙️ 9. Deployment, Environment & Operations](#️-9-deployment-environment--operations)
-- [✅ 10. PR Review Checklist](#-10-pr-review-checklist)
+- [3. Full-Stack Architecture & Data Flow](#️-3-full-stack-architecture--data-flow)
+- [4. Role-Based Access Control (RBAC) Matrix](#-4-role-based-access-control-rbac-matrix)
+- [5. Relational Database Schema & Migration Changes](#️-5-relational-database-schema--migration-changes)
+- [6. Comprehensive File Inventory & Changed Files](#-6-comprehensive-file-inventory--changed-files)
+- [7. Quality Assurance, Testing & Verification Results](#-7-quality-assurance-testing--verification-results)
+- [8. Reviewer Verification Guide & Demo Walkthrough](#-8-reviewer-verification-guide--demo-walkthrough)
+- [9. Deployment, Environment & Operations](#️-9-deployment-environment--operations)
+- [10. PR Review Checklist](#-10-pr-review-checklist)
 
 ---
 
-## 📌 1. Executive Summary & Problem Statement
+## 1. Executive Summary & Problem Statement
 
 ### The Problem
 Traditional educational institutions rely on fragmented paper-based gate passes, physical sign-in registries, and disconnected attendance rolls. This induces severe operational vulnerabilities:
@@ -43,15 +43,15 @@ This Pull Request delivers **CampusGuard Pro (CMADMS — Campus Movement & Absen
 
 ---
 
-## 🚀 2. Major Systems & Features Delivered
+## 2. Major Systems & Features Delivered
 
 ### 2.1 Real-Time QR Gate Pass Engine & Multi-Scan Lifecycle
 - **Opaque Cryptographic Tokens**: Replaced raw database IDs with cryptographically random 256-bit entropy tokens (`CMADMS-PASS-XXXXXX`). Tokens are decoupled from internal user IDs, preventing IDOR and enumeration attacks.
 - **Multi-Scan Pass Lifecycle**: Passes remain valid for multiple physical gate scans (`EXIT` followed by `ENTRY`) during their authorized time window rather than being permanently invalidated after the first scan.
 - **Server-Authoritative Time Engine**: Evaluates validity windows using PostgreSQL server time:
-  - 🟢 **ACTIVE / AUTHORIZED**: Student is cleared for gate movement.
-  - 🟡 **BEFORE_VALIDITY**: Pass is scheduled for a future time slot; displays dynamic countdown. Security officers can authorize an **Early Exit Override** with full audit logging.
-  - 🔴 **EXPIRED / INVALID / UNAPPROVED**: Instantly flags expired, duplicate, or tampered tokens.
+  - **ACTIVE / AUTHORIZED**: Student is cleared for gate movement.
+  - **BEFORE_VALIDITY**: Pass is scheduled for a future time slot; displays dynamic countdown. Security officers can authorize an **Early Exit Override** with full audit logging.
+  - **EXPIRED / INVALID / UNAPPROVED**: Instantly flags expired, duplicate, or tampered tokens.
 - **Mobile Camera Decoder Optimization**: Enhanced `src/components/qr-scanner-modal.tsx` with a multi-pass canvas decoder using downscaling (800px target), 65% center cropping, and Otsu adaptive binarization to read mobile phone screens under sunlight and harsh glare.
 
 ### 2.2 Counselor-First Violation Routing & Resolution Workflow
@@ -107,7 +107,7 @@ This Pull Request delivers **CampusGuard Pro (CMADMS — Campus Movement & Absen
 
 ---
 
-## 🏛️ 3. Full-Stack Architecture & Data Flow
+## 3. Full-Stack Architecture & Data Flow
 
 ```mermaid
 graph TD
@@ -161,31 +161,31 @@ graph TD
 
 ---
 
-## 👥 4. Role-Based Access Control (RBAC) Matrix
+## 4. Role-Based Access Control (RBAC) Matrix
 
 | Feature / Operation | Student | Security Guard | Faculty Counselor | Department HOD | Super Admin |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Apply for Movement Pass** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **View Personal QR Pass** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **View My Assigned Counselor** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Submit Violation Explanation (24h SLA)** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Scan Gate QR Code (Camera Decoder)** | ❌ | ✅ | ❌ | ❌ | ❌ |
-| **Authorize Gate Early Exit Override** | ❌ | ✅ | ❌ | ❌ | ❌ |
-| **Lookup Student Presence & Timetable** | ❌ | ✅ | ✅ | ✅ | ✅ |
-| **File Unauthorized Movement Report** | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **View Assigned Student Roster** | ❌ | ❌ | ✅ (Assigned Only) | ✅ (Department) | ✅ (All) |
-| **Counselor 1st-Level Case Resolution** | ❌ | ❌ | ✅ (Assigned Only) | ✅ (Department) | ✅ (All) |
-| **Escalate Violation Case to HOD** | ❌ | ❌ | ✅ (Assigned Only) | ❌ | ✅ |
-| **Approve / Reject Department Pass** | ❌ | ❌ | ✅ (Assigned) | ✅ (Department) | ✅ (All) |
-| **Issue Final Departmental Adjudication** | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Dispatch Campus Emergency Incident** | ❌ | ✅ | ❌ | ❌ | ✅ |
-| **Manage Master Timetable Slots** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Assign User Roles & Counselor Mappings**| ❌ | ❌ | ❌ | ❌ | ✅ |
-| **View Immutable Audit Logs** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Apply for Movement Pass** | Yes | No | No | No | No |
+| **View Personal QR Pass** | Yes | No | No | No | No |
+| **View My Assigned Counselor** | Yes | No | No | No | No |
+| **Submit Violation Explanation (24h SLA)** | Yes | No | No | No | No |
+| **Scan Gate QR Code (Camera Decoder)** | No | Yes | No | No | No |
+| **Authorize Gate Early Exit Override** | No | Yes | No | No | No |
+| **Lookup Student Presence & Timetable** | No | Yes | Yes | Yes | Yes |
+| **File Unauthorized Movement Report** | No | No | Yes | Yes | Yes |
+| **View Assigned Student Roster** | No | No | Yes (Assigned Only) | Yes (Department) | Yes (All) |
+| **Counselor 1st-Level Case Resolution** | No | No | Yes (Assigned Only) | Yes (Department) | Yes (All) |
+| **Escalate Violation Case to HOD** | No | No | Yes (Assigned Only) | No | Yes |
+| **Approve / Reject Department Pass** | No | No | Yes (Assigned) | Yes (Department) | Yes (All) |
+| **Issue Final Departmental Adjudication** | No | No | No | Yes | Yes |
+| **Dispatch Campus Emergency Incident** | No | Yes | No | No | Yes |
+| **Manage Master Timetable Slots** | No | No | No | No | Yes |
+| **Assign User Roles & Counselor Mappings**| No | No | No | No | Yes |
+| **View Immutable Audit Logs** | No | No | No | No | Yes |
 
 ---
 
-## 🗄️ 5. Relational Database Schema & Migration Changes
+## 5. Relational Database Schema & Migration Changes
 
 ### Key Tables & DDL Schema
 
@@ -303,7 +303,7 @@ CREATE TABLE audit_logs (
 
 ---
 
-## 📂 6. Comprehensive File Inventory & Changed Files
+## 6. Comprehensive File Inventory & Changed Files
 
 | Module / Path | File Type | Purpose & Description |
 | :--- | :--- | :--- |
@@ -331,7 +331,7 @@ CREATE TABLE audit_logs (
 
 ---
 
-## 🧪 7. Quality Assurance, Testing & Verification Results
+## 7. Quality Assurance, Testing & Verification Results
 
 ### 1. Static Type Checking
 ```bash
@@ -342,20 +342,20 @@ npx tsc --noEmit
 ### 2. Integration Test Suites
 All specialized test suites pass with 100% assertions:
 - **Counselor-Student Visibility Suite** (`scratch/test-counselor-student-visibility.ts`):
-  - ✅ Counselor with 36 assigned students correctly displays exact count & full roster.
-  - ✅ Unassigned student correctly displays fallback notification.
-  - ✅ Student 1 & Student 2 correctly fetch their respective class counselors.
-  - ✅ Server RPC authorization strictly isolates counselor rosters across departments.
-  - ✅ Counselor-First violation routing successfully assigns cases to assigned counselors.
+  - Counselor with 36 assigned students correctly displays exact count & full roster.
+  - Unassigned student correctly displays fallback notification.
+  - Student 1 & Student 2 correctly fetch their respective class counselors.
+  - Server RPC authorization strictly isolates counselor rosters across departments.
+  - Counselor-First violation routing successfully assigns cases to assigned counselors.
 - **Security Hardening Suite**:
-  - ✅ 16-byte random salt generation (`salt:derivedHash`).
-  - ✅ Transparent legacy single-secret password migration without user interruption.
-  - ✅ Timing-safe hash comparison via `crypto.timingSafeEqual`.
-  - ✅ Brute-force rate limiting triggers after 5 failed attempts per 15 minutes.
+  - 16-byte random salt generation (`salt:derivedHash`).
+  - Transparent legacy single-secret password migration without user interruption.
+  - Timing-safe hash comparison via `crypto.timingSafeEqual`.
+  - Brute-force rate limiting triggers after 5 failed attempts per 15 minutes.
 - **Gate Pass Lifecycle Suite**:
-  - ✅ Multi-scan sequence correctly registers `EXIT` followed by `ENTRY`.
-  - ✅ `BEFORE_VALIDITY` state triggers dynamic countdown.
-  - ✅ Security officer early exit override successfully clears gate and writes audit log.
+  - Multi-scan sequence correctly registers `EXIT` followed by `ENTRY`.
+  - `BEFORE_VALIDITY` state triggers dynamic countdown.
+  - Security officer early exit override successfully clears gate and writes audit log.
 
 ### 3. Production Bundle Compilation
 ```bash
@@ -365,7 +365,7 @@ npm run build
 
 ---
 
-## 🎬 8. Reviewer Verification Guide & Demo Walkthrough
+## 8. Reviewer Verification Guide & Demo Walkthrough
 
 Reviewers can execute this chronological 15-step sequence to verify all systems in under 10 minutes:
 
@@ -389,7 +389,7 @@ Reviewers can execute this chronological 15-step sequence to verify all systems 
 
 ---
 
-## ⚙️ 9. Deployment, Environment & Operations
+## 9. Deployment, Environment & Operations
 
 ### Docker Compose Stack
 The repository includes a ready-to-run multi-container Docker setup:
@@ -414,7 +414,7 @@ NODE_ENV="development"
 
 ---
 
-## ✅ 10. PR Review Checklist
+## 10. PR Review Checklist
 
 - [x] **Architecture**: Server-authoritative design using TanStack Start server RPCs (`createServerFn`).
 - [x] **Database Safety**: 100% parameterized SQL queries (`$1`, `$2`), eliminating SQL injection.

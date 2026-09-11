@@ -486,7 +486,7 @@ export async function verifyQRTokenServer(
           recipientRole: "student",
           department: student.department,
           type: verificationType === "EXIT" ? "gate_exit_authorized" : "gate_entry_verified",
-          title: verificationType === "EXIT" ? "Gate Exit Authorized 🚪" : "Gate Entry Verified ✅",
+          title: verificationType === "EXIT" ? "Gate Exit Authorized" : "Gate Entry Verified",
           detail: `Your campus ${verificationType.toLowerCase()} was verified at ${activeCheckpoint} via Real-Time QR Scanner.`,
           tone: "resolved",
           relatedId: passRow.movement_permission_id,

@@ -761,7 +761,7 @@ function AdminUsersPage() {
                         {activeTab === "security" && (
                           <td className="py-3.5 px-4 font-bold text-emerald-600 dark:text-emerald-400">
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-500/20">
-                              📍 {assignedGate}
+                              {assignedGate}
                             </span>
                           </td>
                         )}
@@ -859,7 +859,7 @@ function AdminUsersPage() {
                     ) : (
                       collegeGates.map((g) => (
                         <SelectItem key={g.id} value={g.gate_name}>
-                          📍 {g.gate_name} ({g.gate_code})
+                          {g.gate_name} ({g.gate_code})
                         </SelectItem>
                       ))
                     )}
@@ -971,7 +971,7 @@ function AdminUsersPage() {
                       ) : (
                         collegeGates.map((g) => (
                           <SelectItem key={g.id} value={g.gate_name}>
-                            📍 {g.gate_name} ({g.gate_code})
+                            {g.gate_name} ({g.gate_code})
                           </SelectItem>
                         ))
                       )}
@@ -1284,7 +1284,7 @@ function AdminUsersPage() {
                         {collegeGates.map((gate) => (
                           <tr key={gate.id} className="hover:bg-accent/30">
                             <td className="p-3 font-bold text-foreground">
-                              📍 {gate.gate_name}
+                              {gate.gate_name}
                             </td>
                             <td className="p-3 font-mono font-semibold text-muted-foreground">
                               {gate.gate_code}
@@ -1424,7 +1424,7 @@ function AdminUsersPage() {
                     {oneTimeCredentials?.title}
                   </DialogTitle>
                   <DialogDescription className="text-xs text-slate-400">
-                    One-time initial credentials generated securely. Passwords will <strong className="text-rose-400">NEVER</strong> be shown again.
+                    One-time initial credentials generated securely. Passwords will <strong className="text-destructive font-black">NEVER</strong> be shown again.
                   </DialogDescription>
                 </div>
               </div>
@@ -1583,40 +1583,40 @@ function AdminUsersPage() {
 
         {/* MODAL: UNSAVED CREDENTIAL WARNING */}
         <Dialog open={unsavedWarningOpen} onOpenChange={setUnsavedWarningOpen}>
-          <DialogContent className="sm:max-w-md bg-slate-950 border-rose-900/50 text-slate-100 p-6 rounded-2xl shadow-2xl">
+          <DialogContent className="sm:max-w-md bg-card border-destructive/30 text-foreground p-6 rounded-2xl shadow-2xl">
             <DialogHeader>
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10 text-destructive border border-destructive/20">
                   <AlertTriangle className="h-5 w-5" />
                 </div>
                 <div>
-                  <DialogTitle className="text-base font-bold text-slate-100">
+                  <DialogTitle className="text-base font-bold text-foreground">
                     Are you sure?
                   </DialogTitle>
-                  <DialogDescription className="text-xs text-rose-300/80">
+                  <DialogDescription className="text-xs text-muted-foreground">
                     Unsaved temporary credentials warning.
                   </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
 
-            <div className="my-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-slate-200 text-xs leading-relaxed">
-              These temporary passwords will <strong className="text-rose-400">NOT be shown again</strong> after closing this screen. Please copy or download them before proceeding.
+            <div className="my-3 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-foreground text-xs leading-relaxed">
+              These temporary passwords will <strong className="text-destructive font-bold">NOT be shown again</strong> after closing this screen. Please copy or download them before proceeding.
             </div>
 
-            <DialogFooter className="gap-2 pt-2 border-t border-slate-800">
+            <DialogFooter className="gap-2 pt-2 border-t border-border">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setUnsavedWarningOpen(false)}
-                className="border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 text-xs rounded-xl"
+                className="text-xs rounded-xl"
               >
                 Go Back & Copy
               </Button>
               <Button
                 type="button"
                 onClick={forceCloseOneTimeCredentials}
-                className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl"
+                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold text-xs rounded-xl"
               >
                 Close Anyway
               </Button>

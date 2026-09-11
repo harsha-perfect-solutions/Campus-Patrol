@@ -805,7 +805,7 @@ function AdminRoomsPage() {
                                 room.roomType === "Laboratory"
                                   ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border border-emerald-300/50"
                                   : room.roomType === "Seminar Hall"
-                                  ? "bg-purple-500/15 text-purple-800 dark:text-purple-200 border border-purple-300/50"
+                                  ? "bg-primary/10 text-primary border border-primary/25"
                                   : "bg-blue-500/15 text-blue-800 dark:text-blue-200 border border-blue-300/50"
                               }`}
                             >

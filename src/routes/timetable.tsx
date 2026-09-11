@@ -78,38 +78,38 @@ function getPeriodBadge(periodType?: string) {
   switch (clean) {
     case "LAB":
       return {
-        label: "🧪 LAB",
+        label: "LAB",
         className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800",
         note: "Attendance Required • 2-Hour Practical Block",
       };
     case "LIBRARY":
       return {
-        label: "📚 LIBRARY",
-        className: "bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800",
+        label: "LIBRARY",
+        className: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900",
         note: "Classroom Attendance: Not Required • Movement Monitoring: Disabled",
       };
     case "SPORTS":
       return {
-        label: "⚽ SPORTS",
-        className: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800",
+        label: "SPORTS",
+        className: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900",
         note: "Expected Location: Sports Ground • Classroom Attendance: Not Required",
       };
     case "ACTIVITY":
       return {
-        label: "🎨 ACTIVITY",
-        className: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800",
+        label: "ACTIVITY",
+        className: "bg-primary/10 text-primary border-primary/20",
         note: "Co-Curricular Activity • Classroom Attendance: Not Required",
       };
     case "BREAK":
       return {
-        label: "☕ BREAK",
-        className: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800",
+        label: "BREAK",
+        className: "bg-muted text-muted-foreground border-border",
         note: "10-Minute Morning Break • Normal Movement Allowed",
       };
     case "LUNCH":
       return {
-        label: "🍱 LUNCH",
-        className: "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-800",
+        label: "LUNCH",
+        className: "bg-muted text-muted-foreground border-border",
         note: "Lunch Break • Normal Movement Allowed",
       };
     case "NO_CLASS":
@@ -121,7 +121,7 @@ function getPeriodBadge(periodType?: string) {
     case "CLASS":
     default:
       return {
-        label: "📖 CLASS",
+        label: "CLASS",
         className: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-800",
         note: "Standard Academic Class • Attendance & Movement Monitored",
       };

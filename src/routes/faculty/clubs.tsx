@@ -932,7 +932,7 @@ function FacultyClubsPage() {
                           <p><strong className="text-foreground">Schedule:</strong> {activeTargetEvent.event_date} | {activeTargetEvent.start_time} - {activeTargetEvent.end_time}</p>
                           <p><strong className="text-foreground">Location:</strong> {activeTargetEvent.location} ({activeTargetEvent.location_type})</p>
                           <p className="text-emerald-600 dark:text-emerald-400 font-bold pt-1">
-                            ⚡ Selected students automatically receive active digital event pass (`EP-xxxx`). No student confirmation needed.
+                            Selected students automatically receive active digital event pass (`EP-xxxx`). No student confirmation needed.
                           </p>
                         </div>
 

@@ -565,7 +565,7 @@ export async function escalateViolationReport(
         recipientRole: "admin",
         department: cleanDept,
         type: "critical_incident",
-        title: "Critical Incident Escalated by HOD 🚨",
+        title: "Critical Incident Escalated by HOD",
         detail: `Incident #${cleanId} for ${report.student_name} (${report.student_code}) in ${cleanDept} was escalated to Admin by ${hodName}: ${cleanReason}`,
         tone: "violation",
         relatedId: cleanId,
@@ -891,6 +891,7 @@ export type DBHodMovementPass = {
   valid_until: string;
   status: "pending" | "approved" | "rejected";
   issued_by: string;
+  target_role?: string;
   exit_at: string | null;
   entry_at: string | null;
   checkpoint: string | null;
@@ -920,6 +921,7 @@ export async function getHodMovementPasses(department: string): Promise<DBHodMov
         mp.valid_until::text,
         mp.status,
         mp.issued_by,
+        COALESCE(mp.target_role, 'hod')::text AS target_role,
         mp.exit_at::text,
         mp.entry_at::text,
         mp.checkpoint,
@@ -1039,7 +1041,7 @@ export async function approveHodMovementPass(
         recipientId: updated.student_code,
         department: currentPass.department,
         type: isApproved ? "gate_pass_approved" : "gate_pass_rejected",
-        title: isApproved ? "Movement Pass Approved ✅" : "Movement Pass Rejected ❌",
+        title: isApproved ? "Movement Pass Approved" : "Movement Pass Rejected",
         detail: isApproved
           ? `Your movement pass (${cleanId.slice(0, 8)}) for ${updated.date} (${updated.valid_from} - ${updated.valid_until}) has been approved by HOD ${hodName}.`
           : `Your movement pass has been rejected by HOD ${hodName}.${rejectionReason ? ` Reason: ${rejectionReason}` : ""}`,
@@ -1047,6 +1049,20 @@ export async function approveHodMovementPass(
         relatedId: cleanId,
         relatedType: "movement_permission",
       });
+    }
+
+    // 5. Generate QR pass on approval or revoke if rejected
+    try {
+      const { getOrCreateQRPassForMovementPermission, revokeQRPassByPermission } = await import("./qr.server");
+      if (newStatus === "approved") {
+        const validFromIso = new Date().toISOString();
+        const validUntilIso = new Date(Date.now() + 86400000).toISOString();
+        await getOrCreateQRPassForMovementPermission(cleanId, validFromIso, validUntilIso);
+      } else {
+        await revokeQRPassByPermission("NORMAL_MOVEMENT", cleanId);
+      }
+    } catch (qrErr) {
+      console.warn("[QR Notice] Failed to update QR pass status on HOD decision:", qrErr);
     }
 
     await db.query("COMMIT");

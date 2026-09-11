@@ -6,24 +6,24 @@ This matrix documents the exact permissions and capabilities enforced across the
 
 | Operational Feature | Student (`student`) | Faculty (`faculty`) | Security (`security`) | HOD (`hod`) | Admin (`admin`) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Portal Sign-in & Authentication** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Request Movement Permission Pass** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **View Personal Digital QR Pass** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Submit 24h Violation Explanation** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Student Timetable Lookup (`/check`)** | ❌ | ✅ | ❌ | ❌ | ✅ |
-| **Verify Outside-Class Status** | ❌ | ✅ | ❌ | ❌ | ✅ |
-| **Create Explicit Violation Report** | ❌ | ✅ | ❌ | ❌ | ✅ |
-| **Gate QR Code Scanning & Check** | ❌ | ❌ | ✅ | ❌ | ✅ |
-| **Authorize Early Exit Override** | ❌ | ❌ | ✅ | ❌ | ✅ |
-| **Record Gate Exit & Entry Timestamps** | ❌ | ❌ | ✅ | ❌ | ✅ |
-| **Approve / Reject Movement Passes** | ❌ | ❌ | ❌ | ✅ (Dept Only) | ✅ |
-| **HOD Violation Investigation Queue** | ❌ | ❌ | ❌ | ✅ (Dept Only) | ✅ |
-| **Resolve or Dismiss Violation Cases** | ❌ | ❌ | ❌ | ✅ (Dept Only) | ✅ |
-| **Trigger & Control Emergency Incidents**| ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Institutional User & Role Management** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Timetable System Configuration** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Department, Course & Room Management**| ❌ | ❌ | ❌ | ❌ | ✅ |
-| **View Full Immutable Audit Logs** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Portal Sign-in & Authentication** | Yes | Yes | Yes | Yes | Yes |
+| **Request Movement Permission Pass** | Yes | No | No | No | No |
+| **View Personal Digital QR Pass** | Yes | No | No | No | No |
+| **Submit 24h Violation Explanation** | Yes | No | No | No | No |
+| **Student Timetable Lookup (`/check`)** | No | Yes | No | No | Yes |
+| **Verify Outside-Class Status** | No | Yes | No | No | Yes |
+| **Create Explicit Violation Report** | No | Yes | No | No | Yes |
+| **Gate QR Code Scanning & Check** | No | No | Yes | No | Yes |
+| **Authorize Early Exit Override** | No | No | Yes | No | Yes |
+| **Record Gate Exit & Entry Timestamps** | No | No | Yes | No | Yes |
+| **Approve / Reject Movement Passes** | No | No | No | Yes (Dept Only) | Yes |
+| **HOD Violation Investigation Queue** | No | No | No | Yes (Dept Only) | Yes |
+| **Resolve or Dismiss Violation Cases** | No | No | No | Yes (Dept Only) | Yes |
+| **Trigger & Control Emergency Incidents**| No | No | No | No | Yes |
+| **Institutional User & Role Management** | No | No | No | No | Yes |
+| **Timetable System Configuration** | No | No | No | No | Yes |
+| **Department, Course & Room Management**| No | No | No | No | Yes |
+| **View Full Immutable Audit Logs** | No | No | No | No | Yes |
 
 ---
 

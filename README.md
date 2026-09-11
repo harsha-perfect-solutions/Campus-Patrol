@@ -1,4 +1,4 @@
-# 🛡️ CampusGuard Pro (CMADMS)
+# CampusGuard Pro (CMADMS)
 ### *Campus Movement & Absence Detection Management System*
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -14,28 +14,28 @@
 
 **CampusGuard Pro (CMADMS)** is an enterprise full-stack campus governance and student movement management platform. Engineered with **TanStack Start**, **React 19**, **Tailwind CSS v4**, and **PostgreSQL**, it automates out-pass issuance, sub-second QR code gate security verification, class attendance cross-referencing against live timetables, counselor-first disciplinary violation handling, emergency response dispatch, real-time alert broadcasting, and institutional audit logging.
 
-> 🌟 **Core Value Proposition**: Replaces vulnerable paper gate passes and manual logbooks with cryptographically secure, opaque QR tokens synchronized with master academic schedules—slashing gate verification latency by 85% and establishing 100% auditability across campus movements.
+> **Core Value Proposition**: Replaces vulnerable paper gate passes and manual logbooks with cryptographically secure, opaque QR tokens synchronized with master academic schedules—slashing gate verification latency by 85% and establishing 100% auditability across campus movements.
 
 ---
 
-## 📑 Table of Contents
+## Table of Contents
 
-- [🏛️ System Architecture](#️-system-architecture)
-- [✨ Key Features & Modules](#-key-features--modules)
-- [👥 User Roles & Demo Credentials](#-user-roles--demo-credentials)
-- [🔄 Core System Workflows](#-core-system-workflows)
-- [🛠️ Technology Stack](#️-technology-stack)
-- [🔒 Security & Cryptographic Controls](#-security--cryptographic-controls)
-- [📂 Project Directory Structure](#-project-directory-structure)
-- [⚡ Quick Start & Development](#-quick-start--development)
-- [🐳 Docker Deployment](#-docker-deployment)
-- [📦 Production Build](#-production-build)
-- [🧪 Quality Assurance & Type Checking](#-quality-assurance--type-checking)
-- [📚 Complete Documentation Package](#-complete-documentation-package)
+- [System Architecture](#️-system-architecture)
+- [Key Features & Modules](#-key-features--modules)
+- [User Roles & Demo Credentials](#-user-roles--demo-credentials)
+- [Core System Workflows](#-core-system-workflows)
+- [Technology Stack](#️-technology-stack)
+- [Security & Cryptographic Controls](#-security--cryptographic-controls)
+- [Project Directory Structure](#-project-directory-structure)
+- [Quick Start & Development](#-quick-start--development)
+- [Docker Deployment](#-docker-deployment)
+- [Production Build](#-production-build)
+- [Quality Assurance & Type Checking](#-quality-assurance--type-checking)
+- [Complete Documentation Package](#-complete-documentation-package)
 
 ---
 
-## 🏛️ System Architecture
+## System Architecture
 
 CMADMS is designed as a type-safe, server-authoritative web platform leveraging **TanStack Start** server RPCs (`createServerFn`) to execute business logic and database queries on the server side:
 
@@ -67,44 +67,44 @@ CMADMS is designed as a type-safe, server-authoritative web platform leveraging 
 
 ---
 
-## ✨ Key Features & Modules
+## Key Features & Modules
 
-### 1. 🎫 Digital Movement Pass & Opaque QR Tokens
+### 1. Digital Movement Pass & Opaque QR Tokens
 - **Student Self-Service**: Apply for single-day or scheduled out-passes with granular categories (*Medical, Library, Lab, Placement, HOD Duty, Sports*).
 - **Opaque Cryptographic QR Codes**: Encodes random 256-bit entropy tokens (`CMADMS-PASS-XXXXXX`), completely isolating database primary keys from public display.
 - **Multi-Scan Pass Lifecycle**: Passes support multiple gate scans (`EXIT` followed by `ENTRY`) within their authorized validity window without being prematurely invalidated.
 
-### 2. 🛡️ High-Performance Mobile Security Gate PWA
+### 2. High-Performance Mobile Security Gate PWA
 - **Sub-Second Camera Scanner**: Integrated `jsqr` camera reader with canvas downscaling, 65% center cropping, and Otsu adaptive binarization to read mobile screens under glare.
 - **Server-Authoritative Validity Check**:
-  - 🟢 **ACTIVE / AUTHORIZED**: Student is cleared for exit/entry.
-  - 🟡 **BEFORE_VALIDITY**: Pass is scheduled for a future time slot; displays dynamic countdown. Security officers can authorize an **Early Exit Override** with audit logging.
-  - 🔴 **EXPIRED / INVALID / UNAPPROVED**: Instantly flags expired, duplicate, or tampered tokens.
+  - **ACTIVE / AUTHORIZED**: Student is cleared for exit/entry.
+  - **BEFORE_VALIDITY**: Pass is scheduled for a future time slot; displays dynamic countdown. Security officers can authorize an **Early Exit Override** with audit logging.
+  - **EXPIRED / INVALID / UNAPPROVED**: Instantly flags expired, duplicate, or tampered tokens.
 - **Offline-Aware PWA**: Installed directly on mobile devices with full touch-optimized controls (44px+ hit targets).
 
-### 3. 🧑‍🏫 Counselor-First Violation Routing & Student Visibility
+### 3. Counselor-First Violation Routing & Student Visibility
 - **Automated Assignment Routing**: Student violation reports route directly to their assigned Class Counselor for 1st-level review before reaching the HOD.
 - **Counselor 1st-Level Resolution**: Counselors can review student explanations and choose to **`RESOLVE`** locally or **`ESCALATE TO HOD`**.
 - **Assigned Student Roster**: Filterable roster at `/faculty/counselor` with search, department, year, and section filters.
 - **Student Dashboard Visibility**: Students can view their assigned counselor details directly on their dashboard (`/student/dashboard`).
 
-### 4. 📅 Master Timetable & Absence Cross-Referencing
+### 4. Master Timetable & Absence Cross-Referencing
 - **642 Slot Institutional Timetable**: Preloaded schedules covering departments, years, sections, rooms, and faculty.
 - **Instant Absence Detection**: When faculty or security check a student roll number, CMADMS automatically resolves the student's scheduled class, room, and assigned instructor.
 
-### 5. 🚨 6-Stage Campus Emergency Incident Command
+### 5. 6-Stage Campus Emergency Incident Command
 - **Campus-Wide Emergency Dispatch**: Rapid dispatch center for critical events (*Medical, Fire, Security, Lab Hazard*).
 - **Structured Incident Lifecycle**:
   `REPORTED` ➔ `ACKNOWLEDGED` ➔ `RESPONDER_ASSIGNED` ➔ `RESPONSE_STARTED` ➔ `CONTROLLED` ➔ `RESOLVED`.
 - **Live Response Audit**: Real-time responder notes, timestamps, and coordinator tracking.
 
-### 6. 📜 Immutable Audit Logs & Real-Time Alert Bus
+### 6. Immutable Audit Logs & Real-Time Alert Bus
 - **Complete Audit Trail**: Every security check, override, pass approval, violation filing, and emergency status change writes permanent records to `audit_logs`.
 - **Instant UI Notifications**: Server event bus pushes toast alerts via Sonner without requiring manual page refreshes.
 
 ---
 
-## 👥 User Roles & Demo Credentials
+## User Roles & Demo Credentials
 
 The platform includes pre-configured demo credentials for immediate testing across all institutional user roles:
 
@@ -116,11 +116,11 @@ The platform includes pre-configured demo credentials for immediate testing acro
 | **Department HOD** | `hod.cse@cmadms.edu` | `Password123!` | `/hod/dashboard` | Final department authority, approve/reject passes, resolve escalated violation cases |
 | **Super Admin** | `admin@cmadms.edu` | `Password123!` | `/admin/dashboard` | Master timetables, emergency dispatch, user & role management, full system audit logs |
 
-> 💡 **Demo Shortcut**: When logging in on `/auth`, clicking any of the demo role badges pre-fills the login form automatically.
+> **Demo Shortcut**: When logging in on `/auth`, clicking any of the demo role badges pre-fills the login form automatically.
 
 ---
 
-## 🔄 Core System Workflows
+## Core System Workflows
 
 ### Gate QR Verification Flow
 
@@ -138,14 +138,14 @@ sequenceDiagram
     Scanner->>Server: verifyGatePassApi({ token, gateId, scanType })
     Server->>DB: Query movement_permissions by opaque token
     alt Pass Not Found or Rejected
-        Server-->>Scanner: ❌ DENIED: Invalid / Unapproved Pass
+        Server-->>Scanner: DENIED: Invalid / Unapproved Pass
     else Current Time < Valid From
-        Server-->>Scanner: ⏳ BEFORE_VALIDITY (Option: Early Exit Override)
+        Server-->>Scanner: BEFORE_VALIDITY (Option: Early Exit Override)
     else Current Time > Valid Until
-        Server-->>Scanner: ⚠️ EXPIRED: Validity Window Elapsed
+        Server-->>Scanner: EXPIRED: Validity Window Elapsed
     else Pass Active & Valid
         Server->>DB: Record scan in movement_logs (EXIT or ENTRY)
-        Server-->>Scanner: ✅ AUTHORIZED: Student Photo & Details Displayed
+        Server-->>Scanner: AUTHORIZED: Student Photo & Details Displayed
     end
 ```
 
@@ -167,7 +167,7 @@ graph TD
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Domain | Technology | Version | Purpose |
 | :--- | :--- | :--- | :--- |
@@ -185,7 +185,7 @@ graph TD
 
 ---
 
-## 🔒 Security & Cryptographic Controls
+## Security & Cryptographic Controls
 
 1. **Per-User Salted Password Hashing**: Passwords are hashed using `crypto.scryptSync()` with a 16-byte cryptographically secure random salt per user (`salt:derivedHash`), preventing rainbow table attacks.
 2. **Transparent Legacy Migration**: Automatically detects and upgrades legacy single-secret password hashes to per-user salted hashes upon successful login.
@@ -198,7 +198,7 @@ graph TD
 
 ---
 
-## 📂 Project Directory Structure
+## Project Directory Structure
 
 ```
 campus-guard-pro/
@@ -245,7 +245,7 @@ campus-guard-pro/
 
 ---
 
-## ⚡ Quick Start & Development
+## Quick Start & Development
 
 ### 1. Prerequisites
 - **Node.js**: `v20.x` or higher installed
@@ -295,7 +295,7 @@ Open your browser at **[http://localhost:8081](http://localhost:8081)**.
 
 ---
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 The fastest way to spin up the complete CMADMS stack (PostgreSQL database + pgAdmin + Web Application) is with Docker Compose:
 
@@ -318,7 +318,7 @@ docker compose down
 
 ---
 
-## 📦 Production Build
+## Production Build
 
 To compile and execute the optimized production bundle:
 
@@ -333,7 +333,7 @@ The server will bind to the configured `PORT` (default `3000`).
 
 ---
 
-## 🧪 Quality Assurance & Type Checking
+## Quality Assurance & Type Checking
 
 To validate code quality, linting standards, and static TypeScript typing across all client and server files:
 
@@ -350,7 +350,7 @@ npm run format
 
 ---
 
-## 📚 Complete Documentation Package
+## Complete Documentation Package
 
 Extensive technical, architectural, and presentation documents are available in the repository:
 
@@ -372,12 +372,12 @@ Extensive technical, architectural, and presentation documents are available in 
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
 
 ---
 
 <div align="center">
-  <sub>Built with ❤️ for academic institutions seeking secure, efficient, and transparent campus governance.</sub>
+  <sub>Built for academic institutions seeking secure, efficient, and transparent campus governance.</sub>
 </div>

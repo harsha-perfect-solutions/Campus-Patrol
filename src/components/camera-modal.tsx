@@ -218,7 +218,7 @@ export function CameraModal({ open, onClose, onCapture }: CameraModalProps) {
               </div>
 
               <p className="text-[10px] text-muted-foreground text-center pt-1 border-t border-amber-300/40 dark:border-amber-700/40">
-                💡 <strong>Tip for live webcam:</strong> Access via <code>http://localhost:8082</code> on this PC, or use HTTPS.
+                <strong>Tip for live webcam:</strong> Access via <code>http://localhost:8082</code> on this PC, or use HTTPS.
               </p>
             </div>
           ) : captured ? (

@@ -79,7 +79,7 @@ function SecurityProfilePage() {
             </div>
 
             <p className="text-[11px] text-muted-foreground text-center border-t border-border pt-4">
-              🔒 Identity fields are read-only and verified by Campus Administration.
+              Identity fields are read-only and verified by Campus Administration.
             </p>
           </div>
         </div>

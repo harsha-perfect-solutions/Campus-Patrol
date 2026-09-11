@@ -59,7 +59,7 @@ function LandingPage() {
         {/* 8. System Metrics Section */}
         <LandingSystemMetricsSection />
 
-        {/* 9. Security Section (Light Purple Container) */}
+        {/* 9. Security Section */}
         <LandingSecuritySection />
       </main>
 

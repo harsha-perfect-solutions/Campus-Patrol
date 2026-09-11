@@ -266,12 +266,12 @@ function StudentExplanationsPage() {
                       alt="Faculty evidence photo"
                       className="max-h-48 rounded-lg object-contain border border-border shadow-2xs"
                     />
-                    <span className="text-[10px] text-muted-foreground">📷 Official Observation Photo attached by {targetReport.reported_by}</span>
+                    <span className="text-[10px] text-muted-foreground">Official Observation Photo attached by {targetReport.reported_by}</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-between p-2.5 rounded-xl bg-background border border-blue-200/60">
                     <span className="text-xs font-semibold text-foreground truncate">
-                      📎 Attached: {targetReport.evidence}
+                      Attached: {targetReport.evidence}
                     </span>
                   </div>
                 )}
@@ -340,7 +340,7 @@ function StudentExplanationsPage() {
                     <AlertCircle className="size-5 shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
                     <div>
                       <p className="font-extrabold text-sm uppercase tracking-wide text-red-700 dark:text-red-300">
-                        🚨 24 Hours Exceeded — Meet HOD at Cabin!
+                        24 Hours Exceeded — Meet HOD at Cabin!
                       </p>
                       <p className="mt-1 font-medium leading-relaxed">
                         You did not submit an explanation within the 24-hour response window for Case <strong>#{targetReport.id}</strong>. Online submission is now locked. Please report directly to the <strong>HOD Cabin</strong> to present your explanation in person.
@@ -467,7 +467,7 @@ function StudentExplanationsPage() {
                   {submitting
                     ? "Submitting Explanation..."
                     : deadlineStatus?.expired
-                    ? "🚪 Meet HOD at Cabin (24 Hours Exceeded)"
+                    ? "Meet HOD at Cabin (24 Hours Exceeded)"
                     : "Submit Official Explanation to Counselor"}
                 </Button>
               </form>

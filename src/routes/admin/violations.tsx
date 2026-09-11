@@ -278,7 +278,7 @@ function AdminViolationsPage() {
             { label: "Under HOD Review", queueId: "UNDER_REVIEW", value: stats?.underReview ?? 0, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50/60 dark:bg-blue-950/20" },
             { label: "High Severity", queueId: "HIGH_SEVERITY", value: stats?.highSeverity ?? 0, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50/60 dark:bg-orange-950/20" },
             { label: "Critical", queueId: "CRITICAL", value: stats?.critical ?? 0, color: "text-red-600 dark:text-red-400", bg: "bg-red-50/60 dark:bg-red-950/20" },
-            { label: "Violence Reports", queueId: "VIOLENCE", value: stats?.violenceReports ?? 0, color: "text-rose-700 dark:text-rose-400", bg: "bg-rose-50/60 dark:bg-rose-950/20" },
+            { label: "Violence Reports", queueId: "VIOLENCE", value: stats?.violenceReports ?? 0, color: "text-destructive", bg: "bg-destructive/10" },
             { label: "Resolved", queueId: "RESOLVED", value: stats?.resolved ?? 0, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50/60 dark:bg-emerald-950/20" },
             { label: "Dismissed", queueId: "DISMISSED", value: stats?.dismissed ?? 0, color: "text-muted-foreground", bg: "bg-muted/30" },
           ].map((kpi) => (
@@ -469,7 +469,7 @@ function AdminViolationsPage() {
                               report.severity === "Low" && "bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300",
                             )}
                           >
-                            {report.severity === "Critical" && "🚨 "}
+                            {report.severity === "Critical" && ""}
                             {report.severity}
                           </span>
                         </td>
@@ -788,7 +788,7 @@ function AdminViolationsPage() {
                                 className="max-h-64 w-auto rounded-lg object-contain border border-border shadow-2xs"
                               />
                               <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                <span>📷 Captured Evidence Photo</span>
+                                <span>Captured Evidence Photo</span>
                                 <span>•</span>
                                 <button
                                   type="button"
@@ -802,7 +802,7 @@ function AdminViolationsPage() {
                           ) : (
                             <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/40 border border-border">
                               <span className="text-xs font-semibold text-foreground truncate">
-                                📎 Attached: {selectedReport.evidence}
+                                Attached: {selectedReport.evidence}
                               </span>
                               <Button
                                 type="button"
@@ -907,7 +907,7 @@ function AdminViolationsPage() {
 
                 {/* Footer read-only notice */}
                 <div className="sticky bottom-0 z-20 border-t border-border bg-card p-4 text-center text-xs font-semibold text-muted-foreground shadow-lg">
-                  🛡️ Institutional Compliance Oversight Portal &bull; Read-Only Audit Record
+                  Institutional Compliance Oversight Portal &bull; Read-Only Audit Record
                 </div>
               </div>
             )}

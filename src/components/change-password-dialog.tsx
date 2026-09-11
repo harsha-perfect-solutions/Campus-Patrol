@@ -273,7 +273,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
 
         {/* Global Error Banner */}
         {errorMsg && (
-          <div className="mt-3 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium">
+          <div className="mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium">
             {errorMsg}
           </div>
         )}

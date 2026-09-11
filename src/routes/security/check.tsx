@@ -153,7 +153,7 @@ export function SecurityCheckPage() {
       if (res.success) {
         setResult(res as VerificationResultPayload);
         setEarlyExitConfirmOpen(false);
-        toast.success("✅ EARLY EXIT AUTHORIZED", {
+        toast.success("EARLY EXIT AUTHORIZED", {
           description: `Early exit authorized by Security at ${checkpoint}.`,
         });
       } else {
@@ -207,11 +207,11 @@ export function SecurityCheckPage() {
 
         setResult(res as VerificationResultPayload);
         if (res.authorized) {
-          toast.success("✅ EXIT AUTHORIZED", {
+          toast.success("EXIT AUTHORIZED", {
             description: `${res.student?.name || "Student"} is authorized to exit.`,
           });
         } else {
-          toast.error("🚫 EXIT NOT AUTHORIZED", {
+          toast.error("EXIT NOT AUTHORIZED", {
             description: res.failureReason || "Student is not authorized.",
           });
         }
@@ -262,11 +262,11 @@ export function SecurityCheckPage() {
       <div className="space-y-6 max-w-4xl mx-auto pb-8">
         {/* Offline Warning Banner */}
         {!isOnline && (
-          <div className="p-4 rounded-2xl bg-red-600 text-white font-bold flex items-center justify-between shadow-lg animate-bounce">
+          <div className="p-4 rounded-2xl bg-destructive text-destructive-foreground font-bold flex items-center justify-between shadow-md">
             <div className="flex items-center gap-3">
               <ShieldAlert className="size-6 shrink-0" />
               <div>
-                <p className="text-sm uppercase tracking-wider">⚠️ CONNECTION LOST</p>
+                <p className="text-sm uppercase tracking-wider">CONNECTION LOST</p>
                 <p className="text-xs font-normal opacity-90">
                   Live server verification is unavailable. Gate check actions are temporarily disabled until internet connection is restored.
                 </p>
@@ -316,7 +316,7 @@ export function SecurityCheckPage() {
           description={
             gateInfo.assigned && gateInfo.gateName
               ? `Assigned Gate: ${gateInfo.gateName} | Security Officer: ${gateInfo.officerName}${gateInfo.staffCode ? ` (${gateInfo.staffCode})` : ""}`
-              : "⚠️ No Gate Assigned — Please contact system Admin."
+              : "No Gate Assigned — Please contact system Admin."
           }
           breadcrumb={[
             { label: "Security Portal", to: "/security/check" },
@@ -342,7 +342,7 @@ export function SecurityCheckPage() {
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-500/20">
               <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
-              {gateInfo.assigned ? `📍 Assigned Gate: ${gateInfo.gateName} (Server Enforced)` : "⚠️ Unassigned Security Account"}
+              {gateInfo.assigned ? `Assigned Gate: ${gateInfo.gateName} (Server Enforced)` : "Unassigned Security Account"}
             </span>
           </div>
         </div>
@@ -350,7 +350,7 @@ export function SecurityCheckPage() {
         {!gateInfo.assigned && !gateInfo.loading && (
           <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 space-y-2 text-center">
             <ShieldAlert className="size-10 text-amber-600 dark:text-amber-400 mx-auto" />
-            <h3 className="text-base font-bold">⚠️ No Gate Assigned</h3>
+            <h3 className="text-base font-bold">No Gate Assigned</h3>
             <p className="text-xs max-w-md mx-auto">
               Your Security Officer account currently has no assigned college gate. All gate transactions, QR scans, and verifications are disabled until system Admin assigns a gate to your profile.
             </p>
@@ -376,10 +376,10 @@ export function SecurityCheckPage() {
                 <Button
                   type="button"
                   onClick={() => setCameraOpen(true)}
-                  className="w-full sm:w-auto h-12 px-6 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md gap-2"
+                  className="w-full sm:w-auto h-12 px-6 rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-md gap-2"
                 >
                   <Camera className="size-5" />
-                  <span>[ SCAN QR PASS ]</span>
+                  <span>Scan QR Pass</span>
                 </Button>
               </div>
             </div>
@@ -448,7 +448,7 @@ export function SecurityCheckPage() {
                     </span>
                     <div>
                       <span className="inline-block px-3 py-1 rounded-full bg-amber-500 text-white font-black text-xs tracking-wider uppercase shadow-xs">
-                        ⏳ PASS NOT STARTED
+                        PASS NOT STARTED
                       </span>
                       <p className="text-sm font-bold text-amber-900 dark:text-amber-200 mt-1">
                         Starts in {result.timeUntilStartMinutes || 10} minutes ({result.pass?.validFrom} – {result.pass?.validUntil})
@@ -465,7 +465,7 @@ export function SecurityCheckPage() {
                       className="w-full sm:w-auto h-11 px-6 rounded-xl font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-md gap-2"
                     >
                       {!earlyExitLoading && <Sparkles className="size-4" />}
-                      <span>{earlyExitLoading ? "Authorizing Early Exit..." : "[ ALLOW EARLY EXIT ]"}</span>
+                      <span>{earlyExitLoading ? "Authorizing Early Exit..." : "Allow Early Exit"}</span>
                     </Button>
                     <Button
                       type="button"
@@ -531,7 +531,7 @@ export function SecurityCheckPage() {
                     </span>
                     <div>
                       <span className="inline-block px-3 py-1 rounded-full bg-emerald-600 text-white font-black text-xs tracking-wider uppercase shadow-xs">
-                        ✅ EARLY EXIT AUTHORIZED
+                        EARLY EXIT AUTHORIZED
                       </span>
                       <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 mt-1">
                         {result.message}
@@ -621,7 +621,7 @@ export function SecurityCheckPage() {
                           result.verificationType === "ENTRY" ? "bg-cyan-600" : "bg-emerald-500"
                         }`}
                       >
-                        🟢 {result.resultStatus || (result.verificationType === "ENTRY" ? "ENTRY VERIFIED" : "AUTHORIZED")}
+                        {result.resultStatus || (result.verificationType === "ENTRY" ? "ENTRY VERIFIED" : "AUTHORIZED")}
                       </span>
                       <p
                         className={`text-xs font-semibold mt-1 ${
@@ -731,17 +731,17 @@ export function SecurityCheckPage() {
               </div>
             ) : (
               /* CASE C: EXPIRED / DENIED (RED CARD) */
-              <div className="card-surface p-4 sm:p-6 rounded-2xl border-2 border-rose-500 bg-rose-500/10 dark:bg-rose-950/40 shadow-lg space-y-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-rose-500/30 pb-4">
+              <div className="card-surface p-4 sm:p-6 rounded-2xl border-2 border-destructive/80 bg-destructive/5 shadow-md space-y-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-destructive/20 pb-4">
                   <div className="flex items-center gap-3">
-                    <span className="grid size-12 place-items-center rounded-2xl bg-rose-500 text-white font-bold shadow-md">
+                    <span className="grid size-12 place-items-center rounded-2xl bg-destructive text-destructive-foreground font-bold shadow-sm">
                       <XCircle className="size-7" />
                     </span>
                     <div>
-                      <span className="inline-block px-3 py-1 rounded-full bg-rose-500 text-white font-black text-xs tracking-wider uppercase shadow-xs">
-                        🔴 {result.resultStatus || "EXIT NOT AUTHORIZED"}
+                      <span className="inline-block px-3 py-1 rounded-full bg-destructive text-destructive-foreground font-black text-xs tracking-wider uppercase shadow-xs">
+                        {result.resultStatus || "EXIT NOT AUTHORIZED"}
                       </span>
-                      <p className="text-xs font-semibold text-rose-800 dark:text-rose-300 mt-1">
+                      <p className="text-xs font-semibold text-destructive mt-1">
                         {result.message}
                       </p>
                     </div>
@@ -754,7 +754,7 @@ export function SecurityCheckPage() {
                       size="sm"
                       onClick={handleRefresh}
                       disabled={loading}
-                      className="rounded-xl text-xs font-semibold border-rose-500/40 text-rose-800 dark:text-rose-200 hover:bg-rose-500/20"
+                      className="rounded-xl text-xs font-semibold border-destructive/30 text-destructive hover:bg-destructive/10"
                       title="Re-query live server status"
                     >
                       <RotateCcw className={`size-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Re-Check
@@ -764,7 +764,7 @@ export function SecurityCheckPage() {
                       variant="outline"
                       size="sm"
                       onClick={handleReset}
-                      className="rounded-xl text-xs font-semibold border-rose-500/40 text-rose-800 dark:text-rose-200 hover:bg-rose-500/20"
+                      className="rounded-xl text-xs font-semibold border-destructive/30 text-destructive hover:bg-destructive/10"
                       title="Clear and scan next student"
                     >
                       <span>Next Student</span> <ArrowRight className="size-3.5 ml-1.5" />
@@ -772,8 +772,8 @@ export function SecurityCheckPage() {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-card/90 border border-rose-500/30 space-y-2 text-xs">
-                  <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300 font-bold text-sm">
+                <div className="p-4 rounded-xl bg-card border border-destructive/20 space-y-2 text-xs">
+                  <div className="flex items-center gap-2 text-destructive font-bold text-sm">
                     <XCircle className="size-4 shrink-0" />
                     <span>Reason for Denial:</span>
                   </div>

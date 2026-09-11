@@ -21,6 +21,7 @@ import {
   Layers,
   HelpCircle,
   ChevronDown,
+  User,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
@@ -36,6 +37,7 @@ import {
   getMyMovementPermissionsApi,
   requestMovementPermissionApi,
 } from "@/lib/api/student.server";
+import { getMyCounselorApi } from "@/lib/api/counselor.server";
 import type { DBPermission } from "@/lib/db/permissions.server";
 
 export const Route = createFileRoute("/student/passes")({
@@ -108,21 +110,22 @@ function getDerivedPassState(pass: DBPermission): {
 } {
   const rawStatus = String(pass.status || "pending").toLowerCase();
   if (rawStatus === "pending") {
+    const isCounselor = (pass.target_role || "").toLowerCase() === "counselor";
     return {
       state: "pending",
-      label: "PENDING HOD AUTHORIZATION",
-      badgeClass: "bg-amber-500/20 text-amber-800 dark:text-amber-200 border-amber-500/30",
-      borderClass: "border-amber-500/30",
-      bgClass: "bg-amber-500/5 dark:bg-amber-950/20",
+      label: isCounselor ? "PENDING COUNSELOR REVIEW" : "PENDING HOD AUTHORIZATION",
+      badgeClass: "bg-muted text-foreground border-border",
+      borderClass: "border-border",
+      bgClass: "bg-muted/20",
     };
   }
   if (rawStatus === "rejected") {
     return {
       state: "rejected",
       label: "REJECTED PASS",
-      badgeClass: "bg-rose-500/20 text-rose-800 dark:text-rose-200 border-rose-500/30",
-      borderClass: "border-rose-500/30",
-      bgClass: "bg-rose-500/5 dark:bg-rose-950/20",
+      badgeClass: "bg-destructive/15 text-destructive border-destructive/30",
+      borderClass: "border-destructive/30",
+      bgClass: "bg-destructive/5 dark:bg-destructive/10",
     };
   }
 
@@ -208,6 +211,12 @@ function StudentPassesPage() {
 
   // Apply new pass form state
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const [targetRole, setTargetRole] = useState<"counselor" | "hod">("counselor");
+  const [counselorInfo, setCounselorInfo] = useState<{
+    assigned: boolean;
+    counselorName?: string;
+    email?: string | null;
+  } | null>(null);
   const [reason, setReason] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]!);
   const [validFrom, setValidFrom] = useState("10:00");
@@ -228,7 +237,24 @@ function StudentPassesPage() {
         if (isMounted) setLoading(false);
       }
     }
+
+    async function loadCounselor() {
+      try {
+        const res = await getMyCounselorApi();
+        if (isMounted && res && res.assigned) {
+          setCounselorInfo({
+            assigned: true,
+            counselorName: res.counselorName,
+            email: res.email,
+          });
+        }
+      } catch (err) {
+        console.warn("Counselor fetch notice:", err);
+      }
+    }
+
     loadPasses();
+    loadCounselor();
     return () => {
       isMounted = false;
     };
@@ -262,14 +288,18 @@ function StudentPassesPage() {
           date: cleanDate,
           validFrom: String(validFrom),
           validUntil: String(validUntil),
+          targetRole,
         },
       });
 
       if (res.success && res.permission) {
         const newPerm = res.permission;
+        const recipientLabel =
+          targetRole === "counselor"
+            ? `Faculty Counselor ${counselorInfo?.counselorName ? `(${counselorInfo.counselorName})` : ""}`
+            : `Department HOD (${profile?.department || "Dept"})`;
         toast.success("Movement Pass Requested!", {
-          description:
-            "Your request has been submitted to your Department HOD for authorization (Status: Pending).",
+          description: `Your request has been submitted to your ${recipientLabel} for authorization (Status: Pending).`,
         });
         setPasses((prev) => [newPerm, ...prev]);
         setShowApplyModal(false);
@@ -355,9 +385,110 @@ function StudentPassesPage() {
               <h3 className="text-sm font-bold text-foreground">
                 Request New Movement Permission Pass
               </h3>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                STATUS: PENDING HOD
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-border bg-muted text-foreground">
+                STATUS: PENDING {targetRole === "counselor" ? "COUNSELOR" : "HOD"}
               </span>
+            </div>
+
+            {/* Choose Target Authority: Counselor vs HOD */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold text-foreground">
+                  Send Request To (Approving Role) <span className="text-destructive">*</span>
+                </Label>
+                <span className="text-[10px] font-semibold text-muted-foreground">
+                  Select who should authorize this pass
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Counselor Selection Option */}
+                <button
+                  type="button"
+                  onClick={() => setTargetRole("counselor")}
+                  className={cn(
+                    "relative flex items-center gap-3 p-3 rounded-xl border text-left transition-all duration-150 cursor-pointer",
+                    targetRole === "counselor"
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/30 shadow-xs"
+                      : "border-border bg-card hover:bg-muted/40"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "grid size-9 shrink-0 place-items-center rounded-lg font-bold text-xs transition-colors",
+                      targetRole === "counselor"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    <User className="size-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs font-bold text-foreground">Faculty Counselor</span>
+                      {targetRole === "counselor" && (
+                        <CheckCircle2 className="size-4 text-primary shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {counselorInfo?.counselorName
+                        ? counselorInfo.counselorName
+                        : "Direct Mentor / Class Advisor"}
+                    </p>
+                  </div>
+                </button>
+
+                {/* HOD Selection Option */}
+                <button
+                  type="button"
+                  onClick={() => setTargetRole("hod")}
+                  className={cn(
+                    "relative flex items-center gap-3 p-3 rounded-xl border text-left transition-all duration-150 cursor-pointer",
+                    targetRole === "hod"
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/30 shadow-xs"
+                      : "border-border bg-card hover:bg-muted/40"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "grid size-9 shrink-0 place-items-center rounded-lg font-bold text-xs transition-colors",
+                      targetRole === "hod"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    <Building2 className="size-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs font-bold text-foreground">Department HOD</span>
+                      {targetRole === "hod" && (
+                        <CheckCircle2 className="size-4 text-primary shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      Head of Department ({profile?.department || "Dept"})
+                    </p>
+                  </div>
+                </button>
+              </div>
+
+              {/* Informational routing helper */}
+              <div className="p-2.5 rounded-xl border border-border bg-muted/40 text-[11px] text-muted-foreground leading-relaxed flex items-start gap-2">
+                <AlertCircle className="size-3.5 shrink-0 mt-0.5 text-muted-foreground" />
+                <span>
+                  {targetRole === "counselor" ? (
+                    <>
+                      This request will be routed directly to your <strong>Faculty Counselor</strong>
+                      {counselorInfo?.counselorName && ` (${counselorInfo.counselorName})`} for review. Department HOD will not receive this pass request.
+                    </>
+                  ) : (
+                    <>
+                      This request will be routed directly to your <strong>Department HOD</strong> ({profile?.department || "Department"} Office) for official departmental authorization. Counselor will not receive this pass request.
+                    </>
+                  )}
+                </span>
+              </div>
             </div>
 
             <div className="space-y-1.5">
@@ -630,7 +761,7 @@ function StudentPassesPage() {
                         ) : derived.state === "pending" ? (
                           <Clock className="size-4 sm:size-5 shrink-0 text-amber-600 dark:text-amber-400" />
                         ) : (
-                          <XCircle className="size-4 sm:size-5 shrink-0 text-rose-600 dark:text-rose-400" />
+                          <XCircle className="size-4 sm:size-5 shrink-0 text-destructive" />
                         )}
                         <span className="truncate font-extrabold">{derived.label}</span>
                       </div>
@@ -775,9 +906,21 @@ function StudentPassesPage() {
                         <Clock className="size-3.5 shrink-0" />
                         <span>Valid Window: {pass.valid_from} — {pass.valid_until}</span>
                       </p>
-                      <p className="text-muted-foreground text-[11px]">
-                        Approving Authority: <strong className="text-foreground">{pass.issued_by || "HOD Office"}</strong>
-                      </p>
+                      <div className="flex items-center justify-between pt-1 border-t border-border/40 text-[11px]">
+                        <span className="text-muted-foreground">
+                          Approving Authority:{" "}
+                          <strong className="text-foreground">
+                            {pass.status === "pending"
+                              ? (pass.target_role || "hod").toLowerCase() === "counselor"
+                                ? "Faculty Counselor (Pending Review)"
+                                : "Department HOD (Pending Authorization)"
+                              : pass.issued_by || "College Authority"}
+                          </strong>
+                        </span>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md border border-border bg-muted text-muted-foreground">
+                          To: {(pass.target_role || "hod").toLowerCase() === "counselor" ? "Counselor" : "HOD"}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>

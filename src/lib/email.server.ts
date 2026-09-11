@@ -33,7 +33,7 @@ export async function sendOtpEmail(toEmail: string, otp: string): Promise<{ succ
       subject: "CMADMS - Your Password Reset Verification Code",
       text: `Your CMADMS password reset OTP code is: ${otp}\n\nThis code is valid for 10 minutes. If you did not request this password reset, please secure your account immediately.`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
           <div style="text-align: center; margin-bottom: 20px;">
             <h2 style="color: #0f172a; margin: 0; font-size: 22px;">CMADMS Campus Guard</h2>
             <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Campus Movement & Absence Detection Management System</p>
@@ -48,7 +48,7 @@ export async function sendOtpEmail(toEmail: string, otp: string): Promise<{ succ
             ${otp}
           </div>
           <p style="color: #64748b; font-size: 13px; line-height: 1.5;">
-            ⏱️ This OTP code is valid for <strong>10 minutes</strong>. Do not share this code with anyone.
+            This OTP code is valid for <strong>10 minutes</strong>. Do not share this code with anyone.
           </p>
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0 16px 0;" />
           <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">

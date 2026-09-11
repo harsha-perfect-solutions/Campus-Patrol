@@ -48,7 +48,7 @@ This script provides a 15-step chronological demonstration sequence for project 
 
 ### Step 6: Demonstration of BEFORE_VALIDITY State
 - **WHAT TO CLICK**: Verify a pass whose `valid_from` time is in the future (e.g., scheduled for 04:00 PM when current time is 02:30 PM).
-- **WHAT TO SHOW**: Amber Golden Card displaying `⏳ PASS NOT STARTED / BEFORE VALIDITY` and `Pass starts in 90 minutes`.
+- **WHAT TO SHOW**: Amber Golden Card displaying `PASS NOT STARTED / BEFORE VALIDITY` and `Pass starts in 90 minutes`.
 - **WHAT TO EXPLAIN**: Explain **Server-Authoritative Time**: Gate pass exit is not authorized before the valid start time.
 
 ### Step 7: Demonstration of Early Exit Authorization

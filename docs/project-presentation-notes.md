@@ -52,7 +52,7 @@
 ---
 
 ### Slide 9: Mobile Security Gate PWA
-- **Features**: Web App Manifest (`CMADMS Security Gate`), standalone mobile display, camera QR scanner, Early Exit override modal, offline connection warning banner (`⚠️ CONNECTION LOST`).
+- **Features**: Web App Manifest (`CMADMS Security Gate`), standalone mobile display, camera QR scanner, Early Exit override modal, offline connection warning banner (`CONNECTION LOST`).
 - **Cache Security**: Service Worker explicitly bypasses `/api` routes from cache.
 
 ---
