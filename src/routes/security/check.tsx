@@ -427,24 +427,6 @@ export function SecurityCheckPage() {
                   {loading ? "Verifying..." : "Verify"}
                 </Button>
               </div>
-
-              {/* Quick Preset Buttons for Testing */}
-              <div className="pt-2 flex flex-wrap items-center gap-2">
-                <span className="text-[11px] font-semibold text-muted-foreground">Quick Test Roll Nos:</span>
-                {["23CSE1012", "23CSE1044", "23ECE2031"].map((code) => (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => {
-                      setPassInput(code);
-                      handleVerify(undefined, code);
-                    }}
-                    className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-accent text-accent-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                  >
-                    {code}
-                  </button>
-                ))}
-              </div>
             </form>
           </div>
 

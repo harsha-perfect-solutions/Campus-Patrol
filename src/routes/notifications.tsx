@@ -208,16 +208,6 @@ export function NotificationsPage() {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSendTest}
-              disabled={sendingTest}
-              className="text-xs h-8 gap-1.5 cursor-pointer"
-            >
-              <Sparkles className="size-3.5 text-primary" />
-              {sendingTest ? "Sending..." : "Send test alert"}
-            </Button>
-            <Button
               variant="default"
               size="sm"
               onClick={() => markAllRead()}

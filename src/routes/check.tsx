@@ -226,7 +226,7 @@ export function CheckStudentPage() {
   const { addReport, checkActivePermission, reports: storeReports } = useCmadms();
   const { profile } = useAuth();
 
-  const [query, setQuery] = useState(search?.student ?? "23CSE1012");
+  const [query, setQuery] = useState(search?.student ?? "");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [notFound, setNotFound] = useState<string | null>(null);
@@ -455,9 +455,10 @@ export function CheckStudentPage() {
   };
 
   useEffect(() => {
-    const initialQuery = search?.student || "23CSE1012";
-    setQuery(initialQuery);
-    runCheck(initialQuery);
+    if (search?.student) {
+      setQuery(search.student);
+      runCheck(search.student);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search?.student]);
 

@@ -770,33 +770,6 @@ export function QRScannerModal({
           )}
 
           {!loading && !detectedCode && (
-            <div className="space-y-1.5 pt-1 w-full">
-              <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase flex items-center gap-1">
-                <Sparkles className="size-3 text-primary" /> Instant Test Sample QRs:
-              </span>
-              <div className="flex flex-col sm:flex-row flex-wrap gap-1.5 w-full">
-                {[
-                  { code: "23CSE1012", name: "Ashok Dora" },
-                  { code: "22ECE045", name: "Priya Sharma" },
-                  { code: "21MECH088", name: "Vikram Patel" },
-                ].map((s) => (
-                  <Button
-                    key={s.code}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleScanSubmit(s.code)}
-                    className="h-8 sm:h-7 px-2.5 text-[11px] rounded-lg border-primary/20 bg-primary/5 hover:bg-primary/15 text-foreground font-semibold flex items-center justify-start sm:justify-center gap-1 transition-all w-full sm:w-auto"
-                  >
-                    <span className="font-mono text-primary font-bold">{s.code}</span>
-                    <span className="opacity-75">({s.name})</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {!loading && !detectedCode && (
             <div className="flex flex-col sm:flex-row gap-2 pt-1 w-full">
               <label className="w-full sm:flex-1 flex items-center justify-center gap-1.5 h-10 px-3 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs font-semibold text-foreground cursor-pointer transition-colors shadow-2xs">
                 <Upload className="size-3.5 text-primary" />
