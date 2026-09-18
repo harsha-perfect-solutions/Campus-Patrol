@@ -257,7 +257,7 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
               aria-selected={isSelected}
               onClick={() => setSelectedDay(d.key)}
               className={cn(
-                "flex min-h-[40px] items-center gap-2 rounded-xl border px-3.5 text-xs font-semibold transition-all duration-150 shadow-2xs shrink-0",
+                "flex min-h-[40px] items-center gap-2 rounded-xl border px-3.5 text-xs font-medium transition-all duration-150 shadow-2xs shrink-0",
                 isSelected
                   ? "border-primary bg-primary text-primary-foreground shadow-sm"
                   : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -267,7 +267,7 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
               {count > 0 && (
                 <span
                   className={cn(
-                    "rounded-full px-2 py-0.5 text-[10px] font-bold leading-none",
+                    "rounded-full px-2 py-0.5 text-[10px] font-medium leading-none",
                     isSelected
                       ? "bg-primary-foreground/20 text-primary-foreground"
                       : "bg-muted text-muted-foreground",
@@ -317,34 +317,34 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
                     )}
                   >
                     <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-2.5">
-                      <div className="flex items-center gap-1.5 font-bold text-xs text-primary">
+                      <div className="flex items-center gap-1.5 font-medium text-xs text-primary">
                         <Clock className="size-4 shrink-0" />
                         <span>{s.displayStart} — {s.displayEnd}</span>
                       </div>
-                      <span className={cn("rounded-md px-2 py-0.5 text-[10px] font-bold border", badge.className)}>
+                      <span className={cn("rounded-md px-2 py-0.5 text-[10px] font-medium border", badge.className)}>
                         {badge.label}
                       </span>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <h3 className="text-base font-extrabold text-foreground leading-snug break-words">
+                        <h3 className="text-base font-semibold text-foreground leading-snug break-words">
                           {s.subject}
                         </h3>
                         {isInSession && (
-                          <ToneBadge tone="info" className="flex items-center gap-1 font-bold animate-pulse shrink-0">
+                          <ToneBadge tone="info" className="flex items-center gap-1 font-medium animate-pulse shrink-0">
                             <Sparkles className="size-3" /> In session
                           </ToneBadge>
                         )}
                       </div>
-                      <p className="mt-1 text-xs font-mono font-bold text-muted-foreground">{s.code}</p>
+                      <p className="mt-1 text-xs font-mono font-medium text-muted-foreground">{s.code}</p>
                     </div>
 
                     <p className="text-[11px] font-medium text-muted-foreground italic">
                       {badge.note}
                     </p>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-foreground pt-2.5 border-t border-border/50">
+                    <div className="grid grid-cols-2 gap-2 text-xs font-medium text-foreground pt-2.5 border-t border-border/50">
                       <div className="flex items-center gap-1.5">
                         <Users className="size-3.5 text-primary shrink-0" />
                         <span className="truncate">{s.department} {s.year} • {s.section}</span>
@@ -414,18 +414,18 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2.5">
-                          <h3 className="text-base font-bold tracking-tight text-foreground">
+                          <h3 className="text-base font-semibold tracking-tight text-foreground">
                             {s.subject}
                           </h3>
-                          <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-bold text-accent-foreground border border-border">
+                          <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground border border-border">
                             {s.code}
                           </span>
-                          <span className={cn("rounded-md px-2 py-0.5 text-xs font-bold border", badge.className)}>
+                          <span className={cn("rounded-md px-2 py-0.5 text-xs font-medium border", badge.className)}>
                             {badge.label}
                           </span>
                         </div>
                         {isInSession && (
-                          <ToneBadge tone="info" className="flex items-center gap-1 font-bold animate-pulse">
+                          <ToneBadge tone="info" className="flex items-center gap-1 font-medium animate-pulse">
                             <Sparkles className="size-3" /> In session
                           </ToneBadge>
                         )}
@@ -441,12 +441,12 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
                       </p>
 
                       <div className="mt-3 flex flex-wrap items-center gap-4 text-xs font-medium text-subtle-foreground border-t border-border/50 pt-3">
-                        <span className="flex items-center gap-1.5 font-semibold text-foreground">
+                        <span className="flex items-center gap-1.5 font-medium text-foreground">
                           <Users className="size-4 text-primary/80" aria-hidden />
                           {s.department} {s.year} &bull; {s.section}
                         </span>
                         {s.room && (
-                          <span className="flex items-center gap-1.5 font-semibold text-foreground">
+                          <span className="flex items-center gap-1.5 font-medium text-foreground">
                             <DoorOpen className="size-4 text-primary/80" aria-hidden />
                             {s.room}
                           </span>

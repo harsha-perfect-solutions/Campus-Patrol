@@ -313,7 +313,7 @@ function StudentViolationsPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
-                <thead className="border-b border-divider bg-muted/40 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                <thead className="border-b border-divider bg-muted/40 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="py-3.5 px-4">Case ID / Date</th>
                     <th className="py-3.5 px-4">Severity</th>
@@ -340,7 +340,7 @@ function StudentViolationsPage() {
                         )}
                       >
                         <td className="py-3.5 px-4">
-                          <span className="font-bold text-foreground block">
+                          <span className="font-medium text-foreground block">
                             #{report.id}
                           </span>
                           <span className="text-[11px] text-muted-foreground">
@@ -355,7 +355,7 @@ function StudentViolationsPage() {
                         <td className="py-3.5 px-4">
                           <span
                             className={cn(
-                              "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold",
+                              "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium",
                               report.severity === "Critical" && "bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300 border border-red-300",
                               report.severity === "High" && "bg-orange-100 text-orange-700 dark:bg-orange-950/80 dark:text-orange-300",
                               report.severity === "Medium" && "bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300",
@@ -368,7 +368,7 @@ function StudentViolationsPage() {
                         </td>
 
                         <td className="py-3.5 px-4">
-                          <span className="font-semibold text-foreground block">
+                          <span className="font-medium text-foreground block">
                             {report.class_name} ({report.room})
                           </span>
                           <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
@@ -377,7 +377,7 @@ function StudentViolationsPage() {
                         </td>
 
                         <td className="py-3.5 px-4">
-                          <span className="font-semibold text-foreground block">
+                          <span className="font-medium text-foreground block">
                             {report.reported_by}
                           </span>
                         </td>
@@ -385,7 +385,7 @@ function StudentViolationsPage() {
                         <td className="py-3.5 px-4">
                           <span
                             className={cn(
-                              "inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase",
+                              "inline-block px-2.5 py-1 rounded-lg text-[10px] font-medium uppercase",
                               report.status === "resolved" && "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
                               report.status === "dismissed" && "bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300",
                               report.status === "under_review" && "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
@@ -399,11 +399,11 @@ function StudentViolationsPage() {
 
                         <td className="py-3.5 px-4">
                           {hasSubmittedResponse ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
+                            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium text-[11px]">
                               <CheckCircle2 className="size-3" /> Submitted
                             </span>
                           ) : isAwaitingResponse ? (
-                            <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold text-[11px]">
+                            <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium text-[11px]">
                               <Clock className="size-3" /> Required
                             </span>
                           ) : (
@@ -415,7 +415,7 @@ function StudentViolationsPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-8 text-xs font-semibold rounded-xl"
+                            className="h-8 text-xs font-medium rounded-xl"
                             onClick={() => handleOpenDetails(report)}
                           >
                             <Eye className="size-3.5 mr-1" />
@@ -431,61 +431,62 @@ function StudentViolationsPage() {
           )}
         </div>
 
-        {/* Detailed Incident Sheet / Drawer */}
+        {/* DETAILS DRAWER / SHEET */}
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <SheetContent className="sm:max-w-xl overflow-y-auto space-y-6">
-            {selectedReport && (
-              <>
-                <SheetHeader>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                      INCIDENT CASE #{selectedReport.id}
-                    </span>
-                    <span
-                      className={cn(
-                        "inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase",
-                        selectedReport.status === "resolved" && "bg-emerald-100 text-emerald-800",
-                        selectedReport.status === "dismissed" && "bg-zinc-200 text-zinc-800",
-                        selectedReport.status === "under_review" && "bg-blue-100 text-blue-800",
-                        selectedReport.status === "reported" && "bg-amber-100 text-amber-800",
-                        selectedReport.status === "escalated" && "bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30",
-                      )}
-                    >
-                      {selectedReport.status.replace("_", " ")}
-                    </span>
-                  </div>
-                  <SheetTitle className="text-lg font-bold text-foreground">
-                    {selectedReport.violation_type}
-                  </SheetTitle>
-                  <SheetDescription className="text-xs">
-                    Reported on {new Date(selectedReport.created_at).toLocaleString("en-IN")}
-                  </SheetDescription>
-                </SheetHeader>
+          <SheetContent className="sm:max-w-md w-full overflow-y-auto space-y-6">
+            <SheetHeader className="border-b border-divider pb-4 text-left">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  INCIDENT CASE #{selectedReport?.id}
+                </span>
+                {selectedReport && (
+                  <span
+                    className={cn(
+                      "inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium uppercase",
+                      selectedReport.severity === "Critical" && "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border border-red-300",
+                      selectedReport.severity === "High" && "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
+                      selectedReport.severity === "Medium" && "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+                      selectedReport.severity === "Low" && "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+                    )}
+                  >
+                    {selectedReport.severity} Severity
+                  </span>
+                )}
+              </div>
+              <SheetTitle className="text-lg font-semibold text-foreground">
+                Violation Details & Timeline
+              </SheetTitle>
+              <SheetDescription className="text-xs">
+                Review report details, your response, and HOD decisions.
+              </SheetDescription>
+            </SheetHeader>
 
+            {selectedReport && (
+              <div className="space-y-4">
                 {/* Section A: Student Information */}
                 <div className="p-4 rounded-2xl border border-border bg-muted/20 space-y-3">
                   <div className="flex items-center gap-2 border-b border-divider pb-2">
                     <User className="size-4 text-primary" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                       STUDENT RECORD
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <span className="text-muted-foreground block text-[10px]">Name</span>
-                      <span className="font-bold text-foreground">{selectedReport.student_name}</span>
+                      <span className="font-medium text-foreground">{selectedReport.student_name}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground block text-[10px]">Roll Number</span>
-                      <span className="font-bold text-foreground">{selectedReport.student_code}</span>
+                      <span className="font-medium text-foreground">{selectedReport.student_code}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground block text-[10px]">Department</span>
-                      <span className="font-bold text-foreground">{selectedReport.department}</span>
+                      <span className="font-medium text-foreground">{selectedReport.department}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground block text-[10px]">Year / Section</span>
-                      <span className="font-bold text-foreground">{selectedReport.year_section}</span>
+                      <span className="font-medium text-foreground">{selectedReport.year_section}</span>
                     </div>
                   </div>
                 </div>
@@ -495,30 +496,30 @@ function StudentViolationsPage() {
                   <div className="flex items-center justify-between border-b border-blue-200/60 pb-2">
                     <div className="flex items-center gap-2">
                       <Calendar className="size-4 text-blue-600 dark:text-blue-400" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">
                         SCHEDULED CLASS CONTEXT
                       </span>
                     </div>
-                    <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">
+                    <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400">
                       Timetable Snapshot
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <span className="text-muted-foreground block text-[10px]">Scheduled Subject</span>
-                      <span className="font-bold text-foreground">{selectedReport.class_name}</span>
+                      <span className="font-medium text-foreground">{selectedReport.class_name}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground block text-[10px]">Room</span>
-                      <span className="font-bold text-foreground">{selectedReport.room}</span>
+                      <span className="font-medium text-foreground">{selectedReport.room}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground block text-[10px]">Class Window</span>
-                      <span className="font-bold text-foreground">{selectedReport.scheduled_time}</span>
+                      <span className="font-medium text-foreground">{selectedReport.scheduled_time}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground block text-[10px]">Assigned Faculty</span>
-                      <span className="font-bold text-foreground">{selectedReport.scheduled_faculty || "—"}</span>
+                      <span className="font-medium text-foreground">{selectedReport.scheduled_faculty || "—"}</span>
                     </div>
                   </div>
                 </div>
@@ -528,26 +529,26 @@ function StudentViolationsPage() {
                   <div className="flex items-center justify-between border-b border-divider pb-2">
                     <div className="flex items-center gap-2">
                       <MapPin className="size-4 text-primary" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                         FACULTY OBSERVATION
                       </span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
                       <Lock className="size-3" /> Read Only
                     </span>
                   </div>
                   <div className="space-y-2 text-xs">
                     <div>
                       <span className="text-muted-foreground block text-[10px]">Reported By</span>
-                      <span className="font-bold text-foreground">{selectedReport.reported_by}</span>
+                      <span className="font-medium text-foreground">{selectedReport.reported_by}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground block text-[10px]">Observed Location</span>
-                      <span className="font-semibold text-foreground">{selectedReport.location}</span>
+                      <span className="font-medium text-foreground">{selectedReport.location}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground block text-[10px]">Observation Description</span>
-                      <p className="font-medium text-foreground bg-background p-2.5 rounded-xl border border-border mt-1 leading-relaxed">
+                      <p className="font-normal text-foreground bg-background p-2.5 rounded-xl border border-border mt-1 leading-relaxed">
                         {selectedReport.remarks}
                       </p>
                     </div>
@@ -627,7 +628,7 @@ function StudentViolationsPage() {
                 <div className="p-4 rounded-2xl border border-border bg-muted/10 space-y-3">
                   <div className="flex items-center gap-2 border-b border-divider pb-2">
                     <History className="size-4 text-primary" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                       INCIDENT CHRONOLOGICAL TIMELINE
                     </span>
                   </div>
@@ -641,7 +642,7 @@ function StudentViolationsPage() {
                       {timeline.map((item) => (
                         <div key={item.id} className="flex items-start gap-2.5 border-l-2 border-primary/40 pl-3">
                           <div>
-                            <span className="font-bold text-foreground block">
+                            <span className="font-medium text-foreground block">
                               {item.description}
                             </span>
                             <span className="text-[10px] text-muted-foreground">
@@ -653,7 +654,7 @@ function StudentViolationsPage() {
                     </div>
                   )}
                 </div>
-              </>
+              </div>
             )}
           </SheetContent>
         </Sheet>

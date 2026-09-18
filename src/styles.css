@@ -24,6 +24,14 @@
   --text-3xl: 2rem;
   --text-4xl: 2.375rem;
 
+  /* Refined typography weights for sleek executive UI */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 600;
+  --font-weight-extrabold: 700;
+  --font-weight-black: 700;
+
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 4px);
   --radius-lg: calc(var(--radius) - 2px);
@@ -203,6 +211,35 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /*
+   * Executive Typography Standards:
+   * Body, paragraphs, table rows, labels, and inputs use regular/medium weights.
+   * Bold (600-700) is reserved strictly for prominent headings, key status alerts, and primary metrics.
+   */
+  p, dd, dt, td, input, textarea, select {
+    font-weight: 400;
+  }
+
+  label {
+    font-weight: 500;
+  }
+
+  th {
+    font-weight: 600;
+  }
+
+  b, strong {
+    font-weight: 600;
+  }
+
+  h1, h2 {
+    font-weight: 700;
+  }
+
+  h3, h4, h5, h6 {
+    font-weight: 600;
+  }
+
   ::selection {
     background: color-mix(in oklab, var(--color-primary) 22%, transparent);
   }
@@ -249,6 +286,45 @@
     font-size: 0.95rem !important;
     line-height: 1.4rem !important;
   }
+}
+
+/*
+ * Weight Normalization Utilities:
+ * Subdue aggressive 700/800/900 bold classes across the project.
+ * Soften .font-bold and .font-extrabold to 600 (semibold) for a sleek modern aesthetic.
+ */
+.font-bold {
+  font-weight: 600 !important;
+}
+
+.font-extrabold {
+  font-weight: 650 !important;
+}
+
+.font-black {
+  font-weight: 700 !important;
+}
+
+/* Micro badges, chips, labels, and timestamps should never use aggressive bold weights */
+.text-2xs.font-bold,
+.text-xs.font-bold,
+.text-sm.font-bold,
+.text-2xs.font-extrabold,
+.text-xs.font-extrabold,
+.text-sm.font-extrabold,
+.text-2xs.font-black,
+.text-xs.font-black,
+.text-sm.font-black,
+[class*="text-[10px]"].font-bold,
+[class*="text-[10px]"].font-extrabold,
+[class*="text-[10px]"].font-black,
+[class*="text-[11px]"].font-bold,
+[class*="text-[11px]"].font-extrabold,
+[class*="text-[11px]"].font-black,
+[class*="text-[12px]"].font-bold,
+[class*="text-[12px]"].font-extrabold,
+[class*="text-[12px]"].font-black {
+  font-weight: 600 !important;
 }
 
 @utility card-surface {

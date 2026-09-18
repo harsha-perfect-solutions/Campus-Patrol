@@ -618,7 +618,7 @@ export function CheckStudentPage() {
         >
           <Label
             htmlFor="student-id"
-            className="text-xs font-bold uppercase tracking-wider text-foreground"
+            className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
           >
             Student ID / Roll Number
           </Label>
@@ -633,7 +633,7 @@ export function CheckStudentPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="23CSE1012"
-                className="h-11 pl-10 pr-9 text-sm font-semibold tracking-wide text-foreground focus-visible:ring-primary rounded-xl"
+                className="h-11 pl-10 pr-9 text-sm font-medium tracking-wide text-foreground focus-visible:ring-primary rounded-xl"
                 autoComplete="off"
               />
               {query && (
@@ -652,7 +652,7 @@ export function CheckStudentPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setQrScannerOpen(true)}
-                className="h-11 border-border/80 text-foreground hover:bg-accent hover:border-primary/40 px-4 font-semibold rounded-xl shadow-2xs gap-2 w-full sm:w-auto justify-center transition-all"
+                className="h-11 border-border/80 text-foreground hover:bg-accent hover:border-primary/40 px-4 font-medium rounded-xl shadow-2xs gap-2 w-full sm:w-auto justify-center transition-all"
               >
                 <QrCode className="size-4 text-primary" />
                 <span>Scan Student ID</span>
@@ -662,7 +662,7 @@ export function CheckStudentPage() {
                 size="lg"
                 loading={loading}
                 disabled={loading || !query.trim()}
-                className="h-11 bg-primary text-primary-foreground hover:bg-primary/90 px-5 font-bold rounded-xl shadow-xs gap-2 w-full sm:w-auto justify-center"
+                className="h-11 bg-primary text-primary-foreground hover:bg-primary/90 px-5 font-medium rounded-xl shadow-xs gap-2 w-full sm:w-auto justify-center"
               >
                 {!loading && <Search className="size-4" />}
                 <span>{loading ? "Checking..." : "Check Student"}</span>
@@ -740,7 +740,7 @@ export function CheckStudentPage() {
               <div>
                 <h2
                   className={cn(
-                    "text-sm font-bold uppercase tracking-wider",
+                    "text-xs font-semibold uppercase tracking-wider",
                     state === "unauthorized" && "text-destructive",
                     state === "authorized" && "text-emerald-700 dark:text-emerald-400",
                     state === "no-class" && "text-blue-700 dark:text-blue-400",
@@ -765,7 +765,7 @@ export function CheckStudentPage() {
                 <Clock className="size-3.5 text-muted-foreground" />
                 <div>
                   <span className="block text-[10px] text-muted-foreground">Verified at</span>
-                  <span className="font-semibold text-foreground">
+                  <span className="font-medium text-foreground">
                     {verifiedTimeStr || new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
                   </span>
                 </div>
@@ -775,7 +775,7 @@ export function CheckStudentPage() {
                 <User className="size-3.5 text-muted-foreground" />
                 <div>
                   <span className="block text-[10px] text-muted-foreground">Verified by</span>
-                  <span className="font-semibold text-foreground">{activeFacultyName}</span>
+                  <span className="font-medium text-foreground">{activeFacultyName}</span>
                 </div>
               </div>
             </div>
@@ -788,13 +788,13 @@ export function CheckStudentPage() {
               <div>
                 <div className="flex items-center gap-2 border-b border-divider pb-3.5">
                   <UserRound className="size-4 text-primary" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                     STUDENT INFORMATION
                   </span>
                 </div>
 
                 <div className="mt-5 flex items-center gap-4">
-                  <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-xl font-bold text-primary border border-primary/20">
+                  <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-xl font-semibold text-primary border border-primary/20">
                     {result.student.name
                       .split(" ")
                       .map((n) => n[0])
@@ -802,12 +802,12 @@ export function CheckStudentPage() {
                   </span>
                   <div>
                     <div className="flex items-center gap-2.5">
-                      <h3 className="text-xl font-bold text-foreground">{result.student.name}</h3>
-                      <span className="rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 px-2.5 py-0.5 text-[11px] font-bold">
+                      <h3 className="text-lg font-semibold text-foreground">{result.student.name}</h3>
+                      <span className="rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 px-2.5 py-0.5 text-[11px] font-medium">
                         Active
                       </span>
                     </div>
-                    <p className="text-sm font-semibold text-muted-foreground mt-0.5">
+                    <p className="text-sm font-normal text-muted-foreground mt-0.5">
                       {result.student.id}
                     </p>
                   </div>
@@ -818,7 +818,7 @@ export function CheckStudentPage() {
                     <span className="flex items-center gap-1 text-muted-foreground">
                       <Building2 className="size-3.5" /> Department
                     </span>
-                    <p className="mt-1 font-bold text-foreground text-sm">
+                    <p className="mt-1 font-medium text-foreground text-sm">
                       {result.student.department}
                     </p>
                   </div>
@@ -826,7 +826,7 @@ export function CheckStudentPage() {
                     <span className="flex items-center gap-1 text-muted-foreground">
                       <Users className="size-3.5" /> Year / Section
                     </span>
-                    <p className="mt-1 font-bold text-foreground text-sm">
+                    <p className="mt-1 font-medium text-foreground text-sm">
                       {result.student.year} • {result.student.section}
                     </p>
                   </div>
@@ -834,7 +834,7 @@ export function CheckStudentPage() {
                     <span className="flex items-center gap-1 text-muted-foreground">
                       <Calendar className="size-3.5" /> Semester
                     </span>
-                    <p className="mt-1 font-bold text-foreground text-sm">
+                    <p className="mt-1 font-medium text-foreground text-sm">
                       Semester {result.student.semester}
                     </p>
                   </div>
@@ -842,7 +842,7 @@ export function CheckStudentPage() {
                     <span className="flex items-center gap-1 text-muted-foreground font-medium">
                       <UserCheck className="size-3.5 text-primary shrink-0" /> Counselor
                     </span>
-                    <p className="mt-1 font-bold text-primary text-sm truncate" title={counselorName}>
+                    <p className="mt-1 font-medium text-primary text-sm truncate" title={counselorName}>
                       {counselorName}
                     </p>
                   </div>
@@ -852,7 +852,7 @@ export function CheckStudentPage() {
               <div className="mt-4 flex items-center justify-between pt-3 border-t border-divider flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">Status:</span>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                     <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                     Active
                   </span>
@@ -867,7 +867,7 @@ export function CheckStudentPage() {
                       setHistoryOpen(true);
                     }
                   }}
-                  className="h-7 text-xs font-bold text-amber-700 hover:text-amber-800 hover:bg-amber-100/60 dark:text-amber-400 dark:hover:bg-amber-950/50 gap-1.5 px-2.5 rounded-lg"
+                  className="h-7 text-xs font-medium text-amber-700 hover:text-amber-800 hover:bg-amber-100/60 dark:text-amber-400 dark:hover:bg-amber-950/50 gap-1.5 px-2.5 rounded-lg"
                 >
                   <FileText className="size-3.5" />
                   <span>View {historyList.length} Violation Record{historyList.length === 1 ? "" : "s"}</span>
@@ -881,13 +881,13 @@ export function CheckStudentPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-divider pb-3.5 gap-2">
                   <div className="flex items-center gap-2">
                     <BookOpen className="size-4 text-primary" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                       STUDENT TIMETABLE SCHEDULE
                     </span>
                   </div>
 
                   {/* Active Half-Day Session Badge */}
-                  <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/30 px-3 py-1 rounded-xl text-primary font-black text-xs">
+                  <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/30 px-3 py-1 rounded-xl text-primary font-medium text-xs">
                     {sessionTab === "AFTERNOON" ? (
                       <>
                         <span>Afternoon Session (01:10 PM — 04:10 PM)</span>
@@ -932,10 +932,10 @@ export function CheckStudentPage() {
                   <XCircle className="size-6" />
                 </span>
                 <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                     MOVEMENT PERMISSION
                   </span>
-                  <h3 className="text-base font-bold text-destructive mt-0.5">
+                  <h3 className="text-base font-semibold text-destructive mt-0.5">
                     No active movement permission
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1 max-w-xl">
@@ -954,10 +954,10 @@ export function CheckStudentPage() {
                   <ShieldCheck className="size-6" />
                 </span>
                 <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                     MOVEMENT PERMISSION
                   </span>
-                  <h3 className="text-base font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
+                  <h3 className="text-base font-semibold text-emerald-700 dark:text-emerald-400 mt-0.5">
                     Authorized Movement Pass Found
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -966,7 +966,7 @@ export function CheckStudentPage() {
                   </p>
                 </div>
               </div>
-              <ToneBadge tone="success" className="px-4 py-1.5 text-xs font-bold rounded-lg">
+              <ToneBadge tone="success" className="px-4 py-1.5 text-xs font-medium rounded-lg">
                 <CheckCircle2 className="size-4 mr-1.5" /> Authorized
               </ToneBadge>
             </section>
@@ -980,7 +980,7 @@ export function CheckStudentPage() {
                   <AlertTriangle className="size-5" />
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">Faculty Incident Reporting</h3>
+                  <h3 className="text-sm font-semibold text-foreground">Faculty Incident Reporting</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Observed violence, disruptive behavior, or campus violation by this student? Report directly to HOD.
                   </p>
@@ -990,7 +990,7 @@ export function CheckStudentPage() {
                 type="button"
                 variant="destructive"
                 onClick={handleOpenReportForm}
-                className="font-bold h-11 px-6 rounded-xl shadow-xs gap-2 shrink-0 w-full sm:w-auto"
+                className="font-medium h-11 px-6 rounded-xl shadow-xs gap-2 shrink-0 w-full sm:w-auto"
               >
                 <AlertTriangle className="size-4" />
                 <span>Report Incident</span>
@@ -1249,7 +1249,7 @@ export function CheckStudentPage() {
                 </Button>
                 <Button
                   variant="destructive"
-                  className="rounded-xl font-bold px-6 w-full sm:w-auto text-xs sm:text-sm"
+                  className="rounded-xl font-medium px-6 w-full sm:w-auto text-xs sm:text-sm"
                   onClick={() => {
                     setConfirmOpen(true);
                   }}
@@ -1266,7 +1266,7 @@ export function CheckStudentPage() {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive font-black">
+            <DialogTitle className="flex items-center gap-2 text-destructive font-semibold">
               <AlertTriangle className="size-5" />
               Submit Incident Report?
             </DialogTitle>
@@ -1300,7 +1300,7 @@ export function CheckStudentPage() {
               loading={submitting}
               disabled={submitting}
               onClick={submitReport}
-              className="font-bold"
+              className="font-medium"
             >
               {submitting ? "Submitting Report..." : "Submit Report"}
             </Button>
@@ -1325,11 +1325,11 @@ export function CheckStudentPage() {
           <DialogHeader className="p-6 pb-4 border-b border-divider bg-muted/30">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="grid size-12 place-items-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20 shrink-0 shadow-2xs">
+                <span className="grid size-12 place-items-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium border border-amber-500/20 shrink-0 shadow-2xs">
                   <History className="size-6" />
                 </span>
                 <div>
-                  <DialogTitle className="text-xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+                  <DialogTitle className="text-xl font-semibold tracking-tight text-foreground flex items-center gap-2">
                     Student Violation & Discipline History
                   </DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground mt-0.5">
@@ -1338,7 +1338,7 @@ export function CheckStudentPage() {
                   </DialogDescription>
                 </div>
               </div>
-              <span className="rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-extrabold px-3.5 py-1.5 shadow-2xs">
+              <span className="rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-medium px-3.5 py-1.5 shadow-2xs">
                 {historyList.length} Total Incident{historyList.length === 1 ? "" : "s"}
               </span>
             </div>
@@ -1349,14 +1349,14 @@ export function CheckStudentPage() {
                 type="button"
                 onClick={() => setHistoryFilter("ALL")}
                 className={cn(
-                  "px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5",
+                  "px-3.5 py-2 text-xs font-medium rounded-xl transition-all flex items-center gap-1.5",
                   historyFilter === "ALL"
                     ? "bg-primary text-primary-foreground shadow-xs"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                 )}
               >
                 <span>All Violations</span>
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-background/20 font-extrabold">
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-background/20 font-medium">
                   {historyList.length}
                 </span>
               </button>
@@ -1365,7 +1365,7 @@ export function CheckStudentPage() {
                 type="button"
                 onClick={() => setHistoryFilter("EXCUSED")}
                 className={cn(
-                  "px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5",
+                  "px-3.5 py-2 text-xs font-medium rounded-xl transition-all flex items-center gap-1.5",
                   historyFilter === "EXCUSED"
                     ? "bg-emerald-600 text-white shadow-xs"
                     : "text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
@@ -1373,7 +1373,7 @@ export function CheckStudentPage() {
               >
                 <ShieldCheck className="size-3.5" />
                 <span>Excused by HOD</span>
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-background/20 font-extrabold">
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-background/20 font-medium">
                   {historyList.filter((r) => r.status === "exonerated" || r.status === "dismissed" || r.decision === "exonerate").length}
                 </span>
               </button>
@@ -1382,7 +1382,7 @@ export function CheckStudentPage() {
                 type="button"
                 onClick={() => setHistoryFilter("WARNED")}
                 className={cn(
-                  "px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5",
+                  "px-3.5 py-2 text-xs font-medium rounded-xl transition-all flex items-center gap-1.5",
                   historyFilter === "WARNED"
                     ? "bg-amber-600 text-white shadow-xs"
                     : "text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40"
@@ -1390,7 +1390,7 @@ export function CheckStudentPage() {
               >
                 <AlertCircle className="size-3.5" />
                 <span>Warned / Action Taken</span>
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-background/20 font-extrabold">
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-background/20 font-medium">
                   {historyList.filter((r) => r.status === "warned" || r.decision === "warning" || r.status === "escalated").length}
                 </span>
               </button>
@@ -1399,7 +1399,7 @@ export function CheckStudentPage() {
                 type="button"
                 onClick={() => setHistoryFilter("PENDING")}
                 className={cn(
-                  "px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5",
+                  "px-3.5 py-2 text-xs font-medium rounded-xl transition-all flex items-center gap-1.5",
                   historyFilter === "PENDING"
                     ? "bg-blue-600 text-white shadow-xs"
                     : "text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40"
@@ -1407,7 +1407,7 @@ export function CheckStudentPage() {
               >
                 <Clock className="size-3.5" />
                 <span>Pending Review</span>
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-background/20 font-extrabold">
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-background/20 font-medium">
                   {historyList.filter((r) => r.status !== "exonerated" && r.status !== "dismissed" && r.decision !== "exonerate" && r.status !== "warned" && r.decision !== "warning" && r.status !== "escalated").length}
                 </span>
               </button>
@@ -1460,13 +1460,13 @@ export function CheckStudentPage() {
                       {/* Top Bar: Incident Sequence Badge, Case ID & Severity */}
                       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-divider pb-3.5">
                         <div className="flex flex-wrap items-center gap-2.5">
-                          <span className="rounded-lg bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-black px-3 py-1 uppercase tracking-wider shadow-2xs">
+                          <span className="rounded-lg bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-semibold px-3 py-1 uppercase tracking-wider shadow-2xs">
                             VIOLATION #{incidentNum} {idx === 0 ? "(LATEST)" : ""}
                           </span>
-                          <span className="font-mono text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg">
+                          <span className="font-mono text-xs font-medium text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg">
                             CASE #{item.id}
                           </span>
-                          <span className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
+                          <span className="text-xs text-muted-foreground font-normal flex items-center gap-1">
                             <Clock className="size-3.5 text-muted-foreground" />
                             {formatDateSafe(item.created_at || item.incident_time, "Time Unspecified")}
                           </span>
@@ -1475,7 +1475,7 @@ export function CheckStudentPage() {
                         <div className="flex items-center gap-2">
                           <span
                             className={cn(
-                              "px-3 py-1 text-[11px] font-extrabold rounded-full border shadow-2xs uppercase tracking-wider",
+                              "px-3 py-1 text-[11px] font-medium rounded-full border shadow-2xs uppercase tracking-wider",
                               item.severity === "Critical" && "bg-red-100 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-300 dark:border-red-800",
                               item.severity === "High" && "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800",
                               item.severity === "Medium" && "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800",
@@ -1489,34 +1489,34 @@ export function CheckStudentPage() {
 
                       {/* SECTION 1: Faculty Incident Report (Who & Why) */}
                       <div className="space-y-3">
-                        <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground block">
                           1. Faculty Incident Report (What & Why Reported)
                         </span>
 
                         <div className="grid gap-3 sm:grid-cols-2 text-xs">
                           {/* Faculty Reporter Box */}
                           <div className="rounded-xl bg-slate-100/70 dark:bg-slate-900/60 p-3.5 border border-slate-200/80 dark:border-slate-800">
-                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                               <User className="size-3.5 text-primary" /> Faculty Reporter (Who Reported)
                             </span>
-                            <p className="mt-1.5 font-bold text-foreground text-sm">
+                            <p className="mt-1.5 font-medium text-foreground text-sm">
                               {item.reported_by || "Faculty Member"}
                             </p>
                             <p className="text-[11px] text-muted-foreground mt-1">
-                              Class: <strong className="text-foreground">{item.class_name || "N/A"}</strong> ({item.room || "Room N/A"})
+                              Class: <strong className="text-foreground font-medium">{item.class_name || "N/A"}</strong> ({item.room || "Room N/A"})
                             </p>
                           </div>
 
                           {/* Reported Violation Box */}
                           <div className="rounded-xl bg-destructive/10 p-3.5 border border-destructive/20">
-                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-destructive flex items-center gap-1.5">
+                            <span className="text-[10px] font-medium uppercase tracking-wider text-destructive flex items-center gap-1.5">
                               <AlertTriangle className="size-3.5" /> Reported Infraction (Why Reported)
                             </span>
-                            <p className="mt-1.5 font-extrabold text-destructive text-sm">
+                            <p className="mt-1.5 font-semibold text-destructive text-sm">
                               {item.violation_type || "Unauthorized Class Movement"}
                             </p>
                             <p className="text-[11px] text-muted-foreground mt-1">
-                              Location: <strong className="text-foreground">{item.location || "Campus Corridor"}</strong>
+                              Location: <strong className="text-foreground font-medium">{item.location || "Campus Corridor"}</strong>
                             </p>
                           </div>
                         </div>
@@ -1524,7 +1524,7 @@ export function CheckStudentPage() {
                         {/* Faculty Observation Statement */}
                         {item.remarks && (
                           <div className="text-xs bg-muted/40 p-3.5 rounded-xl border border-border/60">
-                            <span className="font-bold text-foreground text-[11px] block mb-1">
+                            <span className="font-medium text-foreground text-[11px] block mb-1">
                               Faculty Observation Details:
                             </span>
                             <p className="text-foreground/90 font-mono text-[11px] italic bg-background/60 p-2.5 rounded-lg border border-border/40">
@@ -1542,15 +1542,15 @@ export function CheckStudentPage() {
                       {/* SECTION 2: Student Explanation Statement */}
                       <div className="space-y-2 border-t border-divider pt-4 text-xs">
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground block">
                             2. Student Explanation Statement
                           </span>
                           {hasExplanation ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 text-[10px] font-bold">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 text-[10px] font-medium">
                               <CheckCircle2 className="size-3" /> Explanation Submitted
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 px-2.5 py-0.5 text-[10px] font-bold">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 px-2.5 py-0.5 text-[10px] font-medium">
                               <XCircle className="size-3" /> Explanation Not Submitted
                             </span>
                           )}
@@ -1558,7 +1558,7 @@ export function CheckStudentPage() {
 
                         {hasExplanation ? (
                           <div className="bg-muted/40 p-3.5 rounded-xl border border-border/60">
-                            <p className="text-[10px] text-muted-foreground font-semibold mb-1">
+                            <p className="text-[10px] text-muted-foreground font-medium mb-1">
                               Student Submitted Explanation:
                             </p>
                             <p className="text-foreground font-mono text-[11px] leading-relaxed bg-background/60 p-2.5 rounded-lg border border-border/40">
@@ -1574,7 +1574,7 @@ export function CheckStudentPage() {
 
                       {/* SECTION 3: HOD Decision & Excuse Status (Is Student Excused?) */}
                       <div className="space-y-2 border-t border-divider pt-4 text-xs">
-                        <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground block">
                           3. HOD Decision & Excuse Status (Did HOD Excuse Student?)
                         </span>
 
@@ -1587,8 +1587,8 @@ export function CheckStudentPage() {
                             !isExcused && !isWarned && !isEscalated && "bg-blue-50/80 border-blue-200 text-blue-950 dark:bg-blue-950/40 dark:border-blue-900/60 dark:text-blue-200"
                           )}
                         >
-                          <div className="flex flex-wrap items-center justify-between font-bold gap-2">
-                            <span className="flex items-center gap-2 text-sm font-extrabold">
+                          <div className="flex flex-wrap items-center justify-between font-semibold gap-2">
+                            <span className="flex items-center gap-2 text-sm font-semibold">
                               {isExcused && <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />}
                               {isWarned && <AlertCircle className="size-4 text-amber-600 dark:text-amber-400" />}
                               {isEscalated && <ShieldAlert className="size-4 text-destructive" />}
@@ -1601,13 +1601,13 @@ export function CheckStudentPage() {
                             </span>
 
                             {item.decision_by && (
-                              <span className="text-[11px] font-extrabold opacity-90 bg-background/40 px-2.5 py-0.5 rounded-md border border-border/40">
+                              <span className="text-[11px] font-medium opacity-90 bg-background/40 px-2.5 py-0.5 rounded-md border border-border/40">
                                 Decision By: HOD {item.decision_by}
                               </span>
                             )}
                           </div>
 
-                          <p className="text-xs leading-relaxed font-medium">
+                          <p className="text-xs leading-relaxed font-normal">
                             {isExcused && (item.decision ? `HOD Ruling: "${item.decision}"` : "The Department HOD reviewed the case and granted an official excuse, exonerating the student.")}
                             {isWarned && (item.decision ? `HOD Ruling: "${item.decision}"` : "The Department HOD did not excuse the student and issued an official disciplinary warning.")}
                             {isEscalated && (item.decision ? `HOD Ruling: "${item.decision}"` : "The Department HOD did not excuse the student and escalated the case to Institutional Administration.")}
@@ -1626,7 +1626,7 @@ export function CheckStudentPage() {
               type="button"
               variant="outline"
               onClick={() => setHistoryOpen(false)}
-              className="h-10 font-bold text-xs rounded-xl px-6"
+              className="h-10 font-medium text-xs rounded-xl px-6"
             >
               Close History Record
             </Button>
@@ -1763,8 +1763,8 @@ function TimetableSlotRow({ slot }: { slot: any }) {
   if (slot.type === "BREAK") {
     return (
       <div className="bg-amber-500/10 border border-amber-300/40 dark:border-amber-900/40 rounded-xl p-2.5 flex items-center justify-between text-xs text-amber-900 dark:text-amber-200">
-        <span className="font-bold flex items-center gap-1.5">{slot.name}</span>
-        <span className="font-extrabold text-[11px] bg-amber-500/20 px-2 py-0.5 rounded-md">
+        <span className="font-medium flex items-center gap-1.5">{slot.name}</span>
+        <span className="font-medium text-[11px] bg-amber-500/20 px-2 py-0.5 rounded-md">
           {slot.time}
         </span>
       </div>
@@ -1782,15 +1782,15 @@ function TimetableSlotRow({ slot }: { slot: any }) {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-black text-foreground truncate">{slot.name}</span>
+            <span className="text-xs font-semibold text-foreground truncate">{slot.name}</span>
             {slot.isCurrent && (
-              <span className="bg-primary text-primary-foreground text-[10px] font-black uppercase px-2 py-0.5 rounded-full animate-pulse shrink-0">
+              <span className="bg-primary text-primary-foreground text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full animate-pulse shrink-0">
                 NOW IN SESSION
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 font-medium">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 font-normal">
             <span className="flex items-center gap-1">
               <MapPin className="size-3 text-primary shrink-0" /> {slot.room}
             </span>
@@ -1801,9 +1801,9 @@ function TimetableSlotRow({ slot }: { slot: any }) {
         </div>
 
         <div className="text-right shrink-0">
-          <span className="text-xs font-extrabold text-foreground block">{slot.time}</span>
+          <span className="text-xs font-medium text-foreground block">{slot.time}</span>
           <span
-            className={`inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-md mt-1 ${
+            className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-md mt-1 ${
               slot.type === "LAB"
                 ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200"
                 : slot.type === "SPORTS"

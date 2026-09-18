@@ -446,14 +446,14 @@ export function SecurityCheckPage() {
               <div className="card-surface p-4 sm:p-6 rounded-2xl border-2 border-amber-500 bg-amber-500/10 dark:bg-amber-950/40 shadow-lg space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-amber-500/30 pb-4">
                   <div className="flex items-center gap-3">
-                    <span className="grid size-12 place-items-center rounded-2xl bg-amber-500 text-white font-bold shadow-md">
+                    <span className="grid size-12 place-items-center rounded-2xl bg-amber-500 text-white font-medium shadow-md">
                       <Clock className="size-7 animate-pulse" />
                     </span>
                     <div>
-                      <span className="inline-block px-3 py-1 rounded-full bg-amber-500 text-white font-black text-xs tracking-wider uppercase shadow-xs">
+                      <span className="inline-block px-3 py-1 rounded-full bg-amber-500 text-white font-medium text-xs tracking-wider uppercase shadow-xs">
                         PASS NOT STARTED
                       </span>
-                      <p className="text-sm font-bold text-amber-900 dark:text-amber-200 mt-1">
+                      <p className="text-sm font-medium text-amber-900 dark:text-amber-200 mt-1">
                         Starts in {result.timeUntilStartMinutes || 10} minutes ({result.pass?.validFrom} – {result.pass?.validUntil})
                       </p>
                     </div>
@@ -465,7 +465,7 @@ export function SecurityCheckPage() {
                       onClick={handleAllowEarlyExit}
                       loading={earlyExitLoading}
                       disabled={earlyExitLoading}
-                      className="w-full sm:w-auto h-11 px-6 rounded-xl font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-md gap-2"
+                      className="w-full sm:w-auto h-11 px-6 rounded-xl font-medium bg-amber-600 hover:bg-amber-700 text-white shadow-md gap-2"
                     >
                       {!earlyExitLoading && <Sparkles className="size-4" />}
                       <span>{earlyExitLoading ? "Authorizing Early Exit..." : "Allow Early Exit"}</span>
@@ -479,7 +479,7 @@ export function SecurityCheckPage() {
                       className="rounded-xl text-xs font-semibold border-amber-500/40 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20"
                       title="Re-query live server status"
                     >
-                      <RotateCcw className={`size-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Refresh Status
+                      <RotateCcw className={`size-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Re-Check
                     </Button>
                     <Button
                       type="button"
@@ -487,9 +487,9 @@ export function SecurityCheckPage() {
                       size="sm"
                       onClick={handleReset}
                       className="rounded-xl text-xs font-semibold border-amber-500/40 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20"
-                      title="Clear and scan next student"
+                      title="Clear scan result and enter new code"
                     >
-                      <span>Next Student</span> <ArrowRight className="size-3.5 ml-1.5" />
+                      <RotateCcw className="size-3.5 mr-1.5" /> Clear
                     </Button>
                   </div>
                 </div>
@@ -498,29 +498,29 @@ export function SecurityCheckPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
                   <div className="p-3.5 rounded-xl bg-card/80 border border-amber-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Student Name</span>
-                    <p className="text-sm font-bold text-foreground">{result.student?.name}</p>
+                    <p className="text-sm font-medium text-foreground">{result.student?.name}</p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-card/80 border border-amber-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Roll Number</span>
-                    <p className="text-sm font-bold font-mono text-primary">{result.student?.studentCode}</p>
+                    <p className="text-sm font-medium font-mono text-primary">{result.student?.studentCode}</p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-card/80 border border-amber-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Department / Section</span>
-                    <p className="text-sm font-bold text-foreground">{result.student?.department} • {result.student?.yearSection}</p>
+                    <p className="text-sm font-medium text-foreground">{result.student?.department} • {result.student?.yearSection}</p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-card/80 border border-amber-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Reason for Leaving</span>
-                    <p className="text-sm font-bold text-foreground">{result.pass?.reason}</p>
+                    <p className="text-sm font-medium text-foreground">{result.pass?.reason}</p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-card/80 border border-amber-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Pass Validity Window</span>
-                    <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
+                    <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
                       {result.pass?.validFrom} – {result.pass?.validUntil}
                     </p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-card/80 border border-amber-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Server Current Time</span>
-                    <p className="text-sm font-bold text-foreground">{result.serverCurrentTime || new Date().toLocaleTimeString()}</p>
+                    <p className="text-sm font-medium text-foreground">{result.serverCurrentTime || new Date().toLocaleTimeString()}</p>
                   </div>
                 </div>
               </div>
@@ -529,11 +529,11 @@ export function SecurityCheckPage() {
               <div className="card-surface p-4 sm:p-6 rounded-2xl border-2 border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/40 shadow-lg space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-emerald-500/30 pb-4">
                   <div className="flex items-center gap-3">
-                    <span className="grid size-12 place-items-center rounded-2xl bg-emerald-500 text-white font-bold shadow-md">
+                    <span className="grid size-12 place-items-center rounded-2xl bg-emerald-500 text-white font-medium shadow-md">
                       <CheckCircle2 className="size-7" />
                     </span>
                     <div>
-                      <span className="inline-block px-3 py-1 rounded-full bg-emerald-600 text-white font-black text-xs tracking-wider uppercase shadow-xs">
+                      <span className="inline-block px-3 py-1 rounded-full bg-emerald-600 text-white font-medium text-xs tracking-wider uppercase shadow-xs">
                         EARLY EXIT AUTHORIZED
                       </span>
                       <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 mt-1">
@@ -570,27 +570,27 @@ export function SecurityCheckPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
                   <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Student Name</span>
-                    <p className="text-sm font-bold text-foreground">{result.student?.name}</p>
+                    <p className="text-sm font-medium text-foreground">{result.student?.name}</p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Roll Number</span>
-                    <p className="text-sm font-bold font-mono text-primary">{result.student?.studentCode}</p>
+                    <p className="text-sm font-medium font-mono text-primary">{result.student?.studentCode}</p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Authorized By Officer</span>
-                    <p className="text-sm font-bold text-foreground">{result.earlyExitDetails?.earlyExitBy || result.pass?.earlyExitBy || "Security Officer"}</p>
+                    <p className="text-sm font-medium text-foreground">{result.earlyExitDetails?.earlyExitBy || result.pass?.earlyExitBy || "Security Officer"}</p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Scheduled Start</span>
-                    <p className="text-sm font-bold text-foreground">{result.pass?.validFrom}</p>
+                    <p className="text-sm font-medium text-foreground">{result.pass?.validFrom}</p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Scheduled End</span>
-                    <p className="text-sm font-bold text-foreground">{result.pass?.validUntil}</p>
+                    <p className="text-sm font-medium text-foreground">{result.pass?.validUntil}</p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">Gate Checkpoint</span>
-                    <p className="text-sm font-bold text-foreground">{result.checkpoint || checkpoint}</p>
+                    <p className="text-sm font-medium text-foreground">{result.checkpoint || checkpoint}</p>
                   </div>
                 </div>
               </div>
@@ -612,7 +612,7 @@ export function SecurityCheckPage() {
                 >
                   <div className="flex items-center gap-3">
                     <span
-                      className={`grid size-12 place-items-center rounded-2xl text-white font-bold shadow-md ${
+                      className={`grid size-12 place-items-center rounded-2xl text-white font-medium shadow-md ${
                         result.verificationType === "ENTRY" ? "bg-cyan-600" : "bg-emerald-500"
                       }`}
                     >
@@ -620,7 +620,7 @@ export function SecurityCheckPage() {
                     </span>
                     <div>
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-white font-black text-xs tracking-wider uppercase shadow-xs ${
+                        className={`inline-block px-3 py-1 rounded-full text-white font-medium text-xs tracking-wider uppercase shadow-xs ${
                           result.verificationType === "ENTRY" ? "bg-cyan-600" : "bg-emerald-500"
                         }`}
                       >
@@ -677,35 +677,35 @@ export function SecurityCheckPage() {
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
                       Student Name
                     </span>
-                    <p className="text-sm font-bold text-foreground">{result.student?.name}</p>
+                    <p className="text-sm font-medium text-foreground">{result.student?.name}</p>
                   </div>
 
                   <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
                       Roll Number
                     </span>
-                    <p className="text-sm font-bold font-mono text-primary">{result.student?.studentCode}</p>
+                    <p className="text-sm font-medium font-mono text-primary">{result.student?.studentCode}</p>
                   </div>
 
                   <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
                       Department
                     </span>
-                    <p className="text-sm font-bold text-foreground">{result.student?.department}</p>
+                    <p className="text-sm font-medium text-foreground">{result.student?.department}</p>
                   </div>
 
                   <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
                       Reason for Leaving
                     </span>
-                    <p className="text-sm font-bold text-foreground">{result.pass?.reason}</p>
+                    <p className="text-sm font-medium text-foreground">{result.pass?.reason}</p>
                   </div>
 
                   <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1">
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
                       Valid Window
                     </span>
-                    <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                    <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
                       {result.pass?.validFrom} – {result.pass?.validUntil}
                     </p>
                   </div>
@@ -714,7 +714,7 @@ export function SecurityCheckPage() {
                     <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
                       Approved By
                     </span>
-                    <p className="text-sm font-bold text-foreground">{result.pass?.issuedBy}</p>
+                    <p className="text-sm font-medium text-foreground">{result.pass?.issuedBy}</p>
                   </div>
 
                   <div className="p-3.5 rounded-xl bg-card/80 border border-emerald-500/20 space-y-1 sm:col-span-2 lg:col-span-3 flex items-center justify-between">
@@ -722,11 +722,11 @@ export function SecurityCheckPage() {
                       <span className="text-[11px] font-semibold text-muted-foreground block uppercase">
                         Verified Checkpoint & Pass ID
                       </span>
-                      <p className="text-xs font-mono font-bold text-foreground">
+                      <p className="text-xs font-mono font-medium text-foreground">
                         {result.checkpoint} &bull; {result.pass?.passCode}
                       </p>
                     </div>
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-md bg-emerald-600 text-white uppercase">
+                    <span className="text-[10px] font-medium px-2.5 py-1 rounded-md bg-emerald-600 text-white uppercase">
                       {result.verificationType || "EXIT"} RECORDED
                     </span>
                   </div>
@@ -737,11 +737,11 @@ export function SecurityCheckPage() {
               <div className="card-surface p-4 sm:p-6 rounded-2xl border-2 border-destructive/80 bg-destructive/5 shadow-md space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-destructive/20 pb-4">
                   <div className="flex items-center gap-3">
-                    <span className="grid size-12 place-items-center rounded-2xl bg-destructive text-destructive-foreground font-bold shadow-sm">
+                    <span className="grid size-12 place-items-center rounded-2xl bg-destructive text-destructive-foreground font-medium shadow-sm">
                       <XCircle className="size-7" />
                     </span>
                     <div>
-                      <span className="inline-block px-3 py-1 rounded-full bg-destructive text-destructive-foreground font-black text-xs tracking-wider uppercase shadow-xs">
+                      <span className="inline-block px-3 py-1 rounded-full bg-destructive text-destructive-foreground font-medium text-xs tracking-wider uppercase shadow-xs">
                         {result.resultStatus || "EXIT NOT AUTHORIZED"}
                       </span>
                       <p className="text-xs font-semibold text-destructive mt-1">
@@ -838,10 +838,10 @@ export function SecurityCheckPage() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
-                    <th className="text-left px-4 py-2 font-bold text-muted-foreground">Time</th>
-                    <th className="text-left px-4 py-2 font-bold text-muted-foreground">Student</th>
-                    <th className="text-left px-4 py-2 font-bold text-muted-foreground">Type</th>
-                    <th className="text-left px-4 py-2 font-bold text-muted-foreground">Status</th>
+                    <th className="text-left px-4 py-2 font-semibold text-muted-foreground">Time</th>
+                    <th className="text-left px-4 py-2 font-semibold text-muted-foreground">Student</th>
+                    <th className="text-left px-4 py-2 font-semibold text-muted-foreground">Type</th>
+                    <th className="text-left px-4 py-2 font-semibold text-muted-foreground">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -855,7 +855,7 @@ export function SecurityCheckPage() {
                         })}
                       </td>
                       <td className="px-4 py-2.5">
-                        <span className="font-bold text-foreground">{scan.studentName || scan.studentCode}</span>
+                        <span className="font-medium text-foreground">{scan.studentName || scan.studentCode}</span>
                         {scan.studentName && scan.studentCode && (
                           <span className="ml-1.5 text-[10px] font-mono text-muted-foreground">{scan.studentCode}</span>
                         )}
@@ -864,7 +864,7 @@ export function SecurityCheckPage() {
                         )}
                       </td>
                       <td className="px-4 py-2.5">
-                        <span className={`font-bold ${
+                        <span className={`font-medium ${
                           scan.verificationType === "ENTRY"
                             ? "text-blue-600 dark:text-blue-400"
                             : "text-emerald-600 dark:text-emerald-400"
@@ -873,7 +873,7 @@ export function SecurityCheckPage() {
                         </span>
                       </td>
                       <td className="px-4 py-2.5">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
                           scan.authorized
                             ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                             : "bg-destructive/15 text-destructive border-destructive/30"
