@@ -83,7 +83,7 @@ export function ScanStudentIdButton({
       {/* 4. Text Label */}
       <span
         className={cn(
-          "font-black tracking-tight text-white select-none whitespace-nowrap",
+          "font-semibold tracking-tight text-white select-none whitespace-nowrap",
           size === "sm" ? "text-xs sm:text-sm" : size === "lg" ? "text-base sm:text-lg" : "text-sm sm:text-[15px]"
         )}
       >

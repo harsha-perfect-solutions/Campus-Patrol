@@ -220,8 +220,8 @@ function AuthPage() {
           <div className="grid size-11 place-items-center rounded-2xl bg-[#0047AB] text-white shadow-md shadow-blue-800/25 mx-auto">
             <ShieldCheck className="size-6 stroke-[2.2]" />
           </div>
-          <h1 className="mt-2 text-xl font-black tracking-tight text-slate-900 dark:text-white leading-none">CMADMS</h1>
-          <p className="mt-1 text-xs font-semibold text-slate-600 dark:text-slate-300">Campus Movement Portal</p>
+          <h1 className="mt-2 text-xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">CMADMS</h1>
+          <p className="mt-1 text-xs font-normal text-slate-600 dark:text-slate-400">Campus Movement Portal</p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Secure access to your campus management portal</p>
           <div className="flex items-center gap-2.5 mt-2.5">
             <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1" />
@@ -234,7 +234,7 @@ function AuthPage() {
 
         {/* ROLE SELECTOR */}
         <div>
-          <Label className="text-xs font-bold text-slate-900 dark:text-white mb-2 block">Select Your Portal</Label>
+          <Label className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2 block">Select Your Portal</Label>
           <div className="grid grid-cols-5 gap-1.5" role="radiogroup" aria-label="Portal Role">
             {ROLES.map((role) => {
               const isSelected = selectedRole === role.id;
@@ -247,9 +247,9 @@ function AuthPage() {
                   aria-checked={isSelected}
                   onClick={() => handleRoleSelect(role.id)}
                   className={cn(
-                    "flex items-center justify-center gap-1 py-2 px-1 rounded-xl text-xs font-semibold transition-all duration-150 ease-in-out outline-none cursor-pointer",
+                    "flex items-center justify-center gap-1 py-2 px-1 rounded-xl text-xs font-medium transition-all duration-150 ease-in-out outline-none cursor-pointer",
                     isSelected
-                      ? "bg-[#0047AB] text-white shadow-md shadow-blue-700/25 font-bold"
+                      ? "bg-[#0047AB] text-white shadow-md shadow-blue-700/25 font-semibold"
                       : "bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700"
                   )}
                 >
@@ -265,14 +265,14 @@ function AuthPage() {
         <form onSubmit={handleSignIn} className="space-y-3.5">
           {errorMessage && (
             <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/30 text-xs font-medium text-destructive flex items-center gap-2">
-              <span className="size-3.5 shrink-0 rounded-full bg-destructive text-destructive-foreground grid place-items-center font-bold text-[9px]">!</span>
+              <span className="size-3.5 shrink-0 rounded-full bg-destructive text-destructive-foreground grid place-items-center font-semibold text-[9px]">!</span>
               <span>{errorMessage}</span>
             </div>
           )}
 
           {/* Email */}
           <div className="space-y-1.5">
-            <Label htmlFor="email" className="text-xs font-bold text-slate-900 dark:text-white">University Email or Roll Number</Label>
+            <Label htmlFor="email" className="text-xs font-medium text-slate-700 dark:text-slate-300">University Email or Roll Number</Label>
             <div className="relative">
               <UserRound className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
               <Input
@@ -282,14 +282,14 @@ function AuthPage() {
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); if (errorMessage) setErrorMessage(null); }}
                 placeholder={activeRoleConfig.placeholder}
-                className="h-11 pl-10 pr-3 rounded-xl bg-slate-100/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-[#0047AB] font-medium"
+                className="h-11 pl-10 pr-3 rounded-xl bg-slate-100/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-[#0047AB] font-normal"
               />
             </div>
           </div>
 
           {/* Password */}
           <div className="space-y-1.5">
-            <Label htmlFor="password" className="text-xs font-bold text-slate-900 dark:text-white">Password</Label>
+            <Label htmlFor="password" className="text-xs font-medium text-slate-700 dark:text-slate-300">Password</Label>
             <div className="relative">
               <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
               <Input
@@ -299,7 +299,7 @@ function AuthPage() {
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); if (errorMessage) setErrorMessage(null); }}
                 placeholder="Enter your password"
-                className="h-11 pl-10 pr-10 rounded-xl bg-slate-100/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-[#0047AB] font-medium"
+                className="h-11 pl-10 pr-10 rounded-xl bg-slate-100/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-[#0047AB] font-normal"
               />
               <button
                 type="button"
@@ -314,7 +314,7 @@ function AuthPage() {
 
           {/* Remember me & Forgot password */}
           <div className="flex items-center justify-between pt-0.5 text-xs">
-            <label className="flex items-center gap-2 cursor-pointer select-none font-medium text-slate-800 dark:text-slate-200">
+            <label className="flex items-center gap-2 cursor-pointer select-none font-normal text-slate-700 dark:text-slate-300">
               <Checkbox
                 checked={rememberMe}
                 onCheckedChange={(checked) => setRememberMe(!!checked)}
@@ -322,7 +322,7 @@ function AuthPage() {
               />
               <span>Remember me</span>
             </label>
-            <Link to="/reset-password" className="font-bold text-[#0047AB] dark:text-blue-400 hover:underline transition-colors">
+            <Link to="/reset-password" className="font-medium text-[#0047AB] dark:text-blue-400 hover:underline transition-colors">
               Forgot password?
             </Link>
           </div>
@@ -331,7 +331,7 @@ function AuthPage() {
           <Button
             type="submit"
             disabled={busy}
-            className="w-full h-11 rounded-xl font-bold text-xs bg-[#0047AB] hover:bg-[#003b8e] text-white shadow-md shadow-blue-800/25 gap-2 transition-all duration-150 active:scale-[0.99] flex items-center justify-center mt-1 cursor-pointer"
+            className="w-full h-11 rounded-xl font-semibold text-xs bg-[#0047AB] hover:bg-[#003b8e] text-white shadow-md shadow-blue-800/25 gap-2 transition-all duration-150 active:scale-[0.99] flex items-center justify-center mt-1 cursor-pointer"
           >
             {busy ? (
               <><Loader2 className="size-4 animate-spin" /><span>Signing in to Portal...</span></>
@@ -351,7 +351,7 @@ function AuthPage() {
               <div className="grid size-12 place-items-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 mx-auto">
                 <Lock className="size-6 stroke-[2.2]" />
               </div>
-              <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">First-Login Password Update Required</h2>
+              <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">First-Login Password Update Required</h2>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 As a security policy for newly onboarded accounts, please update your initial default password to a new secure password before continuing.
               </p>
@@ -360,13 +360,13 @@ function AuthPage() {
             <form onSubmit={handleInitialPasswordChange} className="space-y-3 pt-2">
               {passwordChangeError && (
                 <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/30 text-xs font-medium text-destructive flex items-center gap-2">
-                  <span className="size-4 shrink-0 rounded-full bg-destructive text-destructive-foreground grid place-items-center font-bold text-[10px]">!</span>
+                  <span className="size-4 shrink-0 rounded-full bg-destructive text-destructive-foreground grid place-items-center font-semibold text-[10px]">!</span>
                   <span>{passwordChangeError}</span>
                 </div>
               )}
 
               <div className="space-y-1">
-                <Label htmlFor="currentPass" className="text-xs font-bold text-slate-800 dark:text-slate-200">Current / Temporary Password</Label>
+                <Label htmlFor="currentPass" className="text-xs font-medium text-slate-700 dark:text-slate-300">Current / Temporary Password</Label>
                 <div className="relative">
                   <Input id="currentPass" type={showCurrentPass ? "text" : "password"} required value={currentPasswordVal} onChange={(e) => setCurrentPasswordVal(e.target.value)} placeholder="Current temporary password" className="h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs pr-10 focus-visible:ring-2 focus-visible:ring-[#0047AB]" />
                   <button type="button" onClick={() => setShowCurrentPass(!showCurrentPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -376,7 +376,7 @@ function AuthPage() {
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="newPassword" className="text-xs font-bold text-slate-800 dark:text-slate-200">New Personal Password</Label>
+                <Label htmlFor="newPassword" className="text-xs font-medium text-slate-700 dark:text-slate-300">New Personal Password</Label>
                 <div className="relative">
                   <Input id="newPassword" type={showNewPass ? "text" : "password"} required minLength={8} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password (min. 8 chars)" className="h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs pr-10 focus-visible:ring-2 focus-visible:ring-[#0047AB]" />
                   <button type="button" onClick={() => setShowNewPass(!showNewPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -387,7 +387,7 @@ function AuthPage() {
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="confirmPassword" className="text-xs font-bold text-slate-800 dark:text-slate-200">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword" className="text-xs font-medium text-slate-700 dark:text-slate-300">Confirm New Password</Label>
                 <div className="relative">
                   <Input id="confirmPassword" type={showConfirmPass ? "text" : "password"} required minLength={8} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter new password" className="h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs pr-10 focus-visible:ring-2 focus-visible:ring-[#0047AB]" />
                   <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -396,7 +396,7 @@ function AuthPage() {
                 </div>
               </div>
 
-              <Button type="submit" disabled={changingPassword} className="w-full h-10 rounded-xl font-bold text-xs bg-[#0047AB] hover:bg-[#003b8e] text-white shadow-md gap-2 flex items-center justify-center mt-3 cursor-pointer">
+              <Button type="submit" disabled={changingPassword} className="w-full h-10 rounded-xl font-semibold text-xs bg-[#0047AB] hover:bg-[#003b8e] text-white shadow-md gap-2 flex items-center justify-center mt-3 cursor-pointer">
                 {changingPassword ? (
                   <><Loader2 className="size-4 animate-spin" /><span>Updating Password...</span></>
                 ) : (

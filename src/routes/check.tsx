@@ -750,7 +750,7 @@ export function CheckStudentPage() {
                   {state === "authorized" && "AUTHORIZED MOVEMENT"}
                   {state === "no-class" && "NO CLASS SCHEDULED"}
                 </h2>
-                <p className="text-xs font-medium text-muted-foreground mt-0.5">
+                <p className="text-xs font-normal text-muted-foreground mt-0.5">
                   {state === "unauthorized" &&
                     "Student is currently expected in class and has no active movement permission."}
                   {state === "authorized" &&
@@ -760,7 +760,7 @@ export function CheckStudentPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-5 text-xs font-medium text-muted-foreground self-end sm:self-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-red-200/40">
+            <div className="flex items-center gap-5 text-xs font-normal text-muted-foreground self-end sm:self-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-red-200/40">
               <div className="flex items-center gap-1.5">
                 <Clock className="size-3.5 text-muted-foreground" />
                 <div>
@@ -1002,7 +1002,7 @@ export function CheckStudentPage() {
           {formOpen && (
             <section className="card-surface rounded-2xl overflow-hidden border border-border shadow-md">
               <div className="border-b border-divider px-4 sm:px-6 py-3.5 sm:py-4 bg-muted/30">
-                <h2 className="text-base font-bold text-foreground">
+                <h2 className="text-base font-semibold text-foreground">
                   Report Student Incident
                 </h2>
                 <p className="text-xs text-muted-foreground">
@@ -1064,12 +1064,12 @@ export function CheckStudentPage() {
                             <SelectValue placeholder="Select location" />
                           </SelectTrigger>
                           <SelectContent className="max-h-80">
-                            <div className="px-2 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-primary bg-primary/5 rounded-md my-1">
+                            <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/5 rounded-md my-1">
                               Campus Roaming & Common Locations (Students Roaming)
                             </div>
                             {roamingLocations.map((l) => (
                               <SelectItem key={l} value={l}>
-                                <span className="flex items-center gap-2 font-semibold">
+                                <span className="flex items-center gap-2 font-medium">
                                   <MapPin className="size-4 text-primary shrink-0" aria-hidden /> {l}
                                 </span>
                               </SelectItem>
@@ -1077,7 +1077,7 @@ export function CheckStudentPage() {
 
                             {buildingRooms.length > 0 && (
                               <>
-                                <div className="px-2 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground bg-muted/60 rounded-md my-1.5 mt-3">
+                                <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/60 rounded-md my-1.5 mt-3">
                                   Building Classrooms & Laboratories
                                 </div>
                                 {buildingRooms.map((r) => (

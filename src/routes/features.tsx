@@ -28,11 +28,11 @@ function FeaturesPage() {
         {/* Page Header Header */}
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl border border-primary/20 bg-gradient-to-b from-primary/5 via-card to-background p-8 sm:p-12 text-center space-y-4 shadow-2xs">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-card/80 px-4 py-1.5 text-xs font-bold text-primary">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-card/80 px-4 py-1.5 text-xs font-semibold text-primary">
               <Zap className="size-3.5 text-primary" />
               SYSTEM CAPABILITIES
             </span>
-            <h1 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight">
+            <h1 className="text-3xl sm:text-5xl font-bold text-foreground tracking-tight">
               Powerful Features for Campus Discipline
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">

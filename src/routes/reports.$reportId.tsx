@@ -595,10 +595,10 @@ export function ReportDetail() {
       <div className="hidden print:block border-b-2 border-slate-900 pb-4 mb-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-black tracking-tight text-slate-900 uppercase">
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 uppercase">
               CAMPUSGUARD PRO — OFFICIAL CASE REPORT
             </h1>
-            <p className="text-xs font-semibold text-slate-600">
+            <p className="text-xs font-normal text-slate-600">
               Campus Movement & Discipline Management System (CMADMS)
             </p>
           </div>

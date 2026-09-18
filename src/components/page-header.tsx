@@ -80,7 +80,7 @@ export function PageHeader({
                     {c.to ? (
                       <Link
                         to={c.to}
-                        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/40 hover:bg-primary/10 hover:text-primary text-[11px] font-semibold text-muted-foreground transition-all duration-150 truncate max-w-[150px] sm:max-w-none border border-border/40 hover:border-primary/20 shadow-2xs"
+                        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/40 hover:bg-primary/10 hover:text-primary text-[11px] font-medium text-muted-foreground transition-all duration-150 truncate max-w-[150px] sm:max-w-none border border-border/40 hover:border-primary/20 shadow-2xs"
                       >
                         {isFirst && <Home className="size-3 shrink-0 text-muted-foreground/80" />}
                         <span>{c.label}</span>
@@ -90,8 +90,8 @@ export function PageHeader({
                         className={cn(
                           "truncate text-[11px] max-w-[180px] sm:max-w-none px-2 py-0.5 rounded-md transition-colors",
                           isLast
-                            ? "bg-primary/10 text-primary font-bold border border-primary/25 shadow-2xs"
-                            : "text-muted-foreground font-medium",
+                            ? "bg-primary/10 text-primary font-semibold border border-primary/25 shadow-2xs"
+                            : "text-muted-foreground font-normal",
                         )}
                       >
                         {c.label}
@@ -110,11 +110,11 @@ export function PageHeader({
                 {icon}
               </div>
             )}
-            <h1 className="text-lg sm:text-xl md:text-2xl font-black tracking-tight text-foreground leading-tight break-words min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground leading-tight break-words min-w-0">
               {title}
             </h1>
             {badge && (
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25 shadow-2xs shrink-0">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25 shadow-2xs shrink-0">
                 <span className="size-1.5 rounded-full bg-primary animate-pulse" />
                 {badge}
               </span>

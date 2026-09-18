@@ -76,12 +76,12 @@ function SettingsSection({
             <Icon className="size-4" aria-hidden />
           </span>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold text-foreground truncate">{title}</h2>
+            <h2 className="text-sm font-semibold text-foreground truncate">{title}</h2>
             <p className="text-[11px] text-muted-foreground truncate">{description}</p>
           </div>
         </div>
         {badge && (
-          <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
+          <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
             {badge}
           </span>
         )}
@@ -135,7 +135,7 @@ export function SettingsPage() {
       <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-card p-4 sm:p-6 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5 sm:gap-4">
-            <div className="grid size-12 sm:size-14 shrink-0 place-items-center rounded-2xl bg-primary text-white font-extrabold text-base sm:text-lg shadow-sm">
+            <div className="grid size-12 sm:size-14 shrink-0 place-items-center rounded-2xl bg-primary text-white font-semibold text-base sm:text-lg shadow-sm">
               {fullName
                 .split(" ")
                 .map((n) => n[0])
@@ -145,8 +145,8 @@ export function SettingsPage() {
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-base sm:text-lg font-bold text-foreground">{fullName}</h3>
-                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25 uppercase tracking-wider">
+                <h3 className="text-base sm:text-lg font-semibold text-foreground">{fullName}</h3>
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25 uppercase tracking-wider">
                   <BadgeCheck className="size-3" />
                   {roleDisplayTitle}
                 </span>
@@ -263,9 +263,9 @@ export function SettingsPage() {
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Award className="size-4 text-primary shrink-0" />
-                    <span className="text-xs font-bold text-foreground">Co-ordinator Role</span>
+                    <span className="text-xs font-semibold text-foreground">Co-ordinator Role</span>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25">
                     <CheckCircle2 className="size-3" /> {coordinatorRole}
                   </span>
                 </div>

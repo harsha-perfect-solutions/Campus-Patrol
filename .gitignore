@@ -35,4 +35,5 @@ dist-ssr
 *.sw?
 
 scratch/
-
+*.tar
+*.zip

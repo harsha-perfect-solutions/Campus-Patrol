@@ -649,7 +649,7 @@ export function QRScannerModal({
       <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-3xl p-4 sm:p-6 space-y-3.5 border-2 border-primary/20 bg-background/95 backdrop-blur-xl shadow-2xl mx-auto">
         <DialogHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 pr-6">
-            <DialogTitle className="flex items-center gap-2 text-sm sm:text-base font-black tracking-tight text-foreground min-w-0">
+            <DialogTitle className="flex items-center gap-2 text-sm sm:text-base font-bold tracking-tight text-foreground min-w-0">
               <div className="size-7 sm:size-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-xs shrink-0">
                 <QrCode className="size-4" />
               </div>
@@ -701,7 +701,7 @@ export function QRScannerModal({
               ) : detectedCode ? (
                 <div className="flex flex-col items-center gap-2.5 text-emerald-400 p-6 text-center bg-emerald-950/80 w-full h-full justify-center backdrop-blur-md">
                   <CheckCircle2 className="size-12 animate-bounce text-emerald-400" />
-                  <span className="text-base font-black text-white">QR Code Verified!</span>
+                  <span className="text-base font-bold text-white">QR Code Verified!</span>
                   <span className="text-xs font-mono font-bold text-emerald-300 bg-emerald-900/60 px-3 py-1 rounded-lg border border-emerald-500/40 break-all max-w-[90%]">
                     {detectedCode}
                   </span>
@@ -734,7 +734,7 @@ export function QRScannerModal({
                       <QrCode className="size-10 sm:size-14 text-white/20" />
                     </div>
 
-                    <p className="text-[10px] sm:text-[11px] font-extrabold text-white mt-2 sm:mt-3 px-3 py-1 rounded-full bg-black/80 backdrop-blur-md shadow-xl border border-emerald-500/30 flex items-center gap-1.5 max-w-[90%] text-center truncate">
+                    <p className="text-[10px] sm:text-[11px] font-semibold text-white mt-2 sm:mt-3 px-3 py-1 rounded-full bg-black/80 backdrop-blur-md shadow-xl border border-emerald-500/30 flex items-center gap-1.5 max-w-[90%] text-center truncate">
                       <Camera className="size-3 text-emerald-400 shrink-0" />
                       <span className="truncate">Point camera at Student ID QR Code</span>
                     </p>

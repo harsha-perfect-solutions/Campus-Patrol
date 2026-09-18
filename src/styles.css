@@ -13,22 +13,22 @@
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  /* Elevated typography scale for improved readability */
-  --text-2xs: 0.8125rem;
-  --text-xs: 0.875rem;
-  --text-sm: 0.96875rem;
-  --text-base: 1.0625rem;
-  --text-lg: 1.1875rem;
-  --text-xl: 1.3125rem;
-  --text-2xl: 1.625rem;
-  --text-3xl: 2rem;
-  --text-4xl: 2.375rem;
+  /* Refined clean typography scale */
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
 
-  /* Refined typography weights for sleek executive UI */
+  /* Refined typography weights for clean, light executive UI */
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
-  --font-weight-bold: 600;
+  --font-weight-bold: 650;
   --font-weight-extrabold: 700;
   --font-weight-black: 700;
 
@@ -88,14 +88,14 @@
 :root {
   --radius: 14px;
 
-  /* Executive Corporate Navy & Slate Campus Light Palette (No Neon) */
-  --background: oklch(0.982 0.004 255);
-  --foreground: oklch(0.18 0.03 255);
-  --surface: oklch(0.99 0.003 255);
+  /* Executive Corporate Navy & Slate Campus Light Palette (Clean Contrast) */
+  --background: oklch(0.985 0.003 255);
+  --foreground: oklch(0.25 0.03 255);
+  --surface: oklch(0.99 0.002 255);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 255);
+  --card-foreground: oklch(0.25 0.03 255);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 255);
+  --popover-foreground: oklch(0.25 0.03 255);
 
   --primary: oklch(0.40 0.15 255);
   --primary-foreground: oklch(0.99 0 0);
@@ -187,7 +187,7 @@
   }
 
   html {
-    font-size: 16.5px;
+    font-size: 16px;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
@@ -214,7 +214,7 @@
   /*
    * Executive Typography Standards:
    * Body, paragraphs, table rows, labels, and inputs use regular/medium weights.
-   * Bold (600-700) is reserved strictly for prominent headings, key status alerts, and primary metrics.
+   * Bold (650-700) is reserved strictly for prominent headings, key status alerts, and primary metrics.
    */
   p, dd, dt, td, input, textarea, select {
     font-weight: 400;
@@ -232,12 +232,23 @@
     font-weight: 600;
   }
 
-  h1, h2 {
+  h1 {
     font-weight: 700;
+    color: var(--color-navy);
+  }
+
+  h2 {
+    font-weight: 650;
+    color: var(--color-navy);
   }
 
   h3, h4, h5, h6 {
     font-weight: 600;
+  }
+
+  .dark h1,
+  .dark h2 {
+    color: var(--color-foreground);
   }
 
   ::selection {
@@ -257,34 +268,6 @@
     font-family: var(--font-sans) !important;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.015em;
-  }
-
-  /*
-   * Increase microscopic arbitrary font size utilities across all components
-   * to ensure clear, high-contrast, comfortable legibility across all displays.
-   */
-  .text-\[10px\],
-  [class*="text-[10px]"] {
-    font-size: 0.8125rem !important;
-    line-height: 1.25rem !important;
-  }
-
-  .text-\[11px\],
-  [class*="text-[11px]"] {
-    font-size: 0.85rem !important;
-    line-height: 1.3rem !important;
-  }
-
-  .text-\[12px\],
-  [class*="text-[12px]"] {
-    font-size: 0.9rem !important;
-    line-height: 1.35rem !important;
-  }
-
-  .text-\[13px\],
-  [class*="text-[13px]"] {
-    font-size: 0.95rem !important;
-    line-height: 1.4rem !important;
   }
 }
 

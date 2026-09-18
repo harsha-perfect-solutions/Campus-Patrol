@@ -138,7 +138,7 @@ export function CaseReportTemplateModal({
         {/* Modal Header */}
         <div className="p-4 sm:p-5 border-b border-border bg-muted/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black">
+            <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-semibold">
               <FileText className="size-5" />
             </div>
             <div>
