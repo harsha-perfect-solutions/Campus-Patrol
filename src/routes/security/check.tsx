@@ -28,6 +28,7 @@ import {
   verifyGatePassApi,
   authorizeEarlyExitApi,
   getSecurityAssignedGateApi,
+  getGatePassVerificationHistoryApi,
   type VerificationResultPayload,
 } from "@/lib/api/security.server";
 
@@ -66,6 +67,22 @@ export function SecurityCheckPage() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(false);
   const [earlyExitConfirmOpen, setEarlyExitConfirmOpen] = useState(false);
+
+  // Scan history log
+  const [scanHistory, setScanHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const fetchScanHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const res = await getGatePassVerificationHistoryApi();
+      if (res.success) setScanHistory(res.history ?? []);
+    } catch {
+      // silently fail — history is non-critical
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -134,6 +151,8 @@ export function SecurityCheckPage() {
       }
     }
     fetchGate();
+    fetchScanHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
 
   const handleAllowEarlyExit = async () => {
@@ -206,6 +225,8 @@ export function SecurityCheckPage() {
       if (res.success) {
 
         setResult(res as VerificationResultPayload);
+        // Refresh scan history after each verification
+        fetchScanHistory();
         if (res.authorized) {
           toast.success("EXIT AUTHORIZED", {
             description: `${res.student?.name || "Student"} is authorized to exit.`,
@@ -805,6 +826,87 @@ export function SecurityCheckPage() {
           title="Scan Student ID QR (Security Gate Check)"
           loading={loading}
         />
+
+        {/* Scan History Log */}
+        <div className="card-surface rounded-2xl border border-border overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="size-4 text-primary" />
+              <span className="text-sm font-bold text-foreground">Recent Gate Scans</span>
+              <span className="text-[10px] text-muted-foreground font-mono">
+                ({scanHistory.length} record{scanHistory.length !== 1 ? "s" : ""})
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={fetchScanHistory}
+              disabled={historyLoading}
+              className="text-xs text-primary font-semibold hover:underline disabled:opacity-50"
+            >
+              {historyLoading ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
+
+          {scanHistory.length === 0 ? (
+            <div className="py-8 text-center text-xs text-muted-foreground">
+              {historyLoading ? "Loading scan history..." : "No scans recorded at this gate yet."}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border bg-muted/40">
+                    <th className="text-left px-4 py-2 font-bold text-muted-foreground">Time</th>
+                    <th className="text-left px-4 py-2 font-bold text-muted-foreground">Student</th>
+                    <th className="text-left px-4 py-2 font-bold text-muted-foreground">Type</th>
+                    <th className="text-left px-4 py-2 font-bold text-muted-foreground">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {scanHistory.slice(0, 20).map((scan) => (
+                    <tr key={scan.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-2.5 font-mono text-muted-foreground whitespace-nowrap">
+                        {new Date(scan.timestamp).toLocaleTimeString("en-IN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className="font-bold text-foreground">{scan.studentName || scan.studentCode}</span>
+                        {scan.studentName && scan.studentCode && (
+                          <span className="ml-1.5 text-[10px] font-mono text-muted-foreground">{scan.studentCode}</span>
+                        )}
+                        {scan.department && (
+                          <span className="block text-[10px] text-muted-foreground">{scan.department}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className={`font-bold ${
+                          scan.verificationType === "ENTRY"
+                            ? "text-blue-600 dark:text-blue-400"
+                            : "text-emerald-600 dark:text-emerald-400"
+                        }`}>
+                          {scan.verificationType}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                          scan.authorized
+                            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                            : "bg-destructive/15 text-destructive border-destructive/30"
+                        }`}>
+                          {scan.authorized ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
+                          {scan.authorized ? "AUTHORIZED" : "DENIED"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </RoleGuard>
   );

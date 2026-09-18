@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import QRCodeLib from "qrcode";
 
 interface QRCodeProps {
   value: string;
@@ -17,23 +16,34 @@ export function QRCode({ value, size = 160, className = "" }: QRCodeProps) {
 
   useEffect(() => {
     let isMounted = true;
-    QRCodeLib.toString(
-      value,
-      {
-        type: "svg",
-        margin: 1,
-        color: {
-          dark: "#0F172A",
-          light: "#FFFFFF",
-        },
-        errorCorrectionLevel: "M",
-      },
-      (err, result) => {
-        if (!err && result && isMounted) {
-          setSvgString(result);
-        }
-      }
-    );
+    if (!value) return;
+
+    // Load qrcode dynamically to prevent client bundle resolution locks
+    import("qrcode")
+      .then((mod) => {
+        const QRCodeLib = (mod as any).default || mod;
+        QRCodeLib.toString(
+          value,
+          {
+            type: "svg",
+            margin: 1,
+            color: {
+              dark: "#0F172A",
+              light: "#FFFFFF",
+            },
+            errorCorrectionLevel: "M",
+          },
+          (err: any, result: string) => {
+            if (!err && result && isMounted) {
+              setSvgString(result);
+            }
+          }
+        );
+      })
+      .catch((err) => {
+        console.warn("[QRCode] Dynamic load notice:", err);
+      });
+
     return () => {
       isMounted = false;
     };
@@ -53,7 +63,7 @@ export function QRCode({ value, size = 160, className = "" }: QRCodeProps) {
       ) : (
         <div
           style={{ width: size, height: size }}
-          className="flex items-center justify-center bg-slate-100 text-slate-400 text-xs rounded-lg"
+          className="flex items-center justify-center bg-slate-100 text-slate-400 text-xs rounded-lg animate-pulse"
         >
           Generating QR...
         </div>
@@ -61,3 +71,4 @@ export function QRCode({ value, size = 160, className = "" }: QRCodeProps) {
     </div>
   );
 }
+

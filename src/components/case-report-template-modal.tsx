@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import {
-  Download,
   Printer,
   FileText,
   FileSpreadsheet,
@@ -36,7 +35,6 @@ import {
   blankCaseReportTemplate,
   generateCaseReportHtml,
   printCaseReport,
-  downloadCaseReportHtml,
 } from "@/lib/case-report-template-html";
 
 interface CaseReportTemplateModalProps {
@@ -82,14 +80,7 @@ export function CaseReportTemplateModal({
     }
   };
 
-  const handleDownloadHtml = () => {
-    try {
-      downloadCaseReportHtml(currentReport, { generatedBy: activeFacultyName });
-      toast.success(`Downloaded case report ${currentReport.id}.html`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to download HTML report");
-    }
-  };
+
 
   const handleExportCsv = () => {
     try {
@@ -219,16 +210,6 @@ export function CaseReportTemplateModal({
               <span>Export CSV</span>
             </Button>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadHtml}
-              className="h-9 rounded-xl text-xs font-semibold gap-1.5 border-border"
-            >
-              <Download className="size-3.5 text-primary" />
-              <span>Download HTML</span>
-            </Button>
 
             <Button
               type="button"

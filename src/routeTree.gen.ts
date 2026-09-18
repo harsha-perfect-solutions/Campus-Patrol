@@ -45,6 +45,7 @@ import { Route as FacultyClubsRouteImport } from './routes/faculty/clubs'
 import { Route as FacultyCounselorRouteImport } from './routes/faculty/counselor'
 import { Route as FacultyDashboardRouteImport } from './routes/faculty/dashboard'
 import { Route as FacultyNotificationsRouteImport } from './routes/faculty/notifications'
+import { Route as FacultyReportRouteImport } from './routes/faculty/report'
 import { Route as FacultyReportsRouteImport } from './routes/faculty/reports'
 import { Route as FacultySettingsRouteImport } from './routes/faculty/settings'
 import { Route as FacultyTimetableRouteImport } from './routes/faculty/timetable'
@@ -68,8 +69,10 @@ import { Route as SecurityNotificationsRouteImport } from './routes/security/not
 import { Route as SecurityPassesRouteImport } from './routes/security/passes'
 import { Route as SecurityProfileRouteImport } from './routes/security/profile'
 import { Route as SecurityReportsRouteImport } from './routes/security/reports'
+import { Route as SecurityScanRouteImport } from './routes/security/scan'
 import { Route as SecuritySettingsRouteImport } from './routes/security/settings'
 import { Route as SecurityTimetableRouteImport } from './routes/security/timetable'
+import { Route as SecurityVerifyRouteImport } from './routes/security/verify'
 import { Route as StudentDashboardRouteImport } from './routes/student/dashboard'
 import { Route as StudentEventPermissionsRouteImport } from './routes/student/event-permissions'
 import { Route as StudentExplanationsRouteImport } from './routes/student/explanations'
@@ -262,6 +265,11 @@ const FacultyNotificationsRoute = FacultyNotificationsRouteImport.update({
   path: '/faculty/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FacultyReportRoute = FacultyReportRouteImport.update({
+  id: '/faculty/report',
+  path: '/faculty/report',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FacultyReportsRoute = FacultyReportsRouteImport.update({
   id: '/faculty/reports',
   path: '/faculty/reports',
@@ -377,6 +385,11 @@ const SecurityReportsRoute = SecurityReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => SecurityRoute,
 } as any)
+const SecurityScanRoute = SecurityScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => SecurityRoute,
+} as any)
 const SecuritySettingsRoute = SecuritySettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -385,6 +398,11 @@ const SecuritySettingsRoute = SecuritySettingsRouteImport.update({
 const SecurityTimetableRoute = SecurityTimetableRouteImport.update({
   id: '/timetable',
   path: '/timetable',
+  getParentRoute: () => SecurityRoute,
+} as any)
+const SecurityVerifyRoute = SecurityVerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
   getParentRoute: () => SecurityRoute,
 } as any)
 const StudentDashboardRoute = StudentDashboardRouteImport.update({
@@ -480,6 +498,7 @@ export interface FileRoutesByFullPath {
   '/faculty/counselor': typeof FacultyCounselorRoute
   '/faculty/dashboard': typeof FacultyDashboardRoute
   '/faculty/notifications': typeof FacultyNotificationsRoute
+  '/faculty/report': typeof FacultyReportRoute
   '/faculty/reports': typeof FacultyReportsRoute
   '/faculty/settings': typeof FacultySettingsRoute
   '/faculty/timetable': typeof FacultyTimetableRoute
@@ -501,8 +520,10 @@ export interface FileRoutesByFullPath {
   '/security/passes': typeof SecurityPassesRoute
   '/security/profile': typeof SecurityProfileRoute
   '/security/reports': typeof SecurityReportsRoute
+  '/security/scan': typeof SecurityScanRoute
   '/security/settings': typeof SecuritySettingsRoute
   '/security/timetable': typeof SecurityTimetableRoute
+  '/security/verify': typeof SecurityVerifyRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/event-permissions': typeof StudentEventPermissionsRoute
   '/student/explanations': typeof StudentExplanationsRoute
@@ -553,6 +574,7 @@ export interface FileRoutesByTo {
   '/faculty/counselor': typeof FacultyCounselorRoute
   '/faculty/dashboard': typeof FacultyDashboardRoute
   '/faculty/notifications': typeof FacultyNotificationsRoute
+  '/faculty/report': typeof FacultyReportRoute
   '/faculty/reports': typeof FacultyReportsRoute
   '/faculty/settings': typeof FacultySettingsRoute
   '/faculty/timetable': typeof FacultyTimetableRoute
@@ -574,8 +596,10 @@ export interface FileRoutesByTo {
   '/security/passes': typeof SecurityPassesRoute
   '/security/profile': typeof SecurityProfileRoute
   '/security/reports': typeof SecurityReportsRoute
+  '/security/scan': typeof SecurityScanRoute
   '/security/settings': typeof SecuritySettingsRoute
   '/security/timetable': typeof SecurityTimetableRoute
+  '/security/verify': typeof SecurityVerifyRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/event-permissions': typeof StudentEventPermissionsRoute
   '/student/explanations': typeof StudentExplanationsRoute
@@ -628,6 +652,7 @@ export interface FileRoutesById {
   '/faculty/counselor': typeof FacultyCounselorRoute
   '/faculty/dashboard': typeof FacultyDashboardRoute
   '/faculty/notifications': typeof FacultyNotificationsRoute
+  '/faculty/report': typeof FacultyReportRoute
   '/faculty/reports': typeof FacultyReportsRoute
   '/faculty/settings': typeof FacultySettingsRoute
   '/faculty/timetable': typeof FacultyTimetableRoute
@@ -649,8 +674,10 @@ export interface FileRoutesById {
   '/security/passes': typeof SecurityPassesRoute
   '/security/profile': typeof SecurityProfileRoute
   '/security/reports': typeof SecurityReportsRoute
+  '/security/scan': typeof SecurityScanRoute
   '/security/settings': typeof SecuritySettingsRoute
   '/security/timetable': typeof SecurityTimetableRoute
+  '/security/verify': typeof SecurityVerifyRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/event-permissions': typeof StudentEventPermissionsRoute
   '/student/explanations': typeof StudentExplanationsRoute
@@ -704,6 +731,7 @@ export interface FileRouteTypes {
     | '/faculty/counselor'
     | '/faculty/dashboard'
     | '/faculty/notifications'
+    | '/faculty/report'
     | '/faculty/reports'
     | '/faculty/settings'
     | '/faculty/timetable'
@@ -725,8 +753,10 @@ export interface FileRouteTypes {
     | '/security/passes'
     | '/security/profile'
     | '/security/reports'
+    | '/security/scan'
     | '/security/settings'
     | '/security/timetable'
+    | '/security/verify'
     | '/student/dashboard'
     | '/student/event-permissions'
     | '/student/explanations'
@@ -777,6 +807,7 @@ export interface FileRouteTypes {
     | '/faculty/counselor'
     | '/faculty/dashboard'
     | '/faculty/notifications'
+    | '/faculty/report'
     | '/faculty/reports'
     | '/faculty/settings'
     | '/faculty/timetable'
@@ -798,8 +829,10 @@ export interface FileRouteTypes {
     | '/security/passes'
     | '/security/profile'
     | '/security/reports'
+    | '/security/scan'
     | '/security/settings'
     | '/security/timetable'
+    | '/security/verify'
     | '/student/dashboard'
     | '/student/event-permissions'
     | '/student/explanations'
@@ -851,6 +884,7 @@ export interface FileRouteTypes {
     | '/faculty/counselor'
     | '/faculty/dashboard'
     | '/faculty/notifications'
+    | '/faculty/report'
     | '/faculty/reports'
     | '/faculty/settings'
     | '/faculty/timetable'
@@ -872,8 +906,10 @@ export interface FileRouteTypes {
     | '/security/passes'
     | '/security/profile'
     | '/security/reports'
+    | '/security/scan'
     | '/security/settings'
     | '/security/timetable'
+    | '/security/verify'
     | '/student/dashboard'
     | '/student/event-permissions'
     | '/student/explanations'
@@ -926,6 +962,7 @@ export interface RootRouteChildren {
   FacultyCounselorRoute: typeof FacultyCounselorRoute
   FacultyDashboardRoute: typeof FacultyDashboardRoute
   FacultyNotificationsRoute: typeof FacultyNotificationsRoute
+  FacultyReportRoute: typeof FacultyReportRoute
   FacultyReportsRoute: typeof FacultyReportsRoute
   FacultySettingsRoute: typeof FacultySettingsRoute
   FacultyTimetableRoute: typeof FacultyTimetableRoute
@@ -1206,6 +1243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FacultyNotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/faculty/report': {
+      id: '/faculty/report'
+      path: '/faculty/report'
+      fullPath: '/faculty/report'
+      preLoaderRoute: typeof FacultyReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/faculty/reports': {
       id: '/faculty/reports'
       path: '/faculty/reports'
@@ -1367,6 +1411,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SecurityReportsRouteImport
       parentRoute: typeof SecurityRoute
     }
+    '/security/scan': {
+      id: '/security/scan'
+      path: '/scan'
+      fullPath: '/security/scan'
+      preLoaderRoute: typeof SecurityScanRouteImport
+      parentRoute: typeof SecurityRoute
+    }
     '/security/settings': {
       id: '/security/settings'
       path: '/settings'
@@ -1379,6 +1430,13 @@ declare module '@tanstack/react-router' {
       path: '/timetable'
       fullPath: '/security/timetable'
       preLoaderRoute: typeof SecurityTimetableRouteImport
+      parentRoute: typeof SecurityRoute
+    }
+    '/security/verify': {
+      id: '/security/verify'
+      path: '/verify'
+      fullPath: '/security/verify'
+      preLoaderRoute: typeof SecurityVerifyRouteImport
       parentRoute: typeof SecurityRoute
     }
     '/student/dashboard': {
@@ -1469,8 +1527,10 @@ interface SecurityRouteChildren {
   SecurityPassesRoute: typeof SecurityPassesRoute
   SecurityProfileRoute: typeof SecurityProfileRoute
   SecurityReportsRoute: typeof SecurityReportsRoute
+  SecurityScanRoute: typeof SecurityScanRoute
   SecuritySettingsRoute: typeof SecuritySettingsRoute
   SecurityTimetableRoute: typeof SecurityTimetableRoute
+  SecurityVerifyRoute: typeof SecurityVerifyRoute
   SecurityIndexRoute: typeof SecurityIndexRoute
 }
 
@@ -1482,8 +1542,10 @@ const SecurityRouteChildren: SecurityRouteChildren = {
   SecurityPassesRoute: SecurityPassesRoute,
   SecurityProfileRoute: SecurityProfileRoute,
   SecurityReportsRoute: SecurityReportsRoute,
+  SecurityScanRoute: SecurityScanRoute,
   SecuritySettingsRoute: SecuritySettingsRoute,
   SecurityTimetableRoute: SecurityTimetableRoute,
+  SecurityVerifyRoute: SecurityVerifyRoute,
   SecurityIndexRoute: SecurityIndexRoute,
 }
 
@@ -1552,6 +1614,7 @@ const rootRouteChildren: RootRouteChildren = {
   FacultyCounselorRoute: FacultyCounselorRoute,
   FacultyDashboardRoute: FacultyDashboardRoute,
   FacultyNotificationsRoute: FacultyNotificationsRoute,
+  FacultyReportRoute: FacultyReportRoute,
   FacultyReportsRoute: FacultyReportsRoute,
   FacultySettingsRoute: FacultySettingsRoute,
   FacultyTimetableRoute: FacultyTimetableRoute,

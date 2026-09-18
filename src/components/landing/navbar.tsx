@@ -3,9 +3,10 @@ import { Link } from "@tanstack/react-router";
 import { ShieldCheck, Menu, X, ArrowRight, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { getDefaultDashboardForRole } from "@/lib/permissions";
 
 export function LandingNavbar() {
-  const { session } = useAuth();
+  const { session, role } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window !== "undefined") {
@@ -71,13 +72,13 @@ export function LandingNavbar() {
         </nav>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon-sm"
             onClick={toggleTheme}
             aria-label="Toggle Theme"
-            className="rounded-xl text-muted-foreground hover:text-foreground"
+            className="rounded-xl text-muted-foreground hover:text-foreground cursor-pointer"
           >
             {theme === "dark" ? <Sun className="size-4 text-amber-400" /> : <Moon className="size-4" />}
           </Button>

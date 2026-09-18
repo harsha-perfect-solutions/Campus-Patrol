@@ -13,6 +13,9 @@ import {
   Loader2,
   ArrowRight,
   Check,
+  Sparkles,
+  QrCode,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -203,40 +206,35 @@ function AuthPage() {
 
   return (
     <div
-      className="h-[100svh] min-h-[100svh] w-full overflow-hidden relative flex items-center justify-center p-3 sm:p-4 bg-cover bg-center bg-no-repeat selection:bg-primary/20 selection:text-primary"
+      className="h-[100svh] min-h-[100svh] w-full overflow-hidden relative flex items-center justify-center p-3 sm:p-4 bg-cover bg-center bg-no-repeat selection:bg-blue-600/20 selection:text-blue-700"
       style={{ backgroundImage: "url('/campus-bg.jpg')" }}
     >
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/65 via-slate-900/50 to-blue-950/65 backdrop-blur-[3px] pointer-events-none" />
-
-      {/* Decorative rings */}
-      <div className="absolute -left-16 -top-16 size-72 rounded-full border-[28px] border-primary/15 pointer-events-none" />
-      <div className="absolute -right-20 -bottom-20 size-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-      <div className="absolute -right-16 -bottom-16 size-80 rounded-full border-[36px] border-primary/15 pointer-events-none" />
+      {/* Background Soft Vignette Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/50 via-slate-900/30 to-blue-950/50 backdrop-blur-[2px] pointer-events-none" />
 
       {/* LOGIN CARD */}
-      <div className="relative z-10 w-[min(480px,calc(100vw-24px))] bg-card/95 dark:bg-slate-900/95 backdrop-blur-md rounded-[24px] border border-border shadow-2xl pt-4 pb-5 px-5 sm:pt-4 sm:pb-6 sm:px-6 space-y-3.5 overflow-y-auto max-h-[calc(100svh-24px)] auth-card-entrance">
+      <div className="relative z-10 w-[min(480px,calc(100vw-24px))] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-[28px] border border-white/60 dark:border-slate-800 shadow-[0_20px_60px_rgba(0,0,0,0.35)] pt-5 pb-6 px-5 sm:pt-6 sm:pb-7 sm:px-7 space-y-4 overflow-y-auto max-h-[calc(100svh-24px)] auth-card-entrance text-slate-900 dark:text-slate-100">
 
         {/* BRAND HEADER */}
         <div className="text-center">
-          <div className="grid size-10 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-md shadow-primary/25 mx-auto">
-            <ShieldCheck className="size-5 stroke-[2.2]" />
+          <div className="grid size-11 place-items-center rounded-2xl bg-[#0047AB] text-white shadow-md shadow-blue-800/25 mx-auto">
+            <ShieldCheck className="size-6 stroke-[2.2]" />
           </div>
-          <h1 className="mt-1.5 text-xl font-black tracking-tight text-foreground leading-none">CMADMS</h1>
-          <p className="mt-0.5 text-xs font-semibold text-muted-foreground">Campus Movement Portal</p>
-          <p className="text-[11px] text-muted-foreground/75">Secure access to your campus management portal</p>
-          <div className="flex items-center gap-2.5 mt-2">
-            <div className="h-px bg-border flex-1" />
-            <span className="grid size-5 place-items-center rounded-full bg-primary/10 text-primary border border-primary/20">
+          <h1 className="mt-2 text-xl font-black tracking-tight text-slate-900 dark:text-white leading-none">CMADMS</h1>
+          <p className="mt-1 text-xs font-semibold text-slate-600 dark:text-slate-300">Campus Movement Portal</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Secure access to your campus management portal</p>
+          <div className="flex items-center gap-2.5 mt-2.5">
+            <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1" />
+            <span className="grid size-5 place-items-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
               <GraduationCap className="size-3" />
             </span>
-            <div className="h-px bg-border flex-1" />
+            <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1" />
           </div>
         </div>
 
         {/* ROLE SELECTOR */}
         <div>
-          <Label className="text-[11px] font-bold text-foreground mb-1.5 block">Select Your Portal</Label>
+          <Label className="text-xs font-bold text-slate-900 dark:text-white mb-2 block">Select Your Portal</Label>
           <div className="grid grid-cols-5 gap-1.5" role="radiogroup" aria-label="Portal Role">
             {ROLES.map((role) => {
               const isSelected = selectedRole === role.id;
@@ -249,14 +247,14 @@ function AuthPage() {
                   aria-checked={isSelected}
                   onClick={() => handleRoleSelect(role.id)}
                   className={cn(
-                    "flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 rounded-xl text-xs font-semibold transition-all duration-150 ease-in-out outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    "flex items-center justify-center gap-1 py-2 px-1 rounded-xl text-xs font-semibold transition-all duration-150 ease-in-out outline-none cursor-pointer",
                     isSelected
-                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/25 font-bold"
-                      : "bg-muted/60 border border-border text-foreground hover:bg-muted"
+                      ? "bg-[#0047AB] text-white shadow-md shadow-blue-700/25 font-bold"
+                      : "bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700"
                   )}
                 >
-                  <RoleIcon className={cn("size-3.5 shrink-0", isSelected ? "text-primary-foreground" : "text-primary")} />
-                  <span className="truncate text-[10px] sm:text-xs">{role.label}</span>
+                  <RoleIcon className={cn("size-3.5 shrink-0", isSelected ? "text-white" : "text-[#0047AB] dark:text-blue-400")} />
+                  <span className="text-[11px] font-medium leading-none">{role.label}</span>
                 </button>
               );
             })}
@@ -264,19 +262,19 @@ function AuthPage() {
         </div>
 
         {/* AUTHENTICATION FORM */}
-        <form onSubmit={handleSignIn} className="space-y-3">
+        <form onSubmit={handleSignIn} className="space-y-3.5">
           {errorMessage && (
-            <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/30 text-[11px] font-medium text-destructive flex items-center gap-2">
+            <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/30 text-xs font-medium text-destructive flex items-center gap-2">
               <span className="size-3.5 shrink-0 rounded-full bg-destructive text-destructive-foreground grid place-items-center font-bold text-[9px]">!</span>
               <span>{errorMessage}</span>
             </div>
           )}
 
           {/* Email */}
-          <div className="space-y-1">
-            <Label htmlFor="email" className="text-[11px] font-bold text-foreground">University Email or Roll Number</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-xs font-bold text-slate-900 dark:text-white">University Email or Roll Number</Label>
             <div className="relative">
-              <UserRound className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-primary/70 pointer-events-none" />
+              <UserRound className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
               <Input
                 id="email"
                 type="text"
@@ -284,16 +282,16 @@ function AuthPage() {
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); if (errorMessage) setErrorMessage(null); }}
                 placeholder={activeRoleConfig.placeholder}
-                className="h-10 pl-9 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary font-medium"
+                className="h-11 pl-10 pr-3 rounded-xl bg-slate-100/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-[#0047AB] font-medium"
               />
             </div>
           </div>
 
           {/* Password */}
-          <div className="space-y-1">
-            <Label htmlFor="password" className="text-[11px] font-bold text-foreground">Password</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-xs font-bold text-slate-900 dark:text-white">Password</Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-primary/70 pointer-events-none" />
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
@@ -301,30 +299,30 @@ function AuthPage() {
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); if (errorMessage) setErrorMessage(null); }}
                 placeholder="Enter your password"
-                className="h-10 pl-9 pr-9 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary font-medium"
+                className="h-11 pl-10 pr-10 rounded-xl bg-slate-100/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-[#0047AB] font-medium"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 transition-colors"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 transition-colors cursor-pointer"
                 title={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
           </div>
 
           {/* Remember me & Forgot password */}
-          <div className="flex items-center justify-between pt-0.5 text-[11px]">
-            <label className="flex items-center gap-1.5 cursor-pointer select-none font-medium text-foreground">
+          <div className="flex items-center justify-between pt-0.5 text-xs">
+            <label className="flex items-center gap-2 cursor-pointer select-none font-medium text-slate-800 dark:text-slate-200">
               <Checkbox
                 checked={rememberMe}
                 onCheckedChange={(checked) => setRememberMe(!!checked)}
-                className="size-3.5 rounded-md border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                className="size-4 rounded-md border-slate-300 dark:border-slate-600 data-[state=checked]:bg-[#0047AB] data-[state=checked]:border-[#0047AB]"
               />
               <span>Remember me</span>
             </label>
-            <Link to="/reset-password" className="font-bold text-primary hover:underline transition-colors">
+            <Link to="/reset-password" className="font-bold text-[#0047AB] dark:text-blue-400 hover:underline transition-colors">
               Forgot password?
             </Link>
           </div>
@@ -333,7 +331,7 @@ function AuthPage() {
           <Button
             type="submit"
             disabled={busy}
-            className="w-full h-10 rounded-xl font-bold text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/25 gap-2 transition-all duration-150 active:scale-[0.99] flex items-center justify-center mt-1"
+            className="w-full h-11 rounded-xl font-bold text-xs bg-[#0047AB] hover:bg-[#003b8e] text-white shadow-md shadow-blue-800/25 gap-2 transition-all duration-150 active:scale-[0.99] flex items-center justify-center mt-1 cursor-pointer"
           >
             {busy ? (
               <><Loader2 className="size-4 animate-spin" /><span>Signing in to Portal...</span></>
@@ -348,13 +346,13 @@ function AuthPage() {
       {/* FIRST LOGIN PASSWORD CHANGE MODAL */}
       {mustChangePasswordModalOpen && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card dark:bg-slate-900 border border-border rounded-3xl shadow-2xl p-6 w-full max-w-md space-y-4 text-foreground animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-6 w-full max-w-md space-y-4 text-slate-900 dark:text-slate-100 animate-in fade-in zoom-in-95 duration-200">
             <div className="text-center space-y-2">
-              <div className="grid size-12 place-items-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20 mx-auto">
+              <div className="grid size-12 place-items-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 mx-auto">
                 <Lock className="size-6 stroke-[2.2]" />
               </div>
-              <h2 className="text-lg font-bold tracking-tight text-foreground">First-Login Password Update Required</h2>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">First-Login Password Update Required</h2>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 As a security policy for newly onboarded accounts, please update your initial default password to a new secure password before continuing.
               </p>
             </div>
@@ -368,20 +366,20 @@ function AuthPage() {
               )}
 
               <div className="space-y-1">
-                <Label htmlFor="currentPass" className="text-xs font-bold text-foreground">Current / Temporary Password</Label>
+                <Label htmlFor="currentPass" className="text-xs font-bold text-slate-800 dark:text-slate-200">Current / Temporary Password</Label>
                 <div className="relative">
-                  <Input id="currentPass" type={showCurrentPass ? "text" : "password"} required value={currentPasswordVal} onChange={(e) => setCurrentPasswordVal(e.target.value)} placeholder="Current temporary password" className="h-10 rounded-xl bg-background border border-border text-xs pr-10 focus-visible:ring-2 focus-visible:ring-primary" />
-                  <button type="button" onClick={() => setShowCurrentPass(!showCurrentPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <Input id="currentPass" type={showCurrentPass ? "text" : "password"} required value={currentPasswordVal} onChange={(e) => setCurrentPasswordVal(e.target.value)} placeholder="Current temporary password" className="h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs pr-10 focus-visible:ring-2 focus-visible:ring-[#0047AB]" />
+                  <button type="button" onClick={() => setShowCurrentPass(!showCurrentPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                     {showCurrentPass ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="newPassword" className="text-xs font-bold text-foreground">New Personal Password</Label>
+                <Label htmlFor="newPassword" className="text-xs font-bold text-slate-800 dark:text-slate-200">New Personal Password</Label>
                 <div className="relative">
-                  <Input id="newPassword" type={showNewPass ? "text" : "password"} required minLength={8} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password (min. 8 chars)" className="h-10 rounded-xl bg-background border border-border text-xs pr-10 focus-visible:ring-2 focus-visible:ring-primary" />
-                  <button type="button" onClick={() => setShowNewPass(!showNewPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <Input id="newPassword" type={showNewPass ? "text" : "password"} required minLength={8} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password (min. 8 chars)" className="h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs pr-10 focus-visible:ring-2 focus-visible:ring-[#0047AB]" />
+                  <button type="button" onClick={() => setShowNewPass(!showNewPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                     {showNewPass ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
@@ -389,16 +387,16 @@ function AuthPage() {
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="confirmPassword" className="text-xs font-bold text-foreground">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword" className="text-xs font-bold text-slate-800 dark:text-slate-200">Confirm New Password</Label>
                 <div className="relative">
-                  <Input id="confirmPassword" type={showConfirmPass ? "text" : "password"} required minLength={8} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter new password" className="h-10 rounded-xl bg-background border border-border text-xs pr-10 focus-visible:ring-2 focus-visible:ring-primary" />
-                  <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <Input id="confirmPassword" type={showConfirmPass ? "text" : "password"} required minLength={8} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter new password" className="h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs pr-10 focus-visible:ring-2 focus-visible:ring-[#0047AB]" />
+                  <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                     {showConfirmPass ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
               </div>
 
-              <Button type="submit" disabled={changingPassword} className="w-full h-10 rounded-xl font-bold text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-md gap-2 flex items-center justify-center mt-3">
+              <Button type="submit" disabled={changingPassword} className="w-full h-10 rounded-xl font-bold text-xs bg-[#0047AB] hover:bg-[#003b8e] text-white shadow-md gap-2 flex items-center justify-center mt-3 cursor-pointer">
                 {changingPassword ? (
                   <><Loader2 className="size-4 animate-spin" /><span>Updating Password...</span></>
                 ) : (

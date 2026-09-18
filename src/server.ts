@@ -3,6 +3,9 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
+// Start background QR cleanup job (server-only, fire-and-forget)
+let qrCleanupStarted = false;
+
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
@@ -46,6 +49,21 @@ function isH3SwallowedErrorBody(body: string): boolean {
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const url = new URL(request.url);
+    if (url.pathname === "/health") {
+      return new Response(JSON.stringify({ status: "ok", timestamp: new Date().toISOString() }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+
+    // Lazily start QR cleanup job on first request (server-side only)
+    if (!qrCleanupStarted) {
+      qrCleanupStarted = true;
+      import("./lib/db/qr-cleanup.server")
+        .then((m) => m.startQRCleanupJob())
+        .catch(() => {});
+    }
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

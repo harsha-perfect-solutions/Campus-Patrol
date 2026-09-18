@@ -1,61 +1,74 @@
+import { Link } from "@tanstack/react-router";
 import {
   User,
   ShieldCheck,
   Building2,
   Settings,
   CheckCircle2,
-  QrCode,
-  FileText,
-  UserCog,
+  GraduationCap,
+  ArrowRight,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function LandingUseCasesSection() {
   const roles = [
     {
-      title: "Student",
+      title: "Student Portal",
       roleCode: "student",
       image: "/images/use-case-student.jpg",
       icon: User,
       bullets: [
         "Apply movement passes",
-        "View pass approval status",
-        "View movement history & QR",
+        "View digital pass QR codes",
+        "Track case explanations & status",
       ],
       link: "/student/passes",
     },
     {
-      title: "Security",
+      title: "Faculty Portal",
+      roleCode: "faculty",
+      image: "/images/use-case-hod.jpg",
+      icon: GraduationCap,
+      bullets: [
+        "Verify students in corridors",
+        "Review counselor pass requests",
+        "Manage club events & permissions",
+      ],
+      link: "/faculty/dashboard",
+    },
+    {
+      title: "Security Gate",
       roleCode: "security",
       image: "/images/use-case-security.jpg",
       icon: ShieldCheck,
       bullets: [
-        "Verify passes instantly",
-        "Digital QR code scanning",
-        "Gate exit / entry verification",
+        "Scan QR passes at gate",
+        "Verify departure & return",
+        "Real-time pass verification logs",
       ],
       link: "/security/check",
     },
     {
-      title: "HOD",
+      title: "Department HOD",
       roleCode: "hod",
       image: "/images/use-case-hod.jpg",
       icon: Building2,
       bullets: [
-        "Approve & reject pass requests",
-        "Monitor department movement",
-        "Investigate & resolve incidents",
+        "Approve departmental passes",
+        "Investigate student violations",
+        "Review safety metrics & analytics",
       ],
-      link: "/hod/passes",
+      link: "/hod/dashboard",
     },
     {
-      title: "Admin",
+      title: "Administration",
       roleCode: "admin",
       image: "/images/use-case-admin.jpg",
       icon: Settings,
       bullets: [
-        "Manage users & roles",
-        "Manage master departments & courses",
-        "System settings & audit logs",
+        "Manage users & role privileges",
+        "Configure timetable & departments",
+        "Audit logs & campus compliance",
       ],
       link: "/admin/dashboard",
     },
@@ -78,8 +91,8 @@ export function LandingUseCasesSection() {
           </div>
         </div>
 
-        {/* 4 Role Cards Grid Matching Reference */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* 5 Role Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
           {roles.map((r) => {
             const Icon = r.icon;
             return (
@@ -89,11 +102,15 @@ export function LandingUseCasesSection() {
               >
                 <div>
                   {/* Photo Header */}
-                  <div className="relative h-44 w-full overflow-hidden bg-muted">
+                  <div className="relative h-40 w-full overflow-hidden bg-muted">
                     <img
                       src={r.image}
                       alt={`${r.title} Role Portal`}
                       className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                      onError={(e) => {
+                        // graceful fallback for missing static images
+                        (e.target as HTMLElement).style.display = "none";
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                     <span className="absolute bottom-3 left-3 grid size-8 place-items-center rounded-xl bg-primary text-primary-foreground shadow-xs">
@@ -103,7 +120,7 @@ export function LandingUseCasesSection() {
 
                   {/* Body Content */}
                   <div className="p-5 space-y-3">
-                    <h3 className="text-lg font-extrabold text-foreground">{r.title}</h3>
+                    <h3 className="text-base font-extrabold text-foreground">{r.title}</h3>
                     <ul className="space-y-2 text-xs text-muted-foreground">
                       {r.bullets.map((b) => (
                         <li key={b} className="flex items-start gap-2">
@@ -113,6 +130,16 @@ export function LandingUseCasesSection() {
                       ))}
                     </ul>
                   </div>
+                </div>
+
+                {/* Bottom Action */}
+                <div className="p-5 pt-0">
+                  <Button asChild size="sm" className="w-full rounded-xl text-xs font-semibold gap-1.5 shadow-xs">
+                    <Link to={r.link as any}>
+                      <span>Open Portal</span>
+                      <ArrowRight className="size-3.5" />
+                    </Link>
+                  </Button>
                 </div>
               </div>
             );

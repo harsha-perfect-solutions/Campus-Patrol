@@ -45,9 +45,11 @@ if (!isBrowser && nodeRequire) {
       console.warn("[PostgreSQL Notice]", err?.message || err);
     });
 
-    const fallbackConnectionString = connectionString.includes(":5433")
-      ? connectionString.replace(":5433", ":5434")
-      : "postgresql://postgres:postgrespassword@localhost:5434/cmadms_db";
+    const fallbackConnectionString =
+      process.env["DATABASE_FALLBACK_URL"] ||
+      (connectionString.includes(":5433")
+        ? connectionString.replace(":5433", ":5434")
+        : connectionString);
 
     fallbackPool = new Pool({
       connectionString: fallbackConnectionString,

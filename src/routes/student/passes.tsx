@@ -37,6 +37,7 @@ import {
   getMyMovementPermissionsApi,
   requestMovementPermissionApi,
 } from "@/lib/api/student.server";
+import { getOrCreateMovementQRPassApi } from "@/lib/api/qr.server";
 import { getMyCounselorApi } from "@/lib/api/counselor.server";
 import type { DBPermission } from "@/lib/db/permissions.server";
 
@@ -201,6 +202,10 @@ function StudentPassesPage() {
   const [passes, setPasses] = useState<DBPermission[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Map of permissionId -> real QR token (CMADMS:QR:<hex>)
+  const [qrTokens, setQrTokens] = useState<Record<string, string>>({});
+  const [qrLoading, setQrLoading] = useState<Record<string, boolean>>({});
+
   // Filter & Search states
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "completed" | "expired" | "pending" | "rejected"
@@ -214,8 +219,8 @@ function StudentPassesPage() {
   const [targetRole, setTargetRole] = useState<"counselor" | "hod">("counselor");
   const [counselorInfo, setCounselorInfo] = useState<{
     assigned: boolean;
-    counselorName?: string;
-    email?: string | null;
+    counselorName?: string | undefined;
+    email?: string | null | undefined;
   } | null>(null);
   const [reason, setReason] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]!);
@@ -244,8 +249,8 @@ function StudentPassesPage() {
         if (isMounted && res && res.assigned) {
           setCounselorInfo({
             assigned: true,
-            counselorName: res.counselorName,
-            email: res.email,
+            counselorName: res.counselorName ?? undefined,
+            email: res.email ?? undefined,
           });
         }
       } catch (err) {
@@ -259,6 +264,43 @@ function StudentPassesPage() {
       isMounted = false;
     };
   }, [rollNo]);
+
+  /**
+   * Fetch the real CMADMS:QR:<hex> token for an active movement pass.
+   * Uses a local cache so we don't re-fetch on every re-render.
+   */
+  const fetchQRToken = async (pass: DBPermission) => {
+    const id = String(pass.id);
+    if (qrTokens[id] || qrLoading[id]) return;
+    setQrLoading((prev) => ({ ...prev, [id]: true }));
+    try {
+      const res = await getOrCreateMovementQRPassApi({
+        data: {
+          permissionId: id,
+          validFrom: String(pass.valid_from || "08:00"),
+          validUntil: String(pass.valid_until || "18:00"),
+        },
+      });
+      if (res.success && res.qrToken) {
+        setQrTokens((prev) => ({ ...prev, [id]: res.qrToken! }));
+      }
+    } catch (err) {
+      console.warn("[QR] Token fetch failed for", id, err);
+    } finally {
+      setQrLoading((prev) => ({ ...prev, [id]: false }));
+    }
+  };
+
+  // Auto-fetch QR tokens for all active passes when the list loads/changes
+  useEffect(() => {
+    passes.forEach((pass) => {
+      const derived = getDerivedPassState(pass);
+      if (derived.state === "active") {
+        fetchQRToken(pass);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [passes]);
 
   const handleRequestPass = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -804,7 +846,19 @@ function StudentPassesPage() {
                   {derived.state === "active" && (
                     <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 p-4 rounded-xl bg-card border border-emerald-500/30 flex-1 shadow-xs">
                       <div className="flex flex-col items-center shrink-0">
-                        <QRCode value={passCode} size={125} />
+                        {qrLoading[pass.id] ? (
+                          <div
+                            className="rounded-xl bg-muted animate-pulse flex items-center justify-center text-[10px] text-muted-foreground"
+                            style={{ width: 141, height: 141 }}
+                          >
+                            Generating QR…
+                          </div>
+                        ) : (
+                          <QRCode
+                            value={qrTokens[pass.id] || ""}
+                            size={125}
+                          />
+                        )}
                         <span className="mt-2 text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-400 text-center">
                           {passCode}
                         </span>

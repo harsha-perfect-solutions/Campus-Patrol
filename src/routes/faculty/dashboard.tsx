@@ -13,7 +13,6 @@ import {
   Calendar,
   Ticket,
   RefreshCw,
-  Download,
   Printer,
 } from "lucide-react";
 import { RoleGuard } from "@/components/role-guard";
@@ -24,7 +23,7 @@ import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
 import { getMyCoordinatedClubsApi } from "@/lib/api/clubs.server";
 import type { DBClub } from "@/lib/db/clubs.server";
-import { CaseReportTemplateModal } from "@/components/case-report-template-modal";
+
 import { ScanStudentIdButton } from "@/components/scan-student-id-button";
 
 export const Route = createFileRoute("/faculty/dashboard")({
@@ -46,7 +45,7 @@ function FacultyDashboardContent() {
 
   const [myClubs, setMyClubs] = useState<DBClub[]>([]);
   const [loadingClubs, setLoadingClubs] = useState(true);
-  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+
 
   useEffect(() => {
     getMyCoordinatedClubsApi()
@@ -68,17 +67,6 @@ function FacultyDashboardContent() {
         breadcrumb={[{ label: "Faculty", to: "/faculty/dashboard" }, { label: "Dashboard" }]}
         actions={
           <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              onClick={() => setTemplateModalOpen(true)}
-              className="w-full sm:w-auto rounded-xl font-semibold gap-1.5 shadow-2xs h-11"
-            >
-              <Download className="size-4 text-primary" />
-              <span>Download Report Template</span>
-            </Button>
-
             <ScanStudentIdButton to="/faculty/check" className="w-full sm:w-auto" />
           </div>
         }
@@ -269,12 +257,7 @@ function FacultyDashboardContent() {
         </div>
       </section>
 
-      {/* Case Report Template Preview & Export Modal */}
-      <CaseReportTemplateModal
-        open={templateModalOpen}
-        onOpenChange={setTemplateModalOpen}
-        reports={reports}
-      />
+
     </div>
   );
 }

@@ -137,13 +137,22 @@ function RootContent() {
     }
   }, []);
 
-  const isPublicPage = pathname === "/" || pathname === "/auth" || pathname === "/reset-password";
+  const isPublicPage =
+    pathname === "/" ||
+    pathname === "/auth" ||
+    pathname === "/reset-password" ||
+    pathname === "/features" ||
+    pathname === "/how-it-works" ||
+    pathname === "/modules" ||
+    pathname === "/about" ||
+    pathname === "/security";
 
   if (!session || isPublicPage) {
     return <Outlet />;
   }
 
-  if (role === "admin" || pathname.startsWith("/admin")) {
+  // Path-specific shell mapping ensures each portal gets its native shell
+  if (pathname.startsWith("/admin")) {
     return (
       <AdminShell>
         <Outlet />
@@ -151,7 +160,7 @@ function RootContent() {
     );
   }
 
-  if (role === "hod" || pathname.startsWith("/hod")) {
+  if (pathname.startsWith("/hod")) {
     return (
       <HODShell>
         <Outlet />
@@ -159,7 +168,7 @@ function RootContent() {
     );
   }
 
-  if (role === "student" || pathname.startsWith("/student")) {
+  if (pathname.startsWith("/student")) {
     return (
       <StudentShell>
         <Outlet />
@@ -167,7 +176,48 @@ function RootContent() {
     );
   }
 
-  if (role === "security" || pathname.startsWith("/security")) {
+  if (pathname.startsWith("/security")) {
+    return (
+      <SecurityShell>
+        <Outlet />
+      </SecurityShell>
+    );
+  }
+
+  if (pathname.startsWith("/faculty")) {
+    return (
+      <FacultyShell>
+        <Outlet />
+      </FacultyShell>
+    );
+  }
+
+  // Fallback for shared root routes (/settings, /timetable, /notifications, etc.)
+  if (role === "admin") {
+    return (
+      <AdminShell>
+        <Outlet />
+      </AdminShell>
+    );
+  }
+
+  if (role === "hod") {
+    return (
+      <HODShell>
+        <Outlet />
+      </HODShell>
+    );
+  }
+
+  if (role === "student") {
+    return (
+      <StudentShell>
+        <Outlet />
+      </StudentShell>
+    );
+  }
+
+  if (role === "security") {
     return (
       <SecurityShell>
         <Outlet />

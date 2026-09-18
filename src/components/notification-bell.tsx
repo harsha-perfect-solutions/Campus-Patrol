@@ -9,7 +9,6 @@ import {
   X,
   CheckCheck,
   ChevronRight,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -132,7 +131,6 @@ export function NotificationBell({ role, className }: NotificationBellProps) {
     isConnected,
     markRead,
     markAllRead,
-    sendTestNotification,
   } = useRealtimeNotifications();
 
   // ── Close on outside click ────────────────────────────────────────────
@@ -241,15 +239,6 @@ export function NotificationBell({ role, className }: NotificationBellProps) {
                 <p className="text-[11px] text-muted-foreground">
                   New violation alerts, emergency actions, and gate pass decisions will appear here.
                 </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 text-xs h-7 gap-1.5"
-                  onClick={() => sendTestNotification()}
-                >
-                  <Sparkles className="size-3 text-primary" />
-                  Send test notification
-                </Button>
               </div>
             ) : (
               <ul className="divide-y divide-border/60">
@@ -290,15 +279,7 @@ export function NotificationBell({ role, className }: NotificationBellProps) {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between border-t border-border px-4 py-2.5 bg-muted/20">
-            <button
-              onClick={() => sendTestNotification()}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              title="Dispatches an immediate live test alert"
-            >
-              <Sparkles className="size-3 text-primary" />
-              Test Alert
-            </button>
+          <div className="flex items-center justify-end border-t border-border px-4 py-2.5 bg-muted/20">
             <button
               onClick={() => {
                 setOpen(false);

@@ -59,10 +59,10 @@ export function LandingHeroSection() {
                 <Button
                   asChild
                   size="lg"
-                  className="h-12 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 px-7 font-extrabold shadow-md transition-all hover:scale-[1.02] active:scale-95 text-xs sm:text-sm"
+                  className="h-11 rounded-xl sm:rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 px-7 font-bold shadow-md shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 text-xs sm:text-sm cursor-pointer flex items-center gap-2"
                 >
                   <Link to="/auth">
-                    Sign In <ArrowRight className="size-4 ml-2" />
+                    Sign In <ArrowRight className="size-4" />
                   </Link>
                 </Button>
               </div>

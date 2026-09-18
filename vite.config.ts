@@ -41,6 +41,10 @@ export default defineConfig({
     },
   },
 
+  optimizeDeps: {
+    include: ["qrcode", "jsqr"],
+  },
+
   server: {
     host: true,
     port: 3000,

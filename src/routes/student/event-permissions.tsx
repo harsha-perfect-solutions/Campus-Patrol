@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { ToneBadge } from "@/components/status-badge";
 import { QRCode } from "@/components/qr-code";
 import { getMyEventPermissionsApi } from "@/lib/api/clubs.server";
+import { getOrCreateEventQRPassApi } from "@/lib/api/qr.server";
 import type { DBEventParticipant } from "@/lib/db/clubs.server";
 
 export const Route = createFileRoute("/student/event-permissions")({
@@ -32,6 +33,10 @@ function StudentEventPermissionsPage() {
   // Selected permission for QR Modal
   const [selectedPermForQR, setSelectedPermForQR] = useState<DBEventParticipant | null>(null);
   const [qrModalOpen, setQrModalOpen] = useState(false);
+
+  // Real QR token state for the modal
+  const [qrToken, setQrToken] = useState<string | null>(null);
+  const [qrTokenLoading, setQrTokenLoading] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -49,9 +54,38 @@ function StudentEventPermissionsPage() {
     loadData();
   }, [loadData]);
 
-  const handleOpenQR = (perm: DBEventParticipant) => {
+  const handleOpenQR = async (perm: DBEventParticipant) => {
     setSelectedPermForQR(perm);
+    setQrToken(null);
     setQrModalOpen(true);
+
+    // Fetch real CMADMS:QR:<hex> token for this event participant
+    setQrTokenLoading(true);
+    try {
+      const today = new Date().toISOString().split("T")[0]!;
+      const validFrom = perm.start_time
+        ? `${today}T${perm.start_time}:00+05:30`
+        : `${today}T08:00:00+05:30`;
+      const validUntil = perm.end_time
+        ? `${today}T${perm.end_time}:00+05:30`
+        : `${today}T20:00:00+05:30`;
+      const res = await getOrCreateEventQRPassApi({
+        data: {
+          eventParticipantId: perm.id,
+          validFrom,
+          validUntil,
+        },
+      });
+      if (res.success && res.qrToken) {
+        setQrToken(res.qrToken);
+      } else {
+        toast.error(res.error || "Failed to generate event QR pass.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to generate event QR pass.");
+    } finally {
+      setQrTokenLoading(false);
+    }
   };
 
   return (
@@ -168,7 +202,16 @@ function StudentEventPermissionsPage() {
             {selectedPermForQR && (
               <div className="space-y-4 text-center py-2">
                 <div className="bg-white p-4 rounded-2xl border border-border inline-block shadow-sm">
-                  <QRCode value={selectedPermForQR.permission_code} size={200} />
+                  {qrTokenLoading ? (
+                    <div
+                      className="rounded-xl bg-muted animate-pulse flex items-center justify-center text-[10px] text-muted-foreground"
+                      style={{ width: 216, height: 216 }}
+                    >
+                      Generating QR…
+                    </div>
+                  ) : (
+                    <QRCode value={qrToken || ""} size={200} />
+                  )}
                 </div>
 
                 <div className="space-y-1">
