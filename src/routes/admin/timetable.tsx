@@ -430,7 +430,7 @@ function AdminTimetableContent() {
             className="gap-2 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 rounded-xl px-4 sm:px-5 flex-1 sm:flex-initial text-xs sm:text-sm"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Add / Edit Time Table</span>
+            <span>Add / Edit Timetable</span>
           </Button>
         </div>
       </div>
@@ -857,7 +857,7 @@ function AdminTimetableContent() {
                               ) : (
                                 <div className="h-full w-full rounded-xl border border-dashed border-border/60 hover:border-primary/50 flex flex-col items-center justify-center text-muted-foreground/50 hover:text-primary transition-all p-2 text-center">
                                   <Plus className="w-4 h-4 mb-0.5 opacity-60" />
-                                  <span className="text-[10px] font-medium">+ Add</span>
+                                  <span className="text-[10px] font-medium">Add</span>
                                 </div>
                               )}
                             </td>

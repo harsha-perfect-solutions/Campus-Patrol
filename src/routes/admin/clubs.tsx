@@ -298,7 +298,7 @@ function AdminClubsPage() {
       <div className="space-y-6">
         <PageHeader
           title="Club Management"
-          description="Create and manage student clubs, assign faculty coordinators, and oversee member rosters."
+          description="Create and manage student clubs, assign faculty coordinators, and view members."
           actions={
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <Button
@@ -623,7 +623,7 @@ function AdminClubsPage() {
         <Dialog open={membersModalOpen} onOpenChange={setMembersModalOpen}>
           <DialogContent className="w-[95vw] sm:w-full sm:max-w-xl rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Roster Members — {selectedClubForMembers?.name}</DialogTitle>
+              <DialogTitle>Club Members — {selectedClubForMembers?.name}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-2">
               {loadingMembers ? (
@@ -633,7 +633,7 @@ function AdminClubsPage() {
                 </div>
               ) : clubMembersList.length === 0 ? (
                 <p className="text-center py-6 text-xs text-muted-foreground font-medium">
-                  No registered members found in this club roster.
+                  No members found in this club.
                 </p>
               ) : (
                 <div className="max-h-80 overflow-y-auto space-y-2">

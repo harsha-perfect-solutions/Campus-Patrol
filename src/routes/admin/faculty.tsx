@@ -393,12 +393,12 @@ function AdminFacultyPage() {
         {loading ? (
           <div className="card-surface p-12 rounded-2xl border border-border text-center text-xs text-muted-foreground space-y-2">
             <RefreshCw className="size-5 animate-spin mx-auto text-primary" />
-            <p>Loading faculty roster from PostgreSQL database...</p>
+            <p>Loading faculty list...</p>
           </div>
         ) : facultyList.length === 0 ? (
           <div className="card-surface p-12 rounded-2xl border border-border text-center text-xs text-muted-foreground space-y-2">
             <p className="font-semibold text-foreground">
-              No faculty members found matching search and filter criteria.
+              No faculty members found matching your search.
             </p>
             <div className="pt-2 flex justify-center gap-2">
               <Button

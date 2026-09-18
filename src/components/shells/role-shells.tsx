@@ -277,7 +277,7 @@ export function FacultyShell({ children }: { children: ReactNode }) {
             </span>
             <div>
               <p className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">CMADMS</p>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Faculty Portal</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Faculty &bull; NSS Coordinator</p>
             </div>
           </div>
           <Button variant="ghost" size="icon-sm" onClick={() => setMobileOpen(false)}>
@@ -321,7 +321,7 @@ export function FacultyShell({ children }: { children: ReactNode }) {
           </span>
           <div>
             <p className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">CMADMS</p>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Faculty Portal</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Faculty &bull; NSS Coordinator</p>
           </div>
         </div>
 
@@ -356,14 +356,6 @@ export function FacultyShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
           <div className="flex items-center gap-2 min-w-0">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="lg:hidden shrink-0"
-              onClick={() => setMobileOpen(true)}
-            >
-              <Menu className="size-5" />
-            </Button>
             <span className="text-xs font-bold text-foreground leading-snug">
               <span className="sm:hidden">Faculty Portal</span>
               <span className="hidden sm:inline">Faculty Portal &bull; Academic Oversight</span>
@@ -387,7 +379,7 @@ export function FacultyShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-20 lg:pb-8">
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-28 sm:pb-24 lg:pb-8">
           <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
@@ -624,14 +616,6 @@ export function HODShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
           <div className="flex items-center gap-2 min-w-0">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="lg:hidden shrink-0"
-              onClick={() => setMobileOpen(true)}
-            >
-              <Menu className="size-5" />
-            </Button>
             <span className="text-xs font-bold text-foreground leading-snug">
               <span className="sm:hidden">HOD Office &bull; {activeDept}</span>
               <span className="hidden sm:inline">HOD Office &bull; {activeDept} Department</span>
@@ -655,7 +639,7 @@ export function HODShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-20 lg:pb-8">
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-28 sm:pb-24 lg:pb-8">
           <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
@@ -901,14 +885,6 @@ export function StudentShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
           <div className="flex items-center gap-2 min-w-0">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="lg:hidden shrink-0"
-              onClick={() => setMobileOpen(true)}
-            >
-              <Menu className="size-5" />
-            </Button>
             <span className="text-xs font-bold text-foreground leading-snug">
               <span className="sm:hidden">Student Portal</span>
               <span className="hidden sm:inline">Student Portal {studentCode ? `• ${studentCode}` : ""}</span>
@@ -932,7 +908,7 @@ export function StudentShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-20 lg:pb-8">
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-28 sm:pb-24 lg:pb-8">
           <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
@@ -1180,14 +1156,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
           <div className="flex items-center gap-2 min-w-0">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="lg:hidden shrink-0"
-              onClick={() => setMobileOpen(true)}
-            >
-              <Menu className="size-5" />
-            </Button>
             <span className="text-xs font-bold text-foreground leading-snug">
               <span className="sm:hidden">Admin Console</span>
               <span className="hidden sm:inline">System Administration</span>
@@ -1211,7 +1179,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-20 lg:pb-8">
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-28 sm:pb-24 lg:pb-8">
           <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>
@@ -1437,14 +1405,6 @@ export function SecurityShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
           <div className="flex items-center gap-2 min-w-0">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="lg:hidden shrink-0"
-              onClick={() => setMobileOpen(true)}
-            >
-              <Menu className="size-5" />
-            </Button>
             <span className="text-xs font-bold text-foreground leading-snug">
               <span className="sm:hidden">Security Portal</span>
               <span className="hidden sm:inline">Security Portal ({staffCode})</span>
@@ -1468,7 +1428,7 @@ export function SecurityShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-20 lg:pb-8">
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-28 sm:pb-24 lg:pb-8">
           <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
         </main>
       </div>

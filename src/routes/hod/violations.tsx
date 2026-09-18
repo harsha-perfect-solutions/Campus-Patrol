@@ -468,49 +468,179 @@ function HODViolationsPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-muted/40 border-b border-border text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                  <tr>
-                    <th className="py-3.5 px-4">Case / Student</th>
-                    <th className="py-3.5 px-4">Severity</th>
-                    <th className="py-3.5 px-4">Recorded Class & Location</th>
-                    <th className="py-3.5 px-4">Reporter</th>
-                    <th className="py-3.5 px-4">Status</th>
-                    <th className="py-3.5 px-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-divider">
-                  {filteredReports.map((report) => {
-                    const isCritical =
-                      report.severity === "Critical" ||
-                      report.violation_type.toLowerCase().includes("violence");
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-muted/40 border-b border-border text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                    <tr>
+                      <th className="py-3.5 px-4">Case / Student</th>
+                      <th className="py-3.5 px-4">Severity</th>
+                      <th className="py-3.5 px-4">Recorded Class & Location</th>
+                      <th className="py-3.5 px-4">Reporter</th>
+                      <th className="py-3.5 px-4">Status</th>
+                      <th className="py-3.5 px-4 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-divider">
+                    {filteredReports.map((report) => {
+                      const isCritical =
+                        report.severity === "Critical" ||
+                        report.violation_type.toLowerCase().includes("violence");
 
-                    return (
-                      <tr
-                        key={report.id}
-                        className={cn(
-                          "transition-colors hover:bg-accent/40",
-                          isCritical && "bg-red-50/20 dark:bg-red-950/10",
-                        )}
-                      >
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-3">
-                            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-xs font-bold text-primary border border-primary/20">
-                              {report.student_name.slice(0, 2).toUpperCase()}
-                            </span>
-                            <div>
-                              <span className="font-bold text-foreground block text-sm">
-                                {report.student_name}
+                      return (
+                        <tr
+                          key={report.id}
+                          className={cn(
+                            "transition-colors hover:bg-accent/40",
+                            isCritical && "bg-red-50/20 dark:bg-red-950/10",
+                          )}
+                        >
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center gap-3">
+                              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-xs font-bold text-primary border border-primary/20">
+                                {report.student_name.slice(0, 2).toUpperCase()}
                               </span>
-                              <span className="text-[11px] font-semibold text-muted-foreground">
-                                #{report.id} • {report.student_code} • {report.year_section}
-                              </span>
+                              <div>
+                                <span className="font-bold text-foreground block text-sm">
+                                  {report.student_name}
+                                </span>
+                                <span className="text-[11px] font-semibold text-muted-foreground">
+                                  #{report.id} • {report.student_code} • {report.year_section}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="py-3.5 px-4">
+                          <td className="py-3.5 px-4">
+                            <span
+                              className={cn(
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold",
+                                report.severity === "Critical" && "bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300 border border-red-300",
+                                report.severity === "High" && "bg-orange-100 text-orange-700 dark:bg-orange-950/80 dark:text-orange-300",
+                                report.severity === "Medium" && "bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300",
+                                report.severity === "Low" && "bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300",
+                              )}
+                            >
+                              {report.severity === "Critical" && "🚨 "}
+                              {report.severity}
+                            </span>
+                          </td>
+
+                          <td className="py-3.5 px-4">
+                            <span className="font-semibold text-foreground block">
+                              {report.class_name} ({report.room})
+                            </span>
+                            <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <MapPin className="size-3" /> {report.location}
+                            </span>
+                          </td>
+
+                          <td className="py-3.5 px-4">
+                            <span className="font-semibold text-foreground block">
+                              {report.reported_by}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(report.created_at).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </td>
+
+                          <td className="py-3.5 px-4">
+                            {(() => {
+                              const isCounselorResolved =
+                                report.status === "resolved" &&
+                                (report.decision === "RESOLVED_BY_COUNSELOR" ||
+                                  (report as any).resolution_note ||
+                                  (report as any).counselor_remarks ||
+                                  !(report.decision === "exonerated" || report.decision === "warned" || report.decision === "escalated"));
+
+                              const isHodResolved =
+                                report.status === "resolved" &&
+                                (report.decision === "exonerated" || report.decision === "warned" || report.decision === "escalated");
+
+                              const isEscalatedToHod =
+                                report.status === "escalated" ||
+                                report.status === "escalated_to_hod" ||
+                                Boolean((report as any).escalation_reason);
+
+                              if (isCounselorResolved) {
+                                return (
+                                  <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
+                                    SOLVED BY COUNSELOR
+                                  </span>
+                                );
+                              }
+
+                              if (isHodResolved) {
+                                return (
+                                  <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
+                                    RESOLVED BY HOD
+                                  </span>
+                                );
+                              }
+
+                              if (isEscalatedToHod) {
+                                return (
+                                  <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-300 animate-pulse">
+                                    ESCALATED TO HOD
+                                  </span>
+                                );
+                              }
+
+                              return (
+                                <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300">
+                                  {report.status === "reported" ? "REPORTED" : report.status.replace("_", " ")}
+                                </span>
+                              );
+                            })()}
+                          </td>
+
+                          <td className="py-3.5 px-4 text-right">
+                            <Button
+                              asChild
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs font-semibold rounded-xl"
+                            >
+                              <Link to="/reports/$reportId" params={{ reportId: report.id }}>
+                                <Eye className="size-3.5 mr-1" /> Open Case
+                              </Link>
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="block md:hidden divide-y divide-border">
+                {filteredReports.map((report) => {
+                  const isCritical =
+                    report.severity === "Critical" ||
+                    report.violation_type.toLowerCase().includes("violence");
+
+                  return (
+                    <div
+                      key={report.id}
+                      className={cn(
+                        "p-4 space-y-3",
+                        isCritical && "bg-red-50/20 dark:bg-red-950/10",
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="font-mono text-xs font-bold text-primary">#{report.id}</span>
+                          <h4 className="text-sm font-bold text-foreground">{report.student_name}</h4>
+                          <p className="text-[11px] text-muted-foreground font-mono">{report.student_code} &bull; {report.year_section}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
                           <span
                             className={cn(
                               "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold",
@@ -523,107 +653,49 @@ function HODViolationsPage() {
                             {report.severity === "Critical" && ""}
                             {report.severity}
                           </span>
-                        </td>
+                        </div>
+                      </div>
 
-                        <td className="py-3.5 px-4">
-                          <span className="font-semibold text-foreground block">
-                            {report.class_name} ({report.room})
-                          </span>
-                          <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                            <MapPin className="size-3" /> {report.location}
-                          </span>
-                        </td>
+                      <div className="text-xs space-y-1 bg-muted/20 p-2.5 rounded-xl border border-border/50">
+                        <p className="text-foreground font-semibold">Violation: <span className="font-normal">{report.violation_type}</span></p>
+                        <p className="text-muted-foreground">Class: <span className="text-foreground">{report.class_name} ({report.room})</span></p>
+                        <p className="text-muted-foreground">Location: <span className="text-foreground">{report.location}</span></p>
+                        <p className="text-muted-foreground">Reported By: <span className="text-foreground">{report.reported_by}</span></p>
+                      </div>
 
-                        <td className="py-3.5 px-4">
-                          <span className="font-semibold text-foreground block">
-                            {report.reported_by}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {new Date(report.created_at).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        </td>
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <div>
+                          {report.status === "resolved" ? (
+                            <span className="inline-block px-2 py-0.5 rounded-lg text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
+                              Resolved
+                            </span>
+                          ) : report.status === "escalated" || report.status === "escalated_to_hod" ? (
+                            <span className="inline-block px-2 py-0.5 rounded-lg text-[10px] font-black uppercase bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-300">
+                              Escalated to HOD
+                            </span>
+                          ) : (
+                            <span className="inline-block px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300">
+                              {report.status.replace("_", " ")}
+                            </span>
+                          )}
+                        </div>
 
-                        <td className="py-3.5 px-4">
-                          {(() => {
-                            const isCounselorResolved =
-                              report.status === "resolved" &&
-                              (report.decision === "RESOLVED_BY_COUNSELOR" ||
-                                (report as any).resolution_note ||
-                                (report as any).counselor_remarks ||
-                                !(report.decision === "exonerated" || report.decision === "warned" || report.decision === "escalated"));
-
-                            const isHodResolved =
-                              report.status === "resolved" &&
-                              (report.decision === "exonerated" || report.decision === "warned" || report.decision === "escalated");
-
-                            const isEscalatedToHod =
-                              report.status === "escalated" ||
-                              report.status === "escalated_to_hod" ||
-                              Boolean((report as any).escalation_reason);
-
-                            if (isCounselorResolved) {
-                              return (
-                                <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
-                                  SOLVED BY COUNSELOR
-                                </span>
-                              );
-                            }
-
-                            if (isHodResolved) {
-                              return (
-                                <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
-                                  RESOLVED BY HOD
-                                </span>
-                              );
-                            }
-
-                            if (isEscalatedToHod) {
-                              return (
-                                <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-300">
-                                  ESCALATED TO HOD
-                                </span>
-                              );
-                            }
-
-                            if (report.status === "explanation_submitted") {
-                              return (
-                                <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300">
-                                  EXPLANATION SUBMITTED
-                                </span>
-                              );
-                            }
-
-                            return (
-                              <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300">
-                                {report.status === "reported" ? "REPORTED" : report.status.replace("_", " ")}
-                              </span>
-                            );
-                          })()}
-                        </td>
-
-                        <td className="py-3.5 px-4 text-right">
-                          <Button
-                            asChild
-                            size="sm"
-                            variant="outline"
-                            className="h-8 text-xs font-semibold rounded-xl"
-                          >
-                            <Link to="/reports/$reportId" params={{ reportId: report.id }}>
-                              <Eye className="size-3.5 mr-1" /> Open Case
-                            </Link>
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        <Button
+                          asChild
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs font-semibold rounded-xl"
+                        >
+                          <Link to="/reports/$reportId" params={{ reportId: report.id }}>
+                            <Eye className="size-3.5 mr-1" /> Open Case
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
 

@@ -7,6 +7,8 @@ import { useCmadms } from "@/lib/cmadms-store";
 
 import { RoleGuard } from "@/components/role-guard";
 
+import { ScanStudentIdButton } from "@/components/scan-student-id-button";
+
 export const Route = createFileRoute("/violations")({
   head: () => ({
     meta: [
@@ -44,13 +46,7 @@ function ViolationsPage() {
         title="Reported Violations"
         description="Every unauthorized movement case reported in your department."
         breadcrumb={[{ label: "Home", to: "/" }, { label: "Reporting" }, { label: "Violations" }]}
-        actions={
-          <Button asChild>
-            <Link to="/check">
-              <Search /> Check Student
-            </Link>
-          </Button>
-        }
+        actions={<ScanStudentIdButton to="/check" size="sm" />}
       />
 
       <div className="grid gap-4 sm:grid-cols-3">

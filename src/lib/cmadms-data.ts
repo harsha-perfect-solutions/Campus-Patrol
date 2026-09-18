@@ -148,6 +148,9 @@ export const faculty = {
   name: "Prof. Ravi Kumar",
   id: "FAC-CSE-114",
   role: "Faculty",
+  designation: "Assistant Professor & NSS Co-ordinator",
+  coordinatorRole: "NSS Co-ordinator",
+  club: "National Service Scheme (NSS)",
   department: "Computer Science & Engineering",
   initials: "RK",
 };

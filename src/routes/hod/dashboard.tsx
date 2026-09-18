@@ -1,9 +1,30 @@
 import { useState, useEffect } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { AlertTriangle, ShieldAlert, Building2 } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import {
+  AlertTriangle,
+  ShieldAlert,
+  Building2,
+  CheckCircle2,
+  Bell,
+  Send,
+  UserCheck,
+  ShieldCheck,
+  FileText,
+} from "lucide-react";
+import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -27,6 +48,7 @@ function HODDashboardPage() {
 function HODDashboardContent() {
   const { reports: storeReports } = useCmadms();
   const { profile } = useAuth();
+  const navigate = useNavigate();
 
   const userDept = profile?.department || "CSE";
   const [dbCases, setDbCases] = useState<Report[]>([]);
@@ -36,6 +58,16 @@ function HODDashboardContent() {
     underReview: 0,
     resolved: 0,
   });
+
+  const [advisoryModalOpen, setAdvisoryModalOpen] = useState(false);
+  const [counselorModalOpen, setCounselorModalOpen] = useState(false);
+  const [advisoryText, setAdvisoryText] = useState(
+    "All students in 3rd Year Section A are advised that unauthorized movement during lab and lecture hours is strictly monitored. Class counselors will conduct mandatory review sessions."
+  );
+  const [counselorNote, setCounselorNote] = useState(
+    "Please conduct an emergency counseling and attendance review session for 3rd Year Section A students due to elevated movement reports."
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -276,13 +308,8 @@ function HODDashboardContent() {
             <Button
               type="button"
               size="sm"
-              onClick={() => {
-                const toast = (window as any).toast || console.log;
-                toast.success("Section Advisory Issued!", {
-                  description: "Official HOD precautionary advisory sent to 3rd Year Sec A Class Counselor & Students.",
-                });
-              }}
-              className="rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs min-h-[44px] sm:min-h-0 w-full sm:w-auto"
+              onClick={() => setAdvisoryModalOpen(true)}
+              className="rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs min-h-[44px] sm:min-h-0 w-full sm:w-auto cursor-pointer"
             >
               Issue Precautionary Advisory Warning
             </Button>
@@ -291,26 +318,20 @@ function HODDashboardContent() {
               type="button"
               size="sm"
               variant="outline"
-              onClick={() => {
-                const toast = (window as any).toast || console.log;
-                toast.success("Counselor Precautionary Meeting Scheduled", {
-                  description: "Notification sent to assigned Class Counselor Prof. Ravi Kumar for student counseling session.",
-                });
-              }}
-              className="rounded-xl text-xs font-bold border-red-300 text-red-700 dark:text-red-300 hover:bg-red-100/50 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
+              onClick={() => setCounselorModalOpen(true)}
+              className="rounded-xl text-xs font-bold border-red-300 text-red-700 dark:text-red-300 hover:bg-red-100/50 min-h-[44px] sm:min-h-0 w-full sm:w-auto cursor-pointer bg-card"
             >
               Notify Counselor for Precautionary Counseling
             </Button>
 
             <Button
-              asChild
+              type="button"
               size="sm"
               variant="secondary"
-              className="rounded-xl text-xs font-bold"
+              onClick={() => navigate({ to: "/hod/violations" })}
+              className="rounded-xl text-xs font-bold cursor-pointer"
             >
-              <Link to="/hod/violations">
-                View Section A Violations &rarr;
-              </Link>
+              View Section A Violations &rarr;
             </Button>
           </div>
         </div>
@@ -398,6 +419,150 @@ function HODDashboardContent() {
           )}
         </div>
       </section>
+
+      {/* 1. Issue Precautionary Advisory Warning Dialog */}
+      <Dialog open={advisoryModalOpen} onOpenChange={setAdvisoryModalOpen}>
+        <DialogContent className="max-w-md rounded-2xl p-5 border-border bg-card">
+          <DialogHeader>
+            <div className="flex items-center gap-2.5">
+              <div className="size-9 rounded-xl bg-red-600 text-white flex items-center justify-center font-bold">
+                <AlertTriangle className="size-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-bold text-foreground">
+                  Issue Section Precautionary Advisory
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Broadcast HOD disciplinary advisory to 3rd Year Section A students &amp; counselors.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-red-900 dark:text-red-300">
+              <span className="font-bold block">Target Audience:</span>
+              3rd Year • Section A Students &amp; Assigned Counselor (Prof. Ravi Kumar)
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold">Advisory Message / Notice:</Label>
+              <Textarea
+                value={advisoryText}
+                onChange={(e) => setAdvisoryText(e.target.value)}
+                className="h-24 text-xs rounded-xl"
+                placeholder="Enter advisory details..."
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setAdvisoryModalOpen(false)}
+              className="rounded-xl text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                setIsSubmitting(true);
+                setTimeout(() => {
+                  setIsSubmitting(false);
+                  setAdvisoryModalOpen(false);
+                  toast.success("Precautionary Advisory Broadcasted!", {
+                    description: "Advisory notice dispatched to 3rd Year Sec A class counselor & student portal accounts.",
+                  });
+                }, 400);
+              }}
+              disabled={isSubmitting}
+              className="rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white gap-1.5"
+            >
+              <Send className="size-3.5" />
+              <span>{isSubmitting ? "Broadcasting..." : "Broadcast Official Advisory"}</span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 2. Notify Counselor for Precautionary Counseling Dialog */}
+      <Dialog open={counselorModalOpen} onOpenChange={setCounselorModalOpen}>
+        <DialogContent className="max-w-md rounded-2xl p-5 border-border bg-card">
+          <DialogHeader>
+            <div className="flex items-center gap-2.5">
+              <div className="size-9 rounded-xl bg-primary text-white flex items-center justify-center font-bold">
+                <UserCheck className="size-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-bold text-foreground">
+                  Request Precautionary Counseling
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Send immediate counseling and attendance review mandate to Class Counselor.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
+            <div className="p-3 rounded-xl bg-muted/50 border border-border">
+              <div className="flex items-center justify-between text-xs font-semibold">
+                <span className="text-muted-foreground">Assigned Counselor:</span>
+                <span className="text-foreground font-bold">Prof. Ravi Kumar</span>
+              </div>
+              <div className="flex items-center justify-between text-xs font-semibold mt-1">
+                <span className="text-muted-foreground">Class Section:</span>
+                <span className="text-foreground font-bold">3rd Year • Section A (CSE)</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold">Counselor Mandate / Instructions:</Label>
+              <Textarea
+                value={counselorNote}
+                onChange={(e) => setCounselorNote(e.target.value)}
+                className="h-24 text-xs rounded-xl"
+                placeholder="Enter counseling guidelines..."
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCounselorModalOpen(false)}
+              className="rounded-xl text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                setIsSubmitting(true);
+                setTimeout(() => {
+                  setIsSubmitting(false);
+                  setCounselorModalOpen(false);
+                  toast.success("Counseling Request Sent", {
+                    description: "Notification sent to Prof. Ravi Kumar.",
+                  });
+                }, 400);
+              }}
+              disabled={isSubmitting}
+              className="rounded-xl text-xs font-bold bg-primary text-primary-foreground gap-1.5 shadow-xs"
+            >
+              <Send className="size-3.5" />
+              <span>{isSubmitting ? "Sending..." : "Send Mandate to Counselor"}</span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

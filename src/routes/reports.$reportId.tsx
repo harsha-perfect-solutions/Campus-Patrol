@@ -34,6 +34,8 @@ import {
   escalateCounselorViolationApi,
 } from "@/lib/api/counselor.server";
 import type { Report, TimelineEvent } from "@/lib/cmadms-data";
+import { CaseReportTemplateModal } from "@/components/case-report-template-modal";
+import { printCaseReport, downloadCaseReportHtml } from "@/lib/case-report-template-html";
 
 function formatTimelineTime(dateStr?: string | null): string {
   if (!dateStr) return "Just now";
@@ -134,6 +136,7 @@ export function ReportDetail() {
   const [counselorEscalationReason, setCounselorEscalationReason] = useState("");
   const [counselorRemarksText, setCounselorRemarksText] = useState("");
   const [submittingCounselorAction, setSubmittingCounselorAction] = useState(false);
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
 
   const activeStoreReport = storeReports.find((r) => r.id === reportId);
   const report = dbReport || activeStoreReport;
@@ -492,13 +495,32 @@ export function ReportDetail() {
 
   const handleExportPDF = () => {
     try {
-      toast.dismiss();
-      setTimeout(() => {
-        window.print();
-      }, 100);
-    } catch (err) {
+      printCaseReport(report, {
+        generatedBy: profile?.full_name || "Faculty Portal",
+        portalSubtitle:
+          role === "faculty"
+            ? "Unauthorized Movement — Counselor Case Review & Actions"
+            : "Unauthorized Movement — Case Review & Academic Oversight",
+      });
+      toast.success(`Printing official Case Report ${report.id}...`);
+    } catch (err: any) {
       console.error("PDF export error:", err);
-      toast.error("Failed to launch PDF document print dialog.");
+      toast.error(err.message || "Failed to launch PDF document print dialog.");
+    }
+  };
+
+  const handleDownloadOfficialHtml = () => {
+    try {
+      downloadCaseReportHtml(report, {
+        generatedBy: profile?.full_name || "Faculty Portal",
+        portalSubtitle:
+          role === "faculty"
+            ? "Unauthorized Movement — Counselor Case Review & Actions"
+            : "Unauthorized Movement — Case Review & Academic Oversight",
+      });
+      toast.success(`Downloaded official report ${report.id}.html`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to download HTML file");
     }
   };
 
@@ -710,7 +732,7 @@ export function ReportDetail() {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 bg-card">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-xl border border-border px-4 py-3 bg-card">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <Paperclip className="size-4 text-primary shrink-0" />
                     <span className="truncate text-xs font-semibold text-foreground">
@@ -721,11 +743,11 @@ export function ReportDetail() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="rounded-xl text-xs h-9 px-3.5 font-semibold gap-1.5 border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-colors shadow-2xs shrink-0"
+                    className="rounded-xl text-xs h-9 px-3.5 font-semibold gap-1.5 border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-colors shadow-2xs w-full sm:w-auto shrink-0 justify-center"
                     onClick={() => handleDownloadEvidence(report.evidence!, report.id)}
                   >
                     <Download className="size-3.5" />
-                    <span>Download Faculty Evidence (.png)</span>
+                    <span>Download Faculty Evidence</span>
                   </Button>
                 </div>
               </div>
@@ -739,7 +761,7 @@ export function ReportDetail() {
             {report.explanation ? (
               <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/40 dark:bg-emerald-950/20 p-4 space-y-4">
                 <div>
-                  <div className="flex items-center justify-between border-b border-emerald-200/60 pb-2 mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-emerald-200/60 pb-2 mb-2 gap-1">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
                       Student Official Statement
                     </span>
@@ -756,7 +778,7 @@ export function ReportDetail() {
 
                 {report.evidence && (
                   <div className="pt-2 border-t border-emerald-200/60 space-y-2.5">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
                         <Paperclip className="size-3.5 text-primary" />
                         Student Supporting Evidence Attachment
@@ -765,7 +787,7 @@ export function ReportDetail() {
                         type="button"
                         size="sm"
                         variant="outline"
-                        className="h-7 text-xs font-bold rounded-lg border-primary/40 text-primary hover:bg-primary/10 gap-1.5"
+                        className="h-8 sm:h-7 text-xs font-bold rounded-lg border-primary/40 text-primary hover:bg-primary/10 gap-1.5 w-full sm:w-auto justify-center"
                         onClick={() => handleDownloadEvidence(report.evidence!, report.id)}
                       >
                         <Download className="size-3" /> Download Student Evidence
@@ -858,17 +880,17 @@ export function ReportDetail() {
                     type="button"
                     variant={counselorActionType === "resolve" ? "default" : "outline"}
                     onClick={() => setCounselorActionType("resolve")}
-                    className="w-full sm:flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs h-10 shadow-xs"
+                    className="w-full sm:flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs h-auto min-h-10 py-2.5 px-3 text-center shadow-xs"
                   >
-                    <CheckCircle2 className="size-4 mr-1.5" /> COUNSELOR FINAL DECISION
+                    <CheckCircle2 className="size-4 mr-1.5 shrink-0" /> COUNSELOR FINAL DECISION
                   </Button>
                   <Button
                     type="button"
                     variant={counselorActionType === "escalate" ? "default" : "outline"}
                     onClick={() => setCounselorActionType("escalate")}
-                    className="w-full sm:flex-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-10 shadow-xs"
+                    className="w-full sm:flex-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs h-auto min-h-10 py-2.5 px-3 text-center shadow-xs"
                   >
-                    <AlertTriangle className="size-4 mr-1.5" /> ESCALATE HIGH-SEVERITY ISSUE TO HOD
+                    <AlertTriangle className="size-4 mr-1.5 shrink-0" /> ESCALATE HIGH-SEVERITY TO HOD
                   </Button>
                 </div>
 
@@ -882,8 +904,8 @@ export function ReportDetail() {
                       className="h-20 text-xs rounded-xl"
                     />
                     <div className="flex justify-end gap-2">
-                      <Button type="submit" disabled={submittingCounselorAction} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl">
-                        {submittingCounselorAction ? "Executing..." : "Confirm & Submit Counselor Final Decision"}
+                      <Button type="submit" disabled={submittingCounselorAction} className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl h-9">
+                        {submittingCounselorAction ? "Executing..." : "Confirm & Submit Decision"}
                       </Button>
                     </div>
                   </form>
@@ -906,7 +928,7 @@ export function ReportDetail() {
                       className="h-16 text-xs rounded-xl"
                     />
                     <div className="flex justify-end gap-2">
-                      <Button type="submit" disabled={submittingCounselorAction} className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl">
+                      <Button type="submit" disabled={submittingCounselorAction} className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl h-9">
                         {submittingCounselorAction ? "Escalating to HOD..." : "Confirm & Escalate to HOD"}
                       </Button>
                     </div>
@@ -1067,6 +1089,13 @@ export function ReportDetail() {
           </Section>
         </aside>
       </div>
+
+      {/* Official Case Report Template Preview & Export Modal */}
+      <CaseReportTemplateModal
+        open={templateModalOpen}
+        onOpenChange={setTemplateModalOpen}
+        defaultReport={report}
+      />
     </div>
   );
 }

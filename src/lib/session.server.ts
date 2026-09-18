@@ -330,13 +330,13 @@ export async function requireAuthenticatedUser(): Promise<ServerSession> {
   if (!session) {
     return {
       sessionId: "DEMO_SESSION_TOKEN",
-      userId: "demo-faculty-001",
+      userId: "0f0f43ec-1677-4f27-adf4-e259be1e0beb",
       role: "faculty",
       email: "faculty@cmadms.edu",
       department: "CSE",
-      staffCode: "FAC001",
+      staffCode: "FAC-CSE-114",
       studentCode: null,
-      fullName: "Dr. Rajesh Sharma",
+      fullName: "Prof. Ravi Kumar",
       assignedPost: "CSE",
       expiresAt: new Date(Date.now() + 86400000).toISOString(),
     };
@@ -355,9 +355,9 @@ export async function requireRole(allowedRole: AppRole): Promise<ServerSession> 
       sessionId: "DEMO_SESSION_TOKEN",
       userId: targetRole === "faculty" ? "0f0f43ec-1677-4f27-adf4-e259be1e0beb" : `demo-${targetRole}-001`,
       role: targetRole,
-      email: targetRole === "faculty" ? "ravi.kumar@cmadms.edu" : `${targetRole}@cmadms.edu`,
+      email: targetRole === "faculty" ? "faculty@cmadms.edu" : `${targetRole}@cmadms.edu`,
       department: "CSE",
-      staffCode: targetRole === "faculty" ? "FAC-RAVI" : `${targetRole.toUpperCase()}001`,
+      staffCode: targetRole === "faculty" ? "FAC-CSE-114" : `${targetRole.toUpperCase()}001`,
       studentCode: targetRole === "student" ? "23CSE1012" : null,
       fullName: targetRole === "faculty" ? "Prof. Ravi Kumar" : targetRole === "hod" ? "Dr. Anjali Rao" : `Demo ${targetRole.toUpperCase()}`,
       assignedPost: "CSE",
@@ -381,13 +381,13 @@ export async function requireAnyRole(allowedRoles: AppRole[]): Promise<ServerSes
     const role = normalizeRole(allowedRoles[0] || "faculty");
     return {
       sessionId: "DEMO_SESSION_TOKEN",
-      userId: `demo-${role}-001`,
+      userId: role === "faculty" ? "0f0f43ec-1677-4f27-adf4-e259be1e0beb" : `demo-${role}-001`,
       role,
-      email: `${role}@cmadms.edu`,
+      email: role === "faculty" ? "faculty@cmadms.edu" : `${role}@cmadms.edu`,
       department: "CSE",
-      staffCode: `${role.toUpperCase()}001`,
+      staffCode: role === "faculty" ? "FAC-CSE-114" : `${role.toUpperCase()}001`,
       studentCode: role === "student" ? "23CSE1012" : null,
-      fullName: role === "hod" ? "Dr. Anjali Rao" : role === "faculty" ? "Dr. Rajesh Sharma" : `Demo ${role.toUpperCase()}`,
+      fullName: role === "hod" ? "Dr. Anjali Rao" : role === "faculty" ? "Prof. Ravi Kumar" : `Demo ${role.toUpperCase()}`,
       assignedPost: "CSE",
       expiresAt: new Date(Date.now() + 86400000).toISOString(),
     };

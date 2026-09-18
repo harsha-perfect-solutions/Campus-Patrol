@@ -13,6 +13,8 @@ import {
   Calendar,
   Ticket,
   RefreshCw,
+  Download,
+  Printer,
 } from "lucide-react";
 import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
@@ -22,6 +24,8 @@ import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
 import { getMyCoordinatedClubsApi } from "@/lib/api/clubs.server";
 import type { DBClub } from "@/lib/db/clubs.server";
+import { CaseReportTemplateModal } from "@/components/case-report-template-modal";
+import { ScanStudentIdButton } from "@/components/scan-student-id-button";
 
 export const Route = createFileRoute("/faculty/dashboard")({
   head: () => ({ meta: [{ title: "Faculty Dashboard — CMADMS" }] }),
@@ -42,6 +46,7 @@ function FacultyDashboardContent() {
 
   const [myClubs, setMyClubs] = useState<DBClub[]>([]);
   const [loadingClubs, setLoadingClubs] = useState(true);
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
 
   useEffect(() => {
     getMyCoordinatedClubsApi()
@@ -62,11 +67,20 @@ function FacultyDashboardContent() {
         description="Faculty Discipline & Student Movement Authorization Workspace."
         breadcrumb={[{ label: "Faculty", to: "/faculty/dashboard" }, { label: "Dashboard" }]}
         actions={
-          <Button asChild size="default" className="w-full sm:w-auto rounded-xl font-semibold shadow-xs">
-            <Link to="/faculty/check">
-              <UserSearch className="size-4 mr-2" /> Check Student Roll No
-            </Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              size="default"
+              onClick={() => setTemplateModalOpen(true)}
+              className="w-full sm:w-auto rounded-xl font-semibold gap-1.5 shadow-2xs h-11"
+            >
+              <Download className="size-4 text-primary" />
+              <span>Download Report Template</span>
+            </Button>
+
+            <ScanStudentIdButton to="/faculty/check" className="w-full sm:w-auto" />
+          </div>
         }
       />
 
@@ -149,7 +163,7 @@ function FacultyDashboardContent() {
                 <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
                   <Button size="sm" variant="outline" asChild className="font-semibold text-xs h-8 flex-1 sm:flex-initial">
                     <Link to="/faculty/clubs" search={{ tab: "members" }}>
-                      <Users className="size-3 mr-1" /> Roster
+                      <Users className="size-3 mr-1" /> Members
                     </Link>
                   </Button>
                   <Button size="sm" variant="outline" asChild className="font-semibold text-xs h-8 flex-1 sm:flex-initial">
@@ -254,6 +268,13 @@ function FacultyDashboardContent() {
           ))}
         </div>
       </section>
+
+      {/* Case Report Template Preview & Export Modal */}
+      <CaseReportTemplateModal
+        open={templateModalOpen}
+        onOpenChange={setTemplateModalOpen}
+        reports={reports}
+      />
     </div>
   );
 }

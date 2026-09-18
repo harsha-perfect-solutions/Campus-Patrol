@@ -445,7 +445,7 @@ function AdminRoomsPage() {
                   className="gap-2 font-bold text-xs rounded-xl border-primary/40 hover:bg-primary/5 flex-1 sm:flex-initial"
                 >
                   <Plus className="w-4 h-4 text-primary" />
-                  <span>+ Add Academic Building</span>
+                  <span>Add Building</span>
                 </Button>
 
                 <Button
@@ -453,7 +453,7 @@ function AdminRoomsPage() {
                   className="gap-2 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 rounded-xl px-4 flex-1 sm:flex-initial text-xs"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>+ Add Room to Building</span>
+                  <span>Add Room</span>
                 </Button>
               </>
             ) : (
@@ -462,7 +462,7 @@ function AdminRoomsPage() {
                 className="gap-2 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 rounded-xl px-4 sm:px-5 w-full sm:w-auto text-xs"
               >
                 <Plus className="w-4 h-4" />
-                <span>+ Add Campus Roaming Location</span>
+                <span>Add Roaming Location</span>
               </Button>
             )}
           </div>
@@ -670,7 +670,7 @@ function AdminRoomsPage() {
                       className="gap-2 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 rounded-xl px-4 shrink-0"
                     >
                       <Plus className="w-4 h-4" />
-                      <span>+ Add Room to {selectedBuilding.split(" ")[0]}</span>
+                      <span>Add Room to {selectedBuilding.split(" ")[0]}</span>
                     </Button>
                   </div>
 
@@ -781,7 +781,7 @@ function AdminRoomsPage() {
                       onClick={() => handleOpenAddRoom(selectedBuilding)}
                       className="font-bold text-xs rounded-xl gap-2 mt-2"
                     >
-                      <Plus className="w-4 h-4" /> + Add First Room to {selectedBuilding}
+                      <Plus className="w-4 h-4" /> Add First Room to {selectedBuilding}
                     </Button>
                   </div>
                 ) : (

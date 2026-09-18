@@ -1,6 +1,26 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Bell, Moon, ShieldCheck, Sun, UserRound, KeyRound } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Bell,
+  Moon,
+  ShieldCheck,
+  Sun,
+  User,
+  KeyRound,
+  Award,
+  CheckCircle2,
+  ChevronRight,
+  Mail,
+  Building2,
+  Shield,
+  GraduationCap,
+  Sparkles,
+  Smartphone,
+  Lock,
+  BadgeCheck,
+  Laptop,
+  IdCard,
+} from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -12,6 +32,7 @@ import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
 import { RoleGuard } from "@/components/role-guard";
 import { ChangePasswordDialog } from "@/components/change-password-dialog";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -19,10 +40,8 @@ export const Route = createFileRoute("/settings")({
       { title: "Settings — CMADMS" },
       {
         name: "description",
-        content: "Manage your faculty profile, appearance and notification preferences in CMADMS.",
+        content: "Manage your profile, security, appearance, and notification preferences.",
       },
-      { property: "og:title", content: "Settings — CMADMS" },
-      { property: "og:description", content: "Profile, appearance and notification preferences." },
     ],
   }),
   component: ProtectedSettingsPage,
@@ -36,29 +55,38 @@ function ProtectedSettingsPage() {
   );
 }
 
-function Card({
+function SettingsSection({
   title,
   icon: Icon,
   description,
+  badge,
   children,
 }: {
   title: string;
-  icon: typeof UserRound;
+  icon: typeof User;
   description: string;
+  badge?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="card-surface">
-      <div className="flex items-start gap-3 border-b border-divider px-5 py-4">
-        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent text-primary">
-          <Icon className="size-[18px]" aria-hidden />
-        </span>
-        <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-          <p className="text-xs text-muted-foreground">{description}</p>
+    <section className="card-surface rounded-2xl border border-border overflow-hidden shadow-xs">
+      <div className="flex items-center justify-between border-b border-divider px-4 py-3.5 sm:px-5 sm:py-4 bg-muted/20">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="grid size-8 sm:size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+            <Icon className="size-4" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold text-foreground truncate">{title}</h2>
+            <p className="text-[11px] text-muted-foreground truncate">{description}</p>
+          </div>
         </div>
+        {badge && (
+          <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
+            {badge}
+          </span>
+        )}
       </div>
-      <div className="space-y-4 p-5">{children}</div>
+      <div className="p-4 sm:p-5 space-y-4">{children}</div>
     </section>
   );
 }
@@ -68,50 +96,219 @@ export function SettingsPage() {
   const { profile, role } = useAuth();
   const [changePassOpen, setChangePassOpen] = useState(false);
 
-  const fullName = profile?.full_name || faculty.name;
-  const staffCode = profile?.staff_code || faculty.id;
-  const dept = profile?.department || faculty.department;
-  const roleTitle = (role || "faculty").toUpperCase();
+  // Form states
+  const fullName = profile?.full_name || (role === "admin" ? "System Administrator" : role === "student" ? "Ashok Dora" : faculty.name);
+  const userCode = profile?.staff_code || profile?.student_code || (role === "admin" ? "ADM-001" : role === "student" ? "23CSE1012" : faculty.id);
+  const email = profile?.email || `${(userCode || "user").toLowerCase()}@campusguard.edu`;
+  const dept = profile?.department || faculty.department || "General";
+  const post = profile?.assigned_post || "Main Campus Gate #1";
+
+  const isFacultyRole = role === "faculty";
+  const isHodRole = role === "hod";
+  const isStudentRole = role === "student";
+  const isSecurityRole = role === "security";
+  const isAdminRole = role === "admin";
+
+  const roleDisplayTitle =
+    role === "admin"
+      ? "System Administrator"
+      : role === "hod"
+      ? `HOD — ${dept}`
+      : role === "faculty"
+      ? "Faculty & NSS Coordinator"
+      : role === "security"
+      ? "Security Guard"
+      : "Student";
+
+  const coordinatorRole = faculty.coordinatorRole || "NSS Co-ordinator";
+  const clubName = faculty.club || "National Service Scheme (NSS)";
 
   return (
-    <>
+    <div className="space-y-6">
       <PageHeader
         title="Account Profile & Settings"
-        description="Manage your staff profile, appearance and notification preferences."
+        description="Manage your institutional profile, appearance, security, and alert preferences."
         breadcrumb={[{ label: "Home", to: "/" }, { label: "System" }, { label: "Settings" }]}
       />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card title={`${roleTitle} Profile`} icon={UserRound} description="Your CMADMS official identity">
-          <div>
-            <Label htmlFor="name">Full name</Label>
-            <Input id="name" defaultValue={fullName} className="mt-1.5 h-11 font-semibold" />
+      {/* Role Profile Hero Banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-card p-4 sm:p-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 sm:gap-4">
+            <div className="grid size-12 sm:size-14 shrink-0 place-items-center rounded-2xl bg-primary text-white font-extrabold text-base sm:text-lg shadow-sm">
+              {fullName
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase()}
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-base sm:text-lg font-bold text-foreground">{fullName}</h3>
+                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25 uppercase tracking-wider">
+                  <BadgeCheck className="size-3" />
+                  {roleDisplayTitle}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+                {userCode} &bull; {email}
+              </p>
+            </div>
           </div>
-          <div>
-            <Label htmlFor="fid">Staff / User Code</Label>
-            <Input id="fid" defaultValue={staffCode} readOnly className="mt-1.5 h-11 font-mono font-bold" />
-            <p className="mt-1 text-xs text-subtle-foreground">
-              Official staff credentials are issued by Administration.
-            </p>
-          </div>
-          <div>
-            <Label htmlFor="dept">Department</Label>
-            <Input id="dept" defaultValue={dept} className="mt-1.5 h-11 font-semibold" />
-          </div>
-          <Button onClick={() => toast.success("Profile preferences updated successfully.")}>Save Profile Changes</Button>
-        </Card>
 
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setChangePassOpen(true)}
+              className="rounded-xl text-xs font-semibold gap-1.5 bg-card/80 shadow-2xs h-9"
+            >
+              <KeyRound className="size-3.5 text-primary" />
+              <span>Change Password</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Profile Details Section */}
+        <SettingsSection
+          title="Official Identity"
+          icon={User}
+          description="Verified academic credentials & profile details"
+          badge={role?.toUpperCase() || "STAFF"}
+        >
+          <div className="space-y-3.5">
+            <div>
+              <Label htmlFor="name" className="text-xs font-semibold text-foreground">
+                Full Name
+              </Label>
+              <div className="relative mt-1">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                <Input
+                  id="name"
+                  defaultValue={fullName}
+                  className="pl-9 h-10 text-xs font-semibold rounded-xl bg-muted/20 border-border"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="uid" className="text-xs font-semibold text-foreground">
+                  {isStudentRole ? "Roll Number" : "Staff / User Code"}
+                </Label>
+                <div className="relative mt-1">
+                  <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                  <Input
+                    id="uid"
+                    defaultValue={userCode}
+                    readOnly
+                    className="pl-9 h-10 text-xs font-mono font-bold rounded-xl bg-muted/50 border-border cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="dept" className="text-xs font-semibold text-foreground">
+                  Department
+                </Label>
+                <div className="relative mt-1">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                  <Input
+                    id="dept"
+                    defaultValue={dept}
+                    className="pl-9 h-10 text-xs font-semibold rounded-xl bg-muted/20 border-border"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="email" className="text-xs font-semibold text-foreground">
+                Institutional Email
+              </Label>
+              <div className="relative mt-1">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                <Input
+                  id="email"
+                  defaultValue={email}
+                  readOnly
+                  className="pl-9 h-10 text-xs font-mono rounded-xl bg-muted/50 border-border cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            {isSecurityRole && (
+              <div>
+                <Label htmlFor="post" className="text-xs font-semibold text-foreground">
+                  Assigned Security Checkpoint
+                </Label>
+                <div className="relative mt-1">
+                  <Shield className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                  <Input
+                    id="post"
+                    defaultValue={post}
+                    className="pl-9 h-10 text-xs font-semibold rounded-xl bg-muted/20 border-border"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Special Faculty Coordinator Badge */}
+            {(isFacultyRole || isHodRole) && (
+              <div className="rounded-xl border border-primary/25 bg-primary/5 p-3.5 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Award className="size-4 text-primary shrink-0" />
+                    <span className="text-xs font-bold text-foreground">Co-ordinator Role</span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25">
+                    <CheckCircle2 className="size-3" /> {coordinatorRole}
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Assigned to <strong className="text-foreground">{clubName}</strong> for student attendance permissions and volunteer management.
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  asChild
+                  className="h-8 text-xs font-semibold w-full justify-between bg-card hover:bg-accent border-primary/20 rounded-lg mt-1"
+                >
+                  <Link to="/faculty/clubs" search={{ tab: "members" }}>
+                    <span>Manage Club Events & Permissions</span>
+                    <ChevronRight className="size-3.5 ml-1" />
+                  </Link>
+                </Button>
+              </div>
+            )}
+
+            <Button
+              type="button"
+              onClick={() => toast.success("Profile preferences updated successfully.")}
+              className="w-full sm:w-auto rounded-xl text-xs font-bold bg-primary text-primary-foreground h-9 shadow-xs"
+            >
+              Save Profile Changes
+            </Button>
+          </div>
+        </SettingsSection>
+
+        {/* Right Column: Preferences & Security */}
         <div className="space-y-6">
-          <Card
-            title="Appearance"
+          {/* Appearance Preference */}
+          <SettingsSection
+            title="Appearance & Theme"
             icon={theme === "dark" ? Moon : Sun}
-            description="Theme preference"
+            description="Interface color mode preference"
           >
-            <div className="flex items-center justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground">Dark mode</p>
-                <p className="text-xs text-muted-foreground">
-                  Reduce glare during evening invigilation duty.
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold text-foreground">Dark Mode</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Reduce eye strain during evening rounds or low-light campus shifts.
                 </p>
               </div>
               <Switch
@@ -120,58 +317,115 @@ export function SettingsPage() {
                 aria-label="Toggle dark mode"
               />
             </div>
-          </Card>
+          </SettingsSection>
 
-          <Card title="Notifications" icon={Bell} description="Choose what you get alerted about">
-            {[
-              ["Case status updates", "When a case you filed changes status"],
-              ["Student explanations", "When a student responds to your report"],
-              ["Escalations", "When a case is escalated to the HOD"],
-            ].map(([t, d], i) => (
-              <div key={t} className="flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground">{t}</p>
-                  <p className="text-xs text-muted-foreground">{d}</p>
-                </div>
-                <Switch defaultChecked={i !== 2} aria-label={t} />
-              </div>
-            ))}
-          </Card>
-
-          <Card
-            title="Security & Password"
-            icon={KeyRound}
-            description="Manage your account password and security settings"
+          {/* Role-tailored Notifications Preferences */}
+          <SettingsSection
+            title="Notification Alerts"
+            icon={Bell}
+            description="Control real-time push and email notifications"
           >
-            <div className="flex items-center justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground">Change Password</p>
-                <p className="text-xs text-muted-foreground">
-                  Update your password regularly to maintain account security.
-                </p>
+            <div className="space-y-3 divide-y divide-border/60">
+              {isStudentRole ? (
+                <>
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Disciplinary Incident Reports</p>
+                      <p className="text-[11px] text-muted-foreground">Immediate alerts when reported outside class</p>
+                    </div>
+                    <Switch defaultChecked aria-label="Incident alerts" />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 pt-3">
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Movement Pass Approvals</p>
+                      <p className="text-[11px] text-muted-foreground">Notifications when your out-pass is approved by HOD</p>
+                    </div>
+                    <Switch defaultChecked aria-label="Pass approval alerts" />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 pt-3">
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Club & Event Permissions</p>
+                      <p className="text-[11px] text-muted-foreground">Updates on duty leave & event participation</p>
+                    </div>
+                    <Switch defaultChecked aria-label="Club alerts" />
+                  </div>
+                </>
+              ) : isSecurityRole ? (
+                <>
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Gate Clearance Approvals</p>
+                      <p className="text-[11px] text-muted-foreground">Real-time alerts when students are authorized for exit</p>
+                    </div>
+                    <Switch defaultChecked aria-label="Gate alerts" />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 pt-3">
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Emergency Security Alarms</p>
+                      <p className="text-[11px] text-muted-foreground">High-priority siren sound and visual banner</p>
+                    </div>
+                    <Switch defaultChecked aria-label="Emergency alerts" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Case Status & Explanations</p>
+                      <p className="text-[11px] text-muted-foreground">When a student submits an explanation statement</p>
+                    </div>
+                    <Switch defaultChecked aria-label="Explanation alerts" />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 pt-3">
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Department Escalations</p>
+                      <p className="text-[11px] text-muted-foreground">When high-severity incidents require HOD review</p>
+                    </div>
+                    <Switch defaultChecked aria-label="Escalation alerts" />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 pt-3">
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Pass Approval Requests</p>
+                      <p className="text-[11px] text-muted-foreground">New student out-pass requests awaiting authorization</p>
+                    </div>
+                    <Switch defaultChecked aria-label="Pass requests alerts" />
+                  </div>
+                </>
+              )}
+            </div>
+          </SettingsSection>
+
+          {/* Account Security Card */}
+          <SettingsSection
+            title="Account Security"
+            icon={KeyRound}
+            description="Manage authentication & access credentials"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-border bg-muted/20">
+              <div className="flex items-center gap-2.5">
+                <Lock className="size-4 text-primary shrink-0" />
+                <div>
+                  <p className="text-xs font-bold text-foreground">Password Authentication</p>
+                  <p className="text-[11px] text-muted-foreground">Last updated recently</p>
+                </div>
               </div>
-              <Button onClick={() => setChangePassOpen(true)} variant="outline" className="shrink-0 gap-2">
-                <KeyRound className="size-4 text-cyan-500" />
-                Change Password
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setChangePassOpen(true)}
+                className="rounded-xl text-xs font-semibold gap-1.5 bg-card hover:bg-accent border-border"
+              >
+                <KeyRound className="size-3.5 text-primary" />
+                <span>Update Password</span>
               </Button>
             </div>
-          </Card>
-
-          <Card
-            title="Verification Policy"
-            icon={ShieldCheck}
-            description="How CMADMS handles your reports"
-          >
-            <p className="text-sm text-muted-foreground">
-              Reports are visible to the department head and the reported student. Violations can
-              only be filed when a scheduled class exists and no active movement permission is
-              found.
-            </p>
-          </Card>
+          </SettingsSection>
         </div>
       </div>
 
       <ChangePasswordDialog open={changePassOpen} onOpenChange={setChangePassOpen} />
-    </>
+    </div>
   );
 }
+
