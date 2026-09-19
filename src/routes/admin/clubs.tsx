@@ -13,6 +13,15 @@ import {
   Power,
   X,
   UserMinus,
+  Calendar,
+  Clock,
+  MapPin,
+  CheckCircle2,
+  Ticket,
+  Sparkles,
+  ChevronRight,
+  ArrowLeft,
+  Activity,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
@@ -46,8 +55,16 @@ import {
   assignClubCoordinatorApi,
   removeClubCoordinatorApi,
   getClubMembersApi,
+  getClubEventsApi,
+  getEventParticipantsApi,
 } from "@/lib/api/clubs.server";
-import type { DBClub, DBClubCoordinator, DBClubMember } from "@/lib/db/clubs.server";
+import type {
+  DBClub,
+  DBClubCoordinator,
+  DBClubMember,
+  DBClubEvent,
+  DBEventParticipantReportItem,
+} from "@/lib/db/clubs.server";
 
 export const Route = createFileRoute("/admin/clubs")({
   head: () => ({ meta: [{ title: "Club Management — Admin Console" }] }),
@@ -56,6 +73,8 @@ export const Route = createFileRoute("/admin/clubs")({
 
 type DetailedClub = DBClub & {
   member_count: number;
+  event_count?: number;
+  total_attendees?: number;
   coordinators: DBClubCoordinator[];
 };
 
@@ -102,6 +121,19 @@ function AdminClubsPage() {
   const [selectedClubForMembers, setSelectedClubForMembers] = useState<DetailedClub | null>(null);
   const [clubMembersList, setClubMembersList] = useState<DBClubMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
+
+  // Events & Attendance Modal State
+  const [eventsModalOpen, setEventsModalOpen] = useState(false);
+  const [selectedClubForEvents, setSelectedClubForEvents] = useState<DetailedClub | null>(null);
+  const [clubEventsList, setClubEventsList] = useState<DBClubEvent[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+  const [eventSearchQuery, setEventSearchQuery] = useState("");
+
+  // Event Attendees Drilldown State
+  const [selectedEventForAttendees, setSelectedEventForAttendees] = useState<DBClubEvent | null>(null);
+  const [eventAttendeesList, setEventAttendeesList] = useState<DBEventParticipantReportItem[]>([]);
+  const [loadingAttendees, setLoadingAttendees] = useState(false);
+  const [attendeeSearchQuery, setAttendeeSearchQuery] = useState("");
 
   const fetchFacultyList = async () => {
     try {
@@ -291,7 +323,64 @@ function AdminClubsPage() {
     }
   };
 
+  // Handlers for Viewing Events & Attendance
+  const handleOpenEventsModal = async (club: DetailedClub) => {
+    setSelectedClubForEvents(club);
+    setSelectedEventForAttendees(null);
+    setEventSearchQuery("");
+    setEventsModalOpen(true);
+    setLoadingEvents(true);
+    try {
+      const events = await getClubEventsApi({ data: { clubId: club.club_id } });
+      setClubEventsList(events);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to load club events");
+    } finally {
+      setLoadingEvents(false);
+    }
+  };
+
+  const handleOpenAttendees = async (event: DBClubEvent) => {
+    setSelectedEventForAttendees(event);
+    setAttendeeSearchQuery("");
+    setLoadingAttendees(true);
+    try {
+      const attendees = await getEventParticipantsApi({ data: { eventId: event.event_id } });
+      setEventAttendeesList(attendees);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to load event attendees");
+    } finally {
+      setLoadingAttendees(false);
+    }
+  };
+
+  const filteredEvents = useMemo(() => {
+    if (!eventSearchQuery.trim()) return clubEventsList;
+    const q = eventSearchQuery.toLowerCase();
+    return clubEventsList.filter(
+      (e) =>
+        e.event_name.toLowerCase().includes(q) ||
+        (e.location && e.location.toLowerCase().includes(q)) ||
+        (e.coordinator_name && e.coordinator_name.toLowerCase().includes(q)) ||
+        e.event_type.toLowerCase().includes(q)
+    );
+  }, [clubEventsList, eventSearchQuery]);
+
+  const filteredAttendees = useMemo(() => {
+    if (!attendeeSearchQuery.trim()) return eventAttendeesList;
+    const q = attendeeSearchQuery.toLowerCase();
+    return eventAttendeesList.filter(
+      (a) =>
+        a.student_name.toLowerCase().includes(q) ||
+        a.student_code.toLowerCase().includes(q) ||
+        a.permission_code.toLowerCase().includes(q) ||
+        a.department.toLowerCase().includes(q)
+    );
+  }, [eventAttendeesList, attendeeSearchQuery]);
+
   const activeCount = useMemo(() => clubs.filter((c) => c.status === "ACTIVE").length, [clubs]);
+  const totalEventsConducted = useMemo(() => clubs.reduce((acc, c) => acc + (c.event_count || 0), 0), [clubs]);
+  const totalAttendeesCount = useMemo(() => clubs.reduce((acc, c) => acc + (c.total_attendees || 0), 0), [clubs]);
 
   return (
     <RoleGuard allowedRoles={["admin"]}>
@@ -320,7 +409,7 @@ function AdminClubsPage() {
         />
 
         {/* Overview Stat Cards */}
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
             <div className="flex items-center gap-3">
               <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
@@ -351,9 +440,37 @@ function AdminClubsPage() {
                 <UserCheck className="size-5" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-muted-foreground">Faculty Coordinators</p>
+                <p className="text-xs font-semibold text-muted-foreground">Coordinators</p>
                 <p className="text-xl sm:text-2xl font-black text-foreground">
                   {clubs.reduce((acc, c) => acc + c.coordinators.length, 0)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-amber-500/10 p-2.5 text-amber-600 dark:text-amber-400">
+                <Calendar className="size-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground">Events Conducted</p>
+                <p className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">
+                  {totalEventsConducted}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-xs col-span-2 sm:col-span-1">
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-purple-500/10 p-2.5 text-purple-600 dark:text-purple-400">
+                <Sparkles className="size-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground">Event Attendees</p>
+                <p className="text-xl sm:text-2xl font-black text-purple-600 dark:text-purple-400">
+                  {totalAttendeesCount}
                 </p>
               </div>
             </div>
@@ -413,6 +530,22 @@ function AdminClubsPage() {
                     {club.description || "No description provided."}
                   </p>
 
+                  {/* Club Metrics Bar: Members, Events Conducted, Attendees */}
+                  <div className="grid grid-cols-3 gap-1.5 py-2 px-2.5 rounded-xl bg-muted/40 border border-border text-center">
+                    <div>
+                      <p className="text-sm font-extrabold text-foreground tabular-nums">{club.member_count}</p>
+                      <p className="text-[10px] text-muted-foreground font-semibold">Members</p>
+                    </div>
+                    <div className="border-x border-border/80">
+                      <p className="text-sm font-extrabold text-primary tabular-nums">{club.event_count || 0}</p>
+                      <p className="text-[10px] text-muted-foreground font-semibold">Events</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums">{club.total_attendees || 0}</p>
+                      <p className="text-[10px] text-muted-foreground font-semibold">Attended</p>
+                    </div>
+                  </div>
+
                   {/* Coordinators Section */}
                   <div className="space-y-1.5 pt-2 border-t border-border">
                     <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
@@ -444,8 +577,17 @@ function AdminClubsPage() {
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-border flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1">
+                <div className="pt-3 border-t border-border flex items-center justify-between gap-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOpenEventsModal(club)}
+                      className="gap-1 font-bold h-7 text-xs text-primary border-primary/30 hover:bg-primary/10"
+                    >
+                      <Calendar className="size-3.5" />
+                      {club.event_count || 0} Events
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -453,13 +595,13 @@ function AdminClubsPage() {
                       className="gap-1 font-semibold h-7 text-xs"
                     >
                       <Users className="size-3.5" />
-                      {club.member_count} Members
+                      Members
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenAssignModal(club)}
-                      className="gap-1 text-primary border-primary/30 font-semibold h-7 text-xs"
+                      className="gap-1 font-semibold h-7 text-xs"
                     >
                       <UserPlus className="size-3.5" />
                       Assign
@@ -677,6 +819,259 @@ function AdminClubsPage() {
                 </div>
               )}
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* ══════════════════════════════════════════════════
+            MODAL: CLUB EVENTS & ATTENDANCE DRILL-DOWN
+            ══════════════════════════════════════════════════ */}
+        <Dialog open={eventsModalOpen} onOpenChange={setEventsModalOpen}>
+          <DialogContent className="w-[95vw] sm:w-full sm:max-w-2xl rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+            {selectedEventForAttendees ? (
+              /* ── SUB-VIEW: EVENT ATTENDEES LIST ── */
+              <div className="space-y-4">
+                <DialogHeader className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedEventForAttendees(null)}
+                      className="gap-1 h-8 text-xs font-semibold px-2 cursor-pointer"
+                    >
+                      <ArrowLeft className="size-4" /> Back to Events
+                    </Button>
+                  </div>
+                  <div>
+                    <DialogTitle className="text-base sm:text-lg font-bold">
+                      {selectedEventForAttendees.event_name}
+                    </DialogTitle>
+                    <p className="text-xs text-muted-foreground mt-1 flex flex-wrap items-center gap-2">
+                      <span>📅 {selectedEventForAttendees.event_date}</span>
+                      <span>⏰ {selectedEventForAttendees.start_time} - {selectedEventForAttendees.end_time}</span>
+                      <span>📍 {selectedEventForAttendees.location}</span>
+                    </p>
+                  </div>
+                </DialogHeader>
+
+                {/* Summary bar */}
+                <div className="p-3 rounded-xl bg-muted/40 border border-border flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <Users className="size-4 text-primary" />
+                    <span className="font-bold text-foreground">
+                      {eventAttendeesList.length} Attending Students
+                    </span>
+                  </div>
+                  <ToneBadge tone={selectedEventForAttendees.status === "COMPLETED" ? "neutral" : "success"}>
+                    {selectedEventForAttendees.status}
+                  </ToneBadge>
+                </div>
+
+                {/* Search attendee */}
+                <div className="relative">
+                  <Search className="size-3.5 absolute left-3 top-2.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search attendee by name, roll no, department..."
+                    value={attendeeSearchQuery}
+                    onChange={(e) => setAttendeeSearchQuery(e.target.value)}
+                    className="pl-8 bg-background h-8 text-xs"
+                  />
+                </div>
+
+                {loadingAttendees ? (
+                  <div className="py-10 text-center text-muted-foreground space-y-2">
+                    <RefreshCw className="size-6 animate-spin mx-auto text-primary" />
+                    <p className="text-xs">Loading attending students...</p>
+                  </div>
+                ) : filteredAttendees.length === 0 ? (
+                  <div className="py-8 text-center text-muted-foreground border border-dashed border-border rounded-xl">
+                    <Users className="size-6 mx-auto mb-1 opacity-50" />
+                    <p className="text-xs font-medium">
+                      {attendeeSearchQuery ? "No students match your search." : "No students attended or registered for this event yet."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="max-h-80 overflow-y-auto space-y-2">
+                    {/* Mobile list */}
+                    <div className="block sm:hidden space-y-2">
+                      {filteredAttendees.map((a) => (
+                        <div key={a.id} className="p-3 rounded-xl border border-border bg-card space-y-1.5 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono font-bold text-primary">{a.student_code}</span>
+                            <ToneBadge tone="success">{a.permission_status}</ToneBadge>
+                          </div>
+                          <h4 className="font-bold text-foreground">{a.student_name}</h4>
+                          <p className="text-[11px] text-muted-foreground">{a.department} &bull; {a.year} &bull; {a.section}</p>
+                          <div className="pt-1 flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+                            <span>Code: {a.permission_code}</span>
+                            {(a.exit_at || a.entry_at) && (
+                              <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                                {a.exit_at ? `Out: ${a.exit_at.slice(11, 16)}` : ""} {a.entry_at ? `In: ${a.entry_at.slice(11, 16)}` : ""}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Desktop table */}
+                    <div className="hidden sm:block border border-border rounded-xl overflow-hidden">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-muted/60 text-muted-foreground font-bold uppercase tracking-wider border-b border-border sticky top-0">
+                          <tr>
+                            <th className="px-3 py-2.5">Roll Number</th>
+                            <th className="px-3 py-2.5">Student Name</th>
+                            <th className="px-3 py-2.5">Dept & Class</th>
+                            <th className="px-3 py-2.5">Permission Code</th>
+                            <th className="px-3 py-2.5">Attendance State</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {filteredAttendees.map((a) => (
+                            <tr key={a.id} className="hover:bg-muted/40">
+                              <td className="px-3 py-2 font-mono font-bold text-primary">{a.student_code}</td>
+                              <td className="px-3 py-2 font-medium text-foreground">{a.student_name}</td>
+                              <td className="px-3 py-2 text-muted-foreground">{a.department} &bull; {a.year}</td>
+                              <td className="px-3 py-2 font-mono text-muted-foreground">{a.permission_code}</td>
+                              <td className="px-3 py-2">
+                                <div className="space-y-0.5">
+                                  <ToneBadge tone="success">{a.permission_status}</ToneBadge>
+                                  {(a.exit_at || a.entry_at) && (
+                                    <p className="text-[10px] text-blue-600 dark:text-blue-400 font-mono font-semibold">
+                                      {a.exit_at ? `Exit: ${a.exit_at.slice(11, 16)}` : ""} {a.entry_at ? `Entry: ${a.entry_at.slice(11, 16)}` : ""}
+                                    </p>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── MAIN VIEW: EVENTS LIST ── */
+              <div className="space-y-4">
+                <DialogHeader>
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <DialogTitle className="text-base sm:text-lg font-bold">
+                        Events Conducted — {selectedClubForEvents?.name}
+                      </DialogTitle>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Category: <strong className="text-foreground">{selectedClubForEvents?.club_type}</strong> &bull; Venue: {selectedClubForEvents?.location || "Campus"}
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20 shrink-0">
+                      <Calendar className="size-3.5" /> {clubEventsList.length} Events
+                    </span>
+                  </div>
+                </DialogHeader>
+
+                {/* Search Event bar */}
+                <div className="relative">
+                  <Search className="size-3.5 absolute left-3 top-2.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search events by name, location, coordinator, type..."
+                    value={eventSearchQuery}
+                    onChange={(e) => setEventSearchQuery(e.target.value)}
+                    className="pl-8 bg-background h-8 text-xs"
+                  />
+                </div>
+
+                {/* Event list */}
+                {loadingEvents ? (
+                  <div className="py-10 text-center text-muted-foreground space-y-2">
+                    <RefreshCw className="size-6 animate-spin mx-auto text-primary" />
+                    <p className="text-xs">Loading club events...</p>
+                  </div>
+                ) : filteredEvents.length === 0 ? (
+                  <div className="py-8 text-center text-muted-foreground border border-dashed border-border rounded-xl">
+                    <Calendar className="size-6 mx-auto mb-1 opacity-50" />
+                    <p className="text-xs font-medium">
+                      {eventSearchQuery
+                        ? "No events match your search."
+                        : "No events conducted or scheduled yet for this club."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="max-h-[60vh] overflow-y-auto space-y-3 pr-1">
+                    {filteredEvents.map((evt) => (
+                      <div
+                        key={evt.event_id}
+                        className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-xs hover:border-primary/40 transition-all"
+                      >
+                        {/* Event title & Status */}
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-muted text-foreground border border-border uppercase tracking-wider">
+                                {evt.event_type}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {evt.location_type === "INSIDE_CAMPUS" ? "Inside Campus" : "Outside Campus"}
+                              </span>
+                            </div>
+                            <h4 className="text-sm font-bold text-foreground">{evt.event_name}</h4>
+                            {evt.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-2">{evt.description}</p>
+                            )}
+                          </div>
+                          <ToneBadge tone={evt.status === "COMPLETED" ? "neutral" : evt.status === "CANCELLED" ? "danger" : "success"}>
+                            {evt.status}
+                          </ToneBadge>
+                        </div>
+
+                        {/* Event Details Row */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-muted/40 p-2.5 rounded-lg border border-border">
+                          <div className="space-y-1">
+                            <p className="text-foreground font-medium flex items-center gap-1.5">
+                              <Calendar className="size-3.5 text-muted-foreground shrink-0" />
+                              <span>{evt.event_date}</span>
+                              <span className="text-muted-foreground">({evt.start_time} - {evt.end_time})</span>
+                            </p>
+                            <p className="text-muted-foreground flex items-center gap-1.5">
+                              <MapPin className="size-3.5 text-muted-foreground shrink-0" />
+                              <span className="truncate">{evt.location}</span>
+                            </p>
+                          </div>
+
+                          <div className="space-y-1 sm:text-right">
+                            <p className="text-xs font-semibold text-foreground truncate">
+                              Coordinator: {evt.coordinator_name || "Faculty Coordinator"}
+                            </p>
+                            <div className="flex sm:justify-end items-center gap-2 text-[11px]">
+                              <span className="inline-flex items-center gap-1 font-bold text-primary">
+                                <Ticket className="size-3" /> {evt.participant_count || 0} Registered
+                              </span>
+                              <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400">
+                                <CheckCircle2 className="size-3" /> {evt.attended_count || 0} Attended
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action to View Attending Students */}
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-[11px] font-semibold text-muted-foreground">
+                            {evt.participant_count || 0} total students attended/registered
+                          </span>
+                          <Button
+                            size="sm"
+                            onClick={() => handleOpenAttendees(evt)}
+                            className="h-8 rounded-xl text-xs font-bold gap-1 shadow-xs"
+                          >
+                            <Users className="size-3.5" />
+                            View Attending Students ({evt.participant_count || 0}) &rarr;
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>

@@ -67,6 +67,8 @@ export type DBClubEvent = {
   updated_at: string;
   club_name?: string;
   coordinator_name?: string;
+  participant_count?: number;
+  attended_count?: number;
 };
 
 export type DBEventParticipant = {
@@ -299,7 +301,14 @@ export async function getClubById(clubId: string): Promise<DBClub | null> {
   return res.rows[0] || null;
 }
 
-export async function getAllClubs(): Promise<(DBClub & { member_count: number; coordinators: DBClubCoordinator[] })[]> {
+export async function getAllClubs(): Promise<
+  (DBClub & {
+    member_count: number;
+    event_count: number;
+    total_attendees: number;
+    coordinators: DBClubCoordinator[];
+  })[]
+> {
   await ensureClubSchema();
   const clubsRes = await db.query<DBClub>(
     `SELECT club_id, name, club_type, description, location, status, created_at::text, updated_at::text
@@ -314,11 +323,25 @@ export async function getAllClubs(): Promise<(DBClub & { member_count: number; c
     );
     const member_count = parseInt(memberCountRes.rows[0]?.count || "0", 10);
 
+    const eventStatsRes = await db.query<{ event_count: string; total_attendees: string }>(
+      `SELECT 
+         COUNT(DISTINCT e.event_id) as event_count,
+         COUNT(DISTINCT ep.id) FILTER (WHERE ep.permission_status = 'APPROVED') as total_attendees
+       FROM club_events e
+       LEFT JOIN event_participants ep ON ep.event_id = e.event_id
+       WHERE e.club_id = $1;`,
+      [club.club_id]
+    );
+    const event_count = parseInt(eventStatsRes.rows[0]?.event_count || "0", 10);
+    const total_attendees = parseInt(eventStatsRes.rows[0]?.total_attendees || "0", 10);
+
     const coordinators = await getClubCoordinators(club.club_id);
 
     result.push({
       ...club,
       member_count,
+      event_count,
+      total_attendees,
       coordinators,
     });
   }
@@ -656,11 +679,17 @@ export async function getClubEvents(clubId: string): Promise<DBClubEvent[]> {
             to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
             e.start_time::text, e.end_time::text, e.location_type, e.location,
             e.event_type, e.coordinator_id, e.status, e.created_at::text, e.updated_at::text,
-            c.name AS club_name, p.full_name AS coordinator_name
+            c.name AS club_name, p.full_name AS coordinator_name,
+            COALESCE(COUNT(DISTINCT ep.id) FILTER (WHERE ep.permission_status = 'APPROVED'), 0)::int AS participant_count,
+            COALESCE(COUNT(DISTINCT ep.id) FILTER (WHERE ep.permission_status = 'APPROVED' AND (ep.exit_at IS NOT NULL OR ep.entry_at IS NOT NULL)), 0)::int AS attended_count
      FROM club_events e
      JOIN clubs c ON c.club_id = e.club_id
-     JOIN profiles p ON p.id = e.coordinator_id
+     LEFT JOIN profiles p ON p.id = e.coordinator_id
+     LEFT JOIN event_participants ep ON ep.event_id = e.event_id
      WHERE e.club_id = $1
+     GROUP BY e.event_id, e.club_id, e.event_name, e.description, e.event_date,
+              e.start_time, e.end_time, e.location_type, e.location, e.event_type,
+              e.coordinator_id, e.status, e.created_at, e.updated_at, c.name, p.full_name
      ORDER BY e.event_date DESC, e.start_time DESC;`,
     [clubId]
   );
