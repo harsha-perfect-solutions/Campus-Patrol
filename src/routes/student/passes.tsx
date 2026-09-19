@@ -22,6 +22,7 @@ import {
   HelpCircle,
   ChevronDown,
   User,
+  MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";

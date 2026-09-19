@@ -1112,3 +1112,200 @@ export async function getCounselorPasses(
   return res.rows;
 }
 
+// ============================================================
+// NEW DB FUNCTIONS — Admin Counselor Management Redesign
+// ============================================================
+
+export type DBSectionStudent = {
+  student_code: string;
+  name: string;
+  status: string;
+  counselor_assignment_id: string | null;
+  counselor_name: string | null;
+};
+
+export type DBAssignmentStudent = {
+  id: string;
+  student_code: string;
+  name: string;
+  status: string;
+};
+
+/**
+ * Gets all students in a class section with their current counselor assignment status.
+ * Used by Admin UI to show which students are assigned vs unassigned.
+ */
+export async function getSectionStudentsForAdmin(
+  department: string,
+  year: string,
+  section: string
+): Promise<DBSectionStudent[]> {
+  await ensureCounselorSchema();
+  const query = `
+    SELECT
+      s.student_code,
+      COALESCE(s.name, s.student_code) as name,
+      COALESCE(s.status, 'Active') as status,
+      cs.counselor_assignment_id,
+      p.full_name as counselor_name
+    FROM students s
+    LEFT JOIN counselor_students cs
+      ON UPPER(cs.student_code) = UPPER(s.student_code)
+      AND cs.status = 'ACTIVE'
+    LEFT JOIN counselor_assignments ca
+      ON ca.id = cs.counselor_assignment_id
+      AND ca.status = 'ACTIVE'
+    LEFT JOIN profiles p ON p.id = ca.faculty_id
+    WHERE UPPER(s.department) = UPPER($1)
+      AND UPPER(s.year) = UPPER($2)
+      AND UPPER(s.section) = UPPER($3)
+      AND s.status = 'Active'
+    ORDER BY s.student_code ASC;
+  `;
+  const res = await db.query<DBSectionStudent>(query, [department, year, section]);
+  return res.rows;
+}
+
+/**
+ * Gets all active students assigned to a specific counselor assignment.
+ */
+export async function getCounselorStudentsByAssignmentId(
+  assignmentId: string
+): Promise<DBAssignmentStudent[]> {
+  await ensureCounselorSchema();
+  const query = `
+    SELECT
+      cs.id,
+      cs.student_code,
+      COALESCE(s.name, cs.student_code) as name,
+      COALESCE(s.status, 'Active') as status
+    FROM counselor_students cs
+    LEFT JOIN students s ON UPPER(s.student_code) = UPPER(cs.student_code)
+    WHERE cs.counselor_assignment_id = $1
+      AND cs.status = 'ACTIVE'
+    ORDER BY cs.student_code ASC;
+  `;
+  const res = await db.query<DBAssignmentStudent>(query, [assignmentId]);
+  return res.rows;
+}
+
+/**
+ * Updates the student list for a counselor assignment.
+ * - Students no longer in newStudentCodes → marked INACTIVE
+ * - Students newly in newStudentCodes → inserted ACTIVE (previous active assignment in same section deactivated first)
+ * Historical INACTIVE records are never deleted.
+ */
+export async function updateAssignmentStudents(
+  assignmentId: string,
+  newStudentCodes: string[]
+): Promise<void> {
+  await ensureCounselorSchema();
+  const cleanCodes = newStudentCodes.map(c => c.trim().toUpperCase());
+
+  // Get assignment context (dept/year/section) once
+  const caRes = await db.query<{ department: string; year: string; section: string }>(
+    `SELECT department, year, section FROM counselor_assignments WHERE id = $1;`,
+    [assignmentId]
+  );
+  const ca = caRes.rows[0];
+  if (!ca) throw new Error("Counselor assignment not found.");
+
+  // Get currently active students for this assignment
+  const currentRes = await db.query<{ student_code: string }>(
+    `SELECT student_code FROM counselor_students WHERE counselor_assignment_id = $1 AND status = 'ACTIVE';`,
+    [assignmentId]
+  );
+  const currentCodes = new Set<string>(currentRes.rows.map((r: { student_code: string }) => r.student_code.toUpperCase()));
+  const targetCodes = new Set(cleanCodes);
+
+  // Mark removed students INACTIVE
+  for (const code of Array.from(currentCodes)) {
+    if (!targetCodes.has(code)) {
+      await db.query(
+        `UPDATE counselor_students SET status = 'INACTIVE'
+         WHERE counselor_assignment_id = $1 AND UPPER(student_code) = $2 AND status = 'ACTIVE';`,
+        [assignmentId, String(code)]
+      );
+    }
+  }
+
+  // Insert newly added students
+  for (const code of targetCodes) {
+    if (!currentCodes.has(code)) {
+      // Deactivate any other active mapping for this student in same section
+      await db.query(
+        `UPDATE counselor_students cs SET status = 'INACTIVE'
+         FROM counselor_assignments ca2
+         WHERE ca2.id = cs.counselor_assignment_id
+           AND UPPER(cs.student_code) = $1
+           AND UPPER(ca2.department) = UPPER($2)
+           AND UPPER(ca2.year) = UPPER($3)
+           AND UPPER(ca2.section) = UPPER($4)
+           AND cs.counselor_assignment_id <> $5
+           AND cs.status = 'ACTIVE';`,
+        [code, ca.department, ca.year, ca.section, assignmentId]
+      );
+
+      // Check if already active for this assignment (avoid duplicate insert)
+      const existCheck = await db.query(
+        `SELECT id FROM counselor_students WHERE counselor_assignment_id = $1 AND UPPER(student_code) = $2 AND status = 'ACTIVE';`,
+        [assignmentId, code]
+      );
+      if (existCheck.rows.length === 0) {
+        const csId = `CS-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        await db.query(
+          `INSERT INTO counselor_students (id, counselor_assignment_id, student_code, status, assigned_at)
+           VALUES ($1, $2, $3, 'ACTIVE', NOW());`,
+          [csId, assignmentId, code]
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Moves a single student from one counselor assignment to another.
+ * Safe: marks old mapping INACTIVE, inserts new ACTIVE. Historical records are never deleted.
+ */
+export async function moveCounselorStudent(
+  studentCode: string,
+  fromAssignmentId: string,
+  toAssignmentId: string
+): Promise<void> {
+  await ensureCounselorSchema();
+  const cleanCode = studentCode.trim().toUpperCase();
+
+  // Deactivate current mapping
+  await db.query(
+    `UPDATE counselor_students SET status = 'INACTIVE'
+     WHERE counselor_assignment_id = $1 AND UPPER(student_code) = $2 AND status = 'ACTIVE';`,
+    [fromAssignmentId, cleanCode]
+  );
+
+  // Insert new active mapping
+  const csId = `CS-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  await db.query(
+    `INSERT INTO counselor_students (id, counselor_assignment_id, student_code, status, assigned_at)
+     VALUES ($1, $2, $3, 'ACTIVE', NOW());`,
+    [csId, toAssignmentId, cleanCode]
+  );
+}
+
+/**
+ * Changes the faculty member for an existing counselor assignment.
+ * All student mappings (counselor_students) remain intact.
+ * Historical disciplinary ownership on violation_reports is NOT changed.
+ */
+export async function changeCounselorAssignmentFaculty(
+  assignmentId: string,
+  newFacultyId: string
+): Promise<void> {
+  await ensureCounselorSchema();
+  const fCheck = await db.query(`SELECT id FROM profiles WHERE id = $1;`, [newFacultyId]);
+  if (!fCheck.rows[0]) throw new Error("Faculty profile not found.");
+
+  await db.query(
+    `UPDATE counselor_assignments SET faculty_id = $1::uuid, updated_at = NOW() WHERE id = $2;`,
+    [newFacultyId, assignmentId]
+  );
+}

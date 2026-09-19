@@ -180,4 +180,65 @@ export const getMyCounselorApi = createServerFn({ method: "GET" }).handler(async
 
 export default {};
 
+// ============================================================
+// NEW ADMIN APIs — Counselor Management Redesign
+// ============================================================
 
+/**
+ * Admin API: Get all students in a section with counselor assignment status.
+ */
+export const getSectionStudentsAdminApi = createServerFn({ method: "POST" })
+  .validator((data: { department: string; year: string; section: string }) => data)
+  .handler(async ({ data }) => {
+    await requireRole("admin");
+    const { getSectionStudentsForAdmin } = await import("../db/counselor.server");
+    return await getSectionStudentsForAdmin(data.department, data.year, data.section);
+  });
+
+/**
+ * Admin API: Get students assigned to a specific counselor assignment.
+ */
+export const getCounselorStudentsByAssignmentAdminApi = createServerFn({ method: "POST" })
+  .validator((data: { assignmentId: string }) => data)
+  .handler(async ({ data }) => {
+    await requireRole("admin");
+    const { getCounselorStudentsByAssignmentId } = await import("../db/counselor.server");
+    return await getCounselorStudentsByAssignmentId(data.assignmentId);
+  });
+
+/**
+ * Admin API: Update the student list for a counselor assignment (add/remove).
+ */
+export const updateAssignmentStudentsAdminApi = createServerFn({ method: "POST" })
+  .validator((data: { assignmentId: string; studentCodes: string[] }) => data)
+  .handler(async ({ data }) => {
+    await requireRole("admin");
+    const { updateAssignmentStudents } = await import("../db/counselor.server");
+    await updateAssignmentStudents(data.assignmentId, data.studentCodes);
+    return { success: true };
+  });
+
+/**
+ * Admin API: Move a single student from one counselor assignment to another.
+ */
+export const moveCounselorStudentAdminApi = createServerFn({ method: "POST" })
+  .validator((data: { studentCode: string; fromAssignmentId: string; toAssignmentId: string }) => data)
+  .handler(async ({ data }) => {
+    await requireRole("admin");
+    const { moveCounselorStudent } = await import("../db/counselor.server");
+    await moveCounselorStudent(data.studentCode, data.fromAssignmentId, data.toAssignmentId);
+    return { success: true };
+  });
+
+/**
+ * Admin API: Change the faculty member on a counselor assignment.
+ * Student mappings remain intact. Historical violations are not re-routed.
+ */
+export const changeCounselorFacultyAdminApi = createServerFn({ method: "POST" })
+  .validator((data: { assignmentId: string; facultyId: string }) => data)
+  .handler(async ({ data }) => {
+    await requireRole("admin");
+    const { changeCounselorAssignmentFaculty } = await import("../db/counselor.server");
+    await changeCounselorAssignmentFaculty(data.assignmentId, data.facultyId);
+    return { success: true };
+  });
