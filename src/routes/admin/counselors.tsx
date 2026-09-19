@@ -100,6 +100,13 @@ function AdminCounselorsContent() {
   const [addFaculty, setAddFaculty] = useState("");
   const [addStudentSearch, setAddStudentSearch] = useState("");
   const [addSelected, setAddSelected] = useState<Set<string>>(new Set());
+  // Modal-level class selectors (independent from the filter)
+  const [addDept, setAddDept] = useState(department);
+  const [addYear, setAddYear] = useState(year);
+  const [addSem, setAddSem] = useState(semester);
+  const [addSec, setAddSec] = useState(section);
+  const [addModalStudents, setAddModalStudents] = useState<SectionStudent[]>([]);
+  const [addModalLoading, setAddModalLoading] = useState(false);
 
   // Edit modal
   const [editOpen, setEditOpen] = useState(false);
@@ -183,15 +190,50 @@ function AdminCounselorsContent() {
   };
 
   // ── Add Counselor ────────────────────────────────────────────
+  const fetchAddModalStudents = async (dept: string, yr: string, sec: string) => {
+    setAddModalLoading(true);
+    setAddModalStudents([]);
+    setAddSelected(new Set());
+    try {
+      const res = await getSectionStudentsAdminApi({ data: { department: dept, year: yr, section: sec } });
+      setAddModalStudents(Array.isArray(res) ? res : []);
+    } catch {
+      setAddModalStudents([]);
+    } finally {
+      setAddModalLoading(false);
+    }
+  };
+
   const openAdd = (preSelectUnassigned = false) => {
     setAddFaculty("");
     setAddStudentSearch("");
-    if (preSelectUnassigned) {
-      setAddSelected(new Set(sectionStudents.filter(s => !s.counselor_assignment_id).map(s => s.student_code)));
-    } else {
-      setAddSelected(new Set());
-    }
+    setAddSelected(new Set());
+    setAddDept(department);
+    setAddYear(year);
+    setAddSem(semester);
+    setAddSec(section);
     setAddOpen(true);
+    // Fetch students for the currently selected filter section
+    fetchAddModalStudents(department, year, section).then(() => {
+      if (preSelectUnassigned) {
+        // After fetch, pre-select unassigned ones
+        getSectionStudentsAdminApi({ data: { department, year, section } })
+          .then(res => {
+            const unassigned = (Array.isArray(res) ? res : []).filter((s: SectionStudent) => !s.counselor_assignment_id).map((s: SectionStudent) => s.student_code);
+            setAddSelected(new Set(unassigned));
+          })
+          .catch(() => {});
+      }
+    });
+  };
+
+  const handleAddModalClassChange = async (dept: string, yr: string, sem: number, sec: string) => {
+    setAddDept(dept);
+    setAddYear(yr);
+    setAddSem(sem);
+    setAddSec(sec);
+    setAddSelected(new Set());
+    await fetchAddModalStudents(dept, yr, sec);
   };
 
   const handleAddCounselor = async (e: React.FormEvent) => {
@@ -200,7 +242,7 @@ function AdminCounselorsContent() {
     setSubmitting(true);
     try {
       const newAssignment = await addCounselorAssignmentAdminApi({
-        data: { facultyId: addFaculty, department, year, semester, section },
+        data: { facultyId: addFaculty, department: addDept, year: addYear, semester: addSem, section: addSec },
       });
       if (addSelected.size > 0 && newAssignment?.id) {
         await updateAssignmentStudentsAdminApi({
@@ -611,10 +653,55 @@ function AdminCounselorsContent() {
       {addOpen && (
         <Modal onClose={() => setAddOpen(false)} title={<><UserPlus className="size-4 text-primary" /> Add Counselor</>}>
           <form onSubmit={handleAddCounselor} className="space-y-4">
-            <div className="p-3 rounded-xl bg-muted/50 border border-border text-xs text-muted-foreground font-medium">
-              Class: <span className="text-foreground font-bold">{department} • {year} • Sem {semester} • {section}</span>
+
+            {/* ── Inline class section selectors ── */}
+            <div className="p-3 rounded-xl bg-muted/50 border border-border space-y-2">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Assign to Class Section</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[11px] font-semibold text-muted-foreground mb-0.5">Department</Label>
+                  <select
+                    value={addDept}
+                    onChange={e => handleAddModalClassChange(e.target.value, addYear, addSem, addSec)}
+                    className="w-full h-8 px-2 rounded-lg border border-border bg-background text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    {["CSE","ECE","EEE","MECH","CIVIL","AIML","IT"].map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-[11px] font-semibold text-muted-foreground mb-0.5">Academic Year</Label>
+                  <select
+                    value={addYear}
+                    onChange={e => handleAddModalClassChange(addDept, e.target.value, addSem, addSec)}
+                    className="w-full h-8 px-2 rounded-lg border border-border bg-background text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    {["1st Year","2nd Year","3rd Year","4th Year"].map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-[11px] font-semibold text-muted-foreground mb-0.5">Section</Label>
+                  <select
+                    value={addSec}
+                    onChange={e => handleAddModalClassChange(addDept, addYear, addSem, e.target.value)}
+                    className="w-full h-8 px-2 rounded-lg border border-border bg-background text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    {["Section A","Section B","Section C"].map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-[11px] font-semibold text-muted-foreground mb-0.5">Semester</Label>
+                  <select
+                    value={addSem}
+                    onChange={e => handleAddModalClassChange(addDept, addYear, Number(e.target.value), addSec)}
+                    className="w-full h-8 px-2 rounded-lg border border-border bg-background text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    {[1,2,3,4,5,6,7,8].map(s => <option key={s} value={s}>Sem {s}</option>)}
+                  </select>
+                </div>
+              </div>
             </div>
 
+            {/* Faculty picker */}
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Faculty Counselor *</Label>
               <select
@@ -625,34 +712,45 @@ function AdminCounselorsContent() {
               >
                 <option value="">— Select Faculty Member —</option>
                 {facultyProfiles
-                  .filter(f => !assignments.some(a => a.faculty_id === f.id))
+                  .filter(f => !assignments.some(a => a.faculty_id === f.id && a.department === addDept && a.year === addYear && a.section === addSec))
                   .map(f => (
                     <option key={f.id} value={f.id}>{f.full_name} ({f.email})</option>
                   ))}
               </select>
             </div>
 
-            <StudentSelector
-              label="Assign Students"
-              students={filteredAddStudents}
-              selected={addSelected}
-              onToggle={(code, on) => {
-                const next = new Set(addSelected);
-                if (on) next.add(code); else next.delete(code);
-                setAddSelected(next);
-              }}
-              onSelectAll={() => setAddSelected(new Set(sectionStudents.filter(s => !s.counselor_assignment_id).map(s => s.student_code)))}
-              onDeselectAll={() => setAddSelected(new Set())}
-              search={addStudentSearch}
-              onSearchChange={setAddStudentSearch}
-              totalCount={totalStudents}
-              isDisabledFn={(s) => s.counselor_assignment_id !== null}
-              disabledLabel="Assigned"
-            />
+            {/* Student selector — uses modal-level students, not global filter */}
+            {addModalLoading ? (
+              <div className="h-40 rounded-xl border border-border flex items-center justify-center text-xs text-muted-foreground gap-2">
+                <RefreshCw className="size-4 animate-spin" /> Loading students for {addDept} {addYear} {addSec}...
+              </div>
+            ) : (
+              <StudentSelector
+                label="Assign Students"
+                students={addModalStudents.filter(s =>
+                  !addStudentSearch ||
+                  s.name?.toLowerCase().includes(addStudentSearch.toLowerCase()) ||
+                  s.student_code.toLowerCase().includes(addStudentSearch.toLowerCase())
+                )}
+                selected={addSelected}
+                onToggle={(code, on) => {
+                  const next = new Set(addSelected);
+                  if (on) next.add(code); else next.delete(code);
+                  setAddSelected(next);
+                }}
+                onSelectAll={() => setAddSelected(new Set(addModalStudents.filter(s => !s.counselor_assignment_id).map(s => s.student_code)))}
+                onDeselectAll={() => setAddSelected(new Set())}
+                search={addStudentSearch}
+                onSearchChange={setAddStudentSearch}
+                totalCount={addModalStudents.length}
+                isDisabledFn={(s) => s.counselor_assignment_id !== null}
+                disabledLabel="Assigned"
+              />
+            )}
 
             <div className="flex justify-end gap-2 pt-1">
               <Button type="button" variant="outline" onClick={() => setAddOpen(false)} className="rounded-xl">Cancel</Button>
-              <Button type="submit" disabled={submitting} className="rounded-xl font-bold">
+              <Button type="submit" disabled={submitting || addModalLoading} className="rounded-xl font-bold">
                 {submitting ? "Assigning..." : "Add Counselor"}
               </Button>
             </div>
