@@ -347,9 +347,34 @@ export function CheckStudentPage() {
     }
   };
 
+  const [passRejectedError, setPassRejectedError] = useState<string | null>(null);
+
   const runCheck = async (raw: string) => {
     const id = raw.trim();
     if (!id) return;
+    setPassRejectedError(null);
+
+    // STRICT FACULTY DUTY GUARD:
+    // Faculty only scan Student ID Cards (CMADMS-ID-... or Roll No), NOT movement passes.
+    const upper = id.toUpperCase();
+    if (
+      upper.includes("CMADMS:QR:") ||
+      upper.includes("CMADMS-PASS-") ||
+      upper.startsWith("EP-") ||
+      upper.startsWith("PERM-")
+    ) {
+      const errMsg =
+        "Gate passes cannot be scanned or authorized by Faculty. Faculty duty is strictly to scan Student ID cards for timetable attendance. Gate exit and return authorizations are strictly processed at the Main Gate by Security Personnel.";
+      setPassRejectedError(errMsg);
+      toast.error("Gate Pass Detected — Scan Denied", {
+        description: errMsg,
+        duration: 6000,
+      });
+      setResult(null);
+      setNotFound(null);
+      return;
+    }
+
     setLoading(true);
     setResult(null);
     setNotFound(null);
@@ -359,7 +384,12 @@ export function CheckStudentPage() {
       const res = await verifyStudentForFacultyApi({ data: { studentQrOrRollNo: id } });
 
       if (!res.success || !res.student) {
-        setNotFound(id);
+        if ((res as any).isPassRejected) {
+          setPassRejectedError(res.error || "Gate passes must be authorized at Main Gate by Security.");
+          toast.error("Gate Pass Scan Denied", { description: res.error });
+        } else {
+          setNotFound(id);
+        }
         setLoading(false);
         return;
       }
@@ -466,6 +496,7 @@ export function CheckStudentPage() {
     setQuery("");
     setResult(null);
     setNotFound(null);
+    setPassRejectedError(null);
     setFormOpen(false);
     navigate({ to: "." as any, search: { student: undefined } as any });
   };
@@ -591,10 +622,10 @@ export function CheckStudentPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Student Verification
+            Student Identity & Class Verification
           </h1>
           <p className="mt-1 text-xs text-muted-foreground sm:text-sm max-w-2xl">
-            Check academic status and movement permission before reporting unauthorized movement.
+            Faculty Portal: Scan Student Digital ID Card to verify classroom schedule and presence. Gate passes are authorized strictly at Main Gate by Security.
           </p>
         </div>
         <Button
@@ -620,7 +651,7 @@ export function CheckStudentPage() {
             htmlFor="student-id"
             className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
           >
-            Student ID / Roll Number
+            Student ID Card / Roll Number (Faculty Scan Only)
           </Label>
           <div className="mt-2.5 flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -632,7 +663,7 @@ export function CheckStudentPage() {
                 id="student-id"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="23CSE1012"
+                placeholder="23CSE1012 or CMADMS-ID-23CSE1012"
                 className="h-11 pl-10 pr-9 text-sm font-medium tracking-wide text-foreground focus-visible:ring-primary rounded-xl"
                 autoComplete="off"
               />
@@ -655,7 +686,7 @@ export function CheckStudentPage() {
                 className="h-11 border-border/80 text-foreground hover:bg-accent hover:border-primary/40 px-4 font-medium rounded-xl shadow-2xs gap-2 w-full sm:w-auto justify-center transition-all"
               >
                 <QrCode className="size-4 text-primary" />
-                <span>Scan Student ID</span>
+                <span>Scan Student ID Card</span>
               </Button>
               <Button
                 type="submit"
@@ -667,7 +698,7 @@ export function CheckStudentPage() {
                 {!loading && <Search className="size-4" />}
                 <span>{loading ? "Checking..." : "Check Student"}</span>
               </Button>
-              {(query || result) && (
+              {(query || result || passRejectedError) && (
                 <Button
                   type="button"
                   variant="ghost"
@@ -682,16 +713,40 @@ export function CheckStudentPage() {
             </div>
           </div>
           <p className="mt-2.5 text-xs text-muted-foreground">
-            Enter roll number and press{" "}
-            <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-foreground">
-              Enter
-            </kbd>{" "}
-            or click Check Student
+            Faculty Scan Policy: Scan student ID card or enter roll number. Movement/gate passes cannot be authorized by faculty.
           </p>
         </form>
       </section>
 
       {loading && <VerificationSkeleton />}
+
+      {/* GATE PASS SCAN REJECTION BANNER */}
+      {passRejectedError && !loading && (
+        <section className="card-surface p-6 rounded-2xl border-2 border-rose-500/40 bg-rose-500/10 space-y-3">
+          <div className="flex items-start gap-3.5">
+            <span className="grid size-10 place-items-center rounded-xl bg-rose-600 text-white shrink-0 shadow-xs">
+              <ShieldAlert className="size-5" />
+            </span>
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-rose-900 dark:text-rose-200 uppercase tracking-wide">
+                Gate Pass Detected — Scan Denied for Faculty
+              </h3>
+              <p className="text-xs text-rose-800 dark:text-rose-300 leading-relaxed">
+                Faculty duty is strictly to scan <strong>Student ID Cards</strong> for classroom and timetable attendance.
+                Movement passes, gate passes, and campus exit/return authorizations can only be scanned and verified by <strong>Security Personnel at the Main Gate</strong>.
+              </p>
+              <p className="text-[11px] text-muted-foreground pt-1">
+                Please ask the student to show their Student ID Card for attendance, or present their Gate Pass to Security at the Main Gate.
+              </p>
+            </div>
+          </div>
+          <div className="pt-2 flex justify-end">
+            <Button variant="outline" size="sm" onClick={handleClear} className="text-xs rounded-xl">
+              Dismiss Warning
+            </Button>
+          </div>
+        </section>
+      )}
 
       {notFound && !loading && (
         <section className="card-surface p-8 rounded-2xl">
@@ -746,17 +801,17 @@ export function CheckStudentPage() {
                     state === "no-class" && "text-blue-700 dark:text-blue-400",
                   )}
                 >
-                  {state === "unauthorized" && "UNAUTHORIZED MOVEMENT"}
-                  {state === "authorized" && "AUTHORIZED MOVEMENT"}
-                  {state === "no-class" && "NO CLASS SCHEDULED"}
+                  {state === "unauthorized" && "UNAUTHORIZED CLASS ABSENCE"}
+                  {state === "authorized" && "EXCUSED FROM CLASS (GATE PASS ON FILE)"}
+                  {state === "no-class" && "FREE PERIOD (NO ACTIVE CLASS)"}
                 </h2>
                 <p className="text-xs font-normal text-muted-foreground mt-0.5">
                   {state === "unauthorized" &&
-                    "Student is currently expected in class and has no active movement permission."}
+                    "Student is currently expected in class and has no approved movement permission on file."}
                   {state === "authorized" &&
-                    "Student is authorized with an active movement permission pass."}
+                    "Student has an approved movement pass on file. (Note: Campus exit and return authorizations are strictly performed at the Main Gate by Security)."}
                   {state === "no-class" &&
-                    "Student is not currently expected in any class session."}
+                    "Student is not currently expected in any scheduled academic class."}
                 </p>
               </div>
             </div>

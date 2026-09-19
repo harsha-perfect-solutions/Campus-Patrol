@@ -297,13 +297,10 @@ export async function ensureTimetableSchemaMigration(): Promise<void> {
       );
       if ((checkYear.rows[0]?.count || 0) === 0) {
         for (const s of item.slots) {
-          const slotId = `CSLOT-SEED-${item.year.replace(/\s+/g, "")}-${s.day}-${s.start.replace(":", "")}`;
           await db.query(
-            `INSERT INTO class_slots (id, subject, code, department, year, semester, section, room, faculty_name, day_of_week, start_time, end_time, period_type, created_at)
-             VALUES ($1, $2, $3, 'CSE', $4, $5, 'Section A', $6, $7, $8, $9::time, $10::time, $11, NOW())
-             ON CONFLICT (id) DO NOTHING;`,
+            `INSERT INTO class_slots (subject, code, department, year, semester, section, room, faculty_name, day_of_week, start_time, end_time, period_type, created_at)
+             VALUES ($1, $2, 'CSE', $3, $4, 'Section A', $5, $6, $7, $8::time, $9::time, $10, NOW());`,
             [
-              slotId,
               s.subject,
               s.code,
               item.year,

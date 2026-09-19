@@ -74,25 +74,27 @@ export async function getMyMovementPermissions(studentCode: string): Promise<DBP
   try {
     const query = `
       SELECT
-        id::text,
-        student_code,
-        reason,
-        to_char(date, 'YYYY-MM-DD') AS date,
-        valid_from::text,
-        valid_until::text,
-        status::text,
-        issued_by,
-        COALESCE(target_role, 'hod')::text AS target_role,
-        exit_at::text,
-        entry_at::text,
-        checkpoint,
-        verified_by,
-        revoked_at::text,
-        cancelled_at::text,
-        created_at::text
-      FROM movement_permissions
-      WHERE UPPER(student_code) = UPPER($1)
-      ORDER BY date DESC, created_at DESC;
+        mp.id::text,
+        mp.student_code,
+        mp.reason,
+        to_char(mp.date, 'YYYY-MM-DD') AS date,
+        mp.valid_from::text,
+        mp.valid_until::text,
+        mp.status::text,
+        mp.issued_by,
+        COALESCE(mp.target_role, 'hod')::text AS target_role,
+        mp.exit_at::text,
+        mp.entry_at::text,
+        mp.checkpoint,
+        mp.verified_by,
+        mp.revoked_at::text,
+        mp.cancelled_at::text,
+        mp.created_at::text,
+        qp.qr_token
+      FROM movement_permissions mp
+      LEFT JOIN qr_passes qp ON qp.movement_permission_id = mp.id AND qp.status = 'ACTIVE'
+      WHERE UPPER(mp.student_code) = UPPER($1)
+      ORDER BY mp.date DESC, mp.created_at DESC;
     `;
     const result = await db.query<DBPermission>(query, [cleanCode]);
     return result.rows;

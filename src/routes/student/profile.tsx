@@ -29,7 +29,6 @@ export const Route = createFileRoute("/student/profile")({
 
 function StudentProfilePage() {
   const { profile } = useAuth();
-  const rollNo = profile?.student_code || "23CSE1044";
 
   const [studentData, setStudentData] = useState<{
     student: DBStudent | null;
@@ -58,16 +57,18 @@ function StudentProfilePage() {
     return () => {
       isMounted = false;
     };
-  }, [rollNo]);
+  }, [profile?.student_code, profile?.email]);
 
-  const name = studentData.student?.name || profile?.full_name || "Student User";
-  const dept = studentData.student?.department || profile?.department || "CSE";
-  const year = studentData.student?.year || "3rd Year";
-  const section = studentData.student?.section || "A";
-  const sem = studentData.student?.semester ? `Semester ${studentData.student.semester}` : "Semester 6";
-  const status = studentData.student?.status || "Active Student";
+  const student = studentData.student;
+  const name = student?.name || profile?.full_name || "Student User";
+  const rollNo = student?.student_code || profile?.student_code || "—";
+  const dept = student?.department || profile?.department || "General";
+  const year = student?.year || (loading ? "..." : "3rd Year");
+  const section = student?.section || (loading ? "..." : "Section A");
+  const sem = student?.semester ? `Semester ${student.semester}` : (loading ? "..." : "Semester 6");
+  const status = student?.status || "Active Student";
   const email = studentData.email || profile?.email || "student@cmadms.edu";
-  const qrToken = studentData.student?.qr_token || `CMADMS-ID-${rollNo}`;
+  const qrToken = student?.qr_token || (rollNo && rollNo !== "—" ? `CMADMS-ID-${rollNo}` : "CMADMS-ID-STUDENT");
 
   return (
     <RoleGuard allowedRoles={["student"]}>

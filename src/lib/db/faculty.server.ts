@@ -49,88 +49,89 @@ export async function ensureFacultySchema(): Promise<void> {
       CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_staff_code ON profiles(staff_code) WHERE staff_code IS NOT NULL AND staff_code != '';
     `);
 
-    // Seed baseline initial faculty members if profiles table has no staff_code records
-    const checkCount = await db.query<{ count: number }>(
-      "SELECT COUNT(*)::int AS count FROM profiles WHERE staff_code IS NOT NULL AND staff_code != '';",
-    );
+    // Seed baseline initial faculty members if any are missing
+    const initialFaculty = [
+      {
+        name: "Prof. Ravi Kumar",
+        staffCode: "F-101",
+        department: "CSE",
+        email: "faculty@cmadms.edu",
+        phone: "+91 9876543209",
+      },
+      {
+        name: "Prof. Vikram Mehta",
+        staffCode: "FAC-101",
+        department: "CSE",
+        email: "vikram@cmadms.edu",
+        phone: "+91 9876543210",
+      },
+      {
+        name: "Prof. Anita Sen",
+        staffCode: "FAC-102",
+        department: "CSE",
+        email: "anita@cmadms.edu",
+        phone: "+91 9876543211",
+      },
+      {
+        name: "Dr. K. Swaminathan",
+        staffCode: "FAC-103",
+        department: "ECE",
+        email: "swaminathan@cmadms.edu",
+        phone: "+91 9876543212",
+      },
+      {
+        name: "Prof. S. Nambiar",
+        staffCode: "FAC-104",
+        department: "ECE",
+        email: "nambiar@cmadms.edu",
+        phone: "+91 9876543213",
+      },
+      {
+        name: "Dr. H. Varma",
+        staffCode: "FAC-105",
+        department: "EEE",
+        email: "varma@cmadms.edu",
+        phone: "+91 9876543214",
+      },
+      {
+        name: "Prof. B. Mukherjee",
+        staffCode: "FAC-106",
+        department: "MECH",
+        email: "mukherjee@cmadms.edu",
+        phone: "+91 9876543215",
+      },
+      {
+        name: "Dr. P. Deshmukh",
+        staffCode: "FAC-107",
+        department: "CIVIL",
+        email: "deshmukh@cmadms.edu",
+        phone: "+91 9876543216",
+      },
+      {
+        name: "Dr. M. Venkat",
+        staffCode: "FAC-108",
+        department: "AIML",
+        email: "venkat@cmadms.edu",
+        phone: "+91 9876543217",
+      },
+    ];
 
-    if (checkCount.rows[0]?.count === 0) {
-      const initialFaculty = [
-        {
-          name: "Prof. Vikram Mehta",
-          staffCode: "FAC-101",
-          department: "CSE",
-          email: "vikram@cmadms.edu",
-          phone: "+91 9876543210",
-        },
-        {
-          name: "Prof. Anita Sen",
-          staffCode: "FAC-102",
-          department: "CSE",
-          email: "anita@cmadms.edu",
-          phone: "+91 9876543211",
-        },
-        {
-          name: "Dr. K. Swaminathan",
-          staffCode: "FAC-103",
-          department: "ECE",
-          email: "swaminathan@cmadms.edu",
-          phone: "+91 9876543212",
-        },
-        {
-          name: "Prof. S. Nambiar",
-          staffCode: "FAC-104",
-          department: "ECE",
-          email: "nambiar@cmadms.edu",
-          phone: "+91 9876543213",
-        },
-        {
-          name: "Dr. H. Varma",
-          staffCode: "FAC-105",
-          department: "EEE",
-          email: "varma@cmadms.edu",
-          phone: "+91 9876543214",
-        },
-        {
-          name: "Prof. B. Mukherjee",
-          staffCode: "FAC-106",
-          department: "MECH",
-          email: "mukherjee@cmadms.edu",
-          phone: "+91 9876543215",
-        },
-        {
-          name: "Dr. P. Deshmukh",
-          staffCode: "FAC-107",
-          department: "CIVIL",
-          email: "deshmukh@cmadms.edu",
-          phone: "+91 9876543216",
-        },
-        {
-          name: "Dr. M. Venkat",
-          staffCode: "FAC-108",
-          department: "AIML",
-          email: "venkat@cmadms.edu",
-          phone: "+91 9876543217",
-        },
-      ];
+    for (const f of initialFaculty) {
+      const profRes = await db.query<{ id: string }>(
+        `INSERT INTO profiles (full_name, email, department, staff_code, phone, status, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, 'Active', NOW(), NOW())
+         ON CONFLICT (email) DO UPDATE SET staff_code = EXCLUDED.staff_code, department = EXCLUDED.department
+         RETURNING id::text;`,
+        [f.name, f.email, f.department, f.staffCode, f.phone],
+      );
 
-      for (const f of initialFaculty) {
-        const profRes = await db.query<{ id: string }>(
-          `INSERT INTO profiles (full_name, email, department, staff_code, phone, status, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, 'Active', NOW(), NOW())
-           ON CONFLICT (email) DO UPDATE SET staff_code = EXCLUDED.staff_code, department = EXCLUDED.department
-           RETURNING id::text;`,
-          [f.name, f.email, f.department, f.staffCode, f.phone],
+      if (profRes.rows[0]?.id) {
+        await db.query(
+          `INSERT INTO user_roles (user_id, role)
+           VALUES ($1::uuid, 'faculty')
+           ON CONFLICT (user_id, role) DO NOTHING;`,
+          [profRes.rows[0].id],
         );
-
-        if (profRes.rows[0]?.id) {
-          await db.query(
-            `INSERT INTO user_roles (user_id, role)
-             VALUES ($1::uuid, 'faculty')
-             ON CONFLICT (user_id, role) DO NOTHING;`,
-            [profRes.rows[0].id],
-          );
-        }
       }
     }
 

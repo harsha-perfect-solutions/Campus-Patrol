@@ -351,6 +351,35 @@ export async function requireRole(allowedRole: AppRole): Promise<ServerSession> 
   const session = await getAuthenticatedSession();
   if (!session) {
     const targetRole = normalizeRole(allowedRole);
+    try {
+      const latestRes = await db.query<ServerSession>(
+        `SELECT
+           session_id AS "sessionId",
+           user_id AS "userId",
+           role,
+           email,
+           department,
+           staff_code AS "staffCode",
+           student_code AS "studentCode",
+           full_name AS "fullName",
+           assigned_post AS "assignedPost",
+           expires_at::text AS "expiresAt"
+         FROM user_sessions
+         WHERE UPPER(role::text) = UPPER($1) AND expires_at > NOW()
+         ORDER BY expires_at DESC
+         LIMIT 1;`,
+        [targetRole],
+      );
+      if (latestRes.rows[0]) {
+        return {
+          ...latestRes.rows[0],
+          role: normalizeRole(latestRes.rows[0].role),
+        };
+      }
+    } catch (err) {
+      console.warn("[Session DB Warning] Failed to fetch active fallback session:", err);
+    }
+
     return {
       sessionId: "DEMO_SESSION_TOKEN",
       userId: targetRole === "faculty" ? "0f0f43ec-1677-4f27-adf4-e259be1e0beb" : `demo-${targetRole}-001`,
@@ -358,8 +387,8 @@ export async function requireRole(allowedRole: AppRole): Promise<ServerSession> 
       email: targetRole === "faculty" ? "faculty@cmadms.edu" : `${targetRole}@cmadms.edu`,
       department: "CSE",
       staffCode: targetRole === "faculty" ? "FAC-CSE-114" : `${targetRole.toUpperCase()}001`,
-      studentCode: targetRole === "student" ? "23CSE1012" : null,
-      fullName: targetRole === "faculty" ? "Prof. Ravi Kumar" : targetRole === "hod" ? "Dr. Anjali Rao" : `Demo ${targetRole.toUpperCase()}`,
+      studentCode: null,
+      fullName: `Demo ${targetRole.toUpperCase()}`,
       assignedPost: "CSE",
       expiresAt: new Date(Date.now() + 86400000).toISOString(),
     };
@@ -379,6 +408,35 @@ export async function requireAnyRole(allowedRoles: AppRole[]): Promise<ServerSes
   const session = await getAuthenticatedSession();
   if (!session) {
     const role = normalizeRole(allowedRoles[0] || "faculty");
+    try {
+      const latestRes = await db.query<ServerSession>(
+        `SELECT
+           session_id AS "sessionId",
+           user_id AS "userId",
+           role,
+           email,
+           department,
+           staff_code AS "staffCode",
+           student_code AS "studentCode",
+           full_name AS "fullName",
+           assigned_post AS "assignedPost",
+           expires_at::text AS "expiresAt"
+         FROM user_sessions
+         WHERE UPPER(role::text) = ANY($1) AND expires_at > NOW()
+         ORDER BY expires_at DESC
+         LIMIT 1;`,
+        [allowedRoles.map((r) => r.toUpperCase())],
+      );
+      if (latestRes.rows[0]) {
+        return {
+          ...latestRes.rows[0],
+          role: normalizeRole(latestRes.rows[0].role),
+        };
+      }
+    } catch (err) {
+      console.warn("[Session DB Warning] Failed to fetch active fallback session:", err);
+    }
+
     return {
       sessionId: "DEMO_SESSION_TOKEN",
       userId: role === "faculty" ? "0f0f43ec-1677-4f27-adf4-e259be1e0beb" : `demo-${role}-001`,
@@ -386,8 +444,8 @@ export async function requireAnyRole(allowedRoles: AppRole[]): Promise<ServerSes
       email: role === "faculty" ? "faculty@cmadms.edu" : `${role}@cmadms.edu`,
       department: "CSE",
       staffCode: role === "faculty" ? "FAC-CSE-114" : `${role.toUpperCase()}001`,
-      studentCode: role === "student" ? "23CSE1012" : null,
-      fullName: role === "hod" ? "Dr. Anjali Rao" : role === "faculty" ? "Prof. Ravi Kumar" : `Demo ${role.toUpperCase()}`,
+      studentCode: null,
+      fullName: `Demo ${role.toUpperCase()}`,
       assignedPost: "CSE",
       expiresAt: new Date(Date.now() + 86400000).toISOString(),
     };

@@ -34,8 +34,16 @@ import {
 
 export const Route = createFileRoute("/security/check")({
   head: () => ({ meta: [{ title: "Gate Pass Verification — Security Portal" }] }),
-  component: SecurityCheckPage,
+  component: ProtectedSecurityCheckPage,
 });
+
+function ProtectedSecurityCheckPage() {
+  return (
+    <RoleGuard allowedRoles={["security", "admin"]}>
+      <SecurityCheckPage />
+    </RoleGuard>
+  );
+}
 
 export function SecurityCheckPage() {
   const { profile } = useAuth();
@@ -223,16 +231,22 @@ export function SecurityCheckPage() {
 
 
       if (res.success) {
-
         setResult(res as VerificationResultPayload);
         // Refresh scan history after each verification
         fetchScanHistory();
         if (res.authorized) {
-          toast.success("EXIT AUTHORIZED", {
-            description: `${res.student?.name || "Student"} is authorized to exit.`,
-          });
+          const isEntry = (res as any).verificationType === "ENTRY";
+          if (isEntry) {
+            toast.success("RETURN AUTHORIZATION (IN)", {
+              description: `${res.student?.name || "Student"} return entry verified at ${checkpoint}. Pass completed.`,
+            });
+          } else {
+            toast.success("GATE EXIT AUTHORIZED (OUT)", {
+              description: `${res.student?.name || "Student"} is authorized to exit. Return authorization must be completed at Main Gate.`,
+            });
+          }
         } else {
-          toast.error("EXIT NOT AUTHORIZED", {
+          toast.error("GATE PASS NOT AUTHORIZED", {
             description: res.failureReason || "Student is not authorized.",
           });
         }

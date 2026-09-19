@@ -121,11 +121,11 @@ export async function seedDemoStudentAccount(): Promise<DemoStudentDetails> {
     let facUserId: string | null = null;
     if (pFacCheck.rows.length > 0) {
       facUserId = pFacCheck.rows[0].id;
-      await db.query(`UPDATE profiles SET password_hash = COALESCE(password_hash, $1), status = 'Active' WHERE id = $2;`, [passwordHash, facUserId]);
+      await db.query(`UPDATE profiles SET password_hash = COALESCE(password_hash, $1), status = 'Active', department = 'CSE' WHERE id = $2;`, [passwordHash, facUserId]);
     } else {
       const pFacRes = await db.query(
         `INSERT INTO profiles (full_name, email, department, staff_code, password_hash, must_change_password, status)
-         VALUES ('Prof. Ravi Kumar', 'faculty@cmadms.edu', 'AIML', 'F-101', $1, FALSE, 'Active')
+         VALUES ('Prof. Ravi Kumar', 'faculty@cmadms.edu', 'CSE', 'F-101', $1, FALSE, 'Active')
          RETURNING id::text;`,
         [passwordHash]
       );
@@ -225,6 +225,19 @@ export async function seedDemoStudentAccount(): Promise<DemoStudentDetails> {
       samplePassId = passCheck.rows[0].id;
     }
 
+    // Pre-generate QR Pass for the sample pass so QR is instant
+    try {
+      const { getOrCreateQRPassForMovementPermission } = await import("./qr.server");
+      const today = new Date().toISOString().split("T")[0]!;
+      await getOrCreateQRPassForMovementPermission(
+        samplePassId,
+        `${today}T10:00:00+05:30`,
+        `${today}T12:00:00+05:30`
+      );
+    } catch (qrSeedErr) {
+      console.warn("[Seed Notice] Sample pass QR generation notice:", qrSeedErr);
+    }
+
     // 5. Ensure Class Schedule for 23CSE1012
     const schedCheck = await db.query(`SELECT id FROM class_schedules WHERE student_code = '23CSE1012' LIMIT 1;`);
     if (schedCheck.rows.length === 0) {
@@ -235,6 +248,14 @@ export async function seedDemoStudentAccount(): Promise<DemoStudentDetails> {
            '23CSE1012', 'CS-304', 'Data Structures & Algorithms', '10:00:00', '11:00:00', 'Room C-204', 'Prof. Ravi Kumar', 'Monday', 'CSE-3A'
          );`
       );
+    }
+
+    // 6. Ensure counselor assignment for students
+    try {
+      const { ensureAllStudentsHaveCounselors } = await import("./counselor.server");
+      await ensureAllStudentsHaveCounselors();
+    } catch (counselorErr) {
+      console.warn("[Seed Notice] Counselor auto-assign notice:", counselorErr);
     }
 
     return {

@@ -23,6 +23,7 @@ export type DBPermission = {
   revoked_at?: string | null;
   cancelled_at?: string | null;
   completed?: boolean;
+  qr_token?: string | null;
 };
 
 export type NewPermissionInput = {

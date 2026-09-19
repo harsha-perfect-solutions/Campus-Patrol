@@ -901,14 +901,14 @@ export async function verifyGatePass(
 
   // 5. STAGE 3: Completed Pass Check (both exit_at and entry_at exist)
   if (pass.exit_at && pass.entry_at) {
-    const reason = "Pass has already been completed.";
-    await recordAudit(false, "EXIT NOT AUTHORIZED", "EXIT", reason);
+    const reason = "Movement pass has already been completed. Student has already returned inside campus.";
+    await recordAudit(false, "PASS ALREADY COMPLETED", "EXIT", reason);
     return {
       success: true,
       authorized: false,
-      resultStatus: "EXIT NOT AUTHORIZED",
+      resultStatus: "PASS ALREADY COMPLETED",
       failureReason: reason,
-      message: "Student is NOT authorized to exit the campus.",
+      message: "Student already returned inside campus. Movement pass is completed.",
       timestamp,
     };
   }
@@ -923,12 +923,12 @@ export async function verifyGatePass(
       [pass.id]
     );
 
-    await recordAudit(true, "ENTRY VERIFIED", "ENTRY");
+    await recordAudit(true, "RETURN AUTHORIZATION (IN)", "ENTRY");
 
     return {
       success: true,
       authorized: true,
-      resultStatus: "ENTRY VERIFIED",
+      resultStatus: "RETURN AUTHORIZATION (IN)",
       student: {
         name: student.name,
         studentCode: student.student_code,
@@ -944,10 +944,12 @@ export async function verifyGatePass(
         date: pass.date,
         issuedBy: pass.issued_by,
         status: "APPROVED",
+        exitAt: pass.exit_at,
+        entryAt: new Date().toISOString(),
       },
       checkpoint,
       verificationType: "ENTRY",
-      message: "Student entry verified. Movement pass completed.",
+      message: `Return entry verified at Main Gate (${checkpoint}). Movement pass completed.`,
       timestamp,
     };
   }
@@ -1141,13 +1143,13 @@ export async function verifyGatePass(
     [checkpoint, session.fullName || session.email, pass.id]
   );
 
-  await recordAudit(true, "AUTHORIZED", "EXIT");
+  await recordAudit(true, "GATE EXIT AUTHORIZED (OUT)", "EXIT");
 
   return {
     success: true,
     authorized: true,
     timeState: "ACTIVE",
-    resultStatus: "AUTHORIZED",
+    resultStatus: "GATE EXIT AUTHORIZED (OUT)",
     timeRemainingMinutes: timeRemaining,
     serverCurrentTime,
     student: {
@@ -1169,7 +1171,7 @@ export async function verifyGatePass(
     },
     checkpoint,
     verificationType: "EXIT",
-    message: `Authorized exit. Valid until ${pass.valid_until} (${remainingStr} remaining).`,
+    message: `Authorized exit from campus. Valid until ${pass.valid_until} (${remainingStr} remaining). Return authorization required at Main Gate.`,
     timestamp,
   };
 }

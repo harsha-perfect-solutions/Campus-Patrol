@@ -1,10 +1,7 @@
-import { createRequire } from "module";
+import { getCookie, setCookie, deleteCookie, getRequestHeader } from "@tanstack/react-start/server";
 
-const isBrowser = typeof window !== "undefined";
-const nodeRequire = !isBrowser ? createRequire(import.meta.url) : null;
-
-export function getCookieServer(name: string): string | undefined {
-  if (isBrowser) {
+export async function getCookieServer(name: string): Promise<string | undefined> {
+  if (typeof window !== "undefined") {
     try {
       const match = document.cookie.match(
         new RegExp("(?:^|; )" + (name || "").replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, "\\$1") + "=([^;]*)"),
@@ -14,16 +11,27 @@ export function getCookieServer(name: string): string | undefined {
       return undefined;
     }
   }
+
   try {
-    const { getCookie } = nodeRequire!("@tanstack/react-start/server");
-    return getCookie(name);
-  } catch {
-    return undefined;
-  }
+    const val = getCookie(name);
+    if (val) return val;
+  } catch {}
+
+  try {
+    const rawCookie = getRequestHeader("cookie");
+    if (rawCookie) {
+      const match = rawCookie.match(
+        new RegExp("(?:^|; )" + (name || "").replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, "\\$1") + "=([^;]*)"),
+      );
+      if (match) return decodeURIComponent(match[1] || "");
+    }
+  } catch {}
+
+  return undefined;
 }
 
-export function setCookieServer(name: string, value: string, opts?: any): void {
-  if (isBrowser) {
+export async function setCookieServer(name: string, value: string, opts?: any): Promise<void> {
+  if (typeof window !== "undefined") {
     try {
       document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=86400`;
     } catch {
@@ -32,15 +40,14 @@ export function setCookieServer(name: string, value: string, opts?: any): void {
     return;
   }
   try {
-    const { setCookie } = nodeRequire!("@tanstack/react-start/server");
     setCookie(name, value, opts);
-  } catch {
-    // Ignored outside HTTP server request context
+  } catch (err) {
+    console.warn("[Cookie Error] setCookieServer failed:", err);
   }
 }
 
-export function deleteCookieServer(name: string, opts?: any): void {
-  if (isBrowser) {
+export async function deleteCookieServer(name: string, opts?: any): Promise<void> {
+  if (typeof window !== "undefined") {
     try {
       document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     } catch {
@@ -49,10 +56,9 @@ export function deleteCookieServer(name: string, opts?: any): void {
     return;
   }
   try {
-    const { deleteCookie } = nodeRequire!("@tanstack/react-start/server");
     deleteCookie(name, opts);
-  } catch {
-    // Ignored outside HTTP server request context
+  } catch (err) {
+    console.warn("[Cookie Error] deleteCookieServer failed:", err);
   }
 }
 

@@ -89,8 +89,8 @@ const ROLES: RoleOption[] = [
     label: "Student",
     subtitle: "Pass Request & Cases",
     icon: UserRound,
-    demoEmail: "chodiashokdora278@gmail.com",
-    placeholder: "Enter your email or roll number",
+    demoEmail: "",
+    placeholder: "Enter roll number (e.g. 23CSE1044, 23ECE2031)",
   },
   {
     id: "admin",

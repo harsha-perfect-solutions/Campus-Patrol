@@ -307,6 +307,29 @@ export const verifyStudentForFacultyApi = createServerFn({ method: "POST" })
         throw new Error("Student ID QR or Roll Number is required.");
       }
 
+      // STRICT FACULTY DUTY BOUNDARY:
+      // Faculty duty is strictly to scan Student ID cards (CMADMS-ID-... or Roll Number).
+      // Gate passes (CMADMS:QR:..., CMADMS-PASS-..., EP-..., PERM-...) are strictly authorized at the Main Gate by Security.
+      const upperQuery = query.toUpperCase();
+      if (
+        upperQuery.includes("CMADMS:QR:") ||
+        upperQuery.includes("CMADMS-PASS-") ||
+        upperQuery.startsWith("EP-") ||
+        upperQuery.startsWith("PERM-")
+      ) {
+        return {
+          success: false,
+          student: null,
+          slot: null,
+          activePass: null,
+          isAuthorized: false,
+          isPassRejected: true,
+          resultStatus: "GATE PASS SCAN REJECTED",
+          error:
+            "GATE PASS DETECTED — ACCESS REJECTED. Faculty duty is strictly to scan Student ID cards for timetable & classroom presence. Gate exit & return authorizations are strictly performed at the Main Gate by Security Personnel.",
+        };
+      }
+
       // 2. Resolve student record
       const student = await resolveStudentByQuery(query);
       if (!student) {
@@ -335,17 +358,18 @@ export const verifyStudentForFacultyApi = createServerFn({ method: "POST" })
         isAuthorized = false;
       } else if (!slotResolution.isCurrentlyInScheduledClass) {
         // FREE PERIOD / NO CLASS SCHEDULED: DO NOT report violation
-        resultStatus = "NO ACTIVE CLASS";
+        resultStatus = "NO ACTIVE CLASS (FREE PERIOD)";
         statusTone = "resolved";
         isAuthorized = true;
       } else if (activePass) {
-        // In scheduled class BUT has valid movement pass
-        resultStatus = "AUTHORIZED MOVEMENT";
-        statusTone = "pending";
+        // In scheduled class BUT has valid movement pass approved by HOD/Counselor
+        // NOTE: Faculty does NOT authorize movement passes — gate authorization occurs at Main Gate by Security.
+        resultStatus = "EXCUSED FROM CLASS (Gate Pass on File)";
+        statusTone = "info";
         isAuthorized = true;
       } else {
         // In scheduled class AND NO movement pass
-        resultStatus = "POSSIBLE CLASS MOVEMENT VIOLATION";
+        resultStatus = "UNAUTHORIZED CLASS ABSENCE";
         statusTone = "violation";
         isAuthorized = false;
       }

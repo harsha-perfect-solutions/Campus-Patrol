@@ -103,8 +103,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       });
       if (res.success && res.user) {
+        const sid = (res as any).sessionId || "HTTPONLY";
         const newSess: ServerSession = {
-          sessionId: "HTTPONLY",
+          sessionId: sid,
           userId: res.user.id,
           role: res.user.role,
           email: res.user.email,
@@ -115,6 +116,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           assignedPost: res.user.department || null,
           expiresAt: new Date(Date.now() + 86400000).toISOString(),
         };
+        if (sid && typeof document !== "undefined") {
+          document.cookie = `cmadms_session_token=${sid}; path=/; max-age=86400; SameSite=Lax`;
+        }
         setSessionData(newSess);
         try {
           localStorage.setItem("cmadms_demo_session", JSON.stringify(newSess));
@@ -138,6 +142,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     setLoading(true);
     try {
+      if (typeof document !== "undefined") {
+        document.cookie = "cmadms_session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+      }
       await signOutApi();
     } catch (err) {
       console.error("SignOut error:", err);

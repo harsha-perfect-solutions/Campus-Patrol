@@ -134,10 +134,21 @@ function getDerivedPassState(pass: DBPermission): {
   if (pass.entry_at || pass.completed) {
     return {
       state: "completed",
-      label: "COMPLETED & RETURNED",
+      label: "COMPLETED & RETURNED INSIDE CAMPUS",
       badgeClass: "bg-blue-500/20 text-blue-800 dark:text-blue-200 border-blue-500/30",
       borderClass: "border-blue-500/30",
       bgClass: "bg-blue-500/5 dark:bg-blue-950/20",
+    };
+  }
+
+  // If student exited through Main Gate, but has not returned yet => OUTSIDE CAMPUS (Awaiting Return at Main Gate)
+  if (pass.exit_at && !pass.entry_at) {
+    return {
+      state: "active",
+      label: "OUTSIDE CAMPUS — RETURN AT MAIN GATE",
+      badgeClass: "bg-cyan-500/20 text-cyan-800 dark:text-cyan-200 border-cyan-500/30",
+      borderClass: "border-cyan-500/40",
+      bgClass: "bg-cyan-500/5 dark:bg-cyan-950/20",
     };
   }
 
@@ -198,7 +209,7 @@ function getDerivedPassState(pass: DBPermission): {
 
 function StudentPassesPage() {
   const { profile } = useAuth();
-  const rollNo = profile?.student_code || "23CSE1044";
+  const rollNo = profile?.student_code || "—";
   const [passes, setPasses] = useState<DBPermission[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -235,6 +246,15 @@ function StudentPassesPage() {
         const res = await getMyMovementPermissionsApi();
         if (isMounted && res.success && res.permissions) {
           setPasses(res.permissions);
+          const initialTokens: Record<string, string> = {};
+          for (const p of res.permissions) {
+            if (p.qr_token) {
+              initialTokens[p.id] = p.qr_token;
+            }
+          }
+          if (Object.keys(initialTokens).length > 0) {
+            setQrTokens((prev) => ({ ...initialTokens, ...prev }));
+          }
         }
       } catch (err) {
         console.error("Failed to load student passes from DB:", err);
@@ -263,7 +283,7 @@ function StudentPassesPage() {
     return () => {
       isMounted = false;
     };
-  }, [rollNo]);
+  }, [profile?.student_code, profile?.email]);
 
   /**
    * Fetch the real CMADMS:QR:<hex> token for an active movement pass.
@@ -846,19 +866,10 @@ function StudentPassesPage() {
                   {derived.state === "active" && (
                     <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 p-4 rounded-xl bg-card border border-emerald-500/30 flex-1 shadow-xs">
                       <div className="flex flex-col items-center shrink-0">
-                        {qrLoading[pass.id] ? (
-                          <div
-                            className="rounded-xl bg-muted animate-pulse flex items-center justify-center text-[10px] text-muted-foreground"
-                            style={{ width: 141, height: 141 }}
-                          >
-                            Generating QR…
-                          </div>
-                        ) : (
-                          <QRCode
-                            value={qrTokens[pass.id] || ""}
-                            size={125}
-                          />
-                        )}
+                        <QRCode
+                          value={qrTokens[pass.id] || pass.qr_token || passCode}
+                          size={125}
+                        />
                         <span className="mt-2 text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-400 text-center">
                           {passCode}
                         </span>
@@ -892,6 +903,20 @@ function StudentPassesPage() {
                             {pass.valid_from} – {pass.valid_until}
                           </span>
                         </div>
+                        {pass.exit_at && !pass.entry_at ? (
+                          <div className="pt-2 border-t border-cyan-500/30 text-[10px] text-cyan-800 dark:text-cyan-300 space-y-1">
+                            <span className="font-bold flex items-center gap-1 text-cyan-700 dark:text-cyan-300">
+                              <MapPin className="size-3 text-cyan-600" /> Gate Exit Recorded: Currently Outside Campus
+                            </span>
+                            <p className="text-[10px] text-muted-foreground">
+                              Present this same QR code at the <strong>Main Gate</strong> to Security for return authorization. (Faculty duty is strictly to scan Student ID cards).
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="pt-1.5 border-t border-border/80 text-[10px] text-muted-foreground">
+                            <span>Main Gate Only: Present this QR to Security at Main Gate for Exit & Return. (Faculty cannot scan or authorize passes).</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

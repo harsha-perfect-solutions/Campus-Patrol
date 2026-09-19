@@ -103,6 +103,26 @@ export function parseQRPayload(rawInput: string): string {
 }
 
 /**
+ * Universal safe wrapper for jsQR handling CommonJS and ESM default exports.
+ */
+export function decodeJsQR(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  options?: any
+): { data: string } | null {
+  try {
+    const fn: any = (jsQR as any).default || jsQR;
+    if (typeof fn === "function") {
+      return fn(data, width, height, options);
+    }
+  } catch (err) {
+    console.warn("[QR Scanner] jsQR invocation error:", err);
+  }
+  return null;
+}
+
+/**
  * Multi-pass high-speed QR code decoder.
  * Supports hardware BarcodeDetector, high-res smartphone photo downscaling,
  * adaptive Otsu-style thresholding for screen glare, and multi-orientation rotation.
@@ -162,7 +182,7 @@ export async function decodeQRFromImageSource(
 
     // Pass A: Direct jsQR scan (normal + inverted)
     const imgData = ctx.getImageData(0, 0, targetW, targetH);
-    let qr = jsQR(imgData.data, targetW, targetH, { inversionAttempts: "attemptBoth" });
+    let qr = decodeJsQR(imgData.data, targetW, targetH, { inversionAttempts: "attemptBoth" });
     if (qr && qr.data && qr.data.trim()) return qr.data.trim();
 
     // Pass B: Center Crop (Focus on QR inside viewfinder frame)
@@ -170,7 +190,7 @@ export async function decodeQRFromImageSource(
     const startX = Math.max(0, (targetW - cropSize) / 2);
     const startY = Math.max(0, (targetH - cropSize) / 2);
     const cropData = ctx.getImageData(startX, startY, cropSize, cropSize);
-    qr = jsQR(cropData.data, cropData.width, cropData.height, { inversionAttempts: "attemptBoth" });
+    qr = decodeJsQR(cropData.data, cropData.width, cropData.height, { inversionAttempts: "attemptBoth" });
     if (qr && qr.data && qr.data.trim()) return qr.data.trim();
 
     // Pass C: Adaptive Otsu Binarization (Eliminates mobile screen glare & dark shadows)
@@ -189,7 +209,7 @@ export async function decodeQRFromImageSource(
       data[i + 2] = v;
     }
 
-    qr = jsQR(data, targetW, targetH, { inversionAttempts: "attemptBoth" });
+    qr = decodeJsQR(data, targetW, targetH, { inversionAttempts: "attemptBoth" });
     if (qr && qr.data && qr.data.trim()) return qr.data.trim();
   }
 
@@ -210,7 +230,7 @@ export async function decodeQRFromImageSource(
       rotCtx.drawImage(imageSource, -rotW / 2, -rotH / 2, rotW, rotH);
 
       const rotData = rotCtx.getImageData(0, 0, rotH, rotW);
-      const qr = jsQR(rotData.data, rotH, rotW, { inversionAttempts: "attemptBoth" });
+      const qr = decodeJsQR(rotData.data, rotH, rotW, { inversionAttempts: "attemptBoth" });
       if (qr && qr.data && qr.data.trim()) return qr.data.trim();
     }
   } catch {
@@ -227,7 +247,7 @@ export function decodeQRFromCanvas(
 ): string | null {
   if (width <= 0 || height <= 0) return null;
   const imgData = ctx.getImageData(0, 0, width, height);
-  const qr = jsQR(imgData.data, width, height, { inversionAttempts: "attemptBoth" });
+  const qr = decodeJsQR(imgData.data, width, height, { inversionAttempts: "attemptBoth" });
   if (qr && qr.data && qr.data.trim()) return qr.data.trim();
   return null;
 }
@@ -266,6 +286,7 @@ export function QRScannerModal({
   loading = false,
 }: QRScannerModalProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const animFrameRef = useRef<number | null>(null);
 
@@ -419,9 +440,13 @@ export function QRScannerModal({
   );
 
   useEffect(() => {
-    if (!stream || !videoRef.current || detectedCode || loading) return;
+    const video = videoEl || videoRef.current;
+    if (!stream || !video || detectedCode || loading) return;
 
-    const video = videoRef.current;
+    if (video.srcObject !== stream) {
+      video.srcObject = stream;
+    }
+
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
@@ -443,12 +468,15 @@ export function QRScannerModal({
       console.log("[QR Scanner] Decoder initialized: jsQR Multi-Pass Engine active.");
     }
 
-    console.log(`[QR Scanner] Frame scanning loop started. Video element size: ${video.videoWidth}x${video.videoHeight}`);
-
     let lastScanTime = 0;
 
     const scanFrame = async () => {
-      if (!isScanning || !videoRef.current || video.readyState !== video.HAVE_ENOUGH_DATA) {
+      if (!isScanning) return;
+      const vid = videoEl || videoRef.current;
+      if (!vid) return;
+
+      // Allow readyState >= 2 (HAVE_CURRENT_DATA)
+      if (vid.readyState < 2 || vid.videoWidth <= 0 || vid.videoHeight <= 0) {
         if (isScanning) {
           animFrameRef.current = requestAnimationFrame(scanFrame);
         }
@@ -456,8 +484,8 @@ export function QRScannerModal({
       }
 
       const now = performance.now();
-      // Throttle scan passes to ~15fps (every 65ms) for optimal battery and mobile CPU responsiveness
-      if (now - lastScanTime < 65) {
+      // Scan every 50ms (~20fps) for instant real-time response
+      if (now - lastScanTime < 50) {
         if (isScanning) {
           animFrameRef.current = requestAnimationFrame(scanFrame);
         }
@@ -465,89 +493,120 @@ export function QRScannerModal({
       }
       lastScanTime = now;
 
-      // Pass 1: Hardware BarcodeDetector directly on live video element
+      const vW = vid.videoWidth;
+      const vH = vid.videoHeight;
+
+      // Pass 1: Hardware BarcodeDetector on live video (sub-5ms on supported devices)
       if (detector) {
         try {
-          const barcodes = await detector.detect(video);
-          if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+          const vidBarcodes = await detector.detect(vid);
+          if (vidBarcodes && vidBarcodes.length > 0 && vidBarcodes[0]?.rawValue) {
             isScanning = false;
-            handleScanSuccess(barcodes[0].rawValue);
+            handleScanSuccess(vidBarcodes[0].rawValue);
             return;
           }
         } catch {
-          // Fall through to downscaled canvas multi-pass
+          // BarcodeDetector error or unsupported for video element
         }
       }
 
-      // Pass 2: Multi-Pass Canvas Downscaling & Binarization
-      const vW = video.videoWidth || 1280;
-      const vH = video.videoHeight || 720;
-      const scale = Math.min(1, 800 / Math.max(vW, vH));
-      const targetW = Math.round(vW * scale);
-      const targetH = Math.round(vH * scale);
+      // Pass 2: Full-frame processing scaled to optimal dimensions (max 600px preserving aspect ratio)
+      const maxDim = 600;
+      let targetW = vW;
+      let targetH = vH;
+      if (vW > maxDim || vH > maxDim) {
+        if (vW >= vH) {
+          targetW = maxDim;
+          targetH = Math.round((vH * maxDim) / vW);
+        } else {
+          targetH = maxDim;
+          targetW = Math.round((vW * maxDim) / vH);
+        }
+      }
 
-      canvas.width = targetW;
-      canvas.height = targetH;
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      }
 
       if (ctx && targetW > 0 && targetH > 0) {
-        ctx.drawImage(video, 0, 0, targetW, targetH);
-        const imgData = ctx.getImageData(0, 0, targetW, targetH);
+        ctx.drawImage(vid, 0, 0, targetW, targetH);
 
-        // Sub-Pass A: Full Frame jsQR (Normal + Inverted)
-        let qr = jsQR(imgData.data, targetW, targetH, { inversionAttempts: "attemptBoth" });
-        if (qr && qr.data && qr.data.trim()) {
-          isScanning = false;
-          handleScanSuccess(qr.data.trim());
-          return;
-        }
-
-        // Sub-Pass B: Center Viewfinder Crop (65% center area)
-        const cropSize = Math.min(targetW, targetH) * 0.65;
-        const startX = Math.max(0, (targetW - cropSize) / 2);
-        const startY = Math.max(0, (targetH - cropSize) / 2);
-        const cropData = ctx.getImageData(startX, startY, cropSize, cropSize);
-        qr = jsQR(cropData.data, cropData.width, cropData.height, { inversionAttempts: "attemptBoth" });
-        if (qr && qr.data && qr.data.trim()) {
-          isScanning = false;
-          handleScanSuccess(qr.data.trim());
-          return;
-        }
-
-        // Sub-Pass C: Adaptive Threshold Binarization for Mobile Glare
-        const data = imgData.data;
-        let sumBrightness = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          sumBrightness += (data[i]! + data[i + 1]! + data[i + 2]!) / 3;
-        }
-        const avgBrightness = sumBrightness / (data.length / 4);
-
-        for (let i = 0; i < data.length; i += 4) {
-          const pxAvg = (data[i]! + data[i + 1]! + data[i + 2]!) / 3;
-          const v = pxAvg > avgBrightness ? 255 : 0;
-          data[i] = v;
-          data[i + 1] = v;
-          data[i + 2] = v;
-        }
-
-        qr = jsQR(data, targetW, targetH, { inversionAttempts: "attemptBoth" });
-        if (qr && qr.data && qr.data.trim()) {
-          isScanning = false;
-          handleScanSuccess(qr.data.trim());
-          return;
-        }
-
-        // Sub-Pass D: Hardware BarcodeDetector on downscaled canvas
+        // Pass 2A: Hardware BarcodeDetector on downscaled canvas
         if (detector) {
           try {
             const canvasBarcodes = await detector.detect(canvas);
-            if (canvasBarcodes && canvasBarcodes.length > 0 && canvasBarcodes[0].rawValue) {
+            if (canvasBarcodes && canvasBarcodes.length > 0 && canvasBarcodes[0]?.rawValue) {
               isScanning = false;
               handleScanSuccess(canvasBarcodes[0].rawValue);
               return;
             }
           } catch {
-            // Continue scan loop
+            // continue
           }
+        }
+
+        // Pass 2B: Full-frame jsQR (Normal mode) - proven sub-60ms decode
+        const imgData = ctx.getImageData(0, 0, targetW, targetH);
+        let qr = decodeJsQR(imgData.data, targetW, targetH, { inversionAttempts: "dontInvert" });
+        if (qr && qr.data && qr.data.trim()) {
+          isScanning = false;
+          handleScanSuccess(qr.data.trim());
+          return;
+        }
+
+        // Pass 2C: Adaptive Contrast Binarization for Laptop LCD Screen Backlight Glare
+        const data = imgData.data;
+        const len = data.length;
+        let minLum = 255;
+        let maxLum = 0;
+
+        for (let i = 0; i < len; i += 8) {
+          const lum = (data[i]! + data[i + 1]! + data[i + 2]!) / 3;
+          if (lum < minLum) minLum = lum;
+          if (lum > maxLum) maxLum = lum;
+        }
+
+        // Screen glare stretches or compresses histogram
+        if (maxLum - minLum > 25) {
+          const midLum = (minLum + maxLum) / 2;
+          for (let i = 0; i < len; i += 4) {
+            const lum = (data[i]! + data[i + 1]! + data[i + 2]!) / 3;
+            const val = lum > midLum ? 255 : 0;
+            data[i] = val;
+            data[i + 1] = val;
+            data[i + 2] = val;
+          }
+
+          qr = decodeJsQR(data, targetW, targetH, { inversionAttempts: "dontInvert" });
+          if (qr && qr.data && qr.data.trim()) {
+            isScanning = false;
+            handleScanSuccess(qr.data.trim());
+            return;
+          }
+        }
+
+        // Pass 2D: Inverted mode (for dark mode backgrounds or inverted lighting)
+        const freshData = ctx.getImageData(0, 0, targetW, targetH).data;
+        qr = decodeJsQR(freshData, targetW, targetH, { inversionAttempts: "onlyInvert" });
+        if (qr && qr.data && qr.data.trim()) {
+          isScanning = false;
+          handleScanSuccess(qr.data.trim());
+          return;
+        }
+
+        // Pass 2E: Generous Viewfinder Center Crop (75% dimension) with quiet zone preservation
+        const minDim = Math.min(targetW, targetH);
+        const cropDim = Math.round(minDim * 0.75);
+        const startX = Math.round((targetW - cropDim) / 2);
+        const startY = Math.round((targetH - cropDim) / 2);
+        const cropData = ctx.getImageData(startX, startY, cropDim, cropDim);
+
+        qr = decodeJsQR(cropData.data, cropDim, cropDim, { inversionAttempts: "dontInvert" });
+        if (qr && qr.data && qr.data.trim()) {
+          isScanning = false;
+          handleScanSuccess(qr.data.trim());
+          return;
         }
       }
 
@@ -556,20 +615,30 @@ export function QRScannerModal({
       }
     };
 
-    video
-      .play()
-      .then(() => {
+    const startScanLoop = () => {
+      if (isScanning && !animFrameRef.current) {
         animFrameRef.current = requestAnimationFrame(scanFrame);
-      })
-      .catch(() => {});
+      }
+    };
+
+    video.play().catch(() => {});
+    startScanLoop();
+
+    video.addEventListener("loadedmetadata", startScanLoop);
+    video.addEventListener("play", startScanLoop);
+    video.addEventListener("canplay", startScanLoop);
 
     return () => {
       isScanning = false;
+      video.removeEventListener("loadedmetadata", startScanLoop);
+      video.removeEventListener("play", startScanLoop);
+      video.removeEventListener("canplay", startScanLoop);
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
       }
     };
-  }, [stream, detectedCode, loading, handleScanSuccess]);
+  }, [stream, videoEl, detectedCode, loading, handleScanSuccess]);
 
 
   const handleToggleCamera = () => {
@@ -587,7 +656,8 @@ export function QRScannerModal({
   };
 
   const handleManualSnap = async () => {
-    if (!videoRef.current || !stream) {
+    const activeVideo = videoEl || videoRef.current;
+    if (!activeVideo || !stream) {
       if (manualInput.trim()) {
         handleScanSubmit(manualInput);
       } else {
@@ -597,7 +667,7 @@ export function QRScannerModal({
     }
 
     const toastId = toast.loading("Processing camera frame...");
-    const decoded = await decodeQRFromImageSource(videoRef.current);
+    const decoded = await decodeQRFromImageSource(activeVideo);
     toast.dismiss(toastId);
 
     if (decoded) {
@@ -691,54 +761,63 @@ export function QRScannerModal({
             </div>
           ) : (
             <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-500/40 bg-black aspect-4/3 sm:aspect-video flex items-center justify-center shadow-lg group min-h-[180px] max-w-full w-full">
-              {isInitializing || loading ? (
-                <div className="flex flex-col items-center gap-2 text-white/80 p-6 text-center">
+              {/* Always keep video mounted so stream and scanner loop never drop */}
+              <video
+                ref={(el) => {
+                  videoRef.current = el;
+                  setVideoEl(el);
+                  if (el && stream && el.srcObject !== stream) {
+                    el.srcObject = stream;
+                    el.play().catch(() => {});
+                  }
+                }}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+
+              {/* Initializing or DB Loading Overlay */}
+              {(isInitializing || loading) && (
+                <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2 text-white/80 p-6 text-center bg-black/85 backdrop-blur-xs">
                   <Loader2 className="size-9 animate-spin text-emerald-400" />
                   <span className="text-xs font-semibold text-emerald-200">
                     {loading ? "Verifying with PostgreSQL DB..." : "Initializing high-speed GPU scanner..."}
                   </span>
                 </div>
-              ) : detectedCode ? (
-                <div className="flex flex-col items-center gap-2.5 text-emerald-400 p-6 text-center bg-emerald-950/80 w-full h-full justify-center backdrop-blur-md">
+              )}
+
+              {/* QR Code Verified Overlay */}
+              {detectedCode && (
+                <div className="absolute inset-0 z-30 flex flex-col items-center gap-2.5 text-emerald-400 p-6 text-center bg-emerald-950/90 w-full h-full justify-center backdrop-blur-md">
                   <CheckCircle2 className="size-12 animate-bounce text-emerald-400" />
                   <span className="text-base font-bold text-white">QR Code Verified!</span>
                   <span className="text-xs font-mono font-bold text-emerald-300 bg-emerald-900/60 px-3 py-1 rounded-lg border border-emerald-500/40 break-all max-w-[90%]">
                     {detectedCode}
                   </span>
                 </div>
-              ) : (
-                <>
-                  <video
-                    ref={(el) => {
-                      videoRef.current = el;
-                      if (el && stream) {
-                        el.srcObject = stream;
-                        el.play().catch(() => {});
-                      }
-                    }}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover"
-                  />
+              )}
 
-                  <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-3">
-                    <div className="size-36 sm:size-48 rounded-2xl border border-emerald-400/40 bg-emerald-500/5 shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] flex flex-col items-center justify-center relative overflow-hidden">
-                      <div className="absolute top-2 left-2 size-4 border-t-2 border-l-2 border-emerald-400 rounded-tl-md" />
-                      <div className="absolute top-2 right-2 size-4 border-t-2 border-r-2 border-emerald-400 rounded-tr-md" />
-                      <div className="absolute bottom-2 left-2 size-4 border-b-2 border-l-2 border-emerald-400 rounded-bl-md" />
-                      <div className="absolute bottom-2 right-2 size-4 border-b-2 border-r-2 border-emerald-400 rounded-br-md" />
+              {/* Live Target Viewfinder Overlay */}
+              {!isInitializing && !loading && !detectedCode && (
+                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-3 z-10">
+                  <div className="size-36 sm:size-48 rounded-2xl border border-emerald-400/40 bg-emerald-500/5 shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] flex flex-col items-center justify-center relative overflow-hidden">
+                    <div className="absolute top-2 left-2 size-4 border-t-2 border-l-2 border-emerald-400 rounded-tl-md" />
+                    <div className="absolute top-2 right-2 size-4 border-t-2 border-r-2 border-emerald-400 rounded-tr-md" />
+                    <div className="absolute bottom-2 left-2 size-4 border-b-2 border-l-2 border-emerald-400 rounded-bl-md" />
+                    <div className="absolute bottom-2 right-2 size-4 border-b-2 border-r-2 border-emerald-400 rounded-br-md" />
 
-                      <div className="w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent absolute top-0 animate-[scan_1.5s_infinite_ease-in-out] shadow-[0_0_12px_#34d399]" />
+                    <div className="w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent absolute top-0 animate-[scan_1.5s_infinite_ease-in-out] shadow-[0_0_12px_#34d399]" />
 
-                      <QrCode className="size-10 sm:size-14 text-white/20" />
-                    </div>
-
-                    <p className="text-[10px] sm:text-[11px] font-semibold text-white mt-2 sm:mt-3 px-3 py-1 rounded-full bg-black/80 backdrop-blur-md shadow-xl border border-emerald-500/30 flex items-center gap-1.5 max-w-[90%] text-center truncate">
-                      <Camera className="size-3 text-emerald-400 shrink-0" />
-                      <span className="truncate">Point camera at Student ID QR Code</span>
-                    </p>
+                    <QrCode className="size-10 sm:size-14 text-white/20" />
                   </div>
+
+                  <p className="text-[10px] sm:text-[11px] font-semibold text-white mt-2 sm:mt-3 px-3 py-1 rounded-full bg-black/80 backdrop-blur-md shadow-xl border border-emerald-500/30 flex items-center gap-1.5 max-w-[90%] text-center truncate">
+                    <Camera className="size-3 text-emerald-400 shrink-0" />
+                    <span className="truncate">Point camera at Student ID QR Code</span>
+                  </p>
+                </div>
+              )}
 
                   <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20">
                     {hasTorch && (
@@ -764,8 +843,6 @@ export function QRScannerModal({
                       <RotateCw className="size-4" />
                     </button>
                   </div>
-                </>
-              )}
             </div>
           )}
 

@@ -389,9 +389,9 @@ export async function verifyQRTokenServer(
       return {
         success: true,
         authorized: false,
-        resultStatus: "ACCESS DENIED",
-        failureReason: "Movement pass has already been completed (both EXIT and ENTRY recorded).",
-        message: "Movement pass already completed.",
+        resultStatus: "PASS ALREADY COMPLETED",
+        failureReason: "Movement pass has already been completed (both EXIT and RETURN ENTRY recorded). Student is already returned inside campus.",
+        message: "Movement pass already completed — student returned inside campus.",
         timestamp,
       };
     }
@@ -451,7 +451,7 @@ export async function verifyQRTokenServer(
 
     // Record separate gate transaction in audit_logs
     const auditAction = verificationType === "EXIT" ? "gate_exit_authorized" : "gate_entry_verified";
-    const resultStatus = verificationType === "EXIT" ? "EXIT AUTHORIZED" : "ENTRY VERIFIED";
+    const resultStatus = verificationType === "EXIT" ? "GATE EXIT AUTHORIZED (OUT)" : "RETURN AUTHORIZATION (IN)";
 
     await db.query(
       `INSERT INTO audit_logs (actor, actor_role, action, target, target_id, metadata)
@@ -486,8 +486,11 @@ export async function verifyQRTokenServer(
           recipientRole: "student",
           department: student.department,
           type: verificationType === "EXIT" ? "gate_exit_authorized" : "gate_entry_verified",
-          title: verificationType === "EXIT" ? "Gate Exit Authorized" : "Gate Entry Verified",
-          detail: `Your campus ${verificationType.toLowerCase()} was verified at ${activeCheckpoint} via Real-Time QR Scanner.`,
+          title: verificationType === "EXIT" ? "Gate Exit Authorized (OUT)" : "Gate Return Authorization (IN)",
+          detail:
+            verificationType === "EXIT"
+              ? `Your campus exit was authorized at ${activeCheckpoint}. Please return through the Main Gate for return authorization.`
+              : `Your campus return entry was verified at ${activeCheckpoint}. Movement pass is now completed.`,
           tone: "resolved",
           relatedId: passRow.movement_permission_id,
           relatedType: "movement_permission",
@@ -502,7 +505,10 @@ export async function verifyQRTokenServer(
       authorized: true,
       resultStatus,
       verificationType,
-      message: `Authorized ${verificationType.toLowerCase()} for ${student.name} (${student.student_code}).`,
+      message:
+        verificationType === "EXIT"
+          ? `Authorized campus exit for ${student.name} (${student.student_code}). Return authorization required at Main Gate.`
+          : `Return entry verified for ${student.name} (${student.student_code}) at ${activeCheckpoint}. Movement pass completed.`,
       timestamp,
       student: {
         name: student.name,

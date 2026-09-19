@@ -59,7 +59,7 @@ const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
 function StudentExplanationsPage() {
   const { profile } = useAuth();
-  const rollNo = profile?.student_code || "23CSE1044";
+  const rollNo = profile?.student_code || "—";
 
   const [dbReports, setDbReports] = useState<DBViolationReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +82,7 @@ function StudentExplanationsPage() {
     return () => {
       isMounted = false;
     };
-  }, [rollNo]);
+  }, [profile?.student_code, profile?.email]);
 
   // Target report needing explanation (excludes finalized cases)
   const targetReport = dbReports.find(
