@@ -1372,3 +1372,88 @@ export async function getCounselorPassStatsBatch(
   const res = await db.query<DBCounselorPassStats>(query, [assignmentIds]);
   return res.rows;
 }
+
+// ──────────────────────────────────────────────────────────────
+// Detailed pass list per counselor assignment (Admin drill-down)
+// ──────────────────────────────────────────────────────────────
+
+export type DBCounselorPassDetail = {
+  pass_id: string;
+  student_code: string;
+  student_name: string;
+  department: string | null;
+  year: string | null;
+  section: string | null;
+  reason: string;
+  date: string;
+  valid_from: string;
+  valid_until: string;
+  status: string;
+  issued_by: string | null;
+  target_role: string | null;
+  created_at: string;
+  is_active_now: boolean;
+};
+
+/**
+ * Returns full pass rows for all students assigned to a counselor assignment.
+ * Optionally filtered by status bucket: 'pending' | 'approved' | 'rejected' | 'active' | 'all'.
+ */
+export async function getCounselorPassesDetailedForAdmin(
+  assignmentId: string,
+  statusFilter: "all" | "pending" | "approved" | "rejected" | "active" = "all"
+): Promise<DBCounselorPassDetail[]> {
+  await ensureCounselorSchema();
+
+  const conditions: string[] = [
+    `cs.counselor_assignment_id = $1`,
+    `cs.status = 'ACTIVE'`,
+  ];
+  const params: unknown[] = [assignmentId];
+
+  if (statusFilter === "pending") {
+    conditions.push(`LOWER(mp.status::text) IN ('pending', 'counselor_pending', 'hod_pending')`);
+  } else if (statusFilter === "approved") {
+    conditions.push(`LOWER(mp.status::text) IN ('approved', 'counselor_approved', 'hod_approved', 'granted')`);
+  } else if (statusFilter === "rejected") {
+    conditions.push(`LOWER(mp.status::text) IN ('rejected', 'counselor_rejected', 'hod_rejected', 'denied')`);
+  } else if (statusFilter === "active") {
+    conditions.push(`LOWER(mp.status::text) IN ('approved', 'counselor_approved', 'hod_approved', 'granted')`);
+    conditions.push(`mp.date = CURRENT_DATE`);
+    conditions.push(`NOW()::time >= mp.valid_from::time`);
+    conditions.push(`NOW()::time <= mp.valid_until::time`);
+  }
+
+  const query = `
+    SELECT
+      mp.id::text                                          AS pass_id,
+      mp.student_code,
+      COALESCE(s.name, mp.student_code)                   AS student_name,
+      COALESCE(s.department, ca.department)               AS department,
+      COALESCE(s.year, ca.year)                           AS year,
+      COALESCE(s.section, ca.section)                     AS section,
+      mp.reason,
+      to_char(mp.date, 'YYYY-MM-DD')                      AS date,
+      mp.valid_from::text                                  AS valid_from,
+      mp.valid_until::text                                 AS valid_until,
+      LOWER(mp.status::text)                              AS status,
+      mp.issued_by,
+      COALESCE(mp.target_role, 'counselor')::text         AS target_role,
+      mp.created_at::text                                  AS created_at,
+      (
+        mp.date = CURRENT_DATE
+        AND NOW()::time >= mp.valid_from::time
+        AND NOW()::time <= mp.valid_until::time
+        AND LOWER(mp.status::text) IN ('approved', 'counselor_approved', 'hod_approved', 'granted')
+      )                                                    AS is_active_now
+    FROM counselor_students cs
+    JOIN counselor_assignments ca ON ca.id = cs.counselor_assignment_id
+    JOIN movement_permissions mp ON UPPER(mp.student_code) = UPPER(cs.student_code)
+    LEFT JOIN students s ON UPPER(s.student_code) = UPPER(cs.student_code)
+    WHERE ${conditions.join(" AND ")}
+    ORDER BY mp.created_at DESC;
+  `;
+
+  const res = await db.query<DBCounselorPassDetail>(query, params);
+  return res.rows;
+}

@@ -15,6 +15,12 @@ import {
   Eye,
   MoreVertical,
   UserMinus,
+  FileText,
+  Clock,
+  XCircle,
+  Activity,
+  Calendar,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
@@ -32,9 +38,10 @@ import {
   moveCounselorStudentAdminApi,
   changeCounselorFacultyAdminApi,
   getCounselorPassStatsAdminApi,
+  getCounselorPassesDetailedAdminApi,
 } from "@/lib/api/counselor.server";
 import { getAdminFacultyApi } from "@/lib/api/admin.server";
-import type { DBCounselorAssignment, DBCounselorPassStats } from "@/lib/db/counselor.server";
+import type { DBCounselorAssignment, DBCounselorPassStats, DBCounselorPassDetail } from "@/lib/db/counselor.server";
 import { ToneBadge } from "@/components/status-badge";
 
 export const Route = createFileRoute("/admin/counselors")({
@@ -90,10 +97,13 @@ function AdminCounselorsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // View mode: "cards" = counselor grid, "students" = view-students panel
-  const [viewMode, setViewMode] = useState<"cards" | "students">("cards");
+  // View mode: "cards" = counselor grid, "detail" = view passes/students panel
+  const [viewMode, setViewMode] = useState<"cards" | "detail">("cards");
   const [viewAssignment, setViewAssignment] = useState<DBCounselorAssignment | null>(null);
+  const [detailTab, setDetailTab] = useState<"passes" | "students">("passes");
+  const [passFilter, setPassFilter] = useState<"all" | "pending" | "approved" | "rejected" | "active">("all");
   const [viewStudents, setViewStudents] = useState<AssignmentStudent[]>([]);
+  const [viewPasses, setViewPasses] = useState<DBCounselorPassDetail[]>([]);
   const [viewSearch, setViewSearch] = useState("");
   const [viewLoading, setViewLoading] = useState(false);
 
@@ -149,6 +159,7 @@ function AdminCounselorsContent() {
     setViewMode("cards");
     setViewAssignment(null);
     setViewStudents([]);
+    setViewPasses([]);
     try {
       const [aRes, fRes, sRes] = await Promise.all([
         getCounselorAssignmentsAdminApi({ data: { department, year, semester, section } }),
@@ -183,16 +194,49 @@ function AdminCounselorsContent() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // ── View Students ────────────────────────────────────────────
-  const openViewStudents = async (assignment: DBCounselorAssignment) => {
+  // ── View Passes & Students Drilldown ───────────────────────────
+  const openViewPasses = async (
+    assignment: DBCounselorAssignment,
+    filter: "all" | "pending" | "approved" | "rejected" | "active" = "all"
+  ) => {
     setViewAssignment(assignment);
-    setViewMode("students");
+    setViewMode("detail");
+    setDetailTab("passes");
+    setPassFilter(filter);
     setViewSearch("");
     setViewLoading(true);
+    setViewPasses([]);
     setViewStudents([]);
     try {
-      const students = await getCounselorStudentsByAssignmentAdminApi({ data: { assignmentId: assignment.id } });
+      const [passes, students] = await Promise.all([
+        getCounselorPassesDetailedAdminApi({ data: { assignmentId: assignment.id, statusFilter: "all" } }).catch(() => [] as DBCounselorPassDetail[]),
+        getCounselorStudentsByAssignmentAdminApi({ data: { assignmentId: assignment.id } }).catch(() => [] as AssignmentStudent[]),
+      ]);
+      setViewPasses(Array.isArray(passes) ? passes : []);
       setViewStudents(Array.isArray(students) ? students : []);
+    } catch {
+      toast.error("Failed to load counselor pass details.");
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
+  const openViewStudents = async (assignment: DBCounselorAssignment) => {
+    setViewAssignment(assignment);
+    setViewMode("detail");
+    setDetailTab("students");
+    setPassFilter("all");
+    setViewSearch("");
+    setViewLoading(true);
+    setViewPasses([]);
+    setViewStudents([]);
+    try {
+      const [students, passes] = await Promise.all([
+        getCounselorStudentsByAssignmentAdminApi({ data: { assignmentId: assignment.id } }).catch(() => [] as AssignmentStudent[]),
+        getCounselorPassesDetailedAdminApi({ data: { assignmentId: assignment.id, statusFilter: "all" } }).catch(() => [] as DBCounselorPassDetail[]),
+      ]);
+      setViewStudents(Array.isArray(students) ? students : []);
+      setViewPasses(Array.isArray(passes) ? passes : []);
     } catch {
       toast.error("Failed to load students.");
     } finally {
@@ -204,6 +248,7 @@ function AdminCounselorsContent() {
     setViewMode("cards");
     setViewAssignment(null);
     setViewStudents([]);
+    setViewPasses([]);
   };
 
   // ── Add Counselor ────────────────────────────────────────────
@@ -361,7 +406,7 @@ function AdminCounselorsContent() {
       toast.success(`Moved ${moveSelected.size} student(s) successfully!`);
       setMoveOpen(false);
       await loadData();
-      if (viewMode === "students" && viewAssignment?.id === moveSourceId) {
+      if (viewMode === "detail" && viewAssignment?.id === moveSourceId) {
         await openViewStudents(viewAssignment);
       }
     } catch (err: any) {
@@ -449,6 +494,29 @@ function AdminCounselorsContent() {
     s.name?.toLowerCase().includes(viewSearch.toLowerCase()) ||
     s.student_code.toLowerCase().includes(viewSearch.toLowerCase())
   );
+
+  const filteredViewPasses = viewPasses.filter(p => {
+    if (passFilter === "pending") {
+      const isPending = ["pending", "counselor_pending", "hod_pending"].includes(p.status?.toLowerCase() || "");
+      if (!isPending) return false;
+    } else if (passFilter === "approved") {
+      const isApproved = ["approved", "counselor_approved", "hod_approved", "granted"].includes(p.status?.toLowerCase() || "");
+      if (!isApproved) return false;
+    } else if (passFilter === "rejected") {
+      const isRejected = ["rejected", "counselor_rejected", "hod_rejected", "denied"].includes(p.status?.toLowerCase() || "");
+      if (!isRejected) return false;
+    } else if (passFilter === "active") {
+      if (!p.is_active_now) return false;
+    }
+
+    if (!viewSearch.trim()) return true;
+    const q = viewSearch.toLowerCase();
+    return (
+      (p.student_name && p.student_name.toLowerCase().includes(q)) ||
+      (p.student_code && p.student_code.toLowerCase().includes(q)) ||
+      (p.reason && p.reason.toLowerCase().includes(q))
+    );
+  });
 
   // ── Render ───────────────────────────────────────────────────
   return (
@@ -607,15 +675,22 @@ function AdminCounselorsContent() {
             <RefreshCw className="size-3.5 mr-1" /> Retry
           </Button>
         </div>
-      ) : viewMode === "students" && viewAssignment ? (
-        <ViewStudentsPanel
+      ) : viewMode === "detail" && viewAssignment ? (
+        <CounselorDetailPanel
           assignment={viewAssignment}
           students={filteredViewStudents}
+          passes={filteredViewPasses}
+          allPasses={viewPasses}
           loading={viewLoading}
           search={viewSearch}
           onSearchChange={setViewSearch}
+          activeTab={detailTab}
+          onTabChange={setDetailTab}
+          passFilter={passFilter}
+          onPassFilterChange={setPassFilter}
           onBack={backToCards}
-          totalCount={viewStudents.length}
+          totalStudentsCount={viewStudents.length}
+          passStats={passStats[viewAssignment.id]}
         />
       ) : (
         /* ── COUNSELOR CARD GRID ── */
@@ -641,6 +716,7 @@ function AdminCounselorsContent() {
               assignment={assignment}
               canMove={assignments.length > 1}
               passStats={passStats[assignment.id]}
+              onViewPasses={filter => openViewPasses(assignment, filter)}
               onViewStudents={() => openViewStudents(assignment)}
               onEdit={() => openEdit(assignment)}
               onMove={() => openMove(assignment.id)}
@@ -1168,6 +1244,7 @@ function CounselorCard({
   assignment,
   canMove,
   passStats,
+  onViewPasses,
   onViewStudents,
   onEdit,
   onMove,
@@ -1177,6 +1254,7 @@ function CounselorCard({
   assignment: DBCounselorAssignment;
   canMove: boolean;
   passStats?: DBCounselorPassStats | undefined;
+  onViewPasses: (statusFilter?: "all" | "pending" | "approved" | "rejected" | "active") => void;
   onViewStudents: () => void;
   onEdit: () => void;
   onMove: () => void;
@@ -1233,6 +1311,12 @@ function CounselorCard({
             </button>
             {menuOpen && (
               <div className="absolute right-0 top-8 z-20 bg-card border border-border rounded-xl shadow-xl py-1 min-w-[170px]">
+                <button
+                  onClick={() => { setMenuOpen(false); onEdit(); }}
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-foreground hover:bg-muted flex items-center gap-2"
+                >
+                  <Edit2 className="size-3.5 text-muted-foreground" /> Edit Counselor
+                </button>
                 {canMove && (
                   <button
                     onClick={() => { setMenuOpen(false); onMove(); }}
@@ -1274,40 +1358,59 @@ function CounselorCard({
         )}
       </div>
 
-      {/* Pass Overview — per-counselor movement pass stats */}
+      {/* Pass Overview — interactive buttons for each pass category */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Pass Overview</p>
+        <div className="flex items-center justify-between mb-1.5">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Movement Passes</p>
+          <button
+            type="button"
+            onClick={() => onViewPasses("all")}
+            className="text-[10px] font-bold text-primary hover:underline"
+          >
+            View Details &rarr;
+          </button>
+        </div>
         <div className="grid grid-cols-4 gap-1">
           {[
             {
+              key: "pending" as const,
               label: "Pending",
               value: passStats?.pending ?? 0,
-              bg: "bg-amber-500/10 border-amber-500/20",
+              bg: "bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20",
               text: "text-amber-700 dark:text-amber-300",
             },
             {
+              key: "approved" as const,
               label: "Approved",
               value: passStats?.approved ?? 0,
-              bg: "bg-emerald-500/10 border-emerald-500/20",
+              bg: "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20",
               text: "text-emerald-700 dark:text-emerald-300",
             },
             {
+              key: "rejected" as const,
               label: "Rejected",
               value: passStats?.rejected ?? 0,
-              bg: "bg-red-500/10 border-red-500/20",
+              bg: "bg-red-500/10 border-red-500/20 hover:bg-red-500/20",
               text: "text-red-700 dark:text-red-300",
             },
             {
+              key: "active" as const,
               label: "Active Now",
               value: passStats?.active_now ?? 0,
-              bg: "bg-blue-500/10 border-blue-500/20",
+              bg: "bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20",
               text: "text-blue-700 dark:text-blue-300",
             },
-          ].map(({ label, value, bg, text }) => (
-            <div key={label} className={`rounded-lg border py-1.5 text-center ${bg}`}>
+          ].map(({ key, label, value, bg, text }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => onViewPasses(key)}
+              title={`Click to view ${label.toLowerCase()} passes for this counselor`}
+              className={`rounded-lg border py-1.5 px-1 text-center transition-all cursor-pointer hover:scale-[1.03] active:scale-[0.98] ${bg}`}
+            >
               <div className={`text-base font-extrabold tabular-nums leading-tight ${text}`}>{value}</div>
               <div className="text-[9px] text-muted-foreground font-semibold mt-0.5 leading-tight">{label}</div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -1317,41 +1420,56 @@ function CounselorCard({
         <Button
           size="sm"
           variant="outline"
+          onClick={() => onViewPasses("all")}
+          className="rounded-xl text-xs font-semibold h-9"
+        >
+          <FileText className="size-3.5 mr-1 text-primary" /> View Passes
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
           onClick={onViewStudents}
           className="rounded-xl text-xs font-semibold h-9"
           disabled={studentCount === 0}
         >
-          <Eye className="size-3.5 mr-1" /> View Students
-        </Button>
-        <Button
-          size="sm"
-          onClick={onEdit}
-          className="rounded-xl text-xs font-semibold h-9"
-        >
-          <Edit2 className="size-3.5 mr-1" /> Edit
+          <Users className="size-3.5 mr-1" /> Students ({studentCount})
         </Button>
       </div>
     </div>
   );
 }
 
-/** Inline View Students panel — replaces the card grid without a modal */
-function ViewStudentsPanel({
+/** Comprehensive Counselor Detail Panel — Passes drill-down & student roster */
+function CounselorDetailPanel({
   assignment,
   students,
+  passes,
+  allPasses,
   loading,
   search,
   onSearchChange,
+  activeTab,
+  onTabChange,
+  passFilter,
+  onPassFilterChange,
   onBack,
-  totalCount,
+  totalStudentsCount,
+  passStats,
 }: {
   assignment: DBCounselorAssignment;
   students: AssignmentStudent[];
+  passes: DBCounselorPassDetail[];
+  allPasses: DBCounselorPassDetail[];
   loading: boolean;
   search: string;
   onSearchChange: (v: string) => void;
+  activeTab: "passes" | "students";
+  onTabChange: (tab: "passes" | "students") => void;
+  passFilter: "all" | "pending" | "approved" | "rejected" | "active";
+  onPassFilterChange: (filter: "all" | "pending" | "approved" | "rejected" | "active") => void;
   onBack: () => void;
-  totalCount: number;
+  totalStudentsCount: number;
+  passStats?: DBCounselorPassStats | undefined;
 }) {
   const initials = (assignment.faculty_name || "??")
     .split(" ")
@@ -1359,111 +1477,417 @@ function ViewStudentsPanel({
     .map(n => n[0]?.toUpperCase() || "")
     .join("");
 
+  const pendingCount = passStats?.pending ?? allPasses.filter(p => ["pending", "counselor_pending", "hod_pending"].includes(p.status?.toLowerCase() || "")).length;
+  const approvedCount = passStats?.approved ?? allPasses.filter(p => ["approved", "counselor_approved", "hod_approved", "granted"].includes(p.status?.toLowerCase() || "")).length;
+  const rejectedCount = passStats?.rejected ?? allPasses.filter(p => ["rejected", "counselor_rejected", "hod_rejected", "denied"].includes(p.status?.toLowerCase() || "")).length;
+  const activeCount = passStats?.active_now ?? allPasses.filter(p => p.is_active_now).length;
+
   return (
     <div className="space-y-4">
-      {/* Back + counselor header */}
-      <div className="card-surface rounded-2xl border border-border p-4 sm:p-5 space-y-3">
+      {/* Back button & Counselor profile card */}
+      <div className="card-surface rounded-2xl border border-border p-4 sm:p-5 space-y-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-semibold transition-colors"
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-semibold transition-colors cursor-pointer"
         >
           <ChevronLeft className="size-4" /> Back to Counselors
         </button>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex items-center gap-3">
-            <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-extrabold">
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="size-13 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-extrabold text-base shrink-0 border border-primary/20">
               {initials}
             </div>
             <div>
-              <p className="font-bold text-foreground">{assignment.faculty_name}</p>
-              <p className="text-xs text-muted-foreground">Faculty Counselor</p>
-              {assignment.staff_code && (
-                <p className="text-xs font-mono text-primary font-semibold">{assignment.staff_code}</p>
-              )}
+              <div className="flex items-center gap-2">
+                <p className="font-bold text-base text-foreground">{assignment.faculty_name}</p>
+                <ToneBadge tone="success">ACTIVE</ToneBadge>
+              </div>
+              <p className="text-xs text-muted-foreground font-medium">Faculty Counselor</p>
+              <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground font-medium">
+                {assignment.staff_code && (
+                  <span className="font-mono text-primary font-semibold">{assignment.staff_code}</span>
+                )}
+                <span>&bull;</span>
+                <span>{assignment.department} &bull; {assignment.year} &bull; Sem {assignment.semester} &bull; {assignment.section}</span>
+              </div>
             </div>
           </div>
-          <div className="sm:ml-4 text-xs text-muted-foreground font-medium">
-            {assignment.department} &bull; {assignment.year} &bull; Sem {assignment.semester} &bull; {assignment.section}
+
+          {/* Quick summary badges */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => { onTabChange("students"); }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/60 hover:bg-muted text-xs font-semibold border border-border text-foreground transition-colors cursor-pointer"
+            >
+              <Users className="size-3.5 text-primary" /> {totalStudentsCount} Students
+            </button>
+            <button
+              onClick={() => { onTabChange("passes"); onPassFilterChange("all"); }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/60 hover:bg-muted text-xs font-semibold border border-border text-foreground transition-colors cursor-pointer"
+            >
+              <FileText className="size-3.5 text-blue-600 dark:text-blue-400" /> {allPasses.length} Passes
+            </button>
+            {pendingCount > 0 && (
+              <button
+                onClick={() => { onTabChange("passes"); onPassFilterChange("pending"); }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-xs font-bold border border-amber-500/30 text-amber-700 dark:text-amber-300 transition-colors cursor-pointer"
+              >
+                <Clock className="size-3.5" /> {pendingCount} Pending
+              </button>
+            )}
+            {activeCount > 0 && (
+              <button
+                onClick={() => { onTabChange("passes"); onPassFilterChange("active"); }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-xs font-bold border border-blue-500/30 text-blue-700 dark:text-blue-300 transition-colors cursor-pointer animate-pulse"
+              >
+                <Activity className="size-3.5" /> {activeCount} Active Now
+              </button>
+            )}
           </div>
-          <div className="sm:ml-auto shrink-0">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20">
-              <Users className="size-3.5" /> {totalCount} Students
+        </div>
+
+        {/* Tab switcher */}
+        <div className="flex border-b border-border gap-2 pt-2">
+          <button
+            onClick={() => onTabChange("passes")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
+              activeTab === "passes"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <FileText className="size-3.5" />
+            Movement Passes
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-primary/10 text-primary font-bold">
+              {allPasses.length}
             </span>
-          </div>
+          </button>
+          <button
+            onClick={() => onTabChange("students")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
+              activeTab === "students"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Users className="size-3.5" />
+            Assigned Students
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-muted text-muted-foreground font-bold">
+              {totalStudentsCount}
+            </span>
+          </button>
         </div>
       </div>
 
-      {/* Search bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Search student by name or roll number..."
-          value={search}
-          onChange={e => onSearchChange(e.target.value)}
-          className="w-full h-10 pl-10 pr-4 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-        />
-      </div>
+      {/* ────────────────── PASSES TAB ────────────────── */}
+      {activeTab === "passes" && (
+        <div className="space-y-4">
+          {/* Status filter pills & Search bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Status pills */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {[
+                { id: "all" as const, label: "All Passes", count: allPasses.length, tone: "default" },
+                { id: "pending" as const, label: "Pending", count: pendingCount, tone: "amber" },
+                { id: "approved" as const, label: "Approved", count: approvedCount, tone: "emerald" },
+                { id: "rejected" as const, label: "Rejected", count: rejectedCount, tone: "red" },
+                { id: "active" as const, label: "Active Outside", count: activeCount, tone: "blue" },
+              ].map(tab => {
+                const isActive = passFilter === tab.id;
+                let activeStyle = "bg-primary text-primary-foreground shadow-xs";
+                if (tab.tone === "amber") activeStyle = "bg-amber-600 text-white shadow-xs";
+                if (tab.tone === "emerald") activeStyle = "bg-emerald-600 text-white shadow-xs";
+                if (tab.tone === "red") activeStyle = "bg-red-600 text-white shadow-xs";
+                if (tab.tone === "blue") activeStyle = "bg-blue-600 text-white shadow-xs";
 
-      {/* Student list */}
-      {loading ? (
-        <div className="card-surface rounded-2xl border border-border p-10 text-center space-y-2">
-          <RefreshCw className="size-6 animate-spin mx-auto text-primary" />
-          <p className="text-xs text-muted-foreground">Loading students...</p>
-        </div>
-      ) : students.length === 0 ? (
-        <div className="card-surface rounded-2xl border border-border p-10 text-center space-y-2">
-          <Users className="size-7 text-muted-foreground mx-auto" />
-          <p className="text-sm font-semibold text-foreground">
-            {search ? "No students match your search." : "No students assigned to this counselor."}
-          </p>
-        </div>
-      ) : (
-        <>
-          {/* Desktop table */}
-          <div className="card-surface rounded-2xl border border-border overflow-hidden hidden sm:block">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-muted/60 border-b border-border text-muted-foreground font-bold uppercase tracking-wider">
-                <tr>
-                  <th className="px-4 py-3">Roll Number</th>
-                  <th className="px-4 py-3">Student Name</th>
-                  <th className="px-4 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {students.map(s => (
-                  <tr key={s.student_code} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-mono font-bold text-primary">{s.student_code}</td>
-                    <td className="px-4 py-3 font-medium text-foreground">{s.name || "—"}</td>
-                    <td className="px-4 py-3">
-                      <ToneBadge tone={s.status?.toLowerCase() === "active" ? "success" : "warning"}>
-                        {s.status || "Active"}
-                      </ToneBadge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => onPassFilterChange(tab.id)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      isActive
+                        ? activeStyle
+                        : "bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border"
+                    }`}
+                  >
+                    <span>{tab.label}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                        isActive ? "bg-black/20 text-white" : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search Input */}
+            <div className="relative sm:w-72 shrink-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search student name, roll no, reason..."
+                value={search}
+                onChange={e => onSearchChange(e.target.value)}
+                className="w-full h-9 pl-9 pr-4 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
           </div>
 
-          {/* Mobile student cards */}
-          <div className="sm:hidden space-y-2">
-            {students.map(s => (
-              <div key={s.student_code} className="card-surface rounded-xl border border-border p-3 flex items-center gap-3">
-                <div className="size-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
-                  {s.name?.[0]?.toUpperCase() || "?"}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">{s.name || "—"}</p>
-                  <p className="text-xs font-mono text-muted-foreground">{s.student_code}</p>
-                </div>
-                <ToneBadge tone={s.status?.toLowerCase() === "active" ? "success" : "warning"}>
-                  {s.status || "Active"}
-                </ToneBadge>
+          {/* Passes Content */}
+          {loading ? (
+            <div className="card-surface rounded-2xl border border-border p-10 text-center space-y-2">
+              <RefreshCw className="size-6 animate-spin mx-auto text-primary" />
+              <p className="text-xs text-muted-foreground">Loading movement passes...</p>
+            </div>
+          ) : passes.length === 0 ? (
+            <div className="card-surface rounded-2xl border border-border p-10 text-center space-y-3">
+              <div className="size-12 rounded-full bg-muted flex items-center justify-center mx-auto">
+                <FileText className="size-6 text-muted-foreground" />
               </div>
-            ))}
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {search
+                    ? "No passes match your search criteria."
+                    : passFilter !== "all"
+                    ? `No ${passFilter} passes found for this counselor's students.`
+                    : "No movement passes requested yet by students assigned to this counselor."}
+                </p>
+                {passFilter !== "all" && !search && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onPassFilterChange("all")}
+                    className="mt-3 rounded-xl text-xs font-semibold"
+                  >
+                    View All Passes
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Desktop Passes Table */}
+              <div className="card-surface rounded-2xl border border-border overflow-hidden hidden md:block">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-muted/60 border-b border-border text-muted-foreground font-bold uppercase tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3">Student</th>
+                      <th className="px-4 py-3">Pass Purpose / Reason</th>
+                      <th className="px-4 py-3">Date & Time Window</th>
+                      <th className="px-4 py-3">Approval Status</th>
+                      <th className="px-4 py-3">Issued By</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {passes.map(p => {
+                      const isPending = ["pending", "counselor_pending", "hod_pending"].includes(p.status?.toLowerCase() || "");
+                      const isApproved = ["approved", "counselor_approved", "hod_approved", "granted"].includes(p.status?.toLowerCase() || "");
+                      const isRejected = ["rejected", "counselor_rejected", "hod_rejected", "denied"].includes(p.status?.toLowerCase() || "");
+
+                      return (
+                        <tr key={p.pass_id} className="hover:bg-muted/30 transition-colors">
+                          {/* Student Info */}
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-2.5">
+                              <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                                {p.student_name?.[0]?.toUpperCase() || "?"}
+                              </div>
+                              <div>
+                                <p className="font-bold text-foreground leading-tight">{p.student_name || "—"}</p>
+                                <p className="font-mono text-[11px] text-primary font-semibold">{p.student_code}</p>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Reason */}
+                          <td className="px-4 py-3.5 max-w-xs">
+                            <p className="text-foreground font-medium truncate" title={p.reason}>{p.reason || "General Movement"}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              {p.department} &bull; {p.year} &bull; {p.section}
+                            </p>
+                          </td>
+
+                          {/* Date & Timings */}
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <div className="flex items-center gap-1.5 text-foreground font-semibold">
+                              <Calendar className="size-3.5 text-muted-foreground" />
+                              <span>{p.date}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5 font-mono">
+                              <Clock className="size-3 text-muted-foreground" />
+                              <span>{p.valid_from} &ndash; {p.valid_until}</span>
+                            </div>
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-4 py-3.5">
+                            <div className="flex flex-col gap-1 items-start">
+                              {isPending && (
+                                <ToneBadge tone="warning">
+                                  <Clock className="size-3 mr-1" /> Pending Approval
+                                </ToneBadge>
+                              )}
+                              {isApproved && (
+                                <ToneBadge tone="success">
+                                  <CheckCircle2 className="size-3 mr-1" /> Approved
+                                </ToneBadge>
+                              )}
+                              {isRejected && (
+                                <ToneBadge tone="danger">
+                                  <XCircle className="size-3 mr-1" /> Rejected
+                                </ToneBadge>
+                              )}
+                              {!isPending && !isApproved && !isRejected && (
+                                <ToneBadge tone="neutral">{p.status?.toUpperCase() || "UNKNOWN"}</ToneBadge>
+                              )}
+
+                              {p.is_active_now && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 text-[10px] font-bold border border-blue-500/20 animate-pulse">
+                                  <span className="size-1.5 rounded-full bg-blue-500" /> Outside Campus Now
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Issued By */}
+                          <td className="px-4 py-3.5">
+                            <p className="text-foreground font-medium">{p.issued_by || "Faculty Counselor"}</p>
+                            <p className="text-[10px] text-muted-foreground">{p.target_role || "Counselor"}</p>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Passes Cards */}
+              <div className="md:hidden space-y-2.5">
+                {passes.map(p => {
+                  const isPending = ["pending", "counselor_pending", "hod_pending"].includes(p.status?.toLowerCase() || "");
+                  const isApproved = ["approved", "counselor_approved", "hod_approved", "granted"].includes(p.status?.toLowerCase() || "");
+                  const isRejected = ["rejected", "counselor_rejected", "hod_rejected", "denied"].includes(p.status?.toLowerCase() || "");
+
+                  return (
+                    <div key={p.pass_id} className="card-surface rounded-2xl border border-border p-3.5 space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-bold text-foreground">{p.student_name || "—"}</p>
+                          <p className="font-mono text-xs text-primary font-semibold">{p.student_code}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {isPending && <ToneBadge tone="warning">Pending</ToneBadge>}
+                          {isApproved && <ToneBadge tone="success">Approved</ToneBadge>}
+                          {isRejected && <ToneBadge tone="danger">Rejected</ToneBadge>}
+                          {p.is_active_now && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 text-[9px] font-bold border border-blue-500/20">
+                              <span className="size-1.5 rounded-full bg-blue-500" /> Active Now
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="bg-muted/40 p-2 rounded-xl text-xs space-y-1 border border-border">
+                        <p className="text-foreground font-medium"><span className="text-muted-foreground font-normal">Reason:</span> {p.reason || "General Movement"}</p>
+                        <p className="text-muted-foreground flex items-center gap-2">
+                          <span>📅 {p.date}</span>
+                          <span>⏰ {p.valid_from} &ndash; {p.valid_until}</span>
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span>Issued by: {p.issued_by || "Counselor"}</span>
+                        <span>{p.department} &bull; {p.section}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ────────────────── STUDENTS TAB ────────────────── */}
+      {activeTab === "students" && (
+        <div className="space-y-4">
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search assigned student by name or roll number..."
+              value={search}
+              onChange={e => onSearchChange(e.target.value)}
+              className="w-full h-10 pl-10 pr-4 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            />
           </div>
-        </>
+
+          {/* Student list */}
+          {loading ? (
+            <div className="card-surface rounded-2xl border border-border p-10 text-center space-y-2">
+              <RefreshCw className="size-6 animate-spin mx-auto text-primary" />
+              <p className="text-xs text-muted-foreground">Loading assigned students...</p>
+            </div>
+          ) : students.length === 0 ? (
+            <div className="card-surface rounded-2xl border border-border p-10 text-center space-y-2">
+              <Users className="size-7 text-muted-foreground mx-auto" />
+              <p className="text-sm font-semibold text-foreground">
+                {search ? "No students match your search." : "No students assigned to this counselor."}
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop table */}
+              <div className="card-surface rounded-2xl border border-border overflow-hidden hidden sm:block">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-muted/60 border-b border-border text-muted-foreground font-bold uppercase tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3">Roll Number</th>
+                      <th className="px-4 py-3">Student Name</th>
+                      <th className="px-4 py-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {students.map(s => (
+                      <tr key={s.student_code} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-3 font-mono font-bold text-primary">{s.student_code}</td>
+                        <td className="px-4 py-3 font-medium text-foreground">{s.name || "—"}</td>
+                        <td className="px-4 py-3">
+                          <ToneBadge tone={s.status?.toLowerCase() === "active" ? "success" : "warning"}>
+                            {s.status || "Active"}
+                          </ToneBadge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile student cards */}
+              <div className="sm:hidden space-y-2">
+                {students.map(s => (
+                  <div key={s.student_code} className="card-surface rounded-xl border border-border p-3 flex items-center gap-3">
+                    <div className="size-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                      {s.name?.[0]?.toUpperCase() || "?"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">{s.name || "—"}</p>
+                      <p className="text-xs font-mono text-muted-foreground">{s.student_code}</p>
+                    </div>
+                    <ToneBadge tone={s.status?.toLowerCase() === "active" ? "success" : "warning"}>
+                      {s.status || "Active"}
+                    </ToneBadge>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       )}
     </div>
   );

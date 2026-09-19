@@ -254,3 +254,18 @@ export const getCounselorPassStatsAdminApi = createServerFn({ method: "POST" })
     const { getCounselorPassStatsBatch } = await import("../db/counselor.server");
     return await getCounselorPassStatsBatch(data.assignmentIds);
   });
+
+/**
+ * Admin API: Get detailed pass list for a counselor assignment with student info.
+ * Supports status filter: 'all' | 'pending' | 'approved' | 'rejected' | 'active'
+ */
+export const getCounselorPassesDetailedAdminApi = createServerFn({ method: "POST" })
+  .validator((data: {
+    assignmentId: string;
+    statusFilter?: "all" | "pending" | "approved" | "rejected" | "active";
+  }) => data)
+  .handler(async ({ data }) => {
+    await requireRole("admin");
+    const { getCounselorPassesDetailedForAdmin } = await import("../db/counselor.server");
+    return await getCounselorPassesDetailedForAdmin(data.assignmentId, data.statusFilter ?? "all");
+  });
