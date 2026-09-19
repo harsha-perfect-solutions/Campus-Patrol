@@ -242,3 +242,15 @@ export const changeCounselorFacultyAdminApi = createServerFn({ method: "POST" })
     await changeCounselorAssignmentFaculty(data.assignmentId, data.facultyId);
     return { success: true };
   });
+
+/**
+ * Admin API: Batch-fetch movement-pass stats for multiple counselor assignments.
+ * Returns pending / approved / rejected / active_now / total counts per assignment.
+ */
+export const getCounselorPassStatsAdminApi = createServerFn({ method: "POST" })
+  .validator((data: { assignmentIds: string[] }) => data)
+  .handler(async ({ data }) => {
+    await requireRole("admin");
+    const { getCounselorPassStatsBatch } = await import("../db/counselor.server");
+    return await getCounselorPassStatsBatch(data.assignmentIds);
+  });

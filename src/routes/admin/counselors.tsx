@@ -31,9 +31,10 @@ import {
   updateAssignmentStudentsAdminApi,
   moveCounselorStudentAdminApi,
   changeCounselorFacultyAdminApi,
+  getCounselorPassStatsAdminApi,
 } from "@/lib/api/counselor.server";
 import { getAdminFacultyApi } from "@/lib/api/admin.server";
-import type { DBCounselorAssignment } from "@/lib/db/counselor.server";
+import type { DBCounselorAssignment, DBCounselorPassStats } from "@/lib/db/counselor.server";
 import { ToneBadge } from "@/components/status-badge";
 
 export const Route = createFileRoute("/admin/counselors")({
@@ -85,6 +86,7 @@ function AdminCounselorsContent() {
   const [assignments, setAssignments] = useState<DBCounselorAssignment[]>([]);
   const [facultyProfiles, setFacultyProfiles] = useState<FacultyProfile[]>([]);
   const [sectionStudents, setSectionStudents] = useState<SectionStudent[]>([]);
+  const [passStats, setPassStats] = useState<Record<string, DBCounselorPassStats>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -153,9 +155,24 @@ function AdminCounselorsContent() {
         getAdminFacultyApi().catch(() => ({ success: true, faculty: [] })),
         getSectionStudentsAdminApi({ data: { department, year, section } }).catch(() => []),
       ]);
-      setAssignments(Array.isArray(aRes) ? aRes : []);
+      const fetchedAssignments: DBCounselorAssignment[] = Array.isArray(aRes) ? aRes : [];
+      setAssignments(fetchedAssignments);
       if (fRes?.faculty) setFacultyProfiles(fRes.faculty as FacultyProfile[]);
       setSectionStudents(Array.isArray(sRes) ? sRes : []);
+
+      // Fetch pass stats for all assignments in a single batch call
+      if (fetchedAssignments.length > 0) {
+        const statsRes = await getCounselorPassStatsAdminApi({
+          data: { assignmentIds: fetchedAssignments.map(a => a.id) },
+        }).catch(() => [] as DBCounselorPassStats[]);
+        const statsMap: Record<string, DBCounselorPassStats> = {};
+        (Array.isArray(statsRes) ? statsRes : []).forEach((s: DBCounselorPassStats) => {
+          statsMap[s.assignment_id] = s;
+        });
+        setPassStats(statsMap);
+      } else {
+        setPassStats({});
+      }
     } catch (err: any) {
       setError(err.message || "Failed to load counselor data.");
       toast.error(err.message || "Failed to load counselor data.");
@@ -623,6 +640,7 @@ function AdminCounselorsContent() {
               key={assignment.id}
               assignment={assignment}
               canMove={assignments.length > 1}
+              passStats={passStats[assignment.id]}
               onViewStudents={() => openViewStudents(assignment)}
               onEdit={() => openEdit(assignment)}
               onMove={() => openMove(assignment.id)}
@@ -1149,6 +1167,7 @@ function StudentSelector({
 function CounselorCard({
   assignment,
   canMove,
+  passStats,
   onViewStudents,
   onEdit,
   onMove,
@@ -1157,6 +1176,7 @@ function CounselorCard({
 }: {
   assignment: DBCounselorAssignment;
   canMove: boolean;
+  passStats?: DBCounselorPassStats | undefined;
   onViewStudents: () => void;
   onEdit: () => void;
   onMove: () => void;
@@ -1246,12 +1266,50 @@ function CounselorCard({
       </p>
 
       {/* Student count */}
-      <div className="flex flex-col items-center justify-center py-3 bg-muted/40 rounded-xl border border-border">
+      <div className="flex flex-col items-center justify-center py-2.5 bg-muted/40 rounded-xl border border-border">
         <span className="text-4xl font-extrabold text-foreground tabular-nums">{studentCount}</span>
         <span className="text-xs text-muted-foreground font-medium mt-1">Assigned Students</span>
         {studentCount === 0 && (
           <span className="text-[10px] text-amber-600 font-semibold mt-1">No students assigned</span>
         )}
+      </div>
+
+      {/* Pass Overview — per-counselor movement pass stats */}
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Pass Overview</p>
+        <div className="grid grid-cols-4 gap-1">
+          {[
+            {
+              label: "Pending",
+              value: passStats?.pending ?? 0,
+              bg: "bg-amber-500/10 border-amber-500/20",
+              text: "text-amber-700 dark:text-amber-300",
+            },
+            {
+              label: "Approved",
+              value: passStats?.approved ?? 0,
+              bg: "bg-emerald-500/10 border-emerald-500/20",
+              text: "text-emerald-700 dark:text-emerald-300",
+            },
+            {
+              label: "Rejected",
+              value: passStats?.rejected ?? 0,
+              bg: "bg-red-500/10 border-red-500/20",
+              text: "text-red-700 dark:text-red-300",
+            },
+            {
+              label: "Active Now",
+              value: passStats?.active_now ?? 0,
+              bg: "bg-blue-500/10 border-blue-500/20",
+              text: "text-blue-700 dark:text-blue-300",
+            },
+          ].map(({ label, value, bg, text }) => (
+            <div key={label} className={`rounded-lg border py-1.5 text-center ${bg}`}>
+              <div className={`text-base font-extrabold tabular-nums leading-tight ${text}`}>{value}</div>
+              <div className="text-[9px] text-muted-foreground font-semibold mt-0.5 leading-tight">{label}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Action buttons */}

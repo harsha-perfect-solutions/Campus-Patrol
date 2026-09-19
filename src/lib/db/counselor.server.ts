@@ -1309,3 +1309,66 @@ export async function changeCounselorAssignmentFaculty(
     [newFacultyId, assignmentId]
   );
 }
+
+// ──────────────────────────────────────────────────────────────
+// Pass stats per counselor assignment (Admin overview)
+// ──────────────────────────────────────────────────────────────
+
+export type DBCounselorPassStats = {
+  assignment_id: string;
+  pending: number;
+  approved: number;
+  rejected: number;
+  active_now: number;
+  total: number;
+};
+
+/**
+ * Batch query: returns movement-pass counts for each counselor assignment.
+ * Uses a single SQL query to avoid N+1 per card.
+ *
+ * Status buckets:
+ *   pending    → pass awaiting counselor/HOD approval
+ *   approved   → counselor/HOD approved (not yet used / expired)
+ *   rejected   → rejected by counselor or HOD
+ *   active_now → currently within the valid window (date = today AND valid_from <= now <= valid_until)
+ *   total      → all passes (any status) from students of this counselor
+ */
+export async function getCounselorPassStatsBatch(
+  assignmentIds: string[]
+): Promise<DBCounselorPassStats[]> {
+  if (assignmentIds.length === 0) return [];
+  await ensureCounselorSchema();
+
+  const query = `
+    SELECT
+      ca.id AS assignment_id,
+      COUNT(mp.id) FILTER (
+        WHERE LOWER(mp.status::text) IN ('pending', 'counselor_pending', 'hod_pending')
+      )::int AS pending,
+      COUNT(mp.id) FILTER (
+        WHERE LOWER(mp.status::text) IN ('approved', 'counselor_approved', 'hod_approved', 'granted')
+      )::int AS approved,
+      COUNT(mp.id) FILTER (
+        WHERE LOWER(mp.status::text) IN ('rejected', 'counselor_rejected', 'hod_rejected', 'denied')
+      )::int AS rejected,
+      COUNT(mp.id) FILTER (
+        WHERE LOWER(mp.status::text) IN ('approved', 'counselor_approved', 'hod_approved', 'granted')
+          AND mp.date = CURRENT_DATE
+          AND NOW()::time >= (mp.valid_from::time)
+          AND NOW()::time <= (mp.valid_until::time)
+      )::int AS active_now,
+      COUNT(mp.id)::int AS total
+    FROM counselor_assignments ca
+    LEFT JOIN counselor_students cs
+      ON cs.counselor_assignment_id = ca.id
+      AND cs.status = 'ACTIVE'
+    LEFT JOIN movement_permissions mp
+      ON UPPER(mp.student_code) = UPPER(cs.student_code)
+    WHERE ca.id = ANY($1::text[])
+    GROUP BY ca.id;
+  `;
+
+  const res = await db.query<DBCounselorPassStats>(query, [assignmentIds]);
+  return res.rows;
+}
