@@ -30,7 +30,6 @@ import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminDepartmentsRouteImport } from './routes/admin/departments'
 import { Route as AdminFacultyRouteImport } from './routes/admin/faculty'
 import { Route as AdminMovementPassesRouteImport } from './routes/admin/movement-passes'
-import { Route as AdminPermissionsRouteImport } from './routes/admin/permissions'
 import { Route as AdminReportsRouteImport } from './routes/admin/reports'
 import { Route as AdminRoomsRouteImport } from './routes/admin/rooms'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
@@ -184,11 +183,6 @@ const AdminFacultyRoute = AdminFacultyRouteImport.update({
 const AdminMovementPassesRoute = AdminMovementPassesRouteImport.update({
   id: '/admin/movement-passes',
   path: '/admin/movement-passes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminPermissionsRoute = AdminPermissionsRouteImport.update({
-  id: '/admin/permissions',
-  path: '/admin/permissions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminReportsRoute = AdminReportsRouteImport.update({
@@ -459,7 +453,6 @@ export interface FileRoutesByFullPath {
   '/admin/departments': typeof AdminDepartmentsRoute
   '/admin/faculty': typeof AdminFacultyRoute
   '/admin/movement-passes': typeof AdminMovementPassesRoute
-  '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -531,7 +524,6 @@ export interface FileRoutesByTo {
   '/admin/departments': typeof AdminDepartmentsRoute
   '/admin/faculty': typeof AdminFacultyRoute
   '/admin/movement-passes': typeof AdminMovementPassesRoute
-  '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -605,7 +597,6 @@ export interface FileRoutesById {
   '/admin/departments': typeof AdminDepartmentsRoute
   '/admin/faculty': typeof AdminFacultyRoute
   '/admin/movement-passes': typeof AdminMovementPassesRoute
-  '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -680,7 +671,6 @@ export interface FileRouteTypes {
     | '/admin/departments'
     | '/admin/faculty'
     | '/admin/movement-passes'
-    | '/admin/permissions'
     | '/admin/reports'
     | '/admin/rooms'
     | '/admin/settings'
@@ -752,7 +742,6 @@ export interface FileRouteTypes {
     | '/admin/departments'
     | '/admin/faculty'
     | '/admin/movement-passes'
-    | '/admin/permissions'
     | '/admin/reports'
     | '/admin/rooms'
     | '/admin/settings'
@@ -825,7 +814,6 @@ export interface FileRouteTypes {
     | '/admin/departments'
     | '/admin/faculty'
     | '/admin/movement-passes'
-    | '/admin/permissions'
     | '/admin/reports'
     | '/admin/rooms'
     | '/admin/settings'
@@ -899,7 +887,6 @@ export interface RootRouteChildren {
   AdminDepartmentsRoute: typeof AdminDepartmentsRoute
   AdminFacultyRoute: typeof AdminFacultyRoute
   AdminMovementPassesRoute: typeof AdminMovementPassesRoute
-  AdminPermissionsRoute: typeof AdminPermissionsRoute
   AdminReportsRoute: typeof AdminReportsRouteWithChildren
   AdminRoomsRoute: typeof AdminRoomsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
@@ -1084,13 +1071,6 @@ declare module '@tanstack/react-router' {
       path: '/admin/movement-passes'
       fullPath: '/admin/movement-passes'
       preLoaderRoute: typeof AdminMovementPassesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/permissions': {
-      id: '/admin/permissions'
-      path: '/admin/permissions'
-      fullPath: '/admin/permissions'
-      preLoaderRoute: typeof AdminPermissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/reports': {
@@ -1519,7 +1499,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminDepartmentsRoute: AdminDepartmentsRoute,
   AdminFacultyRoute: AdminFacultyRoute,
   AdminMovementPassesRoute: AdminMovementPassesRoute,
-  AdminPermissionsRoute: AdminPermissionsRoute,
   AdminReportsRoute: AdminReportsRouteWithChildren,
   AdminRoomsRoute: AdminRoomsRoute,
   AdminSettingsRoute: AdminSettingsRoute,

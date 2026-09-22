@@ -1065,7 +1065,6 @@ const adminNavGroups = [
   {
     category: "Governance & System",
     items: [
-      { to: "/admin/permissions", label: "Permission Policies", icon: CheckCircle2 },
       { to: "/admin/audit-logs", label: "Audit Logs", icon: FolderGit2 },
       { to: "/notifications", label: "Notifications", icon: Bell },
       { to: "/admin/settings", label: "Settings", icon: Settings },
