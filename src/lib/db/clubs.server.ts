@@ -55,12 +55,15 @@ export type DBClubEvent = {
   club_id: string;
   event_name: string;
   description: string | null;
+  start_date: string;
+  end_date: string;
   event_date: string;
   start_time: string;
   end_time: string;
   location_type: LocationType;
   location: string;
   event_type: EventType;
+  additional_details?: string | null;
   coordinator_id: string;
   status: EventStatus;
   created_at: string;
@@ -68,6 +71,7 @@ export type DBClubEvent = {
   club_name?: string;
   coordinator_name?: string;
   participant_count?: number;
+  approved_permission_count?: number;
   attended_count?: number;
 };
 
@@ -86,11 +90,15 @@ export type DBEventParticipant = {
   year?: string;
   section?: string;
   event_name?: string;
+  start_date?: string;
+  end_date?: string;
   event_date?: string;
   start_time?: string;
   end_time?: string;
   location_type?: LocationType;
   location?: string;
+  event_type?: EventType;
+  additional_details?: string | null;
   club_name?: string;
   coordinator_name?: string;
 };
@@ -145,16 +153,28 @@ export async function ensureClubSchema(): Promise<void> {
         event_name TEXT NOT NULL,
         description TEXT,
         event_date DATE NOT NULL,
+        start_date DATE,
+        end_date DATE,
         start_time TIME NOT NULL,
         end_time TIME NOT NULL,
         location_type TEXT NOT NULL,
         location TEXT NOT NULL,
         event_type TEXT NOT NULL,
+        additional_details TEXT,
         coordinator_id UUID NOT NULL REFERENCES profiles(id),
         status TEXT NOT NULL DEFAULT 'SCHEDULED',
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+    `);
+
+    // Schema alterations for backward compatibility
+    await db.query(`
+      ALTER TABLE club_events ADD COLUMN IF NOT EXISTS start_date DATE;
+      ALTER TABLE club_events ADD COLUMN IF NOT EXISTS end_date DATE;
+      ALTER TABLE club_events ADD COLUMN IF NOT EXISTS additional_details TEXT;
+      UPDATE club_events SET start_date = event_date WHERE start_date IS NULL;
+      UPDATE club_events SET end_date = event_date WHERE end_date IS NULL;
     `);
 
     await db.query(`
@@ -618,15 +638,35 @@ export async function createClubEvent(
     club_id: string;
     event_name: string;
     description?: string | null;
-    event_date: string;
+    start_date: string;
+    end_date: string;
+    event_date?: string;
     start_time: string;
     end_time: string;
     location_type: LocationType;
     location: string;
     event_type: EventType;
+    additional_details?: string | null;
   }
 ): Promise<DBClubEvent> {
   await ensureClubSchema();
+
+  const cleanName = data.event_name.trim();
+  if (!cleanName) throw new Error("Event name is required.");
+  
+  const startDate = data.start_date || data.event_date;
+  const endDate = data.end_date || startDate;
+  if (!startDate || !endDate) throw new Error("Start date and end date are required.");
+
+  if (new Date(endDate) < new Date(startDate)) {
+    throw new Error("End date cannot be earlier than start date.");
+  }
+
+  if (startDate === endDate && data.start_time && data.end_time) {
+    if (data.end_time <= data.start_time) {
+      throw new Error("For a single-day event, end time must be after start time.");
+    }
+  }
 
   // 1. Check club exists and is ACTIVE
   const club = await getClubById(data.club_id);
@@ -643,22 +683,27 @@ export async function createClubEvent(
   // 3. Insert event
   const res = await db.query<DBClubEvent>(
     `INSERT INTO club_events (
-      club_id, event_name, description, event_date, start_time, end_time,
-      location_type, location, event_type, coordinator_id, status
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'SCHEDULED')
-    RETURNING event_id, club_id, event_name, description, to_char(event_date, 'YYYY-MM-DD') AS event_date,
+      club_id, event_name, description, event_date, start_date, end_date, start_time, end_time,
+      location_type, location, event_type, additional_details, coordinator_id, status
+    ) VALUES ($1, $2, $3, $4, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'SCHEDULED')
+    RETURNING event_id, club_id, event_name, description,
+              to_char(COALESCE(start_date, event_date), 'YYYY-MM-DD') AS start_date,
+              to_char(COALESCE(end_date, event_date), 'YYYY-MM-DD') AS end_date,
+              to_char(COALESCE(start_date, event_date), 'YYYY-MM-DD') AS event_date,
               start_time::text, end_time::text, location_type, location, event_type,
-              coordinator_id, status, created_at::text, updated_at::text;`,
+              additional_details, coordinator_id, status, created_at::text, updated_at::text;`,
     [
       data.club_id,
-      data.event_name.trim(),
+      cleanName,
       data.description?.trim() || null,
-      data.event_date,
+      startDate,
+      endDate,
       data.start_time,
       data.end_time,
       data.location_type,
       data.location.trim(),
       data.event_type,
+      data.additional_details?.trim() || null,
       resolvedCoordinatorId,
     ]
   );
@@ -669,6 +714,115 @@ export async function createClubEvent(
   return {
     ...event,
     club_name: club.name,
+    participant_count: 0,
+    approved_permission_count: 0,
+    attended_count: 0,
+  };
+}
+
+export async function updateClubEvent(
+  coordinatorFacultyId: string,
+  eventId: string,
+  data: {
+    event_name?: string;
+    description?: string | null;
+    start_date?: string;
+    end_date?: string;
+    start_time?: string;
+    end_time?: string;
+    location_type?: LocationType;
+    location?: string;
+    event_type?: EventType;
+    additional_details?: string | null;
+  }
+): Promise<DBClubEvent> {
+  await ensureClubSchema();
+
+  const event = await getClubEventById(eventId);
+  if (!event) throw new Error(`Event ID "${eventId}" does not exist.`);
+
+  const resolvedCoordinatorId = await resolveFacultyUUID(coordinatorFacultyId);
+  const isCoordinator = await isFacultyClubCoordinator(resolvedCoordinatorId, event.club_id);
+  if (!isCoordinator) {
+    throw new Error(`Unauthorized: You are not authorized to edit events for this club.`);
+  }
+
+  const updatedStartDate = data.start_date || event.start_date || event.event_date;
+  const updatedEndDate = data.end_date || event.end_date || updatedStartDate;
+
+  if (new Date(updatedEndDate) < new Date(updatedStartDate)) {
+    throw new Error("End date cannot be earlier than start date.");
+  }
+
+  const updatedStartTime = data.start_time || event.start_time;
+  const updatedEndTime = data.end_time || event.end_time;
+
+  if (updatedStartDate === updatedEndDate && updatedStartTime && updatedEndTime) {
+    if (updatedEndTime <= updatedStartTime) {
+      throw new Error("For a single-day event, end time must be after start time.");
+    }
+  }
+
+  const res = await db.query<DBClubEvent>(
+    `UPDATE club_events
+     SET event_name = COALESCE($1, event_name),
+         description = $2,
+         event_date = $3::date,
+         start_date = $3::date,
+         end_date = $4::date,
+         start_time = COALESCE($5, start_time),
+         end_time = COALESCE($6, end_time),
+         location_type = COALESCE($7, location_type),
+         location = COALESCE($8, location),
+         event_type = COALESCE($9, event_type),
+         additional_details = $10,
+         updated_at = NOW()
+     WHERE event_id = $11
+     RETURNING event_id, club_id, event_name, description,
+               to_char(COALESCE(start_date, event_date), 'YYYY-MM-DD') AS start_date,
+               to_char(COALESCE(end_date, event_date), 'YYYY-MM-DD') AS end_date,
+               to_char(COALESCE(start_date, event_date), 'YYYY-MM-DD') AS event_date,
+               start_time::text, end_time::text, location_type, location, event_type,
+               additional_details, coordinator_id, status, created_at::text, updated_at::text;`,
+    [
+      data.event_name?.trim() || null,
+      data.description !== undefined ? data.description?.trim() || null : event.description,
+      updatedStartDate,
+      updatedEndDate,
+      data.start_time || null,
+      data.end_time || null,
+      data.location_type || null,
+      data.location?.trim() || null,
+      data.event_type || null,
+      data.additional_details !== undefined ? data.additional_details?.trim() || null : event.additional_details,
+      eventId,
+    ]
+  );
+
+  const updated = res.rows[0];
+  if (!updated) throw new Error("Failed to update club event.");
+
+  // Update QR passes valid_from / valid_until if dates/times changed
+  try {
+    const vFrom = `${updatedStartDate}T${updatedStartTime || "00:00:00"}`;
+    const vUntil = `${updatedEndDate}T${updatedEndTime || "23:59:59"}`;
+    await db.query(
+      `UPDATE qr_passes
+       SET valid_from = $1::timestamptz, valid_until = $2::timestamptz
+       WHERE event_participant_id IN (SELECT id FROM event_participants WHERE event_id = $3);`,
+      [vFrom, vUntil, eventId]
+    );
+  } catch (qrErr) {
+    console.warn("[QR Notice] Failed to update QR passes validity times on event edit:", qrErr);
+  }
+
+  return {
+    ...updated,
+    club_name: event.club_name,
+    coordinator_name: event.coordinator_name,
+    participant_count: event.participant_count,
+    approved_permission_count: event.approved_permission_count,
+    attended_count: event.attended_count,
   };
 }
 
@@ -676,21 +830,24 @@ export async function getClubEvents(clubId: string): Promise<DBClubEvent[]> {
   await ensureClubSchema();
   const res = await db.query<DBClubEvent>(
     `SELECT e.event_id, e.club_id, e.event_name, e.description,
-            to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
+            to_char(COALESCE(e.start_date, e.event_date), 'YYYY-MM-DD') AS start_date,
+            to_char(COALESCE(e.end_date, e.start_date, e.event_date), 'YYYY-MM-DD') AS end_date,
+            to_char(COALESCE(e.start_date, e.event_date), 'YYYY-MM-DD') AS event_date,
             e.start_time::text, e.end_time::text, e.location_type, e.location,
-            e.event_type, e.coordinator_id, e.status, e.created_at::text, e.updated_at::text,
+            e.event_type, e.additional_details, e.coordinator_id, e.status, e.created_at::text, e.updated_at::text,
             c.name AS club_name, p.full_name AS coordinator_name,
-            COALESCE(COUNT(DISTINCT ep.id) FILTER (WHERE ep.permission_status = 'APPROVED'), 0)::int AS participant_count,
+            COALESCE(COUNT(DISTINCT ep.id), 0)::int AS participant_count,
+            COALESCE(COUNT(DISTINCT ep.id) FILTER (WHERE ep.permission_status = 'APPROVED'), 0)::int AS approved_permission_count,
             COALESCE(COUNT(DISTINCT ep.id) FILTER (WHERE ep.permission_status = 'APPROVED' AND (ep.exit_at IS NOT NULL OR ep.entry_at IS NOT NULL)), 0)::int AS attended_count
      FROM club_events e
      JOIN clubs c ON c.club_id = e.club_id
      LEFT JOIN profiles p ON p.id = e.coordinator_id
      LEFT JOIN event_participants ep ON ep.event_id = e.event_id
      WHERE e.club_id = $1
-     GROUP BY e.event_id, e.club_id, e.event_name, e.description, e.event_date,
-              e.start_time, e.end_time, e.location_type, e.location, e.event_type,
+     GROUP BY e.event_id, e.club_id, e.event_name, e.description, e.event_date, e.start_date, e.end_date,
+              e.start_time, e.end_time, e.location_type, e.location, e.event_type, e.additional_details,
               e.coordinator_id, e.status, e.created_at, e.updated_at, c.name, p.full_name
-     ORDER BY e.event_date DESC, e.start_time DESC;`,
+     ORDER BY COALESCE(e.start_date, e.event_date) DESC, e.start_time DESC;`,
     [clubId]
   );
   return res.rows;
@@ -700,14 +857,24 @@ export async function getClubEventById(eventId: string): Promise<DBClubEvent | n
   await ensureClubSchema();
   const res = await db.query<DBClubEvent>(
     `SELECT e.event_id, e.club_id, e.event_name, e.description,
-            to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
+            to_char(COALESCE(e.start_date, e.event_date), 'YYYY-MM-DD') AS start_date,
+            to_char(COALESCE(e.end_date, e.start_date, e.event_date), 'YYYY-MM-DD') AS end_date,
+            to_char(COALESCE(e.start_date, e.event_date), 'YYYY-MM-DD') AS event_date,
             e.start_time::text, e.end_time::text, e.location_type, e.location,
-            e.event_type, e.coordinator_id, e.status, e.created_at::text, e.updated_at::text,
-            c.name AS club_name, p.full_name AS coordinator_name
+            e.event_type, e.additional_details, e.coordinator_id, e.status, e.created_at::text, e.updated_at::text,
+            c.name AS club_name, p.full_name AS coordinator_name,
+            COALESCE(COUNT(DISTINCT ep.id), 0)::int AS participant_count,
+            COALESCE(COUNT(DISTINCT ep.id) FILTER (WHERE ep.permission_status = 'APPROVED'), 0)::int AS approved_permission_count,
+            COALESCE(COUNT(DISTINCT ep.id) FILTER (WHERE ep.permission_status = 'APPROVED' AND (ep.exit_at IS NOT NULL OR ep.entry_at IS NOT NULL)), 0)::int AS attended_count
      FROM club_events e
      JOIN clubs c ON c.club_id = e.club_id
-     JOIN profiles p ON p.id = e.coordinator_id
-     WHERE e.event_id = $1 LIMIT 1;`,
+     LEFT JOIN profiles p ON p.id = e.coordinator_id
+     LEFT JOIN event_participants ep ON ep.event_id = e.event_id
+     WHERE e.event_id = $1
+     GROUP BY e.event_id, e.club_id, e.event_name, e.description, e.event_date, e.start_date, e.end_date,
+              e.start_time, e.end_time, e.location_type, e.location, e.event_type, e.additional_details,
+              e.coordinator_id, e.status, e.created_at, e.updated_at, c.name, p.full_name
+     LIMIT 1;`,
     [eventId]
   );
   return res.rows[0] || null;
@@ -746,15 +913,13 @@ export async function cancelClubEvent(coordinatorFacultyId: string, eventId: str
   }
 
   // Notify participants
-  const participantsRes = partsRes;
-
-
-  for (const part of participantsRes.rows) {
+  const eventDateRange = event.start_date === event.end_date ? event.start_date : `${event.start_date} to ${event.end_date}`;
+  for (const part of partsRes.rows) {
     await createNotificationServer({
       recipientRole: "student",
       recipientId: part.student_code,
       title: `Event Cancelled: ${event.event_name}`,
-      detail: `The event "${event.event_name}" on ${event.event_date} has been cancelled by the club coordinator. ${reason ? `Reason: ${reason}` : ""}`,
+      detail: `The event "${event.event_name}" on ${eventDateRange} has been cancelled by the club coordinator. ${reason ? `Reason: ${reason}` : ""}`,
       tone: "critical",
       type: "event_cancelled",
       relatedType: "club_event",
@@ -768,6 +933,18 @@ export async function cancelClubEvent(coordinatorFacultyId: string, eventId: str
   };
 }
 
+export type StudentEventConflict = {
+  student_code: string;
+  student_name: string;
+  conflicted_event_id: string;
+  conflicted_event_name: string;
+  conflicted_club_name: string;
+  start_date: string;
+  end_date: string;
+  start_time: string;
+  end_time: string;
+};
+
 export type ParticipantPreflightReport = {
   valid: { student_code: string; name: string; department: string; year: string; section: string }[];
   invalid: string[];
@@ -775,11 +952,78 @@ export type ParticipantPreflightReport = {
   alreadyPermitted: string[];
 };
 
+export async function getEventParticipantConflicts(
+  eventId: string,
+  rawStudentCodes?: string[]
+): Promise<StudentEventConflict[]> {
+  await ensureClubSchema();
+
+  const event = await getClubEventById(eventId);
+  if (!event) throw new Error(`Event ID "${eventId}" does not exist.`);
+
+  const sDate = event.start_date || event.event_date;
+  const eDate = event.end_date || sDate;
+  const sTime = event.start_time ? event.start_time.slice(0, 5) : "00:00";
+  const eTime = event.end_time ? event.end_time.slice(0, 5) : "23:59";
+
+  let codesToTest: string[] = [];
+  if (rawStudentCodes && rawStudentCodes.length > 0) {
+    codesToTest = rawStudentCodes.map((c) => c.trim().toUpperCase()).filter(Boolean);
+  } else {
+    // If no specific codes provided, check all active club members of this organizing club
+    const clubMembersRes = await db.query<{ student_id: string }>(
+      `SELECT student_id FROM club_members WHERE club_id = $1 AND status = 'ACTIVE';`,
+      [event.club_id]
+    );
+    codesToTest = clubMembersRes.rows.map((r: { student_id: string }) => r.student_id.toUpperCase());
+  }
+
+  if (codesToTest.length === 0) return [];
+
+  const res = await db.query<StudentEventConflict>(
+    `SELECT 
+       ep.student_code,
+       s.name AS student_name,
+       e.event_id AS conflicted_event_id,
+       e.event_name AS conflicted_event_name,
+       c.name AS conflicted_club_name,
+       to_char(COALESCE(e.start_date, e.event_date), 'YYYY-MM-DD') AS start_date,
+       to_char(COALESCE(e.end_date, e.start_date, e.event_date), 'YYYY-MM-DD') AS end_date,
+       e.start_time::text,
+       e.end_time::text
+     FROM event_participants ep
+     JOIN club_events e ON e.event_id = ep.event_id
+     JOIN clubs c ON c.club_id = e.club_id
+     JOIN students s ON UPPER(s.student_code) = UPPER(ep.student_code)
+     WHERE UPPER(ep.student_code) = ANY($1)
+       AND ep.event_id != $2
+       AND ep.permission_status != 'CANCELLED'
+       AND e.status != 'CANCELLED'
+       AND COALESCE(e.start_date, e.event_date) <= $4::date
+       AND COALESCE(e.end_date, e.start_date, e.event_date) >= $3::date
+       AND e.start_time < $6::time
+       AND e.end_time > $5::time;`,
+    [codesToTest, eventId, sDate, eDate, sTime, eTime]
+  );
+
+  return res.rows;
+}
+
 export async function validateEventParticipantsPreflight(
   eventId: string,
   rawStudentCodes: string[]
 ): Promise<ParticipantPreflightReport> {
   await ensureClubSchema();
+
+  const event = await getClubEventById(eventId);
+  if (!event) throw new Error(`Event with ID "${eventId}" does not exist.`);
+
+  // Get active club members of this organizing club
+  const clubMembersRes = await db.query<{ student_id: string }>(
+    `SELECT student_id FROM club_members WHERE club_id = $1 AND status = 'ACTIVE';`,
+    [event.club_id]
+  );
+  const activeClubMemberSet = new Set(clubMembersRes.rows.map((r: { student_id: string }) => r.student_id.toUpperCase()));
 
   const valid: ParticipantPreflightReport["valid"] = [];
   const invalid: string[] = [];
@@ -797,6 +1041,12 @@ export async function validateEventParticipantsPreflight(
       continue;
     }
     seenInInput.add(clean);
+
+    // Verify student is an active member of this club
+    if (!activeClubMemberSet.has(clean)) {
+      invalid.push(clean);
+      continue;
+    }
 
     // Check master students table
     const sRes = await db.query(
@@ -832,6 +1082,59 @@ export async function validateEventParticipantsPreflight(
 }
 
 /**
+ * Adds participants to an event directly.
+ */
+export async function addEventParticipants(
+  coordinatorFacultyId: string,
+  eventId: string,
+  studentCodes: string[]
+): Promise<{ success: boolean; grantedCount: number; permissions: DBEventParticipant[] }> {
+  return await grantEventPermissionsAtomic(coordinatorFacultyId, eventId, studentCodes);
+}
+
+/**
+ * Removes a participant from an event.
+ */
+export async function removeEventParticipant(
+  coordinatorFacultyId: string,
+  eventId: string,
+  studentCode: string
+): Promise<boolean> {
+  await ensureClubSchema();
+
+  const event = await getClubEventById(eventId);
+  if (!event) throw new Error(`Event ID "${eventId}" does not exist.`);
+
+  const resolvedCoordinatorId = await resolveFacultyUUID(coordinatorFacultyId);
+  const isCoordinator = await isFacultyClubCoordinator(resolvedCoordinatorId, event.club_id);
+  if (!isCoordinator) {
+    throw new Error("Unauthorized: Only assigned club coordinators can manage event participants.");
+  }
+
+  const cleanCode = studentCode.trim().toUpperCase();
+
+  const partRes = await db.query<{ id: string }>(
+    `SELECT id FROM event_participants WHERE event_id = $1 AND UPPER(student_code) = $2 LIMIT 1;`,
+    [eventId, cleanCode]
+  );
+
+  if (partRes.rows.length === 0) return false;
+  const partId = partRes.rows[0].id;
+
+  try {
+    const { revokeQRPassByPermission } = await import("./qr.server");
+    await revokeQRPassByPermission("CLUB_EVENT", partId);
+  } catch (_) {}
+
+  const delRes = await db.query(
+    `DELETE FROM event_participants WHERE id = $1;`,
+    [partId]
+  );
+
+  return (delRes.rowCount || 0) > 0;
+}
+
+/**
  * Grants event permissions in an atomic database transaction.
  * Fails safely if invalid roll numbers are present.
  */
@@ -851,11 +1154,29 @@ export async function grantEventPermissionsAtomic(
     throw new Error("Unauthorized: Only assigned club coordinators can grant event permissions.");
   }
 
-  // Pre-flight check
+  // Pre-flight check (enforces club membership)
   const preflight = await validateEventParticipantsPreflight(eventId, studentCodes);
   if (preflight.invalid.length > 0) {
     throw new Error(
-      `Preflight validation failed: ${preflight.invalid.length} invalid student roll number(s) detected: [${preflight.invalid.join(", ")}]. Please resolve invalid records before granting permission.`
+      `Preflight validation failed: ${preflight.invalid.length} student(s) [${preflight.invalid.join(", ")}] are not active members of ${event.club_name || "the organizing club"}. Only active club members can be added to events.`
+    );
+  }
+
+  // Schedule Conflict Check (prevents double-booking students across overlapping events)
+  const conflicts = await getEventParticipantConflicts(
+    eventId,
+    preflight.valid.map((s) => s.student_code)
+  );
+
+  if (conflicts.length > 0) {
+    const conflictDescriptions = conflicts
+      .map(
+        (c) =>
+          `${c.student_name} (${c.student_code}) is already scheduled for "${c.conflicted_event_name}" (${c.conflicted_club_name}) on ${c.start_date}${c.start_date !== c.end_date ? ` to ${c.end_date}` : ""} from ${c.start_time.slice(0, 5)} to ${c.end_time.slice(0, 5)}`
+      )
+      .join("; ");
+    throw new Error(
+      `Schedule Conflict Detected: The following student(s) are already assigned to overlapping events: ${conflictDescriptions}. Students cannot be scheduled for multiple events at overlapping dates & times.`
     );
   }
 
@@ -869,6 +1190,12 @@ export async function grantEventPermissionsAtomic(
   await db.query("BEGIN;");
 
   try {
+    const startDate = event.start_date || event.event_date;
+    const endDate = event.end_date || startDate;
+    const vFrom = `${startDate}T${event.start_time || "00:00:00"}`;
+    const vUntil = `${endDate}T${event.end_time || "23:59:59"}`;
+    const eventDateDisplay = startDate === endDate ? startDate : `${startDate} to ${endDate}`;
+
     for (const student of preflight.valid) {
       // Generate unique Event Permission code (EP-XXXXXX)
       const randomSuffix = Math.floor(100000 + Math.random() * 900000);
@@ -885,16 +1212,6 @@ export async function grantEventPermissionsAtomic(
 
       const pRow = res.rows[0];
       if (pRow) {
-        // Auto-generate active Club/Event QR pass
-        try {
-          const { getOrCreateQRPassForEventParticipant } = await import("./qr.server");
-          const vFrom = `${event.event_date}T${event.start_time || "00:00:00"}`;
-          const vUntil = `${event.event_date}T${event.end_time || "23:59:59"}`;
-          await getOrCreateQRPassForEventParticipant(pRow.id, vFrom, vUntil);
-        } catch (qrErr) {
-          console.warn("[QR Notice] Failed to generate Club/Event QR pass:", qrErr);
-        }
-
         createdPermissions.push({
           ...pRow,
           student_name: student.name,
@@ -902,31 +1219,45 @@ export async function grantEventPermissionsAtomic(
           year: student.year,
           section: student.section,
           event_name: event.event_name,
-          event_date: event.event_date,
+          start_date: startDate,
+          end_date: endDate,
+          event_date: startDate,
           start_time: event.start_time,
           end_time: event.end_time,
           location_type: event.location_type,
           location: event.location,
+          event_type: event.event_type,
+          additional_details: event.additional_details,
           club_name: event.club_name || "",
           coordinator_name: event.coordinator_name || "",
         });
-
-
-        // Notify student automatically (no student confirmation step)
-        await createNotificationServer({
-          recipientRole: "student",
-          recipientId: student.student_code,
-          title: `Event Permission Approved: ${event.event_name}`,
-          detail: `Your club coordinator has granted permission for "${event.event_name}" (${event.club_name}) on ${event.event_date} from ${event.start_time} to ${event.end_time} at ${event.location}.`,
-          tone: "info",
-          type: "event_permission_granted",
-          relatedType: "club_event_permission",
-          relatedId: pRow.permission_code,
-        }).catch(() => {});
       }
     }
 
     await db.query("COMMIT;");
+
+    // After commit, generate QR passes and dispatch notifications
+    for (const perm of createdPermissions) {
+      try {
+        const { getOrCreateQRPassForEventParticipant } = await import("./qr.server");
+        await getOrCreateQRPassForEventParticipant(perm.id, vFrom, vUntil);
+      } catch (qrErr) {
+        console.warn("[QR Notice] Failed to generate Club/Event QR pass:", qrErr);
+      }
+
+      // Notify student automatically (no student confirmation step)
+      await createNotificationServer({
+        recipientRole: "student",
+        recipientId: perm.student_code,
+        title: `Event Permission Approved: ${event.event_name}`,
+        detail: `Your club coordinator has granted permission for "${event.event_name}" (${event.club_name}) from ${eventDateDisplay}, ${event.start_time} - ${event.end_time} at ${event.location}.`,
+        tone: "info",
+        type: "event_permission_granted",
+        relatedType: "club_event_permission",
+        relatedId: perm.permission_code,
+      }).catch(() => {});
+    }
+
     return { success: true, grantedCount: createdPermissions.length, permissions: createdPermissions };
   } catch (err) {
     await db.query("ROLLBACK;");
@@ -941,17 +1272,21 @@ export async function getStudentEventPermissions(studentCode: string): Promise<D
   const res = await db.query<DBEventParticipant>(
     `SELECT ep.id, ep.permission_code, ep.event_id, ep.student_code, ep.permission_status,
             ep.exit_at::text, ep.entry_at::text, ep.verified_by, ep.created_at::text,
-            e.event_name, to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
+            e.event_name,
+            to_char(COALESCE(e.start_date, e.event_date), 'YYYY-MM-DD') AS start_date,
+            to_char(COALESCE(e.end_date, e.start_date, e.event_date), 'YYYY-MM-DD') AS end_date,
+            to_char(COALESCE(e.start_date, e.event_date), 'YYYY-MM-DD') AS event_date,
             e.start_time::text, e.end_time::text, e.location_type, e.location,
+            e.event_type, e.additional_details,
             c.name AS club_name, p.full_name AS coordinator_name,
             s.name AS student_name, s.department, s.year, s.section
      FROM event_participants ep
      JOIN club_events e ON e.event_id = ep.event_id
      JOIN clubs c ON c.club_id = e.club_id
-     JOIN profiles p ON p.id = e.coordinator_id
+     LEFT JOIN profiles p ON p.id = e.coordinator_id
      JOIN students s ON UPPER(s.student_code) = UPPER(ep.student_code)
-     WHERE UPPER(ep.student_code) = $1 AND ep.permission_status = 'APPROVED' AND e.status = 'SCHEDULED'
-     ORDER BY e.event_date DESC, e.start_time DESC;`,
+     WHERE UPPER(ep.student_code) = $1
+     ORDER BY ep.created_at DESC;`,
     [cleanCode]
   );
   return res.rows;
@@ -964,19 +1299,23 @@ export async function getActiveStudentEventPermission(studentCode: string): Prom
   const res = await db.query<DBEventParticipant>(
     `SELECT ep.id, ep.permission_code, ep.event_id, ep.student_code, ep.permission_status,
             ep.exit_at::text, ep.entry_at::text, ep.verified_by, ep.created_at::text,
-            e.event_name, to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
+            e.event_name,
+            to_char(COALESCE(e.start_date, e.event_date), 'YYYY-MM-DD') AS start_date,
+            to_char(COALESCE(e.end_date, e.start_date, e.event_date), 'YYYY-MM-DD') AS end_date,
+            to_char(COALESCE(e.start_date, e.event_date), 'YYYY-MM-DD') AS event_date,
             e.start_time::text, e.end_time::text, e.location_type, e.location,
+            e.event_type, e.additional_details,
             c.name AS club_name, p.full_name AS coordinator_name,
             s.name AS student_name, s.department, s.year, s.section
      FROM event_participants ep
      JOIN club_events e ON e.event_id = ep.event_id
      JOIN clubs c ON c.club_id = e.club_id
-     JOIN profiles p ON p.id = e.coordinator_id
+     LEFT JOIN profiles p ON p.id = e.coordinator_id
      JOIN students s ON UPPER(s.student_code) = UPPER(ep.student_code)
      WHERE UPPER(ep.student_code) = $1
        AND ep.permission_status = 'APPROVED'
        AND e.status = 'SCHEDULED'
-       AND e.event_date = CURRENT_DATE
+       AND CURRENT_DATE BETWEEN COALESCE(e.start_date, e.event_date) AND COALESCE(e.end_date, e.start_date, e.event_date)
        AND (
          CURRENT_TIME BETWEEN e.start_time AND e.end_time
          OR ep.exit_at IS NOT NULL

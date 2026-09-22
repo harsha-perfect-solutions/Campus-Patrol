@@ -82,15 +82,27 @@ function getSemestersForYear(year: string): number[] {
   return [1, 2, 3, 4, 5, 6, 7, 8];
 }
 
-const PERIOD_DEFINITIONS = [
-  { period: "1", name: "Period 1", start: "09:00", end: "10:00", label: "09:00 - 10:00", isBreak: false },
-  { period: "2", name: "Period 2", start: "10:00", end: "11:00", label: "10:00 - 11:00", isBreak: false },
-  { period: "--", name: "Morning Break", start: "11:00", end: "11:10", label: "11:00 - 11:10", isBreak: true, breakType: "BREAK", title: "BREAK (10 Minutes)" },
-  { period: "3", name: "Period 3", start: "11:10", end: "12:10", label: "11:10 - 12:10", isBreak: false },
-  { period: "4", name: "Period 4", start: "12:10", end: "13:10", label: "12:10 - 01:10", isBreak: false },
-  { period: "--", name: "Lunch Break", start: "13:10", end: "14:10", label: "01:10 - 02:10", isBreak: true, breakType: "LUNCH", title: "LUNCH BREAK (1 Hour)" },
-  { period: "5", name: "Period 5", start: "14:10", end: "15:10", label: "02:10 - 03:10", isBreak: false },
-  { period: "6", name: "Period 6", start: "15:10", end: "16:10", label: "03:10 - 04:10", isBreak: false },
+export type PeriodDefinition = {
+  id: string;
+  period: string;
+  name: string;
+  start: string;
+  end: string;
+  label: string;
+  isBreak: boolean;
+  breakType?: "BREAK" | "LUNCH";
+  title?: string;
+};
+
+const DEFAULT_PERIOD_DEFINITIONS: PeriodDefinition[] = [
+  { id: "p1", period: "1", name: "Period 1", start: "09:00", end: "10:00", label: "09:00 - 10:00", isBreak: false },
+  { id: "p2", period: "2", name: "Period 2", start: "10:00", end: "11:00", label: "10:00 - 11:00", isBreak: false },
+  { id: "p-break", period: "--", name: "Morning Break", start: "11:00", end: "11:10", label: "11:00 - 11:10", isBreak: true, breakType: "BREAK", title: "BREAK (10 Minutes)" },
+  { id: "p3", period: "3", name: "Period 3", start: "11:10", end: "12:10", label: "11:10 - 12:10", isBreak: false },
+  { id: "p4", period: "4", name: "Period 4", start: "12:10", end: "13:10", label: "12:10 - 01:10", isBreak: false },
+  { id: "p-lunch", period: "--", name: "Lunch Break", start: "13:10", end: "14:10", label: "01:10 - 02:10", isBreak: true, breakType: "LUNCH", title: "LUNCH BREAK (1 Hour)" },
+  { id: "p5", period: "5", name: "Period 5", start: "14:10", end: "15:10", label: "02:10 - 03:10", isBreak: false },
+  { id: "p6", period: "6", name: "Period 6", start: "15:10", end: "16:10", label: "03:10 - 04:10", isBreak: false },
 ];
 
 const PERIOD_TYPES: { value: string; label: string }[] = [
@@ -133,6 +145,19 @@ function AdminTimetableContent() {
   // Master Slots Data
   const [slots, setSlots] = useState<DBClassSlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Period Timings Configuration State
+  const [periodDefs, setPeriodDefs] = useState<PeriodDefinition[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("cmadms-admin-period-definitions");
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return DEFAULT_PERIOD_DEFINITIONS;
+  });
+  const [isTimingsModalOpen, setIsTimingsModalOpen] = useState(false);
+  const [editingPeriodDefs, setEditingPeriodDefs] = useState<PeriodDefinition[]>(periodDefs);
 
   // Modals State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -234,7 +259,7 @@ function AdminTimetableContent() {
   ]);
 
   // Handle cell click (populated or empty cell)
-  const handleCellClick = (dayNum: number, periodDef: typeof PERIOD_DEFINITIONS[0], existingSlot?: DBClassSlot) => {
+  const handleCellClick = (dayNum: number, periodDef: PeriodDefinition, existingSlot?: DBClassSlot) => {
     setServerError(null);
     if (existingSlot) {
       handleOpenEdit(existingSlot);
@@ -423,6 +448,18 @@ function AdminTimetableContent() {
           >
             <Layers className="w-4 h-4 text-primary" />
             <span>Hierarchy Card View</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={() => {
+              setEditingPeriodDefs(periodDefs);
+              setIsTimingsModalOpen(true);
+            }}
+            className="gap-2 font-bold rounded-xl text-xs sm:text-sm border-primary/30 hover:border-primary hover:bg-primary/5 flex-1 sm:flex-initial"
+          >
+            <Clock className="w-4 h-4 text-primary" />
+            <span>Edit Period Timings</span>
           </Button>
 
           <Button
@@ -763,7 +800,7 @@ function AdminTimetableContent() {
                 </thead>
 
                 <tbody className="divide-y text-xs">
-                  {PERIOD_DEFINITIONS.map((pDef, pIdx) => {
+                  {periodDefs.map((pDef, pIdx) => {
                     const activeDays = DAYS_OF_WEEK.filter(
                       (d) => selectedDayFilter === "ALL" || selectedDayFilter === String(d.num)
                     );
@@ -771,12 +808,23 @@ function AdminTimetableContent() {
                     // Break / Lunch Banner Row
                     if (pDef.isBreak) {
                       return (
-                        <tr key={`break-${pIdx}`} className="bg-amber-500/10 dark:bg-amber-950/30 border-y border-amber-300/50">
+                        <tr key={`break-${pDef.id || pIdx}`} className="bg-amber-500/10 dark:bg-amber-950/30 border-y border-amber-300/50">
                           <td className="px-2 py-2 text-center font-bold font-mono text-muted-foreground border-r">
                             --
                           </td>
-                          <td className="px-2 py-2 text-center font-mono text-[10px] text-muted-foreground border-r whitespace-nowrap">
-                            {pDef.label}
+                          <td
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingPeriodDefs(periodDefs);
+                              setIsTimingsModalOpen(true);
+                            }}
+                            className="px-2 py-2 text-center font-mono text-[10px] text-muted-foreground border-r whitespace-nowrap cursor-pointer hover:bg-amber-500/20 transition-colors group/time"
+                            title="Click to configure break timings"
+                          >
+                            <div className="flex items-center justify-center gap-1">
+                              <span>{pDef.label}</span>
+                              <Pencil className="w-2.5 h-2.5 opacity-0 group-hover/time:opacity-100 transition-opacity text-amber-700 dark:text-amber-300" />
+                            </div>
                           </td>
                           <td colSpan={activeDays.length} className="px-4 py-2.5 text-center font-bold text-amber-900 dark:text-amber-200">
                             <span className="inline-flex items-center gap-2 bg-amber-500/20 px-4 py-1 rounded-full text-xs border border-amber-300/60 shadow-2xs">
@@ -788,15 +836,26 @@ function AdminTimetableContent() {
                     }
 
                     return (
-                      <tr key={`period-${pDef.period}`} className="hover:bg-muted/10 transition-colors">
+                      <tr key={`period-${pDef.id || pDef.period}`} className="hover:bg-muted/10 transition-colors">
                         {/* Period Number Column */}
                         <td className="px-3 py-3 text-center font-extrabold text-sm border-r bg-muted/20">
                           {pDef.period}
                         </td>
 
                         {/* Time Window Column */}
-                        <td className="px-3 py-3 text-center font-mono text-[11px] text-muted-foreground border-r whitespace-nowrap font-medium bg-muted/20">
-                          {pDef.label}
+                        <td
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingPeriodDefs(periodDefs);
+                            setIsTimingsModalOpen(true);
+                          }}
+                          className="px-3 py-3 text-center font-mono text-[11px] text-muted-foreground border-r whitespace-nowrap font-medium bg-muted/20 cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors group/time"
+                          title="Click to configure period timings"
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            <span>{pDef.label}</span>
+                            <Pencil className="w-3 h-3 opacity-0 group-hover/time:opacity-100 transition-opacity text-primary" />
+                          </div>
                         </td>
 
                         {/* Days Cells */}
@@ -1128,6 +1187,73 @@ function AdminTimetableContent() {
               </div>
             </div>
 
+            {/* Quick Period Timings Selector */}
+            <div className="bg-muted/40 p-2.5 rounded-xl border space-y-1.5">
+              <Label className="text-[11px] font-bold text-muted-foreground flex items-center justify-between">
+                <span>Quick Preset Period Timings:</span>
+                <span className="text-[10px] font-normal text-primary">Click to apply standard time</span>
+              </Label>
+              <div className="flex flex-wrap gap-1.5">
+                {periodDefs.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        startTime: p.start,
+                        endTime: p.end,
+                        periodType: p.isBreak ? ((p.breakType || "BREAK") as PeriodType) : (prev.periodType || "CLASS"),
+                      }));
+                    }}
+                    className={`px-2 py-1 rounded-md text-[10px] font-bold border transition-colors cursor-pointer ${
+                      formData.startTime === p.start && formData.endTime === p.end
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background hover:bg-accent text-foreground border-border"
+                    }`}
+                  >
+                    {p.name} ({p.start}-{p.end})
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      startTime: "09:00",
+                      endTime: "11:00",
+                      periodType: "LAB",
+                    }));
+                  }}
+                  className={`px-2 py-1 rounded-md text-[10px] font-bold border transition-colors cursor-pointer ${
+                    formData.startTime === "09:00" && formData.endTime === "11:00" && formData.periodType === "LAB"
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "bg-emerald-500/10 text-emerald-900 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-500/20"
+                  }`}
+                >
+                  Lab 1 (09:00 - 11:00)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      startTime: "14:10",
+                      endTime: "16:10",
+                      periodType: "LAB",
+                    }));
+                  }}
+                  className={`px-2 py-1 rounded-md text-[10px] font-bold border transition-colors cursor-pointer ${
+                    formData.startTime === "14:10" && formData.endTime === "16:10" && formData.periodType === "LAB"
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "bg-emerald-500/10 text-emerald-900 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-500/20"
+                  }`}
+                >
+                  Lab 2 (14:10 - 16:10)
+                </button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <Label className="text-xs font-bold">Day of Week *</Label>
@@ -1236,6 +1362,170 @@ function AdminTimetableContent() {
             </Button>
             <Button variant="destructive" onClick={handleDeleteSubmit} disabled={isSubmitting}>
               {isSubmitting ? "Deleting..." : "Delete Slot"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* CONFIGURE MASTER PERIOD TIMINGS MODAL */}
+      <Dialog open={isTimingsModalOpen} onOpenChange={setIsTimingsModalOpen}>
+        <DialogContent className="w-[95vw] sm:w-full sm:max-w-[580px] max-h-[85vh] overflow-y-auto rounded-2xl p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Clock className="w-5 h-5 text-primary" />
+              Configure Master Period Timings
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Customize the institutional period schedule, shift timings, morning break, and lunch durations.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+              {editingPeriodDefs.map((p, idx) => (
+                <div
+                  key={p.id || idx}
+                  className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+                    p.isBreak
+                      ? "bg-amber-500/10 border-amber-300 dark:border-amber-800"
+                      : "bg-card border-border"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-[120px]">
+                    <span className="text-xs font-bold text-foreground">
+                      {p.name}
+                    </span>
+                    {p.isBreak && (
+                      <span className="text-[10px] bg-amber-500/20 text-amber-800 dark:text-amber-300 px-1.5 py-0.5 rounded font-semibold">
+                        {p.breakType}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-1 justify-end">
+                    <div className="flex items-center gap-1.5">
+                      <Label className="text-[10px] font-semibold text-muted-foreground">Start:</Label>
+                      <Input
+                        type="time"
+                        value={p.start}
+                        onChange={(e) => {
+                          const newStart = e.target.value;
+                          setEditingPeriodDefs((defs) =>
+                            defs.map((item, i) =>
+                              i === idx
+                                ? { ...item, start: newStart, label: `${newStart} - ${item.end}` }
+                                : item
+                            )
+                          );
+                        }}
+                        className="h-8 w-24 text-xs font-mono font-bold"
+                      />
+                    </div>
+
+                    <span className="text-muted-foreground text-xs">–</span>
+
+                    <div className="flex items-center gap-1.5">
+                      <Label className="text-[10px] font-semibold text-muted-foreground">End:</Label>
+                      <Input
+                        type="time"
+                        value={p.end}
+                        onChange={(e) => {
+                          const newEnd = e.target.value;
+                          setEditingPeriodDefs((defs) =>
+                            defs.map((item, i) =>
+                              i === idx
+                                ? { ...item, end: newEnd, label: `${item.start} - ${newEnd}` }
+                                : item
+                            )
+                          );
+                        }}
+                        className="h-8 w-24 text-xs font-mono font-bold"
+                      />
+                    </div>
+
+                    {!p.isBreak && editingPeriodDefs.filter((x) => !x.isBreak).length > 2 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => {
+                          setEditingPeriodDefs((defs) => defs.filter((_, i) => i !== idx));
+                        }}
+                        className="text-destructive hover:bg-destructive/10"
+                        title="Remove period"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const lastNonBreak = [...editingPeriodDefs].reverse().find((x) => !x.isBreak);
+                  const nextPeriodNum = lastNonBreak ? Number(lastNonBreak.period) + 1 : editingPeriodDefs.length + 1;
+                  const newPeriod: PeriodDefinition = {
+                    id: `p-${Date.now()}`,
+                    period: String(nextPeriodNum),
+                    name: `Period ${nextPeriodNum}`,
+                    start: "16:10",
+                    end: "17:10",
+                    label: "16:10 - 17:10",
+                    isBreak: false,
+                  };
+                  setEditingPeriodDefs((defs) => [...defs, newPeriod]);
+                }}
+                className="gap-1.5 text-xs font-bold"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Period Slot
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setEditingPeriodDefs(DEFAULT_PERIOD_DEFINITIONS);
+                  toast.info("Reset to standard institutional period timetable.");
+                }}
+                className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Reset Defaults
+              </Button>
+            </div>
+          </div>
+
+          <DialogFooter className="pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsTimingsModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setPeriodDefs(editingPeriodDefs);
+                if (typeof window !== "undefined") {
+                  try {
+                    localStorage.setItem("cmadms-admin-period-definitions", JSON.stringify(editingPeriodDefs));
+                  } catch {}
+                }
+                setIsTimingsModalOpen(false);
+                toast.success("Period timetable timings updated successfully!");
+              }}
+              className="font-bold gap-1.5"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              Save Period Schedule
             </Button>
           </DialogFooter>
         </DialogContent>

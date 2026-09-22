@@ -43,6 +43,11 @@ import type { DBCounselorStudent, CounselorDashboardStats, DBCounselorPass } fro
 import type { DBViolationReport } from "@/lib/db/violations.server";
 
 export const Route = createFileRoute("/faculty/counselor")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      tab: (search["tab"] as "cases" | "students" | "passes") || "cases",
+    };
+  },
   head: () => ({ meta: [{ title: "Counselor Workspace — Faculty Portal" }] }),
   component: FacultyCounselorPage,
 });
@@ -57,8 +62,9 @@ function FacultyCounselorPage() {
 
 function FacultyCounselorContent() {
   const { profile } = useAuth();
+  const search = Route.useSearch();
+  const activeTab = search.tab || "cases";
   const [isCounselor, setIsCounselor] = useState<boolean | null>(null);
-  const [activeTab, setActiveTab] = useState<"cases" | "students" | "passes">("cases");
   const [passStatusFilter, setPassStatusFilter] = useState<string>("ALL");
   const [studentSearch, setStudentSearch] = useState("");
   const [studentDeptFilter, setStudentDeptFilter] = useState("ALL");
@@ -112,12 +118,6 @@ function FacultyCounselorContent() {
   };
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const searchTab = new URLSearchParams(window.location.search).get("tab");
-      if (searchTab === "passes" || searchTab === "students" || searchTab === "cases") {
-        setActiveTab(searchTab);
-      }
-    }
     loadData();
   }, []);
 
@@ -239,37 +239,6 @@ function FacultyCounselorContent() {
           </div>
         </div>
       )}
-
-      {/* Workspace Tab Switcher */}
-      <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-divider overflow-x-auto no-scrollbar scroll-smooth">
-        {[
-          { id: "cases", label: "Violation Cases", icon: ShieldAlert, count: violations.length },
-          { id: "passes", label: "Pass Approvals", icon: CheckCircle2, count: passes.length },
-          { id: "students", label: "Assigned Students", icon: Users, count: students.length },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isSelected = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id as any)}
-              className={cn(
-                "shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg text-xs font-semibold transition-all",
-                isSelected
-                  ? "bg-background text-foreground shadow-xs font-bold"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Icon className="size-4 shrink-0" />
-              <span>{tab.label}</span>
-              <span className={cn("px-1.5 py-0.5 rounded-full text-[10px] font-bold", isSelected ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground")}>
-                {tab.count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
 
       {/* CASES TAB */}
       {activeTab === "cases" && (

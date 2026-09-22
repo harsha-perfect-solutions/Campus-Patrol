@@ -310,7 +310,7 @@ const STUDENT_VIOLATION_COLUMNS = `
   id, student_code, student_name, department, year_section, class_name,
   subject_code, scheduled_time, room, scheduled_faculty, incident_time,
   location, violation_type, severity, remarks, witness_notes, evidence,
-  reported_by, status, explanation, explanation_submitted_at::text,
+  student_evidence, reported_by, status, explanation, explanation_submitted_at::text,
   decision, decision_by, decision_at::text, semester,
   explanation_deadline::text, created_at::text, observed_at::text
 `;
@@ -631,7 +631,7 @@ export async function submitViolationExplanation(
       UPDATE violation_reports
       SET
         explanation = $1,
-        evidence = COALESCE($2, evidence),
+        student_evidence = $2,
         explanation_submitted_at = NOW(),
         status = 'explanation_submitted'::violation_status
       WHERE UPPER(id) = UPPER($3)

@@ -50,7 +50,11 @@ import {
   FileText,
   AlertCircle,
   ArrowRight,
+  Download,
+  ImageIcon,
+  Paperclip,
 } from "lucide-react";
+import { downloadEvidenceImage } from "@/lib/download-evidence";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/student/violations")({
@@ -552,6 +556,38 @@ function StudentViolationsPage() {
                         {selectedReport.remarks}
                       </p>
                     </div>
+
+                    {selectedReport.evidence && (
+                      <div className="pt-2 border-t border-border space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                            <ImageIcon className="size-3 text-primary" /> Faculty Incident Evidence Photo
+                          </span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-6 text-[11px] font-bold rounded-lg border-primary/40 text-primary hover:bg-primary/10 gap-1 px-2"
+                            onClick={() => downloadEvidenceImage(selectedReport.evidence!, selectedReport.id)}
+                          >
+                            <Download className="size-3" /> Download Photo
+                          </Button>
+                        </div>
+                        {selectedReport.evidence.startsWith("data:") ? (
+                          <div className="p-2 rounded-xl bg-background border border-border flex flex-col items-center">
+                            <img
+                              src={selectedReport.evidence}
+                              alt="Faculty Incident Photo"
+                              className="max-h-48 w-auto rounded-lg object-contain border border-border shadow-2xs"
+                            />
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground italic">
+                            Attached File: {selectedReport.evidence}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -572,10 +608,36 @@ function StudentViolationsPage() {
                     <p className="text-xs text-foreground font-medium bg-background p-2.5 rounded-xl border border-emerald-200 mt-1 leading-relaxed">
                       {selectedReport.explanation}
                     </p>
-                    {selectedReport.evidence && (
-                      <p className="text-[11px] text-muted-foreground italic mt-1">
-                        Note / Evidence: {selectedReport.evidence}
-                      </p>
+                    {selectedReport.student_evidence && (
+                      <div className="pt-2 border-t border-emerald-200/60 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase flex items-center gap-1">
+                            <Paperclip className="size-3" /> Supporting Attachment
+                          </span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-6 text-[11px] font-bold rounded-lg border-emerald-300 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100/50 gap-1 px-2"
+                            onClick={() => downloadEvidenceImage(selectedReport.student_evidence!, selectedReport.id)}
+                          >
+                            <Download className="size-3" /> Download (.png)
+                          </Button>
+                        </div>
+                        {selectedReport.student_evidence.startsWith("data:") ? (
+                          <div className="p-2 rounded-xl bg-background border border-border flex flex-col items-center">
+                            <img
+                              src={selectedReport.student_evidence}
+                              alt="Student Supporting Evidence"
+                              className="max-h-44 w-auto rounded-lg object-contain border border-border shadow-2xs"
+                            />
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground italic">
+                            Attached File: {selectedReport.student_evidence}
+                          </p>
+                        )}
+                      </div>
                     )}
                     <span className="text-[10px] text-muted-foreground block pt-1">
                       Submitted on: {new Date(selectedReport.explanation_submitted_at || selectedReport.created_at).toLocaleString("en-IN")}

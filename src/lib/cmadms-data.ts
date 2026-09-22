@@ -89,6 +89,7 @@ export type Report = {
   location: string;
   remarks: string;
   evidence?: string | undefined;
+  studentEvidence?: string | undefined;
   reportedBy: string;
   status: ReportStatus;
   explanation?: string | undefined;

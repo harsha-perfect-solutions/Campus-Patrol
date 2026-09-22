@@ -152,12 +152,18 @@ function StudentEventPermissionsPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground bg-muted/40 p-3 rounded-xl border border-border">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
                     <Calendar className="size-3.5 text-primary shrink-0" />
-                    <span className="truncate">Date: <strong className="text-foreground">{perm.event_date}</strong></span>
+                    <span className="truncate">
+                      Date: <strong className="text-foreground">
+                        {perm.start_date && perm.end_date && perm.start_date !== perm.end_date
+                          ? `${perm.start_date} – ${perm.end_date}`
+                          : (perm.start_date || perm.event_date)}
+                      </strong>
+                    </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
                     <Clock className="size-3.5 text-primary shrink-0" />
                     <span className="truncate"><strong className="text-foreground">{perm.start_time} - {perm.end_time}</strong></span>
                   </div>

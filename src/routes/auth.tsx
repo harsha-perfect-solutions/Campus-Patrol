@@ -235,7 +235,7 @@ function AuthPage() {
         {/* ROLE SELECTOR */}
         <div>
           <Label className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2 block">Select Your Portal</Label>
-          <div className="grid grid-cols-5 gap-1.5" role="radiogroup" aria-label="Portal Role">
+          <div className="grid grid-cols-5 gap-1 sm:gap-1.5" role="radiogroup" aria-label="Portal Role">
             {ROLES.map((role) => {
               const isSelected = selectedRole === role.id;
               const RoleIcon = role.icon;
@@ -247,14 +247,14 @@ function AuthPage() {
                   aria-checked={isSelected}
                   onClick={() => handleRoleSelect(role.id)}
                   className={cn(
-                    "flex items-center justify-center gap-1 py-2 px-1 rounded-xl text-xs font-medium transition-all duration-150 ease-in-out outline-none cursor-pointer",
+                    "flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 sm:px-2 rounded-xl text-xs font-medium transition-all duration-150 ease-in-out outline-none cursor-pointer min-w-0 overflow-hidden",
                     isSelected
                       ? "bg-[#0047AB] text-white shadow-md shadow-blue-700/25 font-semibold"
                       : "bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700"
                   )}
                 >
                   <RoleIcon className={cn("size-3.5 shrink-0", isSelected ? "text-white" : "text-[#0047AB] dark:text-blue-400")} />
-                  <span className="text-[11px] font-medium leading-none">{role.label}</span>
+                  <span className="text-[10px] sm:text-[11px] font-medium leading-none truncate max-w-full text-center">{role.label}</span>
                 </button>
               );
             })}

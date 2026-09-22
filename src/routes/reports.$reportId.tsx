@@ -296,6 +296,7 @@ export function ReportDetail() {
             location: r.location,
             remarks: r.remarks,
             evidence: r.evidence ?? undefined,
+            studentEvidence: r.student_evidence ?? undefined,
             reportedBy: r.reported_by,
             createdAt:
               (r.created_at as unknown) instanceof Date
@@ -776,7 +777,7 @@ export function ReportDetail() {
                   </blockquote>
                 </div>
 
-                {report.evidence && (
+                {report.studentEvidence && (
                   <div className="pt-2 border-t border-emerald-200/60 space-y-2.5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
@@ -788,16 +789,16 @@ export function ReportDetail() {
                         size="sm"
                         variant="outline"
                         className="h-8 sm:h-7 text-xs font-bold rounded-lg border-primary/40 text-primary hover:bg-primary/10 gap-1.5 w-full sm:w-auto justify-center"
-                        onClick={() => handleDownloadEvidence(report.evidence!, report.id)}
+                        onClick={() => handleDownloadEvidence(report.studentEvidence!, report.id)}
                       >
                         <Download className="size-3" /> Download Student Evidence
                       </Button>
                     </div>
 
-                    {report.evidence.startsWith("data:") ? (
+                    {report.studentEvidence.startsWith("data:") ? (
                       <div className="p-3 rounded-xl bg-background border border-border flex flex-col items-center gap-2">
                         <img
-                          src={report.evidence}
+                          src={report.studentEvidence}
                           alt="Student supporting evidence photo"
                           className="max-h-60 w-auto rounded-lg object-contain border border-border shadow-2xs"
                         />
@@ -808,14 +809,14 @@ export function ReportDetail() {
                     ) : (
                       <div className="flex items-center justify-between p-3 rounded-xl bg-background border border-border">
                         <span className="text-xs font-semibold text-foreground truncate">
-                          Attached: {report.evidence}
+                          Attached: {report.studentEvidence}
                         </span>
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
                           className="h-7 text-xs font-bold rounded-lg"
-                          onClick={() => handleDownloadEvidence(report.evidence!, report.id)}
+                          onClick={() => handleDownloadEvidence(report.studentEvidence!, report.id)}
                         >
                           <Download className="size-3 mr-1" /> Download (.png)
                         </Button>

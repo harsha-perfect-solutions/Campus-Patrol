@@ -204,6 +204,10 @@ export function TimetablePage({ hideHeader = false }: { hideHeader?: boolean } =
     }
 
     loadSchedule();
+
+    return () => {
+      isMounted = false;
+    };
   }, [role, profile?.full_name]);
 
   // Determine active target Day of Week

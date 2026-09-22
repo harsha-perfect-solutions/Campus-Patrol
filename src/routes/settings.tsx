@@ -31,7 +31,7 @@ import { faculty } from "@/lib/cmadms-data";
 import { useCmadms } from "@/lib/cmadms-store";
 import { useAuth } from "@/lib/auth";
 import { RoleGuard } from "@/components/role-guard";
-import { ChangePasswordDialog } from "@/components/change-password-dialog";
+import { ChangePasswordDialog, type DialogMode } from "@/components/change-password-dialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/settings")({
@@ -95,6 +95,17 @@ export function SettingsPage() {
   const { theme, setTheme } = useCmadms();
   const { profile, role } = useAuth();
   const [changePassOpen, setChangePassOpen] = useState(false);
+  const [dialogInitialMode, setDialogInitialMode] = useState<DialogMode>("change");
+
+  const handleOpenUpdatePassword = () => {
+    setDialogInitialMode("change");
+    setChangePassOpen(true);
+  };
+
+  const handleOpenForgotPassword = () => {
+    setDialogInitialMode("forgot_email");
+    setChangePassOpen(true);
+  };
 
   // Form states
   const fullName = profile?.full_name || (role === "admin" ? "System Administrator" : role === "student" ? "Ashok Dora" : faculty.name);
@@ -155,19 +166,6 @@ export function SettingsPage() {
                 {userCode} &bull; {email}
               </p>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setChangePassOpen(true)}
-              className="rounded-xl text-xs font-semibold gap-1.5 bg-card/80 shadow-2xs h-9"
-            >
-              <KeyRound className="size-3.5 text-primary" />
-              <span>Change Password</span>
-            </Button>
           </div>
         </div>
       </div>
@@ -401,30 +399,58 @@ export function SettingsPage() {
             icon={KeyRound}
             description="Manage authentication & access credentials"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-border bg-muted/20">
-              <div className="flex items-center gap-2.5">
-                <Lock className="size-4 text-primary shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-foreground">Password Authentication</p>
-                  <p className="text-[11px] text-muted-foreground">Last updated recently</p>
+            <div className="space-y-3">
+              {/* Row 1: Update Password */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-border bg-muted/20">
+                <div className="flex items-center gap-2.5">
+                  <Lock className="size-4 text-primary shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-foreground">Password Authentication</p>
+                    <p className="text-[11px] text-muted-foreground">Change password using your current password</p>
+                  </div>
                 </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenUpdatePassword}
+                  className="rounded-xl text-xs font-semibold gap-1.5 bg-card hover:bg-accent border-primary/40 text-primary shrink-0"
+                >
+                  <KeyRound className="size-3.5 text-primary" />
+                  <span>Update Password</span>
+                </Button>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setChangePassOpen(true)}
-                className="rounded-xl text-xs font-semibold gap-1.5 bg-card hover:bg-accent border-border"
-              >
-                <KeyRound className="size-3.5 text-primary" />
-                <span>Update Password</span>
-              </Button>
+
+              {/* Row 2: Forgot Password */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-border bg-muted/20">
+                <div className="flex items-center gap-2.5">
+                  <Mail className="size-4 text-primary shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-foreground">Password Reset & Recovery</p>
+                    <p className="text-[11px] text-muted-foreground">Forgot password? Reset securely using email OTP verification</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenForgotPassword}
+                  className="rounded-xl text-xs font-semibold gap-1.5 bg-card hover:bg-accent border-border text-foreground shrink-0"
+                >
+                  <Mail className="size-3.5 text-primary" />
+                  <span>Forgot Password</span>
+                </Button>
+              </div>
             </div>
           </SettingsSection>
         </div>
       </div>
 
-      <ChangePasswordDialog open={changePassOpen} onOpenChange={setChangePassOpen} />
+      <ChangePasswordDialog
+        open={changePassOpen}
+        onOpenChange={setChangePassOpen}
+        initialMode={dialogInitialMode}
+      />
     </div>
   );
 }

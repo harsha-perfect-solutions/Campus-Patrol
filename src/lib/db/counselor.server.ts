@@ -90,6 +90,7 @@ export async function ensureCounselorSchema(): Promise<void> {
       ALTER TABLE violation_reports ADD COLUMN IF NOT EXISTS resolution_note TEXT NULL;
       ALTER TABLE violation_reports ADD COLUMN IF NOT EXISTS resolved_by VARCHAR(64) NULL;
       ALTER TABLE violation_reports ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMPTZ NULL;
+      ALTER TABLE violation_reports ADD COLUMN IF NOT EXISTS student_evidence TEXT NULL;
       ALTER TABLE violation_reports ADD COLUMN IF NOT EXISTS audit_trail JSONB DEFAULT '[]'::jsonb;
     `);
 

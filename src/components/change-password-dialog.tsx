@@ -20,17 +20,22 @@ import {
 } from "@/lib/api/auth.server";
 import { PasswordStrengthMeter } from "./password-strength";
 
-interface ChangePasswordDialogProps {
+export type DialogMode = "change" | "forgot_email" | "forgot_otp" | "forgot_new_password" | "forgot_success";
+
+export interface ChangePasswordDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialMode?: DialogMode;
 }
 
-type DialogMode = "change" | "forgot_email" | "forgot_otp" | "forgot_new_password" | "forgot_success";
-
-export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
+export function ChangePasswordDialog({
+  open,
+  onOpenChange,
+  initialMode = "change",
+}: ChangePasswordDialogProps) {
   const { user } = useAuth();
 
-  const [mode, setMode] = useState<DialogMode>("change");
+  const [mode, setMode] = useState<DialogMode>(initialMode);
 
   // Normal change password fields
   const [currentPassword, setCurrentPassword] = useState("");
@@ -57,8 +62,16 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
     }
   }, [user]);
 
+  // Sync mode with initialMode when dialog opens or initialMode changes
+  useEffect(() => {
+    if (open) {
+      setMode(initialMode);
+      setErrorMsg(null);
+    }
+  }, [open, initialMode]);
+
   const resetForm = () => {
-    setMode("change");
+    setMode(initialMode);
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");

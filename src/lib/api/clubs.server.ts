@@ -14,18 +14,24 @@ import {
   addClubMember,
   removeClubMember,
   createClubEvent,
+  updateClubEvent,
   getClubEvents,
+  getClubEventById,
   cancelClubEvent,
   validateEventParticipantsPreflight,
   grantEventPermissionsAtomic,
+  addEventParticipants,
+  removeEventParticipant,
   getStudentEventPermissions,
   getEventParticipantsServer,
+  getEventParticipantConflicts,
   type DBClub,
   type DBClubCoordinator,
   type DBClubMember,
   type DBClubEvent,
   type DBEventParticipant,
   type DBEventParticipantReportItem,
+  type StudentEventConflict,
   type LocationType,
   type EventType,
 } from "../db/clubs.server";
@@ -114,17 +120,42 @@ export const createClubEventApi = createServerFn({ method: "POST" })
       club_id: string;
       event_name: string;
       description: string | null;
-      event_date: string;
+      start_date: string;
+      end_date: string;
+      event_date?: string;
       start_time: string;
       end_time: string;
       location_type: LocationType;
       location: string;
       event_type: EventType;
+      additional_details?: string | null;
     }) => data
   )
   .handler(async ({ data }) => {
     const session = await requireRole("faculty");
     return await createClubEvent(session.userId, data);
+  });
+
+export const updateClubEventApi = createServerFn({ method: "POST" })
+  .validator(
+    (data: {
+      eventId: string;
+      event_name?: string;
+      description?: string | null;
+      start_date?: string;
+      end_date?: string;
+      start_time?: string;
+      end_time?: string;
+      location_type?: LocationType;
+      location?: string;
+      event_type?: EventType;
+      additional_details?: string | null;
+    }) => data
+  )
+  .handler(async ({ data }) => {
+    const session = await requireRole("faculty");
+    const { eventId, ...rest } = data;
+    return await updateClubEvent(session.userId, eventId, rest);
   });
 
 export const getClubEventsApi = createServerFn({ method: "POST" })
@@ -155,11 +186,32 @@ export const grantEventPermissionsAtomicApi = createServerFn({ method: "POST" })
     return await grantEventPermissionsAtomic(session.userId, data.eventId, data.studentCodes);
   });
 
+export const addEventParticipantsApi = createServerFn({ method: "POST" })
+  .validator((data: { eventId: string; studentCodes: string[] }) => data)
+  .handler(async ({ data }) => {
+    const session = await requireRole("faculty");
+    return await addEventParticipants(session.userId, data.eventId, data.studentCodes);
+  });
+
+export const removeEventParticipantApi = createServerFn({ method: "POST" })
+  .validator((data: { eventId: string; studentCode: string }) => data)
+  .handler(async ({ data }) => {
+    const session = await requireRole("faculty");
+    return await removeEventParticipant(session.userId, data.eventId, data.studentCode);
+  });
+
 export const getMyEventPermissionsApi = createServerFn({ method: "GET" }).handler(async () => {
   const session = await requireRole("student");
   const studentCode = session.studentCode || "23CSE1012";
   return await getStudentEventPermissions(studentCode);
 });
+
+export const getEventParticipantConflictsApi = createServerFn({ method: "POST" })
+  .validator((data: { eventId: string; studentCodes?: string[] }) => data)
+  .handler(async ({ data }) => {
+    await requireRole("faculty");
+    return await getEventParticipantConflicts(data.eventId, data.studentCodes);
+  });
 
 export const getEventParticipantsApi = createServerFn({ method: "POST" })
   .validator((data: { eventId: string }) => data)
@@ -169,3 +221,4 @@ export const getEventParticipantsApi = createServerFn({ method: "POST" })
   });
 
 export default {};
+

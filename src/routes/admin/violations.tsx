@@ -848,6 +848,46 @@ function AdminViolationsPage() {
                         <div className="p-3 rounded-xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/80 text-foreground font-medium leading-relaxed">
                           "{selectedReport.explanation}"
                         </div>
+                        {selectedReport.student_evidence && (
+                          <div className="pt-2 border-t border-emerald-200/60 space-y-2">
+                            <span className="text-[10px] font-semibold text-muted-foreground block uppercase">
+                              Student Supporting Evidence
+                            </span>
+                            {selectedReport.student_evidence.startsWith("data:") ? (
+                              <div className="p-2.5 rounded-xl bg-background border border-border flex flex-col items-center gap-2">
+                                <img
+                                  src={selectedReport.student_evidence}
+                                  alt="Student Supporting Evidence"
+                                  className="max-h-48 w-auto rounded-lg object-contain border border-border shadow-2xs"
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs font-bold rounded-lg border-emerald-300 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100/50 gap-1.5"
+                                  onClick={() => downloadEvidenceImage(selectedReport.student_evidence!, selectedReport.id)}
+                                >
+                                  <Download className="size-3" /> Download Student Evidence (.png)
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between p-2 rounded-lg bg-background border border-border">
+                                <span className="text-xs font-medium text-foreground truncate">
+                                  Attached: {selectedReport.student_evidence}
+                                </span>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs font-bold rounded-lg border-emerald-300 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100/50 gap-1.5"
+                                  onClick={() => downloadEvidenceImage(selectedReport.student_evidence!, selectedReport.id)}
+                                >
+                                  <Download className="size-3" /> Download
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="p-3 rounded-xl bg-muted/30 border border-border text-center space-y-1">

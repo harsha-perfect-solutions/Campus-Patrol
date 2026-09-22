@@ -33,8 +33,6 @@ import { Route as AdminMovementPassesRouteImport } from './routes/admin/movement
 import { Route as AdminPermissionsRouteImport } from './routes/admin/permissions'
 import { Route as AdminReportsRouteImport } from './routes/admin/reports'
 import { Route as AdminRoomsRouteImport } from './routes/admin/rooms'
-import { Route as AdminSafetyAnalyticsRouteImport } from './routes/admin/safety-analytics'
-import { Route as AdminSafetyReportsRouteImport } from './routes/admin/safety-reports'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminStudentsRouteImport } from './routes/admin/students'
 import { Route as AdminTimetableRouteImport } from './routes/admin/timetable'
@@ -51,10 +49,8 @@ import { Route as FacultySettingsRouteImport } from './routes/faculty/settings'
 import { Route as FacultyTimetableRouteImport } from './routes/faculty/timetable'
 import { Route as HodCasesRouteImport } from './routes/hod/cases'
 import { Route as HodDashboardRouteImport } from './routes/hod/dashboard'
-import { Route as HodDepartmentRouteImport } from './routes/hod/department'
 import { Route as HodNotificationsRouteImport } from './routes/hod/notifications'
 import { Route as HodPassesRouteImport } from './routes/hod/passes'
-import { Route as HodSafetyAnalyticsRouteImport } from './routes/hod/safety-analytics'
 import { Route as HodSettingsRouteImport } from './routes/hod/settings'
 import { Route as HodStudentsRouteImport } from './routes/hod/students'
 import { Route as HodTimetableRouteImport } from './routes/hod/timetable'
@@ -205,16 +201,6 @@ const AdminRoomsRoute = AdminRoomsRouteImport.update({
   path: '/admin/rooms',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminSafetyAnalyticsRoute = AdminSafetyAnalyticsRouteImport.update({
-  id: '/admin/safety-analytics',
-  path: '/admin/safety-analytics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminSafetyReportsRoute = AdminSafetyReportsRouteImport.update({
-  id: '/admin/safety-reports',
-  path: '/admin/safety-reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/admin/settings',
   path: '/admin/settings',
@@ -295,11 +281,6 @@ const HodDashboardRoute = HodDashboardRouteImport.update({
   path: '/hod/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HodDepartmentRoute = HodDepartmentRouteImport.update({
-  id: '/hod/department',
-  path: '/hod/department',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const HodNotificationsRoute = HodNotificationsRouteImport.update({
   id: '/hod/notifications',
   path: '/hod/notifications',
@@ -308,11 +289,6 @@ const HodNotificationsRoute = HodNotificationsRouteImport.update({
 const HodPassesRoute = HodPassesRouteImport.update({
   id: '/hod/passes',
   path: '/hod/passes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HodSafetyAnalyticsRoute = HodSafetyAnalyticsRouteImport.update({
-  id: '/hod/safety-analytics',
-  path: '/hod/safety-analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HodSettingsRoute = HodSettingsRouteImport.update({
@@ -486,8 +462,6 @@ export interface FileRoutesByFullPath {
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/rooms': typeof AdminRoomsRoute
-  '/admin/safety-analytics': typeof AdminSafetyAnalyticsRoute
-  '/admin/safety-reports': typeof AdminSafetyReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/timetable': typeof AdminTimetableRoute
@@ -504,10 +478,8 @@ export interface FileRoutesByFullPath {
   '/faculty/timetable': typeof FacultyTimetableRoute
   '/hod/cases': typeof HodCasesRouteWithChildren
   '/hod/dashboard': typeof HodDashboardRoute
-  '/hod/department': typeof HodDepartmentRoute
   '/hod/notifications': typeof HodNotificationsRoute
   '/hod/passes': typeof HodPassesRoute
-  '/hod/safety-analytics': typeof HodSafetyAnalyticsRoute
   '/hod/settings': typeof HodSettingsRoute
   '/hod/students': typeof HodStudentsRoute
   '/hod/timetable': typeof HodTimetableRoute
@@ -562,8 +534,6 @@ export interface FileRoutesByTo {
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/rooms': typeof AdminRoomsRoute
-  '/admin/safety-analytics': typeof AdminSafetyAnalyticsRoute
-  '/admin/safety-reports': typeof AdminSafetyReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/timetable': typeof AdminTimetableRoute
@@ -580,10 +550,8 @@ export interface FileRoutesByTo {
   '/faculty/timetable': typeof FacultyTimetableRoute
   '/hod/cases': typeof HodCasesRouteWithChildren
   '/hod/dashboard': typeof HodDashboardRoute
-  '/hod/department': typeof HodDepartmentRoute
   '/hod/notifications': typeof HodNotificationsRoute
   '/hod/passes': typeof HodPassesRoute
-  '/hod/safety-analytics': typeof HodSafetyAnalyticsRoute
   '/hod/settings': typeof HodSettingsRoute
   '/hod/students': typeof HodStudentsRoute
   '/hod/timetable': typeof HodTimetableRoute
@@ -640,8 +608,6 @@ export interface FileRoutesById {
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/rooms': typeof AdminRoomsRoute
-  '/admin/safety-analytics': typeof AdminSafetyAnalyticsRoute
-  '/admin/safety-reports': typeof AdminSafetyReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/timetable': typeof AdminTimetableRoute
@@ -658,10 +624,8 @@ export interface FileRoutesById {
   '/faculty/timetable': typeof FacultyTimetableRoute
   '/hod/cases': typeof HodCasesRouteWithChildren
   '/hod/dashboard': typeof HodDashboardRoute
-  '/hod/department': typeof HodDepartmentRoute
   '/hod/notifications': typeof HodNotificationsRoute
   '/hod/passes': typeof HodPassesRoute
-  '/hod/safety-analytics': typeof HodSafetyAnalyticsRoute
   '/hod/settings': typeof HodSettingsRoute
   '/hod/students': typeof HodStudentsRoute
   '/hod/timetable': typeof HodTimetableRoute
@@ -719,8 +683,6 @@ export interface FileRouteTypes {
     | '/admin/permissions'
     | '/admin/reports'
     | '/admin/rooms'
-    | '/admin/safety-analytics'
-    | '/admin/safety-reports'
     | '/admin/settings'
     | '/admin/students'
     | '/admin/timetable'
@@ -737,10 +699,8 @@ export interface FileRouteTypes {
     | '/faculty/timetable'
     | '/hod/cases'
     | '/hod/dashboard'
-    | '/hod/department'
     | '/hod/notifications'
     | '/hod/passes'
-    | '/hod/safety-analytics'
     | '/hod/settings'
     | '/hod/students'
     | '/hod/timetable'
@@ -795,8 +755,6 @@ export interface FileRouteTypes {
     | '/admin/permissions'
     | '/admin/reports'
     | '/admin/rooms'
-    | '/admin/safety-analytics'
-    | '/admin/safety-reports'
     | '/admin/settings'
     | '/admin/students'
     | '/admin/timetable'
@@ -813,10 +771,8 @@ export interface FileRouteTypes {
     | '/faculty/timetable'
     | '/hod/cases'
     | '/hod/dashboard'
-    | '/hod/department'
     | '/hod/notifications'
     | '/hod/passes'
-    | '/hod/safety-analytics'
     | '/hod/settings'
     | '/hod/students'
     | '/hod/timetable'
@@ -872,8 +828,6 @@ export interface FileRouteTypes {
     | '/admin/permissions'
     | '/admin/reports'
     | '/admin/rooms'
-    | '/admin/safety-analytics'
-    | '/admin/safety-reports'
     | '/admin/settings'
     | '/admin/students'
     | '/admin/timetable'
@@ -890,10 +844,8 @@ export interface FileRouteTypes {
     | '/faculty/timetable'
     | '/hod/cases'
     | '/hod/dashboard'
-    | '/hod/department'
     | '/hod/notifications'
     | '/hod/passes'
-    | '/hod/safety-analytics'
     | '/hod/settings'
     | '/hod/students'
     | '/hod/timetable'
@@ -950,8 +902,6 @@ export interface RootRouteChildren {
   AdminPermissionsRoute: typeof AdminPermissionsRoute
   AdminReportsRoute: typeof AdminReportsRouteWithChildren
   AdminRoomsRoute: typeof AdminRoomsRoute
-  AdminSafetyAnalyticsRoute: typeof AdminSafetyAnalyticsRoute
-  AdminSafetyReportsRoute: typeof AdminSafetyReportsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
   AdminTimetableRoute: typeof AdminTimetableRoute
@@ -968,10 +918,8 @@ export interface RootRouteChildren {
   FacultyTimetableRoute: typeof FacultyTimetableRoute
   HodCasesRoute: typeof HodCasesRouteWithChildren
   HodDashboardRoute: typeof HodDashboardRoute
-  HodDepartmentRoute: typeof HodDepartmentRoute
   HodNotificationsRoute: typeof HodNotificationsRoute
   HodPassesRoute: typeof HodPassesRoute
-  HodSafetyAnalyticsRoute: typeof HodSafetyAnalyticsRoute
   HodSettingsRoute: typeof HodSettingsRoute
   HodStudentsRoute: typeof HodStudentsRoute
   HodTimetableRoute: typeof HodTimetableRoute
@@ -1159,20 +1107,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRoomsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/safety-analytics': {
-      id: '/admin/safety-analytics'
-      path: '/admin/safety-analytics'
-      fullPath: '/admin/safety-analytics'
-      preLoaderRoute: typeof AdminSafetyAnalyticsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/safety-reports': {
-      id: '/admin/safety-reports'
-      path: '/admin/safety-reports'
-      fullPath: '/admin/safety-reports'
-      preLoaderRoute: typeof AdminSafetyReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/admin/settings'
@@ -1285,13 +1219,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HodDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/hod/department': {
-      id: '/hod/department'
-      path: '/hod/department'
-      fullPath: '/hod/department'
-      preLoaderRoute: typeof HodDepartmentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/hod/notifications': {
       id: '/hod/notifications'
       path: '/hod/notifications'
@@ -1304,13 +1231,6 @@ declare module '@tanstack/react-router' {
       path: '/hod/passes'
       fullPath: '/hod/passes'
       preLoaderRoute: typeof HodPassesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hod/safety-analytics': {
-      id: '/hod/safety-analytics'
-      path: '/hod/safety-analytics'
-      fullPath: '/hod/safety-analytics'
-      preLoaderRoute: typeof HodSafetyAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hod/settings': {
@@ -1602,8 +1522,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPermissionsRoute: AdminPermissionsRoute,
   AdminReportsRoute: AdminReportsRouteWithChildren,
   AdminRoomsRoute: AdminRoomsRoute,
-  AdminSafetyAnalyticsRoute: AdminSafetyAnalyticsRoute,
-  AdminSafetyReportsRoute: AdminSafetyReportsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminStudentsRoute: AdminStudentsRoute,
   AdminTimetableRoute: AdminTimetableRoute,
@@ -1620,10 +1538,8 @@ const rootRouteChildren: RootRouteChildren = {
   FacultyTimetableRoute: FacultyTimetableRoute,
   HodCasesRoute: HodCasesRouteWithChildren,
   HodDashboardRoute: HodDashboardRoute,
-  HodDepartmentRoute: HodDepartmentRoute,
   HodNotificationsRoute: HodNotificationsRoute,
   HodPassesRoute: HodPassesRoute,
-  HodSafetyAnalyticsRoute: HodSafetyAnalyticsRoute,
   HodSettingsRoute: HodSettingsRoute,
   HodStudentsRoute: HodStudentsRoute,
   HodTimetableRoute: HodTimetableRoute,

@@ -27,6 +27,7 @@ export type DBViolationReport = {
   remarks: string;
   witness_notes?: string | null;
   evidence: string | null;
+  student_evidence?: string | null;
   reported_by: string;
   status: string;
   explanation: string | null;
@@ -404,7 +405,7 @@ const VIOLATION_COLUMNS = `
   id, student_code, student_name, department, year_section, class_name,
   subject_code, scheduled_time, room, scheduled_faculty, incident_time,
   observed_at::text, location, violation_type, severity, remarks, witness_notes,
-  evidence, reported_by, status::text, explanation, explanation_submitted_at::text,
+  evidence, student_evidence, reported_by, status::text, explanation, explanation_submitted_at::text,
   decision, decision_by, decision_at::text, semester, explanation_deadline::text, created_at::text
 `;
 
@@ -590,6 +591,7 @@ export async function submitStudentExplanation(
   reportId: string,
   explanation: string,
   studentCode: string,
+  studentEvidence?: string,
 ): Promise<DBViolationReport> {
   const cleanId = reportId.trim();
   const cleanCode = studentCode.trim().toUpperCase();
@@ -615,13 +617,18 @@ export async function submitStudentExplanation(
       UPDATE violation_reports
       SET
         explanation = $1,
+        student_evidence = COALESCE($2, student_evidence),
         explanation_submitted_at = NOW(),
         status = 'explanation_submitted'::violation_status
-      WHERE UPPER(id) = UPPER($2)
+      WHERE UPPER(id) = UPPER($3)
       RETURNING *;
     `;
 
-    const result = await db.query<DBViolationReport>(updateQuery, [explanation.trim(), cleanId]);
+    const result = await db.query<DBViolationReport>(updateQuery, [
+      explanation.trim(),
+      studentEvidence?.trim() || null,
+      cleanId,
+    ]);
 
     const updatedReport = result.rows[0];
     if (!updatedReport) {

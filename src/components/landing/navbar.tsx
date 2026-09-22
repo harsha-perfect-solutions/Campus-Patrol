@@ -1,29 +1,15 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ShieldCheck, Menu, X, ArrowRight, Sun, Moon } from "lucide-react";
+import { ShieldCheck, Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { getDefaultDashboardForRole } from "@/lib/permissions";
 
+import { ThemeToggle } from "@/components/theme-toggle";
+
 export function LandingNavbar() {
   const { session, role } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window !== "undefined") {
-      return document.documentElement.classList.contains("dark") ? "dark" : "light";
-    }
-    return "light";
-  });
-
-  const toggleTheme = () => {
-    const nextTheme = theme === "light" ? "dark" : "light";
-    setTheme(nextTheme);
-    if (nextTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
 
   const navLinks = [
     { label: "Home", to: "/" },
@@ -73,15 +59,7 @@ export function LandingNavbar() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={toggleTheme}
-            aria-label="Toggle Theme"
-            className="rounded-xl text-muted-foreground hover:text-foreground cursor-pointer"
-          >
-            {theme === "dark" ? <Sun className="size-4 text-amber-400" /> : <Moon className="size-4" />}
-          </Button>
+          <ThemeToggle />
 
           {/* Mobile Drawer Trigger */}
           <Button

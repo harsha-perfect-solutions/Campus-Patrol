@@ -38,6 +38,15 @@ import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
+import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { useEffect } from "react";
 import { getUnreadNotificationCountApi } from "@/lib/api/notifications.server";
 
@@ -46,6 +55,68 @@ import { useRealtimeNotifications } from "@/hooks/use-realtime-notifications";
 function useUnreadCount() {
   const { unreadCount } = useRealtimeNotifications();
   return unreadCount;
+}
+
+function UserProfileDropdown({
+  activeName,
+  initials,
+  settingsTo,
+  roleLabel,
+  onSignOut,
+  avatarBg = "bg-primary/10 text-primary",
+}: {
+  activeName: string;
+  initials: string;
+  settingsTo: string;
+  roleLabel?: string;
+  onSignOut: () => void;
+  avatarBg?: string;
+}) {
+  const navigate = useNavigate();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center gap-2 rounded-full p-1 sm:px-2.5 sm:py-1 hover:bg-muted/70 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer border border-transparent hover:border-border select-none"
+          title="Account Menu"
+        >
+          <span className={cn("grid size-7 sm:size-8 place-items-center rounded-full text-xs font-bold shrink-0", avatarBg)}>
+            {initials}
+          </span>
+          <span className="hidden text-xs font-semibold text-foreground sm:inline truncate max-w-[130px]">
+            {activeName}
+          </span>
+          <ChevronDown className="size-3 text-muted-foreground hidden sm:block shrink-0" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" sideOffset={6} className="w-56 p-1.5 rounded-2xl shadow-lg border border-border bg-card">
+        <DropdownMenuLabel className="px-3 py-2">
+          <p className="text-xs font-extrabold text-foreground leading-tight truncate">{activeName}</p>
+          {roleLabel && (
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5">{roleLabel}</p>
+          )}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator className="my-1 bg-border/60" />
+        <DropdownMenuItem
+          onClick={() => navigate({ to: settingsTo as any })}
+          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer text-foreground hover:bg-accent focus:bg-accent transition-colors"
+        >
+          <User className="size-4 text-primary shrink-0" />
+          <span>My Profile</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator className="my-1 bg-border/60" />
+        <DropdownMenuItem
+          onClick={onSignOut}
+          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer text-destructive hover:bg-destructive/10 focus:bg-destructive/10 focus:text-destructive transition-colors"
+        >
+          <LogOut className="size-4 shrink-0" />
+          <span>Sign Out</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 /* ==========================================================================
@@ -99,7 +170,7 @@ const facultyNavGroups = [
   {
     category: "SYSTEM",
     items: [
-      { to: "/faculty/settings", label: "Settings", icon: Settings },
+      { to: "/faculty/settings", label: "My Profile", icon: User },
       { action: "signOut", label: "Sign out", icon: LogOut },
     ],
   },
@@ -355,27 +426,31 @@ export function FacultyShell({ children }: { children: ReactNode }) {
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden flex items-center justify-center size-9 -ml-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shrink-0"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="size-5" />
+            </button>
             <span className="text-xs font-semibold text-foreground leading-snug">
               <span className="sm:hidden">Faculty Portal</span>
               <span className="hidden sm:inline">Faculty Portal &bull; Academic Oversight</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <ThemeToggle />
             <NotificationBell role="faculty" />
-            <Link
-              to="/faculty/settings"
-              title="View Profile & Settings"
-              className="flex items-center gap-2 rounded-full p-0.5 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-            >
-              <span className="grid size-7 sm:size-8 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary shrink-0">
-                {initials}
-              </span>
-              <span className="hidden text-xs font-medium text-foreground sm:inline hover:underline">
-                {activeName}
-              </span>
-            </Link>
+            <UserProfileDropdown
+              activeName={activeName}
+              initials={initials}
+              settingsTo="/faculty/settings"
+              roleLabel="Faculty & Coordinator"
+              onSignOut={handleSignOut}
+            />
           </div>
         </header>
 
@@ -407,6 +482,16 @@ export function FacultyShell({ children }: { children: ReactNode }) {
           <span>Verify</span>
         </Link>
         <Link
+          to="/faculty/reports"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-medium transition-colors",
+            pathname.startsWith("/faculty/reports") ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <FileText className="size-5 mb-0.5" />
+          <span>Reports</span>
+        </Link>
+        <Link
           to="/faculty/timetable"
           className={cn(
             "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-medium transition-colors",
@@ -416,14 +501,6 @@ export function FacultyShell({ children }: { children: ReactNode }) {
           <Calendar className="size-5 mb-0.5" />
           <span>Schedule</span>
         </Link>
-        <button
-          type="button"
-          onClick={() => setMobileOpen(true)}
-          className="flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Menu className="size-5 mb-0.5" />
-          <span>Menu</span>
-        </button>
       </nav>
     </div>
   );
@@ -438,7 +515,6 @@ const hodNavGroups = [
     category: "Department Safety",
     items: [
       { to: "/hod/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/hod/safety-analytics", label: "Safety Analytics", icon: BarChart2 },
       { to: "/hod/violations", label: "Violations & Cases", icon: ShieldAlert },
       { to: "/hod/passes", label: "Movement Passes", icon: CheckCircle2 },
       { to: "/hod/cases", label: "Reviews & Hearings", icon: FileText },
@@ -448,7 +524,6 @@ const hodNavGroups = [
     category: "Academic Administration",
     items: [
       { to: "/hod/students", label: "Department Students", icon: GraduationCap },
-      { to: "/hod/department", label: "Department Structure", icon: Building2 },
       { to: "/hod/timetable", label: "Department Timetable", icon: Calendar },
     ],
   },
@@ -456,7 +531,7 @@ const hodNavGroups = [
     category: "System",
     items: [
       { to: "/notifications", label: "Notifications", icon: Bell },
-      { to: "/hod/settings", label: "Settings", icon: Settings },
+      { to: "/hod/settings", label: "My Profile", icon: User },
     ],
   },
 ];
@@ -557,7 +632,7 @@ export function HODShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Desktop Sidebar */}
-      <aside className="sticky top-0 z-20 hidden h-screen w-[240px] shrink-0 border-r border-border bg-card flex-col justify-between lg:flex">
+      <aside className="sticky top-0 z-20 hidden h-screen w-[240px] shrink-0 border-r border-border bg-card flex-col justify-between lg:flex print:hidden">
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-5">
           <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-xs">
             <Building2 className="size-5" />
@@ -614,38 +689,42 @@ export function HODShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
-          <div className="flex items-center gap-2 min-w-0">
+        <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md print:hidden">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden flex items-center justify-center size-9 -ml-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shrink-0"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="size-5" />
+            </button>
             <span className="text-xs font-semibold text-foreground leading-snug">
               <span className="sm:hidden">HOD Office &bull; {activeDept}</span>
               <span className="hidden sm:inline">HOD Office &bull; {activeDept} Department</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <ThemeToggle />
             <NotificationBell role="hod" />
-            <Link
-              to="/hod/settings"
-              title="View Profile & Settings"
-              className="flex items-center gap-2 rounded-full p-0.5 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-            >
-              <span className="grid size-7 sm:size-8 place-items-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
-                {initials}
-              </span>
-              <span className="hidden text-xs font-medium text-foreground sm:inline hover:underline">
-                {activeName}
-              </span>
-            </Link>
+            <UserProfileDropdown
+              activeName={activeName}
+              initials={initials}
+              settingsTo="/hod/settings"
+              roleLabel={`HOD • ${activeDept}`}
+              onSignOut={() => void signOut().then(() => navigate({ to: "/auth" }))}
+            />
           </div>
         </header>
 
-        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-28 sm:pb-24 lg:pb-8">
-          <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6">{children}</div>
+        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 pb-28 sm:pb-24 lg:pb-8 print:p-0 print:m-0">
+          <div className="mx-auto w-full max-w-[1240px] space-y-5 sm:space-y-6 print:m-0 print:p-0 print:max-w-none">{children}</div>
         </main>
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-15 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-15 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg print:hidden">
         <Link
           to="/hod/dashboard"
           className={cn(
@@ -686,14 +765,6 @@ export function HODShell({ children }: { children: ReactNode }) {
           <GraduationCap className="size-5 mb-0.5" />
           <span>Students</span>
         </Link>
-        <button
-          type="button"
-          onClick={() => setMobileOpen(true)}
-          className="flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Menu className="size-5 mb-0.5" />
-          <span>Menu</span>
-        </button>
       </nav>
     </div>
   );
@@ -884,27 +955,31 @@ export function StudentShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden flex items-center justify-center size-9 -ml-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shrink-0"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="size-5" />
+            </button>
             <span className="text-xs font-semibold text-foreground leading-snug">
               <span className="sm:hidden">Student Portal</span>
               <span className="hidden sm:inline">Student Portal {studentCode ? `• ${studentCode}` : ""}</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <ThemeToggle />
             <NotificationBell role="student" />
-            <Link
-              to="/student/profile"
-              title="View Profile & ID"
-              className="flex items-center gap-2 rounded-full p-0.5 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-            >
-              <span className="grid size-7 sm:size-8 place-items-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
-                {initials}
-              </span>
-              <span className="hidden text-xs font-medium text-foreground sm:inline hover:underline">
-                {activeName}
-              </span>
-            </Link>
+            <UserProfileDropdown
+              activeName={activeName}
+              initials={initials}
+              settingsTo="/student/profile"
+              roleLabel={studentCode ? `Student • ${studentCode}` : "Student"}
+              onSignOut={() => void signOut().then(() => navigate({ to: "/auth" }))}
+            />
           </div>
         </header>
 
@@ -955,14 +1030,6 @@ export function StudentShell({ children }: { children: ReactNode }) {
           <ShieldAlert className="size-5 mb-0.5" />
           <span>Incidents</span>
         </Link>
-        <button
-          type="button"
-          onClick={() => setMobileOpen(true)}
-          className="flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Menu className="size-5 mb-0.5" />
-          <span>More</span>
-        </button>
       </nav>
     </div>
   );
@@ -977,8 +1044,6 @@ const adminNavGroups = [
     category: "Safety & Command",
     items: [
       { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/admin/safety-analytics", label: "Safety Analytics", icon: BarChart2 },
-      { to: "/admin/safety-reports", label: "Executive Reports", icon: FileText },
       { to: "/admin/violations", label: "Violations & Cases", icon: FileText },
       { to: "/admin/movement-passes", label: "Movement Passes", icon: ShieldCheck },
     ],
@@ -1155,27 +1220,31 @@ export function AdminShell({ children }: { children: ReactNode }) {
       {/* Main Content */}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden flex items-center justify-center size-9 -ml-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shrink-0"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="size-5" />
+            </button>
             <span className="text-xs font-semibold text-foreground leading-snug">
               <span className="sm:hidden">Admin Console</span>
               <span className="hidden sm:inline">System Administration</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <ThemeToggle />
             <NotificationBell role="admin" />
-            <Link
-              to="/admin/settings"
-              title="View Profile & System Settings"
-              className="flex items-center gap-2 rounded-full p-0.5 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-            >
-              <span className="grid size-7 sm:size-8 place-items-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
-                AD
-              </span>
-              <span className="hidden text-xs font-medium text-foreground sm:inline hover:underline">
-                {activeName}
-              </span>
-            </Link>
+            <UserProfileDropdown
+              activeName={activeName}
+              initials="AD"
+              settingsTo="/admin/settings"
+              roleLabel="System Administrator"
+              onSignOut={() => void signOut().then(() => navigate({ to: "/auth" }))}
+            />
           </div>
         </header>
 
@@ -1216,14 +1285,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <ShieldCheck className="size-5 mb-0.5" />
           <span>Passes</span>
         </Link>
-        <button
-          type="button"
-          onClick={() => setMobileOpen(true)}
-          className="flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+        <Link
+          to="/admin/users"
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-medium transition-colors",
+            pathname.startsWith("/admin/users") ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground",
+          )}
         >
-          <Menu className="size-5 mb-0.5" />
-          <span>Menu</span>
-        </button>
+          <Users className="size-5 mb-0.5" />
+          <span>Users</span>
+        </Link>
       </nav>
     </div>
   );
@@ -1404,27 +1475,32 @@ export function SecurityShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 lg:px-6 backdrop-blur-md">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden flex items-center justify-center size-9 -ml-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shrink-0"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="size-5" />
+            </button>
             <span className="text-xs font-semibold text-foreground leading-snug">
               <span className="sm:hidden">Security Portal</span>
               <span className="hidden sm:inline">Security Portal ({staffCode})</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <ThemeToggle />
             <NotificationBell role="security" />
-            <Link
-              to="/security/profile"
-              title="View Security Officer Profile"
-              className="flex items-center gap-2 rounded-full p-0.5 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-            >
-              <span className="grid size-7 sm:size-8 place-items-center rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-semibold shrink-0">
-                {initials}
-              </span>
-              <span className="hidden text-xs font-medium text-foreground sm:inline hover:underline">
-                {activeName}
-              </span>
-            </Link>
+            <UserProfileDropdown
+              activeName={activeName}
+              initials={initials}
+              settingsTo="/security/profile"
+              roleLabel={`Security Staff (${staffCode})`}
+              avatarBg="bg-amber-500/20 text-amber-800 dark:text-amber-300"
+              onSignOut={() => void signOut().then(() => navigate({ to: "/auth" }))}
+            />
           </div>
         </header>
 
@@ -1478,14 +1554,6 @@ export function SecurityShell({ children }: { children: ReactNode }) {
           <User className="size-5 mb-0.5" />
           <span>Profile</span>
         </Link>
-        <button
-          type="button"
-          onClick={() => setMobileOpen(true)}
-          className="flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Menu className="size-5 mb-0.5" />
-          <span>Menu</span>
-        </button>
       </nav>
     </div>
   );

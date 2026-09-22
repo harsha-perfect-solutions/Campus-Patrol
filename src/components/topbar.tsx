@@ -67,8 +67,8 @@ export function Topbar({
           <Button
             variant="ghost"
             size="icon-sm"
-            className="hidden lg:inline-flex"
-            onClick={onToggleSidebar}
+            className="flex items-center justify-center size-9 -ml-1 rounded-xl"
+            onClick={onOpenMobileNav || onToggleSidebar}
             aria-label="Toggle sidebar"
           >
             <Menu className="size-5 text-muted-foreground hover:text-foreground" />

@@ -276,6 +276,52 @@ export async function ensureTimetableSchemaMigration(): Promise<void> {
         ],
       },
       {
+        year: "3rd Year",
+        semester: 5,
+        slots: [
+          { day: 1, start: "09:00", end: "10:00", subject: "Database Management Systems", code: "CS501", room: "R-301", faculty: "Prof. Rajesh Kumar", pType: "CLASS" },
+          { day: 1, start: "10:00", end: "11:00", subject: "Operating Systems", code: "CS502", room: "R-301", faculty: "Dr. Anita Roy", pType: "CLASS" },
+          { day: 1, start: "11:00", end: "11:10", subject: "Morning Break", code: "BREAK-10M", room: "-", faculty: "-", pType: "BREAK" },
+          { day: 1, start: "11:10", end: "12:10", subject: "Computer Networks", code: "CS503", room: "R-301", faculty: "Prof. Sanjay Gupta", pType: "CLASS" },
+          { day: 1, start: "12:10", end: "13:10", subject: "Software Engineering", code: "CS504", room: "R-301", faculty: "Dr. K. V. Sharma", pType: "CLASS" },
+          { day: 1, start: "13:10", end: "14:10", subject: "Lunch Break", code: "LUNCH-1H", room: "-", faculty: "-", pType: "LUNCH" },
+          { day: 1, start: "14:10", end: "16:10", subject: "Full Stack Web Development Lab", code: "CS501L", room: "Lab-3", faculty: "Mrs. Kavita Patel", pType: "LAB" },
+          { day: 2, start: "09:00", end: "10:00", subject: "Design & Analysis of Algorithms", code: "CS505", room: "R-301", faculty: "Dr. Ramesh B", pType: "CLASS" },
+          { day: 2, start: "10:00", end: "11:00", subject: "Operating Systems", code: "CS502", room: "R-301", faculty: "Dr. Anita Roy", pType: "CLASS" },
+          { day: 2, start: "11:00", end: "11:10", subject: "Morning Break", code: "BREAK-10M", room: "-", faculty: "-", pType: "BREAK" },
+          { day: 2, start: "11:10", end: "12:10", subject: "Database Management Systems", code: "CS501", room: "R-301", faculty: "Prof. Rajesh Kumar", pType: "CLASS" },
+          { day: 2, start: "12:10", end: "13:10", subject: "Library / Research Hours", code: "LIB-STUDY", room: "Central Library", faculty: "-", pType: "LIBRARY" },
+          { day: 2, start: "13:10", end: "14:10", subject: "Lunch Break", code: "LUNCH-1H", room: "-", faculty: "-", pType: "LUNCH" },
+          { day: 2, start: "14:10", end: "16:10", subject: "Database & OS Practical Lab", code: "CS502L", room: "Lab-3", faculty: "Prof. Rajesh Kumar", pType: "LAB" },
+          { day: 3, start: "09:00", end: "10:00", subject: "Computer Networks", code: "CS503", room: "R-301", faculty: "Prof. Sanjay Gupta", pType: "CLASS" },
+          { day: 3, start: "10:00", end: "11:00", subject: "Software Engineering", code: "CS504", room: "R-301", faculty: "Dr. K. V. Sharma", pType: "CLASS" },
+          { day: 3, start: "11:00", end: "11:10", subject: "Morning Break", code: "BREAK-10M", room: "-", faculty: "-", pType: "BREAK" },
+          { day: 3, start: "11:10", end: "12:10", subject: "Database Management Systems", code: "CS501", room: "R-301", faculty: "Prof. Rajesh Kumar", pType: "CLASS" },
+          { day: 3, start: "12:10", end: "13:10", subject: "Design & Analysis of Algorithms", code: "CS505", room: "R-301", faculty: "Dr. Ramesh B", pType: "CLASS" },
+          { day: 3, start: "13:10", end: "14:10", subject: "Lunch Break", code: "LUNCH-1H", room: "-", faculty: "-", pType: "LUNCH" },
+          { day: 3, start: "14:10", end: "16:10", subject: "Networks & Security Lab", code: "CS503L", room: "Lab-4", faculty: "Prof. Sanjay Gupta", pType: "LAB" },
+          { day: 4, start: "09:00", end: "10:00", subject: "Operating Systems", code: "CS502", room: "R-301", faculty: "Dr. Anita Roy", pType: "CLASS" },
+          { day: 4, start: "10:00", end: "11:00", subject: "Design & Analysis of Algorithms", code: "CS505", room: "R-301", faculty: "Dr. Ramesh B", pType: "CLASS" },
+          { day: 4, start: "11:00", end: "11:10", subject: "Morning Break", code: "BREAK-10M", room: "-", faculty: "-", pType: "BREAK" },
+          { day: 4, start: "11:10", end: "12:10", subject: "Computer Networks", code: "CS503", room: "R-301", faculty: "Prof. Sanjay Gupta", pType: "CLASS" },
+          { day: 4, start: "12:10", end: "13:10", subject: "Software Engineering", code: "CS504", room: "R-301", faculty: "Dr. K. V. Sharma", pType: "CLASS" },
+          { day: 4, start: "13:10", end: "14:10", subject: "Lunch Break", code: "LUNCH-1H", room: "-", faculty: "-", pType: "LUNCH" },
+          { day: 4, start: "14:10", end: "16:10", subject: "Mini Project & Seminar", code: "CS506P", room: "Project Lab", faculty: "Dr. K. V. Sharma", pType: "CLASS" },
+          { day: 5, start: "09:00", end: "10:00", subject: "Database Management Systems", code: "CS501", room: "R-301", faculty: "Prof. Rajesh Kumar", pType: "CLASS" },
+          { day: 5, start: "10:00", end: "11:00", subject: "Operating Systems", code: "CS502", room: "R-301", faculty: "Dr. Anita Roy", pType: "CLASS" },
+          { day: 5, start: "11:00", end: "11:10", subject: "Morning Break", code: "BREAK-10M", room: "-", faculty: "-", pType: "BREAK" },
+          { day: 5, start: "11:10", end: "12:10", subject: "Software Engineering", code: "CS504", room: "R-301", faculty: "Dr. K. V. Sharma", pType: "CLASS" },
+          { day: 5, start: "12:10", end: "13:10", subject: "Sports / Physical Fitness", code: "SPORTS-3", room: "Sports Complex", faculty: "Coach Sharma", pType: "SPORTS" },
+          { day: 5, start: "13:10", end: "14:10", subject: "Lunch Break", code: "LUNCH-1H", room: "-", faculty: "-", pType: "LUNCH" },
+          { day: 5, start: "14:10", end: "16:10", subject: "Industry Mentorship & Coding Club", code: "CS507C", room: "Auditorium", faculty: "Dr. Ramesh B", pType: "ACTIVITY" },
+          { day: 6, start: "09:00", end: "10:00", subject: "Design & Analysis of Algorithms", code: "CS505", room: "R-301", faculty: "Dr. Ramesh B", pType: "CLASS" },
+          { day: 6, start: "10:00", end: "11:00", subject: "Computer Networks", code: "CS503", room: "R-301", faculty: "Prof. Sanjay Gupta", pType: "CLASS" },
+          { day: 6, start: "11:00", end: "11:10", subject: "Morning Break", code: "BREAK-10M", room: "-", faculty: "-", pType: "BREAK" },
+          { day: 6, start: "11:10", end: "13:10", subject: "Technical Seminar & Review", code: "CS508S", room: "Seminar Hall", faculty: "Dr. K. V. Sharma", pType: "CLASS" },
+          { day: 6, start: "13:10", end: "14:10", subject: "Lunch Break", code: "LUNCH-1H", room: "-", faculty: "-", pType: "LUNCH" },
+        ],
+      },
+      {
         year: "4th Year",
         semester: 7,
         slots: [
@@ -890,9 +936,27 @@ export async function getAdminTimetable(filters?: {
       query += ` AND (subject ILIKE $${params.length} OR code ILIKE $${params.length} OR faculty_name ILIKE $${params.length} OR room ILIKE $${params.length})`;
     }
 
-    query += ` ORDER BY day_of_week, start_time, department, section;`;
-
     const res = await db.query<DBClassSlot>(query, params);
+    if (res.rows.length === 0 && filters?.section && filters.section !== "ALL") {
+      // Fallback: query slots for the same department and year (Section A default)
+      const fallbackParams = [...params];
+      const sectionParamIdx = params.indexOf(filters.section);
+      if (sectionParamIdx !== -1) {
+        fallbackParams[sectionParamIdx] = "Section A";
+        const fallbackRes = await db.query<DBClassSlot>(query, fallbackParams);
+        if (fallbackRes.rows.length > 0) {
+          const secSuffix = filters.section.replace("Section ", "").trim();
+          const roomMap: Record<string, string> = { B: "R-302", C: "R-303", D: "2-S-08" };
+          return fallbackRes.rows.map((r: any) => ({
+            ...r,
+            section: filters.section || "Section A",
+            room: roomMap[secSuffix] || r.room || "R-301",
+            day_name: dayOfWeekToString(r.day_of_week),
+          }));
+        }
+      }
+    }
+
     return res.rows.map((r: any) => ({
       ...r,
       day_name: dayOfWeekToString(r.day_of_week),
