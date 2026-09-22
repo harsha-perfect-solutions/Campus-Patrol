@@ -25,7 +25,6 @@ import { Route as ViolationsRouteImport } from './routes/violations'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin/audit-logs'
 import { Route as AdminClubsRouteImport } from './routes/admin/clubs'
 import { Route as AdminCounselorsRouteImport } from './routes/admin/counselors'
-import { Route as AdminCoursesRouteImport } from './routes/admin/courses'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminDepartmentsRouteImport } from './routes/admin/departments'
 import { Route as AdminFacultyRouteImport } from './routes/admin/faculty'
@@ -158,11 +157,6 @@ const AdminClubsRoute = AdminClubsRouteImport.update({
 const AdminCounselorsRoute = AdminCounselorsRouteImport.update({
   id: '/admin/counselors',
   path: '/admin/counselors',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminCoursesRoute = AdminCoursesRouteImport.update({
-  id: '/admin/courses',
-  path: '/admin/courses',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
@@ -448,7 +442,6 @@ export interface FileRoutesByFullPath {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/clubs': typeof AdminClubsRoute
   '/admin/counselors': typeof AdminCounselorsRoute
-  '/admin/courses': typeof AdminCoursesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/departments': typeof AdminDepartmentsRoute
   '/admin/faculty': typeof AdminFacultyRoute
@@ -519,7 +512,6 @@ export interface FileRoutesByTo {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/clubs': typeof AdminClubsRoute
   '/admin/counselors': typeof AdminCounselorsRoute
-  '/admin/courses': typeof AdminCoursesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/departments': typeof AdminDepartmentsRoute
   '/admin/faculty': typeof AdminFacultyRoute
@@ -592,7 +584,6 @@ export interface FileRoutesById {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/clubs': typeof AdminClubsRoute
   '/admin/counselors': typeof AdminCounselorsRoute
-  '/admin/courses': typeof AdminCoursesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/departments': typeof AdminDepartmentsRoute
   '/admin/faculty': typeof AdminFacultyRoute
@@ -666,7 +657,6 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/clubs'
     | '/admin/counselors'
-    | '/admin/courses'
     | '/admin/dashboard'
     | '/admin/departments'
     | '/admin/faculty'
@@ -737,7 +727,6 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/clubs'
     | '/admin/counselors'
-    | '/admin/courses'
     | '/admin/dashboard'
     | '/admin/departments'
     | '/admin/faculty'
@@ -809,7 +798,6 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/clubs'
     | '/admin/counselors'
-    | '/admin/courses'
     | '/admin/dashboard'
     | '/admin/departments'
     | '/admin/faculty'
@@ -882,7 +870,6 @@ export interface RootRouteChildren {
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminClubsRoute: typeof AdminClubsRoute
   AdminCounselorsRoute: typeof AdminCounselorsRoute
-  AdminCoursesRoute: typeof AdminCoursesRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDepartmentsRoute: typeof AdminDepartmentsRoute
   AdminFacultyRoute: typeof AdminFacultyRoute
@@ -1036,13 +1023,6 @@ declare module '@tanstack/react-router' {
       path: '/admin/counselors'
       fullPath: '/admin/counselors'
       preLoaderRoute: typeof AdminCounselorsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/courses': {
-      id: '/admin/courses'
-      path: '/admin/courses'
-      fullPath: '/admin/courses'
-      preLoaderRoute: typeof AdminCoursesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/dashboard': {
@@ -1494,7 +1474,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminClubsRoute: AdminClubsRoute,
   AdminCounselorsRoute: AdminCounselorsRoute,
-  AdminCoursesRoute: AdminCoursesRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDepartmentsRoute: AdminDepartmentsRoute,
   AdminFacultyRoute: AdminFacultyRoute,
