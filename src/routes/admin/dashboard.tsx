@@ -8,6 +8,7 @@ import {
   FolderGit2,
   GraduationCap,
   ShieldAlert,
+  UserCog,
   Users,
 } from "lucide-react";
 import { RoleGuard } from "@/components/role-guard";
