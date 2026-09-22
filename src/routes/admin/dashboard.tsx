@@ -8,7 +8,6 @@ import {
   FolderGit2,
   GraduationCap,
   ShieldAlert,
-  UserCog,
   Users,
 } from "lucide-react";
 import { RoleGuard } from "@/components/role-guard";
@@ -222,16 +221,10 @@ function AdminDashboardContent() {
             icon: Users,
           },
           {
-            title: "Student Master",
-            desc: "Manage enrolled student profiles and semester records",
+            title: "Students & Faculty",
+            desc: "Manage enrolled student rosters and faculty teaching staff records",
             to: "/admin/students",
             icon: GraduationCap,
-          },
-          {
-            title: "Faculty Master",
-            desc: "Manage staff codes, departments & subject assignments",
-            to: "/admin/faculty",
-            icon: UserCog,
           },
           {
             title: "Departments",
