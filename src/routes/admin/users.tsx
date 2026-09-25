@@ -840,24 +840,6 @@ function AdminUsersPage() {
     }
   };
 
-  const downloadSampleTemplate = () => {
-    const csvData = `Roll Number,Name,Department,Year,Semester,Section
-23CSE1012,Ashok Dora,CSE,3,6,A
-23CSE1013,Ravi Teja,CSE,3,6,A
-23CSE1014,Priya Sharma,CSE,3,6,A
-23ECE2031,Karthik Reddy,ECE,2,4,B
-22MEC3007,Sneha Patil,MECH,4,8,C`;
-
-    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "CMADMS_Student_Bulk_Import_Template.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   // Filtered User Records
   const filteredUsers = users.filter((u) => {
     const roleMatch =
@@ -1455,15 +1437,6 @@ function AdminUsersPage() {
             </DialogHeader>
 
             <div className="space-y-4 text-xs">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50 border border-border">
-                <div>
-                  <span className="font-bold text-foreground block">Download Standard CSV Template</span>
-                  <span className="text-[11px] text-muted-foreground">Columns: Roll Number, Name, Department, Year, Semester, Section</span>
-                </div>
-                <Button type="button" variant="outline" size="sm" onClick={downloadSampleTemplate} className="rounded-xl text-xs font-semibold">
-                  <Download className="size-3.5 mr-1" /> Template CSV
-                </Button>
-              </div>
 
               <div>
                 <Label className="text-xs font-semibold text-foreground">Paste CSV Text or Select File</Label>
