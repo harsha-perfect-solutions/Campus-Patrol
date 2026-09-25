@@ -68,8 +68,11 @@ type AssignmentStudent = {
 type FacultyProfile = {
   id: string;
   full_name: string;
+  name?: string;
+  department?: string;
   email: string;
   staff_code: string | null;
+  staffCode?: string | null;
 };
 
 function getSemestersForYear(year: string): number[] {
@@ -176,7 +179,19 @@ function AdminCounselorsContent() {
       ]);
       const fetchedAssignments: DBCounselorAssignment[] = Array.isArray(aRes) ? aRes : [];
       setAssignments(fetchedAssignments);
-      if (fRes?.faculty) setFacultyProfiles(fRes.faculty as FacultyProfile[]);
+      if (fRes?.faculty) {
+        setFacultyProfiles(
+          (fRes.faculty as any[]).map((f) => ({
+            id: f.id,
+            full_name: f.full_name || f.name || "Faculty Member",
+            name: f.name || f.full_name || "Faculty Member",
+            department: f.department || "",
+            email: f.email || "",
+            staff_code: f.staff_code || f.staffCode || null,
+            staffCode: f.staffCode || f.staff_code || null,
+          }))
+        );
+      }
       setSectionStudents(Array.isArray(sRes) ? sRes : []);
 
       // Fetch pass stats for all assignments in a single batch call
@@ -305,6 +320,12 @@ function AdminCounselorsContent() {
     setAddSem(sem);
     setAddSec(sec);
     setAddSelected(new Set());
+    if (addFaculty) {
+      const selectedFac = facultyProfiles.find(f => f.id === addFaculty);
+      if (selectedFac?.department && selectedFac.department.toLowerCase() !== dept.toLowerCase()) {
+        setAddFaculty("");
+      }
+    }
     await fetchAddModalStudents(dept, yr, sec);
   };
 
@@ -818,20 +839,31 @@ function AdminCounselorsContent() {
 
             {/* Faculty picker */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Faculty Counselor *</Label>
+              <Label className="text-xs font-semibold">Faculty Counselor * ({addDept} Department)</Label>
               <select
                 value={addFaculty}
                 onChange={e => setAddFaculty(e.target.value)}
                 required
                 className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value="">— Select Faculty Member —</option>
+                <option value="">— Select {addDept} Faculty Member —</option>
                 {facultyProfiles
-                  .filter(f => !assignments.some(a => a.faculty_id === f.id && a.department === addDept && a.year === addYear && a.section === addSec))
+                  .filter(f => {
+                    const deptMatch = !f.department || !addDept || f.department.toLowerCase() === addDept.toLowerCase();
+                    const alreadyAssigned = assignments.some(a => a.faculty_id === f.id && a.department === addDept && a.year === addYear && a.section === addSec);
+                    return deptMatch && !alreadyAssigned;
+                  })
                   .map(f => (
-                    <option key={f.id} value={f.id}>{f.full_name} ({f.email})</option>
+                    <option key={f.id} value={f.id}>
+                      {f.full_name || f.name} {f.department ? `[${f.department}]` : ""} ({f.email})
+                    </option>
                   ))}
               </select>
+              {facultyProfiles.filter(f => !f.department || !addDept || f.department.toLowerCase() === addDept.toLowerCase()).length === 0 && (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                  No registered faculty found for {addDept} department. Please add faculty in Users / Faculty directory first.
+                </p>
+              )}
             </div>
 
             {/* Student selector — uses modal-level students, not global filter */}
@@ -884,15 +916,19 @@ function AdminCounselorsContent() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Faculty Counselor</Label>
+              <Label className="text-xs font-semibold">Faculty Counselor ({editAssignment.department} Department)</Label>
               <select
                 value={editFaculty}
                 onChange={e => setEditFaculty(e.target.value)}
                 className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                {facultyProfiles.map(f => (
-                  <option key={f.id} value={f.id}>{f.full_name} ({f.email})</option>
-                ))}
+                {facultyProfiles
+                  .filter(f => !f.department || !editAssignment.department || f.department.toLowerCase() === editAssignment.department.toLowerCase() || f.id === editAssignment.faculty_id)
+                  .map(f => (
+                    <option key={f.id} value={f.id}>
+                      {f.full_name || f.name} {f.department ? `[${f.department}]` : ""} ({f.email})
+                    </option>
+                  ))}
               </select>
               {editFaculty !== editAssignment.faculty_id && (
                 <p className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
