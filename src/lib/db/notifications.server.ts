@@ -31,6 +31,10 @@ export type NotificationType =
   | "violation_decision_updated"
   | "event_cancelled"
   | "event_permission_granted"
+  | "event_permission_requested"
+  | "event_permission_approved"
+  | "event_permission_rejected"
+  | "club_event_permission_requested"
   | "info";
 
 export type NotificationTone = "violation" | "pending" | "resolved" | "info" | "critical";

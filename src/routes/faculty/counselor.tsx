@@ -17,6 +17,8 @@ import {
   ChevronRight,
   Info,
   ShieldCheck,
+  Sparkles,
+  Ticket,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
@@ -35,12 +37,15 @@ import {
   getCounselorViolationsApi,
   getCounselorPassesApi,
   approveCounselorPassApi,
+  getCounselorEventPermissionsApi,
+  approveCounselorEventPermissionApi,
   resolveCounselorViolationApi,
   escalateCounselorViolationApi,
   isFacultyCounselorApi,
 } from "@/lib/api/counselor.server";
 import type { DBCounselorStudent, CounselorDashboardStats, DBCounselorPass } from "@/lib/db/counselor.server";
 import type { DBViolationReport } from "@/lib/db/violations.server";
+import type { DBEventParticipant } from "@/lib/db/clubs.server";
 
 export const Route = createFileRoute("/faculty/counselor")({
   validateSearch: (search: Record<string, unknown>) => {
@@ -74,6 +79,7 @@ function FacultyCounselorContent() {
       replace: true,
     });
   };
+  const [passCategory, setPassCategory] = useState<"all" | "movement" | "event">("all");
   const [passStatusFilter, setPassStatusFilter] = useState<string>("ALL");
   const [studentSearch, setStudentSearch] = useState("");
   const [studentDeptFilter, setStudentDeptFilter] = useState("ALL");
@@ -84,9 +90,8 @@ function FacultyCounselorContent() {
   const [students, setStudents] = useState<DBCounselorStudent[]>([]);
   const [violations, setViolations] = useState<DBViolationReport[]>([]);
   const [passes, setPasses] = useState<DBCounselorPass[]>([]);
+  const [eventPermissions, setEventPermissions] = useState<DBEventParticipant[]>([]);
   const [loading, setLoading] = useState(true);
-
-
 
   const loadData = async () => {
     setLoading(true);
@@ -95,16 +100,18 @@ function FacultyCounselorContent() {
       setIsCounselor(cCheck.isCounselor);
 
       if (cCheck.isCounselor) {
-        const [sRes, stRes, vRes, pRes] = await Promise.all([
+        const [sRes, stRes, vRes, pRes, epRes] = await Promise.all([
           getCounselorDashboardStatsApi(),
           getCounselorStudentsApi(),
           getCounselorViolationsApi({ data: { status: "ALL" } }),
           getCounselorPassesApi({ data: { status: "ALL" } }),
+          getCounselorEventPermissionsApi({ data: { status: "ALL" } }),
         ]);
         setStats(sRes);
         setStudents(stRes);
         setViolations(vRes);
         setPasses(pRes);
+        setEventPermissions(epRes);
       }
     } catch (err: any) {
       console.error("Error loading counselor data:", err);
@@ -123,6 +130,18 @@ function FacultyCounselorContent() {
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to update pass status");
+    }
+  };
+
+  const handleApproveEventPass = async (participantId: string, status: "APPROVED" | "REJECTED") => {
+    try {
+      const res = await approveCounselorEventPermissionApi({ data: { participantId, status } });
+      if (res.success) {
+        toast.success(`Club Event Pass ${status === "APPROVED" ? "Approved" : "Rejected"} Successfully`);
+        loadData();
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update club event pass status");
     }
   };
 
@@ -148,6 +167,17 @@ function FacultyCounselorContent() {
         p.status.toLowerCase() === "pending" && (p.target_role || "counselor").toLowerCase() === "counselor"
     ).length;
   }, [passes]);
+
+  const filteredEventPermissions = useMemo(() => {
+    if (passStatusFilter === "ALL") return eventPermissions;
+    return eventPermissions.filter(
+      (ep: DBEventParticipant) => ep.permission_status?.toUpperCase() === passStatusFilter.toUpperCase()
+    );
+  }, [eventPermissions, passStatusFilter]);
+
+  const pendingEventPermissionsCount = useMemo(() => {
+    return eventPermissions.filter((ep: DBEventParticipant) => ep.permission_status === "PENDING").length;
+  }, [eventPermissions]);
 
   const filteredStudents = useMemo(() => {
     return students.filter((st: DBCounselorStudent) => {
@@ -253,7 +283,7 @@ function FacultyCounselorContent() {
       <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-border overflow-x-auto no-scrollbar scroll-smooth">
         {[
           { id: "cases", label: "Violation Cases", icon: ShieldAlert, count: violations.length },
-          { id: "passes", label: "Pass Approvals", icon: CheckCircle2, count: passes.length },
+          { id: "passes", label: "Pass Approvals", icon: CheckCircle2, count: passes.length + eventPermissions.length },
           { id: "students", label: "Assigned Students", icon: Users, count: students.length },
         ].map((tab) => {
           const Icon = tab.icon;
@@ -379,21 +409,79 @@ function FacultyCounselorContent() {
 
       {/* PASSES TAB */}
       {activeTab === "passes" && (
-        <div className="card-surface rounded-2xl border border-border shadow-2xs overflow-hidden">
-          <div className="p-4 border-b border-border bg-muted/30 flex flex-wrap items-center justify-between gap-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
-              COUNSELING STUDENT MOVEMENT PASSES & APPROVALS
-            </h4>
+        <div className="space-y-4">
+          {/* Sub-Category Filter */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-border">
+              <button
+                type="button"
+                onClick={() => setPassCategory("all")}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                  passCategory === "all"
+                    ? "bg-background text-foreground shadow-xs font-bold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                )}
+              >
+                <span>All Passes</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground">
+                  {passes.length + eventPermissions.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPassCategory("movement")}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                  passCategory === "movement"
+                    ? "bg-background text-foreground shadow-xs font-bold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                )}
+              >
+                <Ticket className="size-3.5" />
+                <span>Movement Passes</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground">
+                  {passes.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPassCategory("event")}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                  passCategory === "event"
+                    ? "bg-background text-foreground shadow-xs font-bold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                )}
+              >
+                <Sparkles className="size-3.5 text-amber-500" />
+                <span>Club Event Passes</span>
+                {pendingEventPermissionsCount > 0 ? (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                    {pendingEventPermissionsCount} pending
+                  </span>
+                ) : (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground">
+                    {eventPermissions.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
             <div className="flex items-center gap-2">
               <Select value={passStatusFilter} onValueChange={setPassStatusFilter}>
-                <SelectTrigger className="w-[160px] h-8 rounded-xl text-xs font-semibold bg-card border-border shadow-2xs">
+                <SelectTrigger className="w-[170px] h-8 rounded-xl text-xs font-semibold bg-card border-border shadow-2xs">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-border">
-                  <SelectItem value="ALL">All Passes ({passes.length})</SelectItem>
-                  <SelectItem value="pending">Pending ({pendingPassesCount})</SelectItem>
-                  <SelectItem value="approved">Approved ({passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === "approved").length})</SelectItem>
-                  <SelectItem value="rejected">Rejected ({passes.filter((p: DBCounselorPass) => p.status.toLowerCase() === "rejected").length})</SelectItem>
+                  <SelectItem value="ALL">All Statuses</SelectItem>
+                  <SelectItem value="PENDING">
+                    Pending ({pendingPassesCount + pendingEventPermissionsCount})
+                  </SelectItem>
+                  <SelectItem value="APPROVED">Approved</SelectItem>
+                  <SelectItem value="REJECTED">Rejected</SelectItem>
                 </SelectContent>
               </Select>
               <Button variant="ghost" size="sm" onClick={loadData} className="text-xs">
@@ -402,89 +490,222 @@ function FacultyCounselorContent() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-muted/60 text-muted-foreground font-bold uppercase tracking-wider border-b border-border">
-                <tr>
-                  <th className="px-4 py-3">Pass ID</th>
-                  <th className="px-4 py-3">Student Name</th>
-                  <th className="px-4 py-3">Reason</th>
-                  <th className="px-4 py-3">Date & Time Window</th>
-                  <th className="px-4 py-3">Status & Routing</th>
-                  <th className="px-4 py-3">Issued / Approved By</th>
-                  <th className="px-4 py-3 text-right">Acceptance Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredPasses.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground italic">
-                      No movement pass requests found for your counseling students matching status filter "{passStatusFilter}".
-                    </td>
-                  </tr>
-                ) : (
-                  filteredPasses.map((p) => (
-                    <tr key={p.id} className="hover:bg-muted/40 transition-colors">
-                      <td className="px-4 py-3 font-mono font-bold text-primary">#{p.id.slice(0, 8)}</td>
-                      <td className="px-4 py-3">
-                        <strong className="text-foreground">{p.student_name || p.student_code}</strong>
-                        <p className="text-[11px] text-muted-foreground font-mono">{p.student_code} &bull; {p.department}</p>
-                      </td>
-                      <td className="px-4 py-3 font-medium text-foreground max-w-xs truncate">{p.reason}</td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        <div>{p.date}</div>
-                        <div className="text-[11px] font-mono text-primary">{p.valid_from} - {p.valid_until}</div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col gap-1 items-start">
-                          <ToneBadge
-                            tone={
-                              p.status === "approved"
-                                ? "success"
-                                : p.status === "rejected"
-                                ? "danger"
-                                : "warning"
-                            }
-                          >
-                            {p.status.toUpperCase()}
-                          </ToneBadge>
-                          <span className="text-[9px] font-bold text-muted-foreground px-1.5 py-0.5 rounded bg-muted/60 border border-border">
-                            {(p.target_role || "counselor").toLowerCase() === "counselor" ? "To: Counselor" : "To: HOD"}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.issued_by || "—"}</td>
-                      <td className="px-4 py-3 text-right">
-                        {p.status === "pending" ? (
-                          <div className="flex items-center justify-end gap-1.5">
-                            <Button
-                              size="sm"
-                              onClick={() => handleApprovePass(p.id, "approved")}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold px-3 h-8 shadow-xs"
-                            >
-                              <CheckCircle2 className="size-3.5 mr-1" /> Approve Pass
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleApprovePass(p.id, "rejected")}
-                              className="text-destructive hover:bg-destructive/10 border-destructive/30 rounded-xl text-xs font-bold px-3 h-8"
-                            >
-                              Reject
-                            </Button>
-                          </div>
-                        ) : (
-                          <span className="text-[11px] text-muted-foreground italic">
-                            Pass {p.status}
-                          </span>
-                        )}
-                      </td>
+          {/* CLUB EVENT PARTICIPATION PASSES */}
+          {(passCategory === "all" || passCategory === "event") && (
+            <div className="card-surface rounded-2xl border border-border shadow-2xs overflow-hidden">
+              <div className="p-4 border-b border-border bg-muted/30 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="size-4 text-amber-500" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                    CLUB EVENT PARTICIPATION APPROVALS ({filteredEventPermissions.length})
+                  </h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Club events require counselor approval before student QR passes activate
+                </p>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-muted/60 text-muted-foreground font-bold uppercase tracking-wider border-b border-border">
+                    <tr>
+                      <th className="px-4 py-3">Pass Code</th>
+                      <th className="px-4 py-3">Student Name</th>
+                      <th className="px-4 py-3">Club & Event</th>
+                      <th className="px-4 py-3">Date & Window</th>
+                      <th className="px-4 py-3">Location</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3 text-right">Counselor Action</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {filteredEventPermissions.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground italic">
+                          No club event permissions found matching current filter.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredEventPermissions.map((ep) => (
+                        <tr key={ep.id} className="hover:bg-muted/40 transition-colors">
+                          <td className="px-4 py-3 font-mono font-bold text-primary">
+                            {ep.permission_code || `#${ep.id.slice(0, 8)}`}
+                          </td>
+                          <td className="px-4 py-3">
+                            <strong className="text-foreground">{ep.student_name || ep.student_code}</strong>
+                            <p className="text-[11px] text-muted-foreground font-mono">
+                              {ep.student_code} &bull; {ep.department || ""} {ep.year ? `Yr ${ep.year}` : ""} {ep.section || ""}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <strong className="text-foreground">{ep.event_name}</strong>
+                            <p className="text-[11px] text-muted-foreground">{ep.club_name || "Club Event"}</p>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            <div>
+                              {ep.start_date === ep.end_date
+                                ? (ep.start_date || ep.event_date)
+                                : `${ep.start_date || ep.event_date} to ${ep.end_date || ep.start_date || ep.event_date}`}
+                            </div>
+                            <div className="text-[11px] font-mono text-primary">
+                              {ep.start_time?.slice(0, 5)} - {ep.end_time?.slice(0, 5)}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="font-medium text-foreground">{ep.location || ep.location_type}</span>
+                            <span className="block text-[10px] text-muted-foreground uppercase">{ep.location_type}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex flex-col gap-1 items-start">
+                              <ToneBadge
+                                tone={
+                                  ep.permission_status === "APPROVED"
+                                    ? "success"
+                                    : ep.permission_status === "REJECTED"
+                                    ? "danger"
+                                    : "warning"
+                                }
+                              >
+                                {ep.permission_status}
+                              </ToneBadge>
+                              {ep.reviewed_by && (
+                                <span className="text-[9px] text-muted-foreground">
+                                  by {ep.reviewed_by}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {ep.permission_status === "PENDING" ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleApproveEventPass(ep.id, "APPROVED")}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold px-3 h-8 shadow-xs cursor-pointer"
+                                >
+                                  <CheckCircle2 className="size-3.5 mr-1" /> Approve Pass
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleApproveEventPass(ep.id, "REJECTED")}
+                                  className="text-destructive hover:bg-destructive/10 border-destructive/30 rounded-xl text-xs font-bold px-3 h-8 cursor-pointer"
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-[11px] text-muted-foreground italic">
+                                Pass {ep.permission_status}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* MOVEMENT PASSES */}
+          {(passCategory === "all" || passCategory === "movement") && (
+            <div className="card-surface rounded-2xl border border-border shadow-2xs overflow-hidden">
+              <div className="p-4 border-b border-border bg-muted/30 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Ticket className="size-4 text-primary" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                    STUDENT MOVEMENT PASSES ({filteredPasses.length})
+                  </h4>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-muted/60 text-muted-foreground font-bold uppercase tracking-wider border-b border-border">
+                    <tr>
+                      <th className="px-4 py-3">Pass ID</th>
+                      <th className="px-4 py-3">Student Name</th>
+                      <th className="px-4 py-3">Reason</th>
+                      <th className="px-4 py-3">Date & Time Window</th>
+                      <th className="px-4 py-3">Status & Routing</th>
+                      <th className="px-4 py-3">Issued / Approved By</th>
+                      <th className="px-4 py-3 text-right">Acceptance Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {filteredPasses.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground italic">
+                          No movement pass requests found matching status filter "{passStatusFilter}".
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredPasses.map((p) => (
+                        <tr key={p.id} className="hover:bg-muted/40 transition-colors">
+                          <td className="px-4 py-3 font-mono font-bold text-primary">#{p.id.slice(0, 8)}</td>
+                          <td className="px-4 py-3">
+                            <strong className="text-foreground">{p.student_name || p.student_code}</strong>
+                            <p className="text-[11px] text-muted-foreground font-mono">{p.student_code} &bull; {p.department}</p>
+                          </td>
+                          <td className="px-4 py-3 font-medium text-foreground max-w-xs truncate">{p.reason}</td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            <div>{p.date}</div>
+                            <div className="text-[11px] font-mono text-primary">{p.valid_from} - {p.valid_until}</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex flex-col gap-1 items-start">
+                              <ToneBadge
+                                tone={
+                                  p.status === "approved"
+                                    ? "success"
+                                    : p.status === "rejected"
+                                    ? "danger"
+                                    : "warning"
+                                }
+                              >
+                                {p.status.toUpperCase()}
+                              </ToneBadge>
+                              <span className="text-[9px] font-bold text-muted-foreground px-1.5 py-0.5 rounded bg-muted/60 border border-border">
+                                {(p.target_role || "counselor").toLowerCase() === "counselor" ? "To: Counselor" : "To: HOD"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{p.issued_by || "—"}</td>
+                          <td className="px-4 py-3 text-right">
+                            {p.status === "pending" ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleApprovePass(p.id, "approved")}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold px-3 h-8 shadow-xs cursor-pointer"
+                                >
+                                  <CheckCircle2 className="size-3.5 mr-1" /> Approve Pass
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleApprovePass(p.id, "rejected")}
+                                  className="text-destructive hover:bg-destructive/10 border-destructive/30 rounded-xl text-xs font-bold px-3 h-8 cursor-pointer"
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-[11px] text-muted-foreground italic">
+                                Pass {p.status}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

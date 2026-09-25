@@ -13,7 +13,7 @@ export type EventType =
   | "CULTURAL_EVENT"
   | "OTHER";
 export type EventStatus = "SCHEDULED" | "CANCELLED" | "COMPLETED";
-export type PermissionStatus = "APPROVED" | "CANCELLED" | "EXPIRED";
+export type PermissionStatus = "APPROVED" | "CANCELLED" | "EXPIRED" | "PENDING" | "REJECTED" | string;
 
 export type DBClub = {
   club_id: string;
@@ -84,6 +84,9 @@ export type DBEventParticipant = {
   exit_at: string | null;
   entry_at: string | null;
   verified_by: string | null;
+  counselor_remarks?: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
   created_at: string;
   student_name?: string;
   department?: string;
@@ -183,13 +186,19 @@ export async function ensureClubSchema(): Promise<void> {
         permission_code TEXT NOT NULL UNIQUE,
         event_id UUID NOT NULL REFERENCES club_events(event_id) ON DELETE CASCADE,
         student_code TEXT NOT NULL REFERENCES students(student_code) ON DELETE CASCADE,
-        permission_status TEXT NOT NULL DEFAULT 'APPROVED',
+        permission_status TEXT NOT NULL DEFAULT 'PENDING',
         exit_at TIMESTAMPTZ,
         entry_at TIMESTAMPTZ,
         verified_by TEXT,
+        counselor_remarks TEXT,
+        reviewed_by VARCHAR(64),
+        reviewed_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         UNIQUE(event_id, student_code)
       );
+      ALTER TABLE event_participants ADD COLUMN IF NOT EXISTS counselor_remarks TEXT;
+      ALTER TABLE event_participants ADD COLUMN IF NOT EXISTS reviewed_by VARCHAR(64);
+      ALTER TABLE event_participants ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
     `);
 
     await db.query(`CREATE INDEX IF NOT EXISTS idx_club_coordinators_faculty ON club_coordinators(faculty_id);`);
@@ -1059,9 +1068,9 @@ export async function validateEventParticipantsPreflight(
       continue;
     }
 
-    // Check existing participant permission
+    // Check existing participant permission (both APPROVED and PENDING are already enrolled/pending)
     const existing = await db.query(
-      `SELECT id FROM event_participants WHERE event_id = $1 AND UPPER(student_code) = $2 AND permission_status = 'APPROVED';`,
+      `SELECT id FROM event_participants WHERE event_id = $1 AND UPPER(student_code) = $2 AND permission_status IN ('APPROVED', 'PENDING');`,
       [eventId, clean]
     );
 
@@ -1201,12 +1210,13 @@ export async function grantEventPermissionsAtomic(
       const randomSuffix = Math.floor(100000 + Math.random() * 900000);
       const permCode = `EP-${randomSuffix}`;
 
+      // Insert event participant with PENDING status awaiting Counselor review
       const res = await db.query<DBEventParticipant>(
         `INSERT INTO event_participants (permission_code, event_id, student_code, permission_status)
-         VALUES ($1, $2, $3, 'APPROVED')
+         VALUES ($1, $2, $3, 'PENDING')
          ON CONFLICT (event_id, student_code)
-         DO UPDATE SET permission_status = 'APPROVED', created_at = NOW()
-         RETURNING id, permission_code, event_id, student_code, permission_status, exit_at::text, entry_at::text, verified_by, created_at::text;`,
+         DO UPDATE SET permission_status = 'PENDING', created_at = NOW()
+         RETURNING id, permission_code, event_id, student_code, permission_status, exit_at::text, entry_at::text, verified_by, counselor_remarks, reviewed_by, reviewed_at::text, created_at::text;`,
         [permCode, eventId, student.student_code]
       );
 
@@ -1236,23 +1246,34 @@ export async function grantEventPermissionsAtomic(
 
     await db.query("COMMIT;");
 
-    // After commit, generate QR passes and dispatch notifications
+    // After commit, notify each student's Counselor and the Student about the pending permission request
     for (const perm of createdPermissions) {
       try {
-        const { getOrCreateQRPassForEventParticipant } = await import("./qr.server");
-        await getOrCreateQRPassForEventParticipant(perm.id, vFrom, vUntil);
-      } catch (qrErr) {
-        console.warn("[QR Notice] Failed to generate Club/Event QR pass:", qrErr);
+        const counselor = await getCounselorForStudentCode(perm.student_code);
+        if (counselor && counselor.facultyId) {
+          await createNotificationServer({
+            recipientRole: "faculty",
+            recipientId: counselor.facultyId,
+            title: `Club Event Pass Request: ${event.event_name}`,
+            detail: `Coordinator (${event.coordinator_name || "Faculty"}) requested event permission for your assigned student ${perm.student_name} (${perm.student_code}) for "${event.event_name}" (${event.club_name || ""}) on ${eventDateDisplay}, ${event.start_time} - ${event.end_time}.`,
+            tone: "pending",
+            type: "club_event_permission_requested",
+            relatedType: "club_event_permission",
+            relatedId: perm.permission_code,
+          }).catch(() => {});
+        }
+      } catch (cErr) {
+        console.warn("[Counselor Notify Warning] Failed to notify counselor:", cErr);
       }
 
-      // Notify student automatically (no student confirmation step)
+      // Notify student that request is sent to counselor for approval
       await createNotificationServer({
         recipientRole: "student",
         recipientId: perm.student_code,
-        title: `Event Permission Approved: ${event.event_name}`,
-        detail: `Your club coordinator has granted permission for "${event.event_name}" (${event.club_name}) from ${eventDateDisplay}, ${event.start_time} - ${event.end_time} at ${event.location}.`,
-        tone: "info",
-        type: "event_permission_granted",
+        title: `Event Permission Requested: ${event.event_name}`,
+        detail: `Your club coordinator requested permission for "${event.event_name}" (${event.club_name || ""}) on ${eventDateDisplay}, ${event.start_time} - ${event.end_time}. Awaiting approval from your Faculty Counselor.`,
+        tone: "pending",
+        type: "event_permission_requested",
         relatedType: "club_event_permission",
         relatedId: perm.permission_code,
       }).catch(() => {});
@@ -1263,6 +1284,54 @@ export async function grantEventPermissionsAtomic(
     await db.query("ROLLBACK;");
     throw err;
   }
+}
+
+/**
+ * Looks up the assigned faculty counselor for a student code.
+ */
+export async function getCounselorForStudentCode(studentCode: string): Promise<{ facultyId: string; facultyName: string; email: string } | null> {
+  const clean = studentCode.trim().toUpperCase();
+  // 1. Check direct student-to-counselor assignment
+  const direct = await db.query<{ faculty_id: string; full_name: string; email: string }>(
+    `SELECT p.id as faculty_id, p.full_name, p.email
+     FROM counselor_students cs
+     JOIN counselor_assignments ca ON ca.id = cs.counselor_assignment_id
+     JOIN profiles p ON p.id = ca.faculty_id
+     WHERE UPPER(cs.student_code) = $1
+       AND cs.status = 'ACTIVE'
+       AND ca.status = 'ACTIVE'
+     LIMIT 1;`,
+    [clean]
+  );
+  if (direct.rows[0]) {
+    return {
+      facultyId: direct.rows[0].faculty_id,
+      facultyName: direct.rows[0].full_name,
+      email: direct.rows[0].email,
+    };
+  }
+
+  // 2. Check section mapping
+  const sectionMapping = await db.query<{ faculty_id: string; full_name: string; email: string }>(
+    `SELECT p.id as faculty_id, p.full_name, p.email
+     FROM students s
+     JOIN counselor_assignments ca ON UPPER(ca.department) = UPPER(s.department)
+       AND UPPER(ca.year) = UPPER(s.year)
+       AND UPPER(ca.section) = UPPER(s.section)
+     JOIN profiles p ON p.id = ca.faculty_id
+     WHERE UPPER(s.student_code) = $1
+       AND ca.status = 'ACTIVE'
+     LIMIT 1;`,
+    [clean]
+  );
+  if (sectionMapping.rows[0]) {
+    return {
+      facultyId: sectionMapping.rows[0].faculty_id,
+      facultyName: sectionMapping.rows[0].full_name,
+      email: sectionMapping.rows[0].email,
+    };
+  }
+  return null;
 }
 
 export async function getStudentEventPermissions(studentCode: string): Promise<DBEventParticipant[]> {
@@ -1443,5 +1512,144 @@ export async function getEventParticipantsServer(
 
   return res.rows;
 }
+
+/**
+ * Fetches event permissions for students assigned to a specific counselor.
+ */
+export async function getCounselorEventPermissions(
+  facultyId: string,
+  statusFilter: string = "ALL"
+): Promise<DBEventParticipant[]> {
+  await ensureClubSchema();
+
+  const conditions: string[] = [
+    `UPPER(ep.student_code) IN (
+      SELECT UPPER(cs.student_code)
+      FROM counselor_students cs
+      JOIN counselor_assignments ca ON ca.id = cs.counselor_assignment_id
+      WHERE ca.faculty_id = $1 AND ca.status = 'ACTIVE' AND cs.status = 'ACTIVE'
+      UNION
+      SELECT UPPER(s.student_code)
+      FROM students s
+      JOIN counselor_assignments ca ON UPPER(ca.department) = UPPER(s.department)
+        AND UPPER(ca.year) = UPPER(s.year)
+        AND UPPER(ca.section) = UPPER(s.section)
+      WHERE ca.faculty_id = $1 AND ca.status = 'ACTIVE'
+    )`,
+  ];
+  const params: any[] = [facultyId];
+
+  if (statusFilter && statusFilter !== "ALL") {
+    params.push(statusFilter.toUpperCase());
+    conditions.push(`UPPER(ep.permission_status) = $${params.length}`);
+  }
+
+  const query = `
+    SELECT ep.id, ep.permission_code, ep.event_id, ep.student_code, ep.permission_status,
+           ep.exit_at::text, ep.entry_at::text, ep.verified_by, ep.counselor_remarks, ep.reviewed_by, ep.reviewed_at::text, ep.created_at::text,
+           e.event_name,
+           to_char(COALESCE(e.start_date, e.event_date), 'YYYY-MM-DD') AS start_date,
+           to_char(COALESCE(e.end_date, e.start_date, e.event_date), 'YYYY-MM-DD') AS end_date,
+           to_char(COALESCE(e.start_date, e.event_date), 'YYYY-MM-DD') AS event_date,
+           e.start_time::text, e.end_time::text, e.location_type, e.location,
+           e.event_type, e.additional_details,
+           c.name AS club_name, p.full_name AS coordinator_name,
+           s.name AS student_name, s.department, s.year, s.section
+    FROM event_participants ep
+    JOIN club_events e ON e.event_id = ep.event_id
+    JOIN clubs c ON c.club_id = e.club_id
+    LEFT JOIN profiles p ON p.id = e.coordinator_id
+    JOIN students s ON UPPER(s.student_code) = UPPER(ep.student_code)
+    WHERE ${conditions.join(" AND ")}
+    ORDER BY ep.created_at DESC;
+  `;
+
+  const res = await db.query<DBEventParticipant>(query, params);
+  return res.rows;
+}
+
+/**
+ * Counselor decision (APPROVE or REJECT) on an event permission request.
+ */
+export async function approveCounselorEventPermission(
+  facultyId: string,
+  participantId: string,
+  status: "APPROVED" | "REJECTED",
+  counselorName: string,
+  remarks?: string
+): Promise<DBEventParticipant> {
+  await ensureClubSchema();
+
+  const permRes = await db.query<DBEventParticipant>(
+    `SELECT ep.id, ep.permission_code, ep.event_id, ep.student_code, ep.permission_status,
+            e.event_name,
+            to_char(COALESCE(e.start_date, e.event_date), 'YYYY-MM-DD') AS start_date,
+            to_char(COALESCE(e.end_date, e.start_date, e.event_date), 'YYYY-MM-DD') AS end_date,
+            e.start_time::text, e.end_time::text, e.location_type, e.location,
+            c.name AS club_name, e.coordinator_id,
+            s.name AS student_name, s.department, s.year, s.section
+     FROM event_participants ep
+     JOIN club_events e ON e.event_id = ep.event_id
+     JOIN clubs c ON c.club_id = e.club_id
+     JOIN students s ON UPPER(s.student_code) = UPPER(ep.student_code)
+     WHERE ep.id = $1;`,
+    [participantId]
+  );
+
+  const perm = permRes.rows[0];
+  if (!perm) throw new Error("Event permission record not found.");
+
+  const updateRes = await db.query<DBEventParticipant>(
+    `UPDATE event_participants
+     SET permission_status = $1,
+         counselor_remarks = $2,
+         reviewed_by = $3,
+         reviewed_at = NOW()
+     WHERE id = $4
+     RETURNING id, permission_code, event_id, student_code, permission_status, exit_at::text, entry_at::text, verified_by, counselor_remarks, reviewed_by, reviewed_at::text, created_at::text;`,
+    [status, remarks || null, counselorName, participantId]
+  );
+
+  const updated = { ...perm, ...updateRes.rows[0] };
+
+  const startDate = perm.start_date || perm.event_date;
+  const endDate = perm.end_date || startDate;
+  const vFrom = `${startDate}T${perm.start_time || "00:00:00"}`;
+  const vUntil = `${endDate}T${perm.end_time || "23:59:59"}`;
+
+  if (status === "APPROVED") {
+    try {
+      const { getOrCreateQRPassForEventParticipant } = await import("./qr.server");
+      await getOrCreateQRPassForEventParticipant(participantId, vFrom, vUntil);
+    } catch (qrErr) {
+      console.warn("[QR Notice] QR generation warning:", qrErr);
+    }
+
+    await createNotificationServer({
+      recipientRole: "student",
+      recipientId: perm.student_code,
+      title: `Event Permission Approved: ${perm.event_name}`,
+      detail: `Your Faculty Counselor (${counselorName}) has approved your event permission for "${perm.event_name}" (${perm.club_name}). Your digital event pass is now active.`,
+      tone: "resolved",
+      type: "event_permission_approved",
+      relatedType: "club_event_permission",
+      relatedId: perm.permission_code,
+    }).catch(() => {});
+  } else {
+    await createNotificationServer({
+      recipientRole: "student",
+      recipientId: perm.student_code,
+      title: `Event Permission Declined: ${perm.event_name}`,
+      detail: `Your Faculty Counselor (${counselorName}) declined permission for "${perm.event_name}" (${perm.club_name}). Remarks: ${remarks || "Declined by counselor."}`,
+      tone: "violation",
+      type: "event_permission_rejected",
+      relatedType: "club_event_permission",
+      relatedId: perm.permission_code,
+    }).catch(() => {});
+  }
+
+  return updated;
+}
+
 
 

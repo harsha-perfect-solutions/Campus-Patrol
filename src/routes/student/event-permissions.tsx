@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ToneBadge } from "@/components/status-badge";
+import { cn } from "@/lib/utils";
 import { QRCode } from "@/components/qr-code";
 import { getMyEventPermissionsApi } from "@/lib/api/clubs.server";
 import { getOrCreateEventQRPassApi } from "@/lib/api/qr.server";
@@ -106,9 +107,9 @@ function StudentEventPermissionsPage() {
         <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3 text-xs text-foreground font-medium">
           <Info className="size-5 text-primary shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-bold text-primary">Automatic Approval & Digital Event Passes</p>
+            <p className="font-bold text-primary">Counselor Review & Digital Event Passes</p>
             <p className="text-muted-foreground">
-              When your Faculty Coordinator grants permission for an official club event, your permission code (`EP-xxxx`) is generated automatically. Use the digital pass QR code at Security Gate for outside-campus events or classroom movement verification.
+              When your Club Coordinator registers you for an official club event, your event pass is forwarded to your assigned Faculty Counselor for review and approval (same as movement passes). Once approved by your counselor, your digital pass QR code is activated for security gate verification.
             </p>
           </div>
         </div>
@@ -131,70 +132,112 @@ function StudentEventPermissionsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {eventPermissions.map((perm) => (
-              <div
-                key={perm.id}
-                className="rounded-2xl border border-border bg-card p-4 sm:p-5 space-y-4 shadow-xs hover:border-primary/40 transition-all"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <span className="inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider mb-1">
-                      {perm.club_name}
+            {eventPermissions.map((perm) => {
+              const isApproved = perm.permission_status === "APPROVED";
+              const isPending = perm.permission_status === "PENDING";
+              const isRejected = perm.permission_status === "REJECTED";
+
+              return (
+                <div
+                  key={perm.id}
+                  className={cn(
+                    "rounded-2xl border bg-card p-4 sm:p-5 space-y-4 shadow-xs transition-all",
+                    isApproved ? "border-emerald-500/40 bg-emerald-500/5 hover:border-emerald-500/60" : isRejected ? "border-destructive/30 bg-destructive/5" : "border-border hover:border-primary/40"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <span className="inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider mb-1">
+                        {perm.club_name}
+                      </span>
+                      <h3 className="text-base font-bold text-foreground">{perm.event_name}</h3>
+                      <p className="font-mono text-xs font-bold text-primary mt-0.5">
+                        Pass Code: {perm.permission_code}
+                      </p>
+                    </div>
+                    <ToneBadge
+                      tone={
+                        isApproved
+                          ? "success"
+                          : isRejected
+                          ? "danger"
+                          : "warning"
+                      }
+                    >
+                      {isApproved
+                        ? "APPROVED"
+                        : isRejected
+                        ? "REJECTED"
+                        : "PENDING COUNSELOR"}
+                    </ToneBadge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground bg-muted/40 p-3 rounded-xl border border-border">
+                    <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
+                      <Calendar className="size-3.5 text-primary shrink-0" />
+                      <span className="truncate">
+                        Date: <strong className="text-foreground">
+                          {perm.start_date && perm.end_date && perm.start_date !== perm.end_date
+                            ? `${perm.start_date} – ${perm.end_date}`
+                            : (perm.start_date || perm.event_date)}
+                        </strong>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
+                      <Clock className="size-3.5 text-primary shrink-0" />
+                      <span className="truncate"><strong className="text-foreground">{perm.start_time} - {perm.end_time}</strong></span>
+                    </div>
+
+                    <div className="flex items-center gap-2 col-span-2">
+                      <MapPin className="size-3.5 text-primary shrink-0" />
+                      <span>Venue: <strong className="text-foreground">{perm.location}</strong> ({perm.location_type})</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 col-span-2 pt-1 border-t border-border/60">
+                      <Building className="size-3.5 text-primary shrink-0" />
+                      <span>Coordinator: <strong className="text-foreground">{perm.coordinator_name}</strong></span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-2 border-t border-border gap-2">
+                    <span className="text-[11px] font-semibold text-muted-foreground">
+                      Requested: {new Date(perm.created_at).toLocaleDateString()}
                     </span>
-                    <h3 className="text-base font-bold text-foreground">{perm.event_name}</h3>
-                    <p className="font-mono text-xs font-bold text-primary mt-0.5">
-                      Pass Code: {perm.permission_code}
-                    </p>
-                  </div>
-                  <ToneBadge tone={perm.permission_status === "APPROVED" ? "success" : "neutral"}>
-                    {perm.permission_status}
-                  </ToneBadge>
-                </div>
 
-                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground bg-muted/40 p-3 rounded-xl border border-border">
-                  <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
-                    <Calendar className="size-3.5 text-primary shrink-0" />
-                    <span className="truncate">
-                      Date: <strong className="text-foreground">
-                        {perm.start_date && perm.end_date && perm.start_date !== perm.end_date
-                          ? `${perm.start_date} – ${perm.end_date}`
-                          : (perm.start_date || perm.event_date)}
-                      </strong>
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
-                    <Clock className="size-3.5 text-primary shrink-0" />
-                    <span className="truncate"><strong className="text-foreground">{perm.start_time} - {perm.end_time}</strong></span>
-                  </div>
-
-                  <div className="flex items-center gap-2 col-span-2">
-                    <MapPin className="size-3.5 text-primary shrink-0" />
-                    <span>Venue: <strong className="text-foreground">{perm.location}</strong> ({perm.location_type})</span>
-                  </div>
-
-                  <div className="flex items-center gap-2 col-span-2 pt-1 border-t border-border/60">
-                    <Building className="size-3.5 text-primary shrink-0" />
-                    <span>Coordinator: <strong className="text-foreground">{perm.coordinator_name}</strong></span>
+                    {isApproved ? (
+                      <Button
+                        onClick={() => handleOpenQR(perm)}
+                        size="sm"
+                        className="gap-2 font-bold shadow-xs w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white"
+                      >
+                        <QrCode className="size-4" />
+                        Digital Event Pass
+                      </Button>
+                    ) : isRejected ? (
+                      <Button
+                        disabled
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 font-bold text-xs w-full sm:w-auto text-destructive border-destructive/30 opacity-80"
+                      >
+                        Declined by Counselor
+                      </Button>
+                    ) : (
+                      <Button
+                        disabled
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 font-bold text-xs w-full sm:w-auto text-amber-700 dark:text-amber-300 border-amber-500/30 bg-amber-500/10 opacity-90"
+                      >
+                        <Clock className="size-3.5" />
+                        Pending Counselor Approval
+                      </Button>
+                    )}
                   </div>
                 </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-2 border-t border-border gap-2">
-                  <span className="text-[11px] font-semibold text-muted-foreground">
-                    Granted: {new Date(perm.created_at).toLocaleDateString()}
-                  </span>
-
-                  <Button
-                    onClick={() => handleOpenQR(perm)}
-                    size="sm"
-                    className="gap-2 font-bold shadow-xs w-full sm:w-auto"
-                  >
-                    <QrCode className="size-4" />
-                    Digital Event Pass
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

@@ -165,6 +165,35 @@ export const approveCounselorPassApi = createServerFn({ method: "POST" })
   });
 
 /**
+ * Server API: Get Club Event Permissions for students assigned to the logged-in Counselor.
+ */
+export const getCounselorEventPermissionsApi = createServerFn({ method: "POST" })
+  .validator((data: { status?: string }) => data)
+  .handler(async ({ data }) => {
+    const session = await requireRole("faculty");
+    const { getCounselorEventPermissions } = await import("../db/clubs.server");
+    return await getCounselorEventPermissions(session.userId, data.status);
+  });
+
+/**
+ * Server API: Counselor decision (Approve or Reject) on a Club Event Permission request.
+ */
+export const approveCounselorEventPermissionApi = createServerFn({ method: "POST" })
+  .validator((data: { participantId: string; status: "APPROVED" | "REJECTED"; remarks?: string }) => data)
+  .handler(async ({ data }) => {
+    const session = await requireRole("faculty");
+    const { approveCounselorEventPermission } = await import("../db/clubs.server");
+    const updated = await approveCounselorEventPermission(
+      session.userId,
+      data.participantId,
+      data.status,
+      session.fullName || session.email || "Faculty Counselor",
+      data.remarks
+    );
+    return { success: true, permission: updated };
+  });
+
+/**
  * Server API: Get assigned counselor information for the logged-in student.
  * Server-authoritative: Enforces student authorization using session.userId.
  */
