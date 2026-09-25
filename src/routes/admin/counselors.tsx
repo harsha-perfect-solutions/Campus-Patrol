@@ -331,7 +331,18 @@ function AdminCounselorsContent() {
 
   const handleAddCounselor = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addFaculty) { toast.error("Please select a faculty member."); return; }
+    if (!addDept || !addYear || !addSem || !addSec) {
+      toast.error("Please fill all class section details (Department, Year, Semester, Section).");
+      return;
+    }
+    if (!addFaculty) {
+      toast.error("Please select a faculty member.");
+      return;
+    }
+    if (addSelected.size === 0) {
+      toast.error("Mandatory: Please select at least one student to assign to this counselor.");
+      return;
+    }
     setSubmitting(true);
     try {
       const newAssignment = await addCounselorAssignmentAdminApi({
@@ -342,10 +353,7 @@ function AdminCounselorsContent() {
           data: { assignmentId: newAssignment.id, studentCodes: Array.from(addSelected) },
         });
       }
-      const msg = addSelected.size > 0
-        ? `Counselor assigned! ${addSelected.size} student(s) linked.`
-        : "Counselor assigned successfully!";
-      toast.success(msg);
+      toast.success(`Counselor assigned successfully with ${addSelected.size} student(s) linked.`);
       setAddOpen(false);
       await loadData();
     } catch (err: any) {
@@ -390,6 +398,14 @@ function AdminCounselorsContent() {
   const handleEditAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editAssignment) return;
+    if (!editFaculty) {
+      toast.error("Please select a faculty member.");
+      return;
+    }
+    if (editSelected.size === 0) {
+      toast.error("Mandatory: A counselor must have at least one assigned student.");
+      return;
+    }
     setSubmitting(true);
     try {
       if (editFaculty && editFaculty !== editAssignment.faculty_id) {
@@ -398,7 +414,7 @@ function AdminCounselorsContent() {
       await updateAssignmentStudentsAdminApi({
         data: { assignmentId: editAssignment.id, studentCodes: Array.from(editSelected) },
       });
-      toast.success("Assignment updated successfully!");
+      toast.success(`Assignment updated successfully with ${editSelected.size} student(s)!`);
       setEditOpen(false);
       await loadData();
     } catch (err: any) {
@@ -904,10 +920,21 @@ function AdminCounselorsContent() {
               />
             )}
 
+            {addSelected.size === 0 && !addModalLoading && (
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs font-medium flex items-center gap-2">
+                <AlertTriangle className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                <span>Mandatory requirement: You must select at least one student to assign to this counselor.</span>
+              </div>
+            )}
+
             <div className="flex justify-end gap-2 pt-1">
               <Button type="button" variant="outline" onClick={() => setAddOpen(false)} className="rounded-xl">Cancel</Button>
-              <Button type="submit" disabled={submitting || addModalLoading} className="rounded-xl font-bold">
-                {submitting ? "Assigning..." : "Add Counselor"}
+              <Button
+                type="submit"
+                disabled={submitting || addModalLoading || !addFaculty || addSelected.size === 0}
+                className="rounded-xl font-bold"
+              >
+                {submitting ? "Assigning..." : `Add Counselor (${addSelected.size} Selected)`}
               </Button>
             </div>
           </form>
@@ -982,10 +1009,21 @@ function AdminCounselorsContent() {
               />
             )}
 
+            {editSelected.size === 0 && !editLoading && (
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs font-medium flex items-center gap-2">
+                <AlertTriangle className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                <span>Mandatory requirement: Counselor must have at least one assigned student.</span>
+              </div>
+            )}
+
             <div className="flex justify-end gap-2 pt-1">
               <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="rounded-xl">Cancel</Button>
-              <Button type="submit" disabled={submitting || editLoading} className="rounded-xl font-bold">
-                {submitting ? "Saving..." : "Save Changes"}
+              <Button
+                type="submit"
+                disabled={submitting || editLoading || !editFaculty || editSelected.size === 0}
+                className="rounded-xl font-bold"
+              >
+                {submitting ? "Saving..." : `Save Changes (${editSelected.size} Students)`}
               </Button>
             </div>
           </form>
