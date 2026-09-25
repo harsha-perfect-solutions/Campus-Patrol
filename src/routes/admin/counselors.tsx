@@ -72,6 +72,14 @@ type FacultyProfile = {
   staff_code: string | null;
 };
 
+function getSemestersForYear(year: string): number[] {
+  if (year === "1st Year" || year === "1") return [1, 2];
+  if (year === "2nd Year" || year === "2") return [3, 4];
+  if (year === "3rd Year" || year === "3") return [5, 6];
+  if (year === "4th Year" || year === "4") return [7, 8];
+  return [1, 2, 3, 4, 5, 6, 7, 8];
+}
+
 // ─── Page Root ───────────────────────────────────────────────
 function AdminCounselorsPage() {
   return (
@@ -272,7 +280,9 @@ function AdminCounselorsContent() {
     setAddSelected(new Set());
     setAddDept(department);
     setAddYear(year);
-    setAddSem(semester);
+    const validSems = getSemestersForYear(year);
+    const validSem = validSems.includes(semester) ? semester : (validSems[0] || 1);
+    setAddSem(validSem);
     setAddSec(section);
     setAddOpen(true);
     // Fetch students for the currently selected filter section
@@ -544,46 +554,52 @@ function AdminCounselorsContent() {
             <Filter className="size-3.5 text-primary" />
             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Class Section</span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              {
-                label: "Department", value: department,
-                options: ["CSE", "ECE", "EEE", "MECH", "CIVIL", "AIML", "IT"],
-                onChange: (v: string) => setDepartment(v),
-              },
-              {
-                label: "Academic Year", value: year,
-                options: ["1st Year", "2nd Year", "3rd Year", "4th Year"],
-                onChange: (v: string) => setYear(v),
-              },
-              {
-                label: "Section", value: section,
-                options: ["Section A", "Section B", "Section C"],
-                onChange: (v: string) => setSection(v),
-              },
-            ].map(({ label, value, options, onChange }) => (
-              <div key={label}>
-                <Label className="text-xs font-semibold text-muted-foreground mb-1">{label}</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                {
+                  label: "Department", value: department,
+                  options: ["CSE", "ECE", "EEE", "MECH", "CIVIL", "AIML", "IT"],
+                  onChange: (v: string) => setDepartment(v),
+                },
+                {
+                  label: "Academic Year", value: year,
+                  options: ["1st Year", "2nd Year", "3rd Year", "4th Year"],
+                  onChange: (v: string) => {
+                    setYear(v);
+                    const validSems = getSemestersForYear(v);
+                    if (!validSems.includes(semester)) {
+                      setSemester(validSems[0] || 1);
+                    }
+                  },
+                },
+                {
+                  label: "Section", value: section,
+                  options: ["Section A", "Section B", "Section C"],
+                  onChange: (v: string) => setSection(v),
+                },
+              ].map(({ label, value, options, onChange }) => (
+                <div key={label}>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1">{label}</Label>
+                  <select
+                    value={value}
+                    onChange={e => onChange(e.target.value)}
+                    className="w-full h-9 px-3 rounded-xl border border-border bg-background text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    {options.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+              ))}
+              <div>
+                <Label className="text-xs font-semibold text-muted-foreground mb-1">Semester</Label>
                 <select
-                  value={value}
-                  onChange={e => onChange(e.target.value)}
+                  value={semester}
+                  onChange={e => setSemester(Number(e.target.value))}
                   className="w-full h-9 px-3 rounded-xl border border-border bg-background text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary"
                 >
-                  {options.map(o => <option key={o} value={o}>{o}</option>)}
+                  {getSemestersForYear(year).map(s => <option key={s} value={s}>Semester {s}</option>)}
                 </select>
               </div>
-            ))}
-            <div>
-              <Label className="text-xs font-semibold text-muted-foreground mb-1">Semester</Label>
-              <select
-                value={semester}
-                onChange={e => setSemester(Number(e.target.value))}
-                className="w-full h-9 px-3 rounded-xl border border-border bg-background text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary"
-              >
-                {[1,2,3,4,5,6,7,8].map(s => <option key={s} value={s}>Semester {s}</option>)}
-              </select>
             </div>
-          </div>
         </div>
       )}
 
@@ -766,7 +782,12 @@ function AdminCounselorsContent() {
                   <Label className="text-[11px] font-semibold text-muted-foreground mb-0.5">Academic Year</Label>
                   <select
                     value={addYear}
-                    onChange={e => handleAddModalClassChange(addDept, e.target.value, addSem, addSec)}
+                    onChange={e => {
+                      const newYr = e.target.value;
+                      const validSems = getSemestersForYear(newYr);
+                      const newSem = validSems.includes(addSem) ? addSem : (validSems[0] || 1);
+                      handleAddModalClassChange(addDept, newYr, newSem, addSec);
+                    }}
                     className="w-full h-8 px-2 rounded-lg border border-border bg-background text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary"
                   >
                     {["1st Year","2nd Year","3rd Year","4th Year"].map(y => <option key={y} value={y}>{y}</option>)}
@@ -789,7 +810,7 @@ function AdminCounselorsContent() {
                     onChange={e => handleAddModalClassChange(addDept, addYear, Number(e.target.value), addSec)}
                     className="w-full h-8 px-2 rounded-lg border border-border bg-background text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary"
                   >
-                    {[1,2,3,4,5,6,7,8].map(s => <option key={s} value={s}>Sem {s}</option>)}
+                    {getSemestersForYear(addYear).map(s => <option key={s} value={s}>Sem {s}</option>)}
                   </select>
                 </div>
               </div>
