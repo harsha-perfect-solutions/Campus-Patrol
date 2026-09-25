@@ -885,7 +885,16 @@ function AdminCounselorsContent() {
                   if (on) next.add(code); else next.delete(code);
                   setAddSelected(next);
                 }}
-                onSelectAll={() => setAddSelected(new Set(addModalStudents.filter(s => !s.counselor_assignment_id).map(s => s.student_code)))}
+                onSelectAll={() => {
+                  const available = addModalStudents
+                    .filter(s => !s.counselor_assignment_id)
+                    .filter(s =>
+                      !addStudentSearch ||
+                      s.name?.toLowerCase().includes(addStudentSearch.toLowerCase()) ||
+                      s.student_code.toLowerCase().includes(addStudentSearch.toLowerCase())
+                    );
+                  setAddSelected(new Set(available.map(s => s.student_code)));
+                }}
                 onDeselectAll={() => setAddSelected(new Set())}
                 search={addStudentSearch}
                 onSearchChange={setAddStudentSearch}
@@ -954,7 +963,16 @@ function AdminCounselorsContent() {
                   if (on) next.add(code); else next.delete(code);
                   setEditSelected(next);
                 }}
-                onSelectAll={() => setEditSelected(new Set(sectionStudents.filter(s => !s.counselor_assignment_id || s.counselor_assignment_id === editAssignment?.id).map(s => s.student_code)))}
+                onSelectAll={() => {
+                  const available = sectionStudents
+                    .filter(s => !s.counselor_assignment_id || s.counselor_assignment_id === editAssignment?.id)
+                    .filter(s =>
+                      !editStudentSearch ||
+                      s.name?.toLowerCase().includes(editStudentSearch.toLowerCase()) ||
+                      s.student_code.toLowerCase().includes(editStudentSearch.toLowerCase())
+                    );
+                  setEditSelected(new Set(available.map(s => s.student_code)));
+                }}
                 onDeselectAll={() => setEditSelected(new Set())}
                 search={editStudentSearch}
                 onSearchChange={setEditStudentSearch}
@@ -1252,10 +1270,10 @@ function StudentSelector({
         />
       </div>
       <div className="flex gap-3 text-xs">
-        <button type="button" onClick={onSelectAll} className="text-primary font-semibold hover:underline">
-          Select Available
+        <button type="button" onClick={onSelectAll} className="text-primary font-semibold hover:underline cursor-pointer">
+          Select All
         </button>
-        <button type="button" onClick={onDeselectAll} className="text-muted-foreground hover:underline">
+        <button type="button" onClick={onDeselectAll} className="text-muted-foreground hover:underline cursor-pointer">
           Deselect All
         </button>
       </div>
