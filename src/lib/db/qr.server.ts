@@ -425,21 +425,45 @@ export async function verifyQRTokenServer(
       }
     }
 
-    // Perform atomic database update for movement permission
+    // Perform atomic database update for movement permission (TOCTOU race-condition safe)
     if (verificationType === "EXIT") {
-      await db.query(
+      const exitUpdateRes = await db.query(
         `UPDATE movement_permissions
          SET exit_at = NOW(), checkpoint = $1, verified_by = $2
-         WHERE id::text = $3;`,
+         WHERE id::text = $3 AND exit_at IS NULL
+         RETURNING id;`,
         [activeCheckpoint, session.fullName || session.email, passRow.movement_permission_id]
       );
+
+      if (exitUpdateRes.rows.length === 0) {
+        return {
+          success: true,
+          authorized: false,
+          resultStatus: "GATE EXIT ALREADY RECORDED",
+          failureReason: "Pass exit was already processed by another gate checkpoint (concurrency conflict).",
+          message: "Student gate exit already processed.",
+          timestamp,
+        };
+      }
     } else {
-      await db.query(
+      const entryUpdateRes = await db.query(
         `UPDATE movement_permissions
          SET entry_at = NOW()
-         WHERE id::text = $1;`,
+         WHERE id::text = $1 AND exit_at IS NOT NULL AND entry_at IS NULL
+         RETURNING id;`,
         [passRow.movement_permission_id]
       );
+
+      if (entryUpdateRes.rows.length === 0) {
+        return {
+          success: true,
+          authorized: false,
+          resultStatus: "RETURN ENTRY ALREADY RECORDED",
+          failureReason: "Return entry was already recorded (concurrency conflict).",
+          message: "Return entry already recorded.",
+          timestamp,
+        };
+      }
 
       // Upon return entry, mark QR pass as completed/EXPIRED
       await db.query(
@@ -566,18 +590,44 @@ export async function verifyQRTokenServer(
       }
     }
 
-    // Update event_participants record
+    // Update event_participants record (TOCTOU race-condition safe)
     if (isOutside) {
       if (verificationType === "EXIT") {
-        await db.query(
-          `UPDATE event_participants SET exit_at = NOW(), verified_by = $1 WHERE permission_code = $2;`,
+        const epExitRes = await db.query(
+          `UPDATE event_participants
+           SET exit_at = NOW(), verified_by = $1
+           WHERE permission_code = $2 AND exit_at IS NULL
+           RETURNING id;`,
           [session.fullName || session.email, passRow.ep_permission_code]
         );
+        if (epExitRes.rows.length === 0) {
+          return {
+            success: true,
+            authorized: false,
+            resultStatus: "EVENT EXIT ALREADY RECORDED",
+            failureReason: "Event exit was already processed by another checkpoint (concurrency conflict).",
+            message: "Event exit already processed.",
+            timestamp,
+          };
+        }
       } else {
-        await db.query(
-          `UPDATE event_participants SET entry_at = NOW() WHERE permission_code = $1;`,
+        const epEntryRes = await db.query(
+          `UPDATE event_participants
+           SET entry_at = NOW()
+           WHERE permission_code = $1 AND exit_at IS NOT NULL AND entry_at IS NULL
+           RETURNING id;`,
           [passRow.ep_permission_code]
         );
+        if (epEntryRes.rows.length === 0) {
+          return {
+            success: true,
+            authorized: false,
+            resultStatus: "EVENT ENTRY ALREADY RECORDED",
+            failureReason: "Event return entry was already recorded (concurrency conflict).",
+            message: "Event return entry already recorded.",
+            timestamp,
+          };
+        }
         await db.query(
           `UPDATE qr_passes SET status = 'EXPIRED' WHERE id::text = $1;`,
           [passRow.qr_pass_id]

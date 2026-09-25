@@ -17,9 +17,12 @@ import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ModulesRouteImport } from './routes/modules'
 import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
 import { Route as TimetableRouteImport } from './routes/timetable'
 import { Route as ViolationsRouteImport } from './routes/violations'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin/audit-logs'
@@ -119,6 +122,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -132,6 +140,16 @@ const SecurityRoute = SecurityRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsOfUseRoute = TermsOfUseRouteImport.update({
+  id: '/terms-of-use',
+  path: '/terms-of-use',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TimetableRoute = TimetableRouteImport.update({
@@ -434,9 +452,12 @@ export interface FileRoutesByFullPath {
   '/how-it-works': typeof HowItWorksRoute
   '/modules': typeof ModulesRoute
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
+  '/terms-of-use': typeof TermsOfUseRoute
   '/timetable': typeof TimetableRoute
   '/violations': typeof ViolationsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
@@ -505,8 +526,11 @@ export interface FileRoutesByTo {
   '/how-it-works': typeof HowItWorksRoute
   '/modules': typeof ModulesRoute
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
+  '/terms-of-use': typeof TermsOfUseRoute
   '/timetable': typeof TimetableRoute
   '/violations': typeof ViolationsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
@@ -576,9 +600,12 @@ export interface FileRoutesById {
   '/how-it-works': typeof HowItWorksRoute
   '/modules': typeof ModulesRoute
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
+  '/terms-of-use': typeof TermsOfUseRoute
   '/timetable': typeof TimetableRoute
   '/violations': typeof ViolationsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
@@ -649,9 +676,12 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/modules'
     | '/notifications'
+    | '/privacy'
     | '/reset-password'
     | '/security'
     | '/settings'
+    | '/terms'
+    | '/terms-of-use'
     | '/timetable'
     | '/violations'
     | '/admin/audit-logs'
@@ -720,8 +750,11 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/modules'
     | '/notifications'
+    | '/privacy'
     | '/reset-password'
     | '/settings'
+    | '/terms'
+    | '/terms-of-use'
     | '/timetable'
     | '/violations'
     | '/admin/audit-logs'
@@ -790,9 +823,12 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/modules'
     | '/notifications'
+    | '/privacy'
     | '/reset-password'
     | '/security'
     | '/settings'
+    | '/terms'
+    | '/terms-of-use'
     | '/timetable'
     | '/violations'
     | '/admin/audit-logs'
@@ -862,9 +898,12 @@ export interface RootRouteChildren {
   HowItWorksRoute: typeof HowItWorksRoute
   ModulesRoute: typeof ModulesRoute
   NotificationsRoute: typeof NotificationsRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SecurityRoute: typeof SecurityRouteWithChildren
   SettingsRoute: typeof SettingsRoute
+  TermsRoute: typeof TermsRoute
+  TermsOfUseRoute: typeof TermsOfUseRoute
   TimetableRoute: typeof TimetableRoute
   ViolationsRoute: typeof ViolationsRoute
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
@@ -969,6 +1008,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -988,6 +1034,20 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-of-use': {
+      id: '/terms-of-use'
+      path: '/terms-of-use'
+      fullPath: '/terms-of-use'
+      preLoaderRoute: typeof TermsOfUseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/timetable': {
@@ -1466,9 +1526,12 @@ const rootRouteChildren: RootRouteChildren = {
   HowItWorksRoute: HowItWorksRoute,
   ModulesRoute: ModulesRoute,
   NotificationsRoute: NotificationsRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SecurityRoute: SecurityRouteWithChildren,
   SettingsRoute: SettingsRoute,
+  TermsRoute: TermsRoute,
+  TermsOfUseRoute: TermsOfUseRoute,
   TimetableRoute: TimetableRoute,
   ViolationsRoute: ViolationsRoute,
   AdminAuditLogsRoute: AdminAuditLogsRoute,

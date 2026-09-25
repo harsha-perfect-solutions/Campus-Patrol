@@ -54,32 +54,33 @@ export function LandingFooter() {
             </ul>
           </div>
 
-          {/* System Security Note */}
+          {/* Institutional Status & Legal */}
           <div className="lg:col-span-2 space-y-3">
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-foreground">
-              Institutional Status
+              Governance &amp; Legal
             </h4>
-            <div className="p-3 rounded-2xl bg-muted/40 border border-border text-xs space-y-1.5">
-              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>v2.4 Production Live</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground leading-tight">
-                Server-authoritative authorization engine with PostgreSQL storage & SSE bus.
-              </p>
-            </div>
+            <ul className="space-y-2 text-xs font-semibold text-muted-foreground">
+              <li><Link to="/terms" className="hover:text-primary transition-colors">Terms &amp; Conditions (TOC)</Link></li>
+              <li><Link to="/terms-of-use" className="hover:text-primary transition-colors">Terms of Use (TOU)</Link></li>
+              <li><Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/security" className="hover:text-primary transition-colors">Security Architecture</Link></li>
+            </ul>
           </div>
         </div>
 
         {/* Copyright Footer */}
         <div className="pt-6 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <p className="text-center sm:text-left">
-            CMADMS &bull; Campus Movement Authorization & Discipline System &copy; 2026
+            CMADMS &bull; Campus Movement Authorization &amp; Discipline System &copy; 2026
           </p>
-          <div className="flex items-center gap-4 text-[11px]">
-            <Link to="/auth" className="hover:underline">Sign In</Link>
+          <div className="flex flex-wrap items-center justify-center gap-3 text-[11px]">
+            <Link to="/terms" className="hover:underline hover:text-primary transition-colors">TOC</Link>
             <span>&bull;</span>
-            <Link to="/security" className="hover:underline">Privacy & Security</Link>
+            <Link to="/terms-of-use" className="hover:underline hover:text-primary transition-colors">TOU</Link>
+            <span>&bull;</span>
+            <Link to="/privacy" className="hover:underline hover:text-primary transition-colors">Privacy</Link>
+            <span>&bull;</span>
+            <Link to="/auth" className="hover:underline hover:text-primary transition-colors">Sign In</Link>
           </div>
         </div>
       </div>

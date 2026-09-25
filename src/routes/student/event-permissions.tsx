@@ -64,12 +64,18 @@ function StudentEventPermissionsPage() {
     setQrTokenLoading(true);
     try {
       const today = new Date().toISOString().split("T")[0]!;
-      const validFrom = perm.start_time
-        ? `${today}T${perm.start_time}:00+05:30`
-        : `${today}T08:00:00+05:30`;
-      const validUntil = perm.end_time
-        ? `${today}T${perm.end_time}:00+05:30`
-        : `${today}T20:00:00+05:30`;
+      const startDate = perm.start_date || perm.event_date || today;
+      const endDate = perm.end_date || startDate;
+
+      const cleanStartTime = (perm.start_time || "08:00").replace(/ AM| PM/i, "").trim();
+      const startTime = cleanStartTime.length === 5 ? `${cleanStartTime}:00` : cleanStartTime.length === 8 ? cleanStartTime : "08:00:00";
+
+      const cleanEndTime = (perm.end_time || "20:00").replace(/ AM| PM/i, "").trim();
+      const endTime = cleanEndTime.length === 5 ? `${cleanEndTime}:00` : cleanEndTime.length === 8 ? cleanEndTime : "20:00:00";
+
+      const validFrom = `${startDate}T${startTime}+05:30`;
+      const validUntil = `${endDate}T${endTime}+05:30`;
+
       const res = await getOrCreateEventQRPassApi({
         data: {
           eventParticipantId: perm.id,
@@ -198,6 +204,12 @@ function StudentEventPermissionsPage() {
                       <Building className="size-3.5 text-primary shrink-0" />
                       <span>Coordinator: <strong className="text-foreground">{perm.coordinator_name}</strong></span>
                     </div>
+
+                    {perm.counselor_remarks && (
+                      <div className="col-span-2 pt-1 border-t border-border/60 text-[11px] text-amber-700 dark:text-amber-300 font-medium">
+                        <span>Counselor Note: <strong>{perm.counselor_remarks}</strong></span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-2 border-t border-border gap-2">

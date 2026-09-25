@@ -889,9 +889,19 @@ export async function resetPasswordWithOtp(data: {
   }
 
   try {
+    // 2. Mark OTP as used atomically to prevent TOCTOU reuse / concurrent consumption
+    const markUsedRes = await db.query(
+      `UPDATE password_resets SET used = TRUE WHERE id = $1 AND used = FALSE RETURNING id;`,
+      [vRes.resetToken]
+    );
+
+    if (markUsedRes.rowCount === 0) {
+      return { success: false, error: "This OTP code has already been used or expired. Please request a new code." };
+    }
+
     const newHash = hashPassword(newPassword);
 
-    // 2. Update profiles password
+    // 3. Update profiles password
     await db.query(
       `
       UPDATE profiles
@@ -900,9 +910,6 @@ export async function resetPasswordWithOtp(data: {
     `,
       [newHash, cleanEmail]
     );
-
-    // 3. Mark OTP as used
-    await db.query(`UPDATE password_resets SET used = TRUE WHERE id = $1;`, [vRes.resetToken]);
 
     return { success: true };
   } catch (err: any) {

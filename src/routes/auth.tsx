@@ -339,6 +339,18 @@ function AuthPage() {
               <><Lock className="size-3.5" /><span>Sign in to Portal</span><ArrowRight className="size-3.5 opacity-80" /></>
             )}
           </Button>
+
+          {/* Legal / Policy Disclaimer */}
+          <p className="text-center text-[11px] text-slate-500 dark:text-slate-400 pt-1.5 leading-relaxed">
+            By signing in, you accept the{" "}
+            <Link to="/terms" className="text-[#0047AB] dark:text-blue-400 hover:underline font-semibold">
+              Terms &amp; Conditions (TOC)
+            </Link>{" "}
+            and{" "}
+            <Link to="/terms-of-use" className="text-[#0047AB] dark:text-blue-400 hover:underline font-semibold">
+              Terms of Use (TOU)
+            </Link>.
+          </p>
         </form>
 
       </div>

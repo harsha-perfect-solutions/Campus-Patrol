@@ -27,6 +27,8 @@ import {
   ExternalLink,
   Check,
   Phone,
+  Scale,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
@@ -662,6 +664,76 @@ export function SettingsPage() {
               </div>
             </SettingsSection>
           )}
+
+          {/* Institutional Policies & Legal Section */}
+          <SettingsSection
+            title="Institutional Governance & Policies"
+            icon={Scale}
+            description="Terms of Conditions, Acceptable Use, and Privacy guidelines"
+            badge="LEGAL & POLICIES"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Link
+                to="/terms"
+                className="p-3.5 rounded-xl border border-border bg-card hover:bg-accent/40 transition-colors flex items-center justify-between group"
+              >
+                <div className="space-y-0.5">
+                  <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                    Terms &amp; Conditions (TOC)
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Pass authorization &amp; discipline terms
+                  </p>
+                </div>
+                <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </Link>
+
+              <Link
+                to="/terms-of-use"
+                className="p-3.5 rounded-xl border border-border bg-card hover:bg-accent/40 transition-colors flex items-center justify-between group"
+              >
+                <div className="space-y-0.5">
+                  <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                    Terms of Use (TOU)
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Acceptable usage &amp; credential safety
+                  </p>
+                </div>
+                <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </Link>
+
+              <Link
+                to="/privacy"
+                className="p-3.5 rounded-xl border border-border bg-card hover:bg-accent/40 transition-colors flex items-center justify-between group"
+              >
+                <div className="space-y-0.5">
+                  <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                    Privacy Policy
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Data protection &amp; log retention
+                  </p>
+                </div>
+                <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </Link>
+
+              <Link
+                to="/security"
+                className="p-3.5 rounded-xl border border-border bg-card hover:bg-accent/40 transition-colors flex items-center justify-between group"
+              >
+                <div className="space-y-0.5">
+                  <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                    Security Architecture
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    PostgreSQL RBAC &amp; QR cryptography
+                  </p>
+                </div>
+                <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </Link>
+            </div>
+          </SettingsSection>
         </div>
       </div>
 

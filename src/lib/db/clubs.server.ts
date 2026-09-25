@@ -1431,11 +1431,13 @@ export async function recordEventParticipantExit(permissionCode: string, verifie
     `UPDATE event_participants
      SET exit_at = NOW(), verified_by = $1
      WHERE (UPPER(permission_code) = $2 OR UPPER(id::text) = $2)
+       AND exit_at IS NULL
+       AND permission_status = 'APPROVED'
      RETURNING id, permission_code, event_id, student_code, permission_status, exit_at::text, entry_at::text, verified_by, created_at::text;`,
     [verifierName, cleanCode]
   );
   const row = res.rows[0];
-  if (!row) throw new Error("Failed to record exit.");
+  if (!row) throw new Error("Event exit has already been recorded or permission is not active.");
   return { ...perm, exit_at: row.exit_at, verified_by: row.verified_by };
 }
 
@@ -1451,11 +1453,13 @@ export async function recordEventParticipantEntry(permissionCode: string, verifi
     `UPDATE event_participants
      SET entry_at = NOW(), verified_by = $1
      WHERE (UPPER(permission_code) = $2 OR UPPER(id::text) = $2)
+       AND exit_at IS NOT NULL
+       AND entry_at IS NULL
      RETURNING id, permission_code, event_id, student_code, permission_status, exit_at::text, entry_at::text, verified_by, created_at::text;`,
     [verifierName, cleanCode]
   );
   const row = res.rows[0];
-  if (!row) throw new Error("Failed to record entry.");
+  if (!row) throw new Error("Return entry has already been recorded.");
   return { ...perm, entry_at: row.entry_at, verified_by: row.verified_by };
 }
 
@@ -1605,12 +1609,17 @@ export async function approveCounselorEventPermission(
          counselor_remarks = $2,
          reviewed_by = $3,
          reviewed_at = NOW()
-     WHERE id = $4
+     WHERE id = $4 AND permission_status = 'PENDING'
      RETURNING id, permission_code, event_id, student_code, permission_status, exit_at::text, entry_at::text, verified_by, counselor_remarks, reviewed_by, reviewed_at::text, created_at::text;`,
     [status, remarks || null, counselorName, participantId]
   );
 
-  const updated = { ...perm, ...updateRes.rows[0] };
+  const updatedRow = updateRes.rows[0];
+  if (!updatedRow) {
+    throw new Error("Event permission has already been reviewed or is no longer pending.");
+  }
+
+  const updated = { ...perm, ...updatedRow };
 
   const startDate = perm.start_date || perm.event_date;
   const endDate = perm.end_date || startDate;

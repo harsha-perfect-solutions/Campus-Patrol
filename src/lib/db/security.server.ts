@@ -916,12 +916,26 @@ export async function verifyGatePass(
   // 6. STAGE 2: Returning Student Entry (exit_at IS NOT NULL, entry_at IS NULL)
   // CRITICAL RULE: DO NOT check valid_until for entry!
   if (pass.exit_at && !pass.entry_at) {
-    await db.query(
+    const entryRes = await db.query(
       `UPDATE movement_permissions
        SET entry_at = NOW()
-       WHERE id = $1`,
+       WHERE id = $1 AND exit_at IS NOT NULL AND entry_at IS NULL
+       RETURNING id`,
       [pass.id]
     );
+
+    if (entryRes.rows.length === 0) {
+      const reason = "Return entry already recorded by another checkpoint (concurrency conflict).";
+      await recordAudit(false, "RETURN ENTRY ALREADY RECORDED", "ENTRY", reason);
+      return {
+        success: true,
+        authorized: false,
+        resultStatus: "RETURN ENTRY ALREADY RECORDED",
+        failureReason: reason,
+        message: "Return entry already recorded.",
+        timestamp,
+      };
+    }
 
     await recordAudit(true, "RETURN AUTHORIZATION (IN)", "ENTRY");
 
@@ -1135,13 +1149,27 @@ export async function verifyGatePass(
   const remMins = timeRemaining % 60;
   const remainingStr = remHours > 0 ? `${remHours}h ${remMins}m` : `${remMins}m`;
 
-  // Atomically record normal Exit
-  await db.query(
+  // Atomically record normal Exit (TOCTOU race-condition safe)
+  const exitRes = await db.query(
     `UPDATE movement_permissions
      SET exit_at = NOW(), checkpoint = $1, verified_by = $2
-     WHERE id = $3`,
+     WHERE id = $3 AND exit_at IS NULL
+     RETURNING id`,
     [checkpoint, session.fullName || session.email, pass.id]
   );
+
+  if (exitRes.rows.length === 0) {
+    const reason = "Gate exit already authorized by another checkpoint (concurrency conflict).";
+    await recordAudit(false, "GATE EXIT ALREADY RECORDED", "EXIT", reason);
+    return {
+      success: true,
+      authorized: false,
+      resultStatus: "GATE EXIT ALREADY RECORDED",
+      failureReason: reason,
+      message: "Student gate exit already processed.",
+      timestamp,
+    };
+  }
 
   await recordAudit(true, "GATE EXIT AUTHORIZED (OUT)", "EXIT");
 

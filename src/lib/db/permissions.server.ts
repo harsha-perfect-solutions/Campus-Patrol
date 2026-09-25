@@ -147,7 +147,7 @@ export async function approveMovementPermission(
     const query = `
       UPDATE movement_permissions
       SET status = $1, issued_by = $2
-      WHERE id::text = $3
+      WHERE id::text = $3 AND status = 'pending'
       RETURNING
         id::text,
         student_code,
@@ -162,7 +162,14 @@ export async function approveMovementPermission(
     const res = await db.query<DBPermission>(query, [newStatus, approverName, cleanId]);
     const updated = res.rows[0];
     if (!updated) {
-      throw new Error(`Movement permission ${cleanId} not found.`);
+      const checkExists = await db.query<{ id: string; status: string }>(
+        `SELECT id::text, status FROM movement_permissions WHERE id::text = $1;`,
+        [cleanId]
+      );
+      if (checkExists.rows.length === 0) {
+        throw new Error(`Movement permission #${cleanId} not found.`);
+      }
+      throw new Error(`Movement permission #${cleanId} has already been reviewed (status: ${checkExists.rows[0].status}).`);
     }
 
     // Auto generate or revoke QR pass depending on newStatus
