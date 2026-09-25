@@ -73,7 +73,7 @@ import {
 } from "@/lib/api/gates.server";
 import type { AdminUserRecord } from "@/lib/db/admin.server";
 import type { BulkImportValidationResult, ImportPreviewItem, BulkImportCredential } from "@/lib/db/user-management.server";
-import { cn } from "@/lib/utils";
+import { cn, isValidPhoneNumber, normalizePhoneNumber } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/users")({
   head: () => ({ meta: [{ title: "User Onboarding & Management — Admin Console" }] }),
@@ -683,6 +683,14 @@ function AdminUsersPage() {
     if (!newCode.trim() || !newName.trim()) {
       toast.error("Please fill in required fields (Code / Roll No and Name).");
       return;
+    }
+
+    if (newPhone.trim()) {
+      const clean10 = newPhone.replace(/\D/g, "");
+      if (clean10.length !== 10 || !/^[6-9]\d{9}$/.test(clean10)) {
+        toast.error("Please enter a valid 10-digit mobile number (e.g. 9876543210).");
+        return;
+      }
     }
 
     setSubmittingUser(true);
@@ -1351,13 +1359,28 @@ function AdminUsersPage() {
                   </div>
 
                   <div>
-                    <Label className="text-xs font-semibold">Phone Number</Label>
-                    <Input
-                      value={newPhone}
-                      onChange={(e) => setNewPhone(e.target.value)}
-                      placeholder="+91 9876543210"
-                      className="mt-1 h-10 rounded-xl"
-                    />
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold">Phone Number (10 Digits)</Label>
+                      {newPhone && (
+                        <span className={cn("text-[10px] font-mono font-bold", newPhone.length === 10 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-500")}>
+                          {newPhone.length}/10 digits
+                        </span>
+                      )}
+                    </div>
+                    <div className="relative mt-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground select-none">
+                        +91
+                      </span>
+                      <Input
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
+                        value={newPhone}
+                        onChange={(e) => setNewPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                        placeholder="9876543210"
+                        className="pl-12 h-10 rounded-xl font-mono text-xs"
+                      />
+                    </div>
                   </div>
                 </div>
               )}

@@ -232,13 +232,26 @@ export async function createFacultyMember(
   const staffCode = input.staffCode.trim().toUpperCase();
   const department = input.department.trim().toUpperCase();
   const email = input.email.trim().toLowerCase();
-  const phone = input.phone?.trim() || "";
+  let phone = input.phone?.trim() || "";
   const status = input.status || "Active";
 
   if (!name) throw new Error("Faculty Full Name is required.");
   if (!staffCode) throw new Error("Staff Code is required.");
   if (!department) throw new Error("Department selection is required.");
   if (!email || !email.includes("@")) throw new Error("Valid email address is required.");
+
+  if (phone) {
+    const digits = phone.replace(/\D/g, "");
+    const clean10 = digits.length === 12 && digits.startsWith("91")
+      ? digits.slice(2)
+      : digits.length === 11 && digits.startsWith("0")
+      ? digits.slice(1)
+      : digits;
+    if (clean10.length !== 10 || !/^[6-9]\d{9}$/.test(clean10)) {
+      throw new Error("Phone number must be a valid 10-digit mobile number (e.g. 9876543210).");
+    }
+    phone = `+91 ${clean10}`;
+  }
 
   // Check duplicate staff_code
   const dupCode = await db.query("SELECT id FROM profiles WHERE UPPER(staff_code) = UPPER($1);", [staffCode]);
@@ -333,12 +346,25 @@ export async function updateFacultyMember(
   const staffCode = input.staffCode !== undefined ? input.staffCode.trim().toUpperCase() : existing.staffCode;
   const department = input.department !== undefined ? input.department.trim().toUpperCase() : existing.department;
   const email = input.email !== undefined ? input.email.trim().toLowerCase() : existing.email;
-  const phone = input.phone !== undefined ? input.phone.trim() : existing.phone;
+  let phone = input.phone !== undefined ? input.phone.trim() : existing.phone;
   const status = input.status !== undefined ? input.status : existing.status;
 
   if (!name) throw new Error("Faculty Name cannot be empty.");
   if (!staffCode) throw new Error("Staff Code cannot be empty.");
   if (!email || !email.includes("@")) throw new Error("Valid email is required.");
+
+  if (phone) {
+    const digits = phone.replace(/\D/g, "");
+    const clean10 = digits.length === 12 && digits.startsWith("91")
+      ? digits.slice(2)
+      : digits.length === 11 && digits.startsWith("0")
+      ? digits.slice(1)
+      : digits;
+    if (clean10.length !== 10 || !/^[6-9]\d{9}$/.test(clean10)) {
+      throw new Error("Phone number must be a valid 10-digit mobile number (e.g. 9876543210).");
+    }
+    phone = `+91 ${clean10}`;
+  }
 
   // Check duplicate staff_code if changed
   if (staffCode.toUpperCase() !== existing.staffCode.toUpperCase()) {

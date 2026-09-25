@@ -37,7 +37,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ToneBadge } from "@/components/status-badge";
-import { cn } from "@/lib/utils";
+import { cn, isValidPhoneNumber, normalizePhoneNumber } from "@/lib/utils";
 import { getAdminStudentsApi } from "@/lib/api/admin.server";
 import {
   getAdminFacultyListApi,
@@ -203,7 +203,7 @@ export function AdminStudentsAndFacultyPage({ initialTab }: { initialTab?: "stud
     setFormStaffCode("");
     setFormDepartment("CSE");
     setFormEmail("");
-    setFormPhone("+91 ");
+    setFormPhone("");
     setFormStatus("Active");
     setFormModalOpen(true);
   };
@@ -214,7 +214,7 @@ export function AdminStudentsAndFacultyPage({ initialTab }: { initialTab?: "stud
     setFormStaffCode(faculty.staffCode);
     setFormDepartment(faculty.department);
     setFormEmail(faculty.email);
-    setFormPhone(faculty.phone || "+91 ");
+    setFormPhone(normalizePhoneNumber(faculty.phone || ""));
     setFormStatus(faculty.status);
     setFormModalOpen(true);
   };
@@ -224,6 +224,14 @@ export function AdminStudentsAndFacultyPage({ initialTab }: { initialTab?: "stud
     if (!formName.trim() || !formStaffCode.trim() || !formEmail.trim() || !formDepartment.trim()) {
       toast.error("Please enter Name, Staff Code, Email, and Department.");
       return;
+    }
+
+    if (formPhone.trim()) {
+      const clean10 = formPhone.replace(/\D/g, "");
+      if (clean10.length !== 10 || !/^[6-9]\d{9}$/.test(clean10)) {
+        toast.error("Please enter a valid 10-digit mobile number (e.g. 9876543210).");
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -840,14 +848,28 @@ export function AdminStudentsAndFacultyPage({ initialTab }: { initialTab?: "stud
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold">Phone Number</Label>
-                      <Input
-                        type="text"
-                        placeholder="e.g. +91 9876543210"
-                        value={formPhone}
-                        onChange={(e) => setFormPhone(e.target.value)}
-                        className="h-9 text-xs rounded-xl"
-                      />
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-bold">Mobile Phone (10 Digits)</Label>
+                        {formPhone && (
+                          <span className={cn("text-[10px] font-mono font-bold", formPhone.length === 10 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-500")}>
+                            {formPhone.length}/10 digits
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground select-none">
+                          +91
+                        </span>
+                        <Input
+                          type="tel"
+                          inputMode="numeric"
+                          maxLength={10}
+                          placeholder="9876543210"
+                          value={formPhone}
+                          onChange={(e) => setFormPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                          className="pl-12 h-9 text-xs rounded-xl font-mono"
+                        />
+                      </div>
                     </div>
                   </div>
 

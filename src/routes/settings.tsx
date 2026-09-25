@@ -26,6 +26,7 @@ import {
   AlertCircle,
   ExternalLink,
   Check,
+  Phone,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
@@ -39,7 +40,7 @@ import { useAuth } from "@/lib/auth";
 import { RoleGuard } from "@/components/role-guard";
 import { ChangePasswordDialog, type DialogMode } from "@/components/change-password-dialog";
 import { getSmtpStatusApi, sendTestOtpEmailApi } from "@/lib/api/auth.server";
-import { cn } from "@/lib/utils";
+import { cn, isValidPhoneNumber, normalizePhoneNumber } from "@/lib/utils";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -306,6 +307,31 @@ export function SettingsPage() {
                   defaultValue={email}
                   readOnly
                   className="pl-9 h-10 text-xs font-mono rounded-xl bg-muted/50 border-border cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="phone" className="text-xs font-semibold text-foreground">
+                  Contact Mobile Number (10 Digits)
+                </Label>
+                <span className="text-[10px] font-mono text-muted-foreground">
+                  10 Digits (+91)
+                </span>
+              </div>
+              <div className="relative mt-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground select-none">
+                  +91
+                </span>
+                <Input
+                  id="phone"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="9876543210"
+                  defaultValue={normalizePhoneNumber((profile as any)?.phone || "9876543210")}
+                  className="pl-12 h-10 text-xs font-mono rounded-xl bg-muted/20 border-border"
                 />
               </div>
             </div>

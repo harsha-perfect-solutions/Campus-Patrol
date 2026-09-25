@@ -501,7 +501,20 @@ export async function createSingleUserAdmin(data: {
   const cleanCode = data.code.trim().toUpperCase();
   const cleanName = data.name.trim();
   const cleanDept = data.department.trim().toUpperCase();
-  const cleanPhone = (data.phone || "").trim();
+  let cleanPhone = (data.phone || "").trim();
+
+  if (cleanPhone) {
+    const digits = cleanPhone.replace(/\D/g, "");
+    const clean10 = digits.length === 12 && digits.startsWith("91")
+      ? digits.slice(2)
+      : digits.length === 11 && digits.startsWith("0")
+      ? digits.slice(1)
+      : digits;
+    if (clean10.length !== 10 || !/^[6-9]\d{9}$/.test(clean10)) {
+      return { success: false, error: "Phone number must be a valid 10-digit mobile number (e.g. 9876543210)." };
+    }
+    cleanPhone = `+91 ${clean10}`;
+  }
 
   let email = (data.email || "").trim().toLowerCase();
   if (role === "student") {
