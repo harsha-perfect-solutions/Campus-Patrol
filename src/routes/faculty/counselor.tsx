@@ -503,18 +503,18 @@ function FacultyCounselorContent() {
 
             {/* Filters Bar */}
             <div className="flex flex-wrap items-center gap-2">
-              <div className="relative">
+              <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
                 <Input
                   placeholder="Search student..."
                   value={studentSearch}
                   onChange={(e) => setStudentSearch(e.target.value)}
-                  className="pl-8 h-8 w-[160px] text-xs rounded-xl bg-card border-border"
+                  className="pl-8 h-8 w-full sm:w-[160px] text-xs rounded-xl bg-card border-border"
                 />
               </div>
 
               <Select value={studentDeptFilter} onValueChange={setStudentDeptFilter}>
-                <SelectTrigger className="h-8 w-[120px] text-xs rounded-xl bg-card border-border">
+                <SelectTrigger className="h-8 flex-1 sm:flex-initial sm:w-[120px] text-xs rounded-xl bg-card border-border">
                   <SelectValue placeholder="Dept" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-border">
@@ -530,7 +530,7 @@ function FacultyCounselorContent() {
               </Select>
 
               <Select value={studentYearFilter} onValueChange={setStudentYearFilter}>
-                <SelectTrigger className="h-8 w-[110px] text-xs rounded-xl bg-card border-border">
+                <SelectTrigger className="h-8 flex-1 sm:flex-initial sm:w-[110px] text-xs rounded-xl bg-card border-border">
                   <SelectValue placeholder="Year" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-border">
@@ -543,7 +543,7 @@ function FacultyCounselorContent() {
               </Select>
 
               <Select value={studentSecFilter} onValueChange={setStudentSecFilter}>
-                <SelectTrigger className="h-8 w-[100px] text-xs rounded-xl bg-card border-border">
+                <SelectTrigger className="h-8 flex-1 sm:flex-initial sm:w-[100px] text-xs rounded-xl bg-card border-border">
                   <SelectValue placeholder="Sec" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-border">
@@ -555,7 +555,7 @@ function FacultyCounselorContent() {
                 </SelectContent>
               </Select>
 
-              <Button variant="ghost" size="sm" onClick={loadData} className="h-8 text-xs px-2">
+              <Button variant="ghost" size="sm" onClick={loadData} className="h-8 text-xs px-2 shrink-0">
                 <RefreshCw className="size-3 mr-1" /> Refresh
               </Button>
             </div>

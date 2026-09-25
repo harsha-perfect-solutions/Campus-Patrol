@@ -519,7 +519,7 @@ export function FacultyShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-15 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-16 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
         <Link
           to="/faculty/dashboard"
           className={cn(
@@ -783,7 +783,7 @@ export function HODShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-15 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg print:hidden">
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-16 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg print:hidden">
         <Link
           to="/hod/dashboard"
           className={cn(
@@ -1048,7 +1048,7 @@ export function StudentShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-15 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-16 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
         <Link
           to="/student/dashboard"
           className={cn(
@@ -1316,7 +1316,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-15 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-16 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
         <Link
           to="/admin/dashboard"
           className={cn(
@@ -1580,7 +1580,7 @@ export function SecurityShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-15 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden flex items-center justify-around h-16 bg-card/95 backdrop-blur-md border-t border-border px-1 py-1 shadow-lg">
         <Link
           to="/security/check"
           className={cn(

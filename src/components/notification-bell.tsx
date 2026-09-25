@@ -179,7 +179,7 @@ export function NotificationBell({ role, className }: NotificationBellProps) {
       {open && (
         <div
           id="notification-panel"
-          className="absolute right-0 top-10 z-50 w-80 sm:w-96 rounded-2xl border border-border bg-card shadow-2xl ring-1 ring-black/5 dark:ring-white/5 overflow-hidden animate-in fade-in-50 zoom-in-95"
+          className="absolute -right-2 sm:right-0 top-10 z-50 w-[min(calc(100vw-24px),24rem)] rounded-2xl border border-border bg-card shadow-2xl ring-1 ring-black/5 dark:ring-white/5 overflow-hidden animate-in fade-in-50 zoom-in-95"
           role="dialog"
           aria-label="Notifications panel"
         >

@@ -249,7 +249,7 @@ function StudentViolationsPage() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-            <div className="relative col-span-2">
+            <div className="relative col-span-1 sm:col-span-2">
               <Search className="size-4 absolute left-3 top-3 text-muted-foreground" />
               <Input
                 placeholder="Search report ID, category, subject, location..."
