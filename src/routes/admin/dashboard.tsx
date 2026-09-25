@@ -80,7 +80,7 @@ function AdminDashboardContent() {
     <div className="space-y-6">
       <PageHeader
         title="CMADMS System Administration"
-        description="Master Management Console for Users, Academic Structures, Timetables, and System Policies."
+        description="Master Management Console for Users, Academic Structures, Incident Governance, and System Policies."
         breadcrumb={[{ label: "Admin", to: "/admin/dashboard" }, { label: "Dashboard" }]}
         actions={
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -88,7 +88,7 @@ function AdminDashboardContent() {
               <Link to="/admin/violations">Incidents</Link>
             </Button>
             <Button size="sm" variant="outline" asChild className="rounded-xl text-xs font-semibold h-9 flex-1 sm:flex-initial">
-              <Link to="/admin/timetable">Timetable</Link>
+              <Link to="/admin/users">User Accounts</Link>
             </Button>
             <Button size="sm" variant="outline" asChild className="rounded-xl text-xs font-semibold h-9 flex-1 sm:flex-initial">
               <Link to="/notifications">Notifications</Link>
@@ -209,10 +209,10 @@ function AdminDashboardContent() {
             icon: CheckCircle2,
           },
           {
-            title: "Master Timetable",
-            desc: "Schedule periods, time slots & classroom allocations",
-            to: "/admin/timetable",
-            icon: Calendar,
+            title: "Counselor Management",
+            desc: "Oversee faculty mentor mappings, student batches & counselor caseloads",
+            to: "/admin/counselors",
+            icon: Users,
           },
           {
             title: "User Management",

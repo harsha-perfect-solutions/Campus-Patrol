@@ -50,13 +50,13 @@ import type { DBStudent } from "@/lib/db/students.server";
 import type { DBFacultyMember } from "@/lib/db/faculty.server";
 
 interface SearchParams {
-  tab?: "students" | "faculty";
+  tab?: "students" | "faculty" | undefined;
 }
 
 export const Route = createFileRoute("/admin/students")({
   validateSearch: (search: Record<string, unknown>): SearchParams => {
     return {
-      tab: search.tab === "faculty" ? "faculty" : "students",
+      tab: search["tab"] === "faculty" ? "faculty" : "students",
     };
   },
   head: () => ({ meta: [{ title: "Students & Faculty — Admin Console" }] }),

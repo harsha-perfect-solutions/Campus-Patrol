@@ -99,7 +99,7 @@ function UserProfileDropdown({
         <DropdownMenuSeparator className="my-1 bg-border/60" />
         <DropdownMenuItem
           onClick={() => navigate({ to: settingsTo as any })}
-          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer text-foreground hover:bg-accent focus:bg-accent transition-colors"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer text-foreground hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary transition-colors"
         >
           <User className="size-4 text-primary shrink-0" />
           <span>My Profile</span>
@@ -136,14 +136,14 @@ const facultyNavGroups = [
       {
         label: "COUNSELOR",
         icon: UserCheck,
-        badgeBg: "bg-slate-700 text-white dark:bg-slate-600",
-        cardBg: "bg-slate-100/80 border-slate-200/80 dark:bg-slate-800/60 dark:border-slate-700/60",
-        textColor: "text-slate-800 dark:text-slate-200",
-        lineColor: "border-slate-300 dark:border-slate-700",
-        dotColor: "bg-slate-500 dark:bg-slate-400",
-        activeBg: "bg-blue-100/90 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 font-semibold",
+        badgeBg: "bg-blue-600 text-white dark:bg-blue-500",
+        cardBg: "bg-blue-50/80 border-blue-200/80 dark:bg-blue-950/40 dark:border-blue-800/60 hover:border-blue-300 dark:hover:border-blue-700",
+        textColor: "text-blue-900 dark:text-blue-200",
+        lineColor: "border-blue-200 dark:border-blue-800/60",
+        dotColor: "bg-blue-600 dark:bg-blue-400",
+        activeBg: "bg-blue-600 text-white font-semibold shadow-xs dark:bg-blue-600 dark:text-white",
         subItems: [
-          { to: "/faculty/counselor", label: "Violation Cases", icon: ShieldAlert },
+          { to: "/faculty/counselor?tab=cases", label: "Violation Cases", icon: ShieldAlert },
           { to: "/faculty/counselor?tab=passes", label: "Pass Approvals", icon: CheckCircle2 },
           { to: "/faculty/counselor?tab=students", label: "Assigned Students", icon: Users },
         ],
@@ -151,14 +151,14 @@ const facultyNavGroups = [
       {
         label: "CLUB COORDINATOR",
         icon: Users,
-        badgeBg: "bg-slate-700 text-white dark:bg-slate-600",
-        cardBg: "bg-slate-100/80 border-slate-200/80 dark:bg-slate-800/60 dark:border-slate-700/60",
-        textColor: "text-slate-800 dark:text-slate-200",
-        lineColor: "border-slate-300 dark:border-slate-700",
-        dotColor: "bg-slate-500 dark:bg-slate-400",
-        activeBg: "bg-blue-100/90 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 font-semibold",
+        badgeBg: "bg-indigo-600 text-white dark:bg-indigo-500",
+        cardBg: "bg-indigo-50/80 border-indigo-200/80 dark:bg-indigo-950/40 dark:border-indigo-800/60 hover:border-indigo-300 dark:hover:border-indigo-700",
+        textColor: "text-indigo-900 dark:text-indigo-200",
+        lineColor: "border-indigo-200 dark:border-indigo-800/60",
+        dotColor: "bg-indigo-600 dark:bg-indigo-400",
+        activeBg: "bg-indigo-600 text-white font-semibold shadow-xs dark:bg-indigo-600 dark:text-white",
         subItems: [
-          { to: "/faculty/clubs", label: "My Club", icon: Building },
+          { to: "/faculty/clubs?tab=members", label: "My Club", icon: Building },
           { to: "/faculty/clubs?tab=events", label: "Events", icon: Calendar },
           { to: "/faculty/clubs?tab=permissions", label: "Give Permission", icon: Ticket },
         ],
@@ -174,21 +174,60 @@ const facultyNavGroups = [
   },
 ];
 
+function isFacultyRouteActive(itemTo: string | undefined, currentPath: string, searchStr: string): boolean {
+  if (!itemTo || itemTo === "#") return false;
+
+  const currentParams = new URLSearchParams(searchStr || "");
+  const currentTab = currentParams.get("tab");
+
+  if (itemTo.includes("?")) {
+    const [targetPath, targetQuery] = itemTo.split("?");
+    if (currentPath !== targetPath) return false;
+
+    const targetParams = new URLSearchParams(targetQuery);
+    const targetTab = targetParams.get("tab");
+
+    if (targetTab) {
+      if (currentTab) {
+        return currentTab === targetTab;
+      }
+      // Default fallbacks when URL has no explicit ?tab= query
+      if (targetPath === "/faculty/counselor" && targetTab === "cases") return true;
+      if (targetPath === "/faculty/clubs" && targetTab === "members") return true;
+      return false;
+    }
+    return true;
+  }
+
+  // itemTo has no query string
+  if (currentPath === itemTo) {
+    if (itemTo === "/faculty/counselor") {
+      return !currentTab || currentTab === "cases";
+    }
+    if (itemTo === "/faculty/clubs") {
+      return !currentTab || currentTab === "members";
+    }
+    return true;
+  }
+
+  return currentPath.startsWith(`${itemTo}/`);
+}
+
 function FacultySidebarNavItem({
   item,
   pathname,
+  searchStr = "",
   unreadCount,
   onSelect,
   onSignOut,
 }: {
   item: any;
   pathname: string;
+  searchStr?: string;
   unreadCount: number;
   onSelect?: () => void;
   onSignOut?: () => void;
 }) {
-  const fullPath = pathname + (typeof window !== "undefined" ? window.location.search : "");
-
   if (item.action === "signOut") {
     return (
       <button
@@ -206,14 +245,17 @@ function FacultySidebarNavItem({
   }
 
   if (item.subItems) {
-    const isGroupActive = item.subItems.some((sub: any) => {
-      if (sub.to.includes("?")) {
-        return fullPath === sub.to;
-      }
-      return pathname === sub.to && !fullPath.includes("?tab=");
-    });
+    const isGroupActive = item.subItems.some((sub: any) =>
+      isFacultyRouteActive(sub.to, pathname, searchStr)
+    );
 
     const [expanded, setExpanded] = useState(isGroupActive);
+
+    useEffect(() => {
+      if (isGroupActive) {
+        setExpanded(true);
+      }
+    }, [isGroupActive]);
 
     return (
       <div className="my-1.5 space-y-1">
@@ -245,9 +287,7 @@ function FacultySidebarNavItem({
         {expanded && (
           <div className={cn("relative ml-5 pl-3.5 pb-1 pt-1 border-l-2 space-y-1.5", item.lineColor)}>
             {item.subItems.map((sub: any) => {
-              const active = sub.to.includes("?")
-                ? fullPath === sub.to
-                : pathname === sub.to && !fullPath.includes("?tab=");
+              const active = isFacultyRouteActive(sub.to, pathname, searchStr);
 
               return (
                 <Link
@@ -255,14 +295,28 @@ function FacultySidebarNavItem({
                   to={sub.to as any}
                   onClick={onSelect}
                   className={cn(
-                    "relative flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
+                    "group/subitem relative flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all duration-150",
                     active
                       ? item.activeBg
-                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-blue-50/90 hover:text-blue-700 dark:hover:bg-blue-950/60 dark:hover:text-blue-300"
                   )}
                 >
-                  <span className={cn("absolute -left-[19px] size-2 rounded-full ring-2 ring-background", item.dotColor)} />
-                  <sub.icon className="size-3.5 shrink-0 opacity-80" />
+                  <span
+                    className={cn(
+                      "absolute -left-[19px] size-2 rounded-full ring-2 ring-background transition-all duration-150",
+                      active
+                        ? (item.dotColor || "bg-blue-600")
+                        : "bg-slate-300 dark:bg-slate-600 group-hover/subitem:bg-blue-600 dark:group-hover/subitem:bg-blue-400 group-hover/subitem:scale-125"
+                    )}
+                  />
+                  <sub.icon
+                    className={cn(
+                      "size-3.5 shrink-0 transition-colors",
+                      active
+                        ? "opacity-100"
+                        : "opacity-75 group-hover/subitem:opacity-100 group-hover/subitem:text-blue-600 dark:group-hover/subitem:text-blue-400"
+                    )}
+                  />
                   <span className="truncate">{sub.label}</span>
                 </Link>
               );
@@ -273,11 +327,7 @@ function FacultySidebarNavItem({
     );
   }
 
-  const active =
-    item.to && item.to.includes("?")
-      ? fullPath === item.to
-      : pathname === item.to || (pathname.startsWith(`${item.to}/`) && !fullPath.includes("?tab="));
-
+  const active = isFacultyRouteActive(item.to, pathname, searchStr);
   const badge = item.to && item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
 
   return (
@@ -285,13 +335,20 @@ function FacultySidebarNavItem({
       to={(item.to || "#") as any}
       onClick={onSelect}
       className={cn(
-        "relative flex min-h-[38px] items-center gap-3 rounded-xl px-3 text-xs font-medium transition-all",
+        "group relative flex min-h-[38px] items-center gap-3 rounded-xl px-3 text-xs font-medium transition-all duration-150",
         active
           ? "bg-blue-100/90 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 font-semibold border-l-4 border-blue-600 shadow-2xs"
-          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+          : "text-slate-600 dark:text-slate-400 hover:bg-blue-50/80 hover:text-blue-700 dark:hover:bg-blue-950/50 dark:hover:text-blue-300"
       )}
     >
-      <item.icon className={cn("size-4 shrink-0", active ? "text-blue-600 dark:text-blue-400" : "text-slate-500")} />
+      <item.icon
+        className={cn(
+          "size-4 shrink-0 transition-colors",
+          active
+            ? "text-blue-600 dark:text-blue-400"
+            : "text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+        )}
+      />
       <span className="truncate">{item.label}</span>
       {badge && (
         <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold text-destructive-foreground">
@@ -304,7 +361,9 @@ function FacultySidebarNavItem({
 
 export function FacultyShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const location = useRouterState({ select: (s) => s.location });
+  const pathname = location.pathname;
+  const searchStr = location.searchStr || "";
   const unreadCount = useUnreadCount();
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
@@ -365,6 +424,7 @@ export function FacultyShell({ children }: { children: ReactNode }) {
                   key={item.label}
                   item={item}
                   pathname={pathname}
+                  searchStr={searchStr}
                   unreadCount={unreadCount}
                   onSelect={() => setMobileOpen(false)}
                   onSignOut={handleSignOut}
@@ -405,6 +465,7 @@ export function FacultyShell({ children }: { children: ReactNode }) {
                   key={item.label}
                   item={item}
                   pathname={pathname}
+                  searchStr={searchStr}
                   unreadCount={unreadCount}
                   onSignOut={handleSignOut}
                 />
@@ -598,13 +659,13 @@ export function HODShell({ children }: { children: ReactNode }) {
                     to={item.to as any}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      "flex min-h-[40px] items-center gap-3 rounded-xl px-3.5 text-xs font-medium transition-colors",
+                      "group flex min-h-[40px] items-center gap-3 rounded-xl px-3.5 text-xs font-medium transition-all duration-150",
                       active
-                        ? "bg-primary/10 text-primary font-semibold shadow-2xs"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        ? "bg-primary/10 text-primary font-semibold shadow-2xs border-l-4 border-primary"
+                        : "text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/15",
                     )}
                   >
-                    <item.icon className="size-4 shrink-0" />
+                    <item.icon className={cn("size-4 shrink-0 transition-colors", active ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
                     <span className="truncate">{item.label}</span>
                     {badge && (
                       <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold text-destructive-foreground">
@@ -655,13 +716,13 @@ export function HODShell({ children }: { children: ReactNode }) {
                     key={item.to}
                     to={item.to as any}
                     className={cn(
-                      "flex min-h-[38px] items-center gap-3 rounded-xl px-3 text-xs font-medium transition-colors",
+                      "group flex min-h-[38px] items-center gap-3 rounded-xl px-3 text-xs font-medium transition-all duration-150",
                       active
-                        ? "bg-primary/10 text-primary font-semibold shadow-2xs"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        ? "bg-primary/10 text-primary font-semibold shadow-2xs border-l-4 border-primary"
+                        : "text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/15",
                     )}
                   >
-                    <item.icon className="size-4 shrink-0" />
+                    <item.icon className={cn("size-4 shrink-0 transition-colors", active ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
                     <span className="truncate">{item.label}</span>
                     {badge && (
                       <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold text-destructive-foreground">
@@ -863,13 +924,13 @@ export function StudentShell({ children }: { children: ReactNode }) {
                     to={item.to as any}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      "flex min-h-[40px] items-center gap-3 rounded-xl px-3.5 text-xs font-medium transition-colors",
+                      "group flex min-h-[40px] items-center gap-3 rounded-xl px-3.5 text-xs font-medium transition-all duration-150",
                       active
-                        ? "bg-primary/10 text-primary font-semibold shadow-2xs"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        ? "bg-primary/10 text-primary font-semibold shadow-2xs border-l-4 border-primary"
+                        : "text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/15",
                     )}
                   >
-                    <item.icon className="size-4 shrink-0" />
+                    <item.icon className={cn("size-4 shrink-0 transition-colors", active ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
                     <span className="truncate">{item.label}</span>
                     {badge && (
                       <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold text-destructive-foreground">
@@ -920,13 +981,13 @@ export function StudentShell({ children }: { children: ReactNode }) {
                     key={item.to}
                     to={item.to as any}
                     className={cn(
-                      "flex min-h-[38px] items-center gap-3 rounded-xl px-3 text-xs font-medium transition-colors",
+                      "group flex min-h-[38px] items-center gap-3 rounded-xl px-3 text-xs font-medium transition-all duration-150",
                       active
-                        ? "bg-primary/10 text-primary font-semibold shadow-2xs"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        ? "bg-primary/10 text-primary font-semibold shadow-2xs border-l-4 border-primary"
+                        : "text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/15",
                     )}
                   >
-                    <item.icon className="size-4 shrink-0" />
+                    <item.icon className={cn("size-4 shrink-0 transition-colors", active ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
                     <span className="truncate">{item.label}</span>
                     {badge && (
                       <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold text-destructive-foreground">
@@ -1042,7 +1103,7 @@ const adminNavGroups = [
     category: "Safety & Command",
     items: [
       { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/admin/violations", label: "Violations & Cases", icon: FileText },
+      { to: "/admin/violations", label: "Violations & Cases", icon: FileText, aliases: ["/admin/reports", "/reports"] },
       { to: "/admin/movement-passes", label: "Movement Passes", icon: ShieldCheck },
     ],
   },
@@ -1052,9 +1113,8 @@ const adminNavGroups = [
       { to: "/admin/users", label: "User Accounts", icon: Users },
       { to: "/admin/counselors", label: "Counselor Management", icon: Users },
       { to: "/admin/clubs", label: "Club Management", icon: Users },
-      { to: "/admin/students", label: "Students & Faculty", icon: GraduationCap },
-      { to: "/admin/departments", label: "Departments & Rooms", icon: Building2 },
-      { to: "/admin/timetable", label: "Master Timetable", icon: Calendar },
+      { to: "/admin/students", label: "Students & Faculty", icon: GraduationCap, aliases: ["/admin/faculty"] },
+      { to: "/admin/departments", label: "Departments & Rooms", icon: Building2, aliases: ["/admin/rooms"] },
     ],
   },
   {
@@ -1073,6 +1133,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const unreadCount = useUnreadCount();
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const isItemActive = (item: any) => {
+    if (pathname === item.to || pathname.startsWith(`${item.to}/`)) return true;
+    if (item.aliases && item.aliases.some((alias: string) => pathname === alias || pathname.startsWith(`${alias}/`))) {
+      return true;
+    }
+    return false;
+  };
 
   const activeName = profile?.full_name || "Admin User";
 
@@ -1115,7 +1183,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 {group.category}
               </p>
               {group.items.map((item) => {
-                const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
+                const active = isItemActive(item);
                 const badge = item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
                 return (
                   <Link
@@ -1123,13 +1191,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
                     to={item.to as any}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      "flex min-h-[40px] items-center gap-3 rounded-xl px-3.5 text-xs font-medium transition-colors",
+                      "group flex min-h-[40px] items-center gap-3 rounded-xl px-3.5 text-xs font-medium transition-all duration-150",
                       active
-                        ? "bg-primary/10 text-primary font-semibold shadow-2xs"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        ? "bg-primary/10 text-primary font-semibold shadow-2xs border-l-4 border-primary"
+                        : "text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/15",
                     )}
                   >
-                    <item.icon className="size-4 shrink-0" />
+                    <item.icon className={cn("size-4 shrink-0 transition-colors", active ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
                     <span className="truncate">{item.label}</span>
                     {badge && (
                       <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold text-destructive-foreground">
@@ -1173,20 +1241,20 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 {group.category}
               </p>
               {group.items.map((item) => {
-                const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
+                const active = isItemActive(item);
                 const badge = item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
                 return (
                   <Link
                     key={item.to}
                     to={item.to as any}
                     className={cn(
-                      "flex min-h-[38px] items-center gap-3 rounded-xl px-3 text-xs font-medium transition-colors",
+                      "group flex min-h-[38px] items-center gap-3 rounded-xl px-3 text-xs font-medium transition-all duration-150",
                       active
-                        ? "bg-primary/10 text-primary font-semibold shadow-2xs"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        ? "bg-primary/10 text-primary font-semibold shadow-2xs border-l-4 border-primary"
+                        : "text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/15",
                     )}
                   >
-                    <item.icon className="size-4 shrink-0" />
+                    <item.icon className={cn("size-4 shrink-0 transition-colors", active ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
                     <span className="truncate">{item.label}</span>
                     {badge && (
                       <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold text-destructive-foreground">
@@ -1302,7 +1370,7 @@ const securityNavGroups = [
   {
     category: "Gate & Operations",
     items: [
-      { to: "/security/check", label: "Gate Pass Verification", icon: ShieldCheck },
+      { to: "/security/check", label: "Gate Pass Verification", icon: ShieldCheck, aliases: ["/security/verify", "/security/scan"] },
       { to: "/security/passes", label: "Verification History", icon: Clock },
     ],
   },
@@ -1310,7 +1378,7 @@ const securityNavGroups = [
     category: "Account",
     items: [
       { to: "/notifications", label: "Notifications", icon: Bell },
-      { to: "/security/profile", label: "Profile", icon: User },
+      { to: "/security/profile", label: "Profile", icon: User, aliases: ["/security/settings"] },
     ],
   },
 ];
@@ -1321,6 +1389,14 @@ export function SecurityShell({ children }: { children: ReactNode }) {
   const unreadCount = useUnreadCount();
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const isItemActive = (item: any) => {
+    if (pathname === item.to || pathname.startsWith(`${item.to}/`)) return true;
+    if (item.aliases && item.aliases.some((alias: string) => pathname === alias || pathname.startsWith(`${alias}/`))) {
+      return true;
+    }
+    return false;
+  };
 
   const activeName = profile?.full_name || "Campus Security Officer";
   const staffCode = profile?.staff_code || "SEC-101";
@@ -1371,7 +1447,7 @@ export function SecurityShell({ children }: { children: ReactNode }) {
                 {group.category}
               </p>
               {group.items.map((item) => {
-                const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
+                const active = isItemActive(item);
                 const badge = item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
                 return (
                   <Link
@@ -1379,13 +1455,13 @@ export function SecurityShell({ children }: { children: ReactNode }) {
                     to={item.to as any}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      "flex min-h-[40px] items-center gap-3 rounded-xl px-3.5 text-xs font-medium transition-colors",
+                      "group flex min-h-[40px] items-center gap-3 rounded-xl px-3.5 text-xs font-medium transition-all duration-150",
                       active
-                        ? "bg-primary/10 text-primary font-semibold shadow-2xs"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 font-semibold shadow-2xs border-l-4 border-amber-500"
+                        : "text-muted-foreground hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-300",
                     )}
                   >
-                    <item.icon className="size-4 shrink-0" />
+                    <item.icon className={cn("size-4 shrink-0 transition-colors", active ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400")} />
                     <span className="truncate">{item.label}</span>
                     {badge && (
                       <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold text-destructive-foreground">
@@ -1429,20 +1505,20 @@ export function SecurityShell({ children }: { children: ReactNode }) {
                 {group.category}
               </p>
               {group.items.map((item) => {
-                const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
+                const active = isItemActive(item);
                 const badge = item.to.includes("notifications") && unreadCount > 0 ? unreadCount : null;
                 return (
                   <Link
                     key={item.to}
                     to={item.to as any}
                     className={cn(
-                      "flex min-h-[38px] items-center gap-3 rounded-xl px-3 text-xs font-medium transition-colors",
+                      "group flex min-h-[38px] items-center gap-3 rounded-xl px-3 text-xs font-medium transition-all duration-150",
                       active
-                        ? "bg-primary/10 text-primary font-semibold shadow-2xs"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 font-semibold shadow-2xs border-l-4 border-amber-500"
+                        : "text-muted-foreground hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-300",
                     )}
                   >
-                    <item.icon className="size-4 shrink-0" />
+                    <item.icon className={cn("size-4 shrink-0 transition-colors", active ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400")} />
                     <span className="truncate">{item.label}</span>
                     {badge && (
                       <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold text-destructive-foreground">

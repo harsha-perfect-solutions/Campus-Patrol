@@ -584,6 +584,71 @@ export const changePasswordUserApi = createServerFn({ method: "POST" })
     );
   });
 
+/**
+ * Server function for Admin to email account credentials to a single user.
+ */
+export const sendUserCredentialsEmailApi = createServerFn({ method: "POST" })
+  .validator(
+    (data: {
+      toEmail: string;
+      name: string;
+      role: string;
+      loginIdentifier?: string | null | undefined;
+      tempPassword: string;
+    }) => data
+  )
+  .handler(async ({ data }) => {
+    const { requireRole } = await import("../session.server");
+    await requireRole("admin");
+    const { sendUserCredentialsEmail } = await import("../email.server");
+    return await sendUserCredentialsEmail(data);
+  });
+
+/**
+ * Server function for Admin to email account credentials to bulk users.
+ */
+export const sendBulkCredentialsEmailsApi = createServerFn({ method: "POST" })
+  .validator(
+    (data: {
+      items: Array<{
+        email: string;
+        name: string;
+        role: string;
+        loginIdentifier?: string | null | undefined;
+        tempPassword: string;
+      }>;
+    }) => data
+  )
+  .handler(async ({ data }) => {
+    const { requireRole } = await import("../session.server");
+    await requireRole("admin");
+    const { sendBulkCredentialsEmails } = await import("../email.server");
+    return await sendBulkCredentialsEmails(data);
+  });
+
+/**
+ * Server function to check current SMTP mailer configuration.
+ */
+export const getSmtpStatusApi = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { getSmtpStatus } = await import("../email.server");
+    return getSmtpStatus();
+  });
+
+/**
+ * Server function to send a live test verification OTP email.
+ */
+export const sendTestOtpEmailApi = createServerFn({ method: "POST" })
+  .validator((data: { email: string }) => data)
+  .handler(async ({ data }) => {
+    const cleanEmail = data.email?.trim().toLowerCase();
+    if (!cleanEmail) {
+      throw new Error("Valid email address is required.");
+    }
+    const { sendTestOtpEmail } = await import("../email.server");
+    return await sendTestOtpEmail(cleanEmail);
+  });
+
 const authServerApi = {
   signInApi,
   getSelfProfileApi,
@@ -591,6 +656,10 @@ const authServerApi = {
   changeInitialPasswordApi,
   resetUserPasswordAdminApi,
   changePasswordUserApi,
+  sendUserCredentialsEmailApi,
+  sendBulkCredentialsEmailsApi,
+  getSmtpStatusApi,
+  sendTestOtpEmailApi,
 };
 export default authServerApi;
 

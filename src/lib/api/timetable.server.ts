@@ -84,7 +84,7 @@ export const getDynamicSubjectsApi = createServerFn({ method: "GET" })
     },
   );
 
-// ─── Add Timetable Slot (Admin Only) ────────────────────────────────────────
+// ─── Add Timetable Slot (Admin / HOD) ────────────────────────────────────────
 
 export const addTimetableSlotApi = createServerFn({ method: "POST" })
   .validator((data: TimetableSlotInput) => {
@@ -112,7 +112,7 @@ export const addTimetableSlotApi = createServerFn({ method: "POST" })
       error?: string;
     }> => {
       try {
-        const session = await requireRole("admin");
+        const session = await requireAnyRole(["admin", "hod"]);
         const slot = await addTimetableSlot(data, session.fullName || session.email);
         return { success: true, slot };
       } catch (err: any) {
@@ -126,7 +126,7 @@ export const addTimetableSlotApi = createServerFn({ method: "POST" })
     },
   );
 
-// ─── Update Timetable Slot (Admin Only) ─────────────────────────────────────
+// ─── Update Timetable Slot (Admin / HOD) ─────────────────────────────────────
 
 export const updateTimetableSlotApi = createServerFn({ method: "POST" })
   .validator(
@@ -157,7 +157,7 @@ export const updateTimetableSlotApi = createServerFn({ method: "POST" })
       error?: string;
     }> => {
       try {
-        const session = await requireRole("admin");
+        const session = await requireAnyRole(["admin", "hod"]);
         const slot = await updateTimetableSlot(
           data.id,
           data.input,
@@ -175,7 +175,7 @@ export const updateTimetableSlotApi = createServerFn({ method: "POST" })
     },
   );
 
-// ─── Delete Timetable Slot (Admin Only) ─────────────────────────────────────
+// ─── Delete Timetable Slot (Admin / HOD) ─────────────────────────────────────
 
 export const deleteTimetableSlotApi = createServerFn({ method: "POST" })
   .validator((data: { id: string }) => {
@@ -185,7 +185,7 @@ export const deleteTimetableSlotApi = createServerFn({ method: "POST" })
   .handler(
     async ({ data }): Promise<{ success: boolean; error?: string }> => {
       try {
-        const session = await requireRole("admin");
+        const session = await requireAnyRole(["admin", "hod"]);
         const deleted = await deleteTimetableSlot(
           data.id,
           session.fullName || session.email,

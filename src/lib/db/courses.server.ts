@@ -83,7 +83,7 @@ export async function ensureCoursesTable(): Promise<void> {
         { id: "CRS-06", course_code: "EE601", title: "Control Systems Engineering", department: "EEE", semester: 6, credits: 4, course_type: "Theory", assigned_faculty: "Dr. H. Varma", status: "Active" },
         { id: "CRS-07", course_code: "ME501", title: "Thermodynamics & Heat Transfer", department: "MECH", semester: 5, credits: 4, course_type: "Theory", assigned_faculty: "Prof. B. Mukherjee", status: "Active" },
         { id: "CRS-08", course_code: "CE501", title: "Structural Analysis & Design", department: "CIVIL", semester: 5, credits: 4, course_type: "Theory", assigned_faculty: "Dr. P. Deshmukh", status: "Active" },
-        { id: "CRS-09", course_code: "CS701E", title: "Artificial Intelligence & Deep Learning", department: "CSE", semester: 7, credits: 3, course_type: "Elective", assigned_faculty: "Dr. M. Venkat", status: "Active" },
+        { id: "CRS-09", course_code: "CS701E", title: "Artificial Intelligence & Deep Learning", department: "CSE", semester: 7, credits: 3, course_type: "Elective", assigned_faculty: "Prof. Vikram Mehta", status: "Active" },
         // 1st Year (Semester 1 & 2)
         { id: "CRS-10", course_code: "MA101", title: "Mathematics-I", department: "CSE", semester: 1, credits: 4, course_type: "Theory", assigned_faculty: "Dr. S. Sharma", status: "Active" },
         { id: "CRS-11", course_code: "PH101", title: "Engineering Physics", department: "CSE", semester: 1, credits: 4, course_type: "Theory", assigned_faculty: "Mr. Arjun V", status: "Active" },
@@ -102,22 +102,22 @@ export async function ensureCoursesTable(): Promise<void> {
         { id: "CRS-23", course_code: "CS301L", title: "Data Structures & OOP Lab", department: "CSE", semester: 3, credits: 2, course_type: "Practical / Lab", assigned_faculty: "Dr. Ramesh B", status: "Active" },
         { id: "CRS-24", course_code: "CS401", title: "Database Management Systems", department: "CSE", semester: 4, credits: 4, course_type: "Theory", assigned_faculty: "Prof. Anita Sen", status: "Active" },
         { id: "CRS-25", course_code: "CS402", title: "Computer Organization & Arch", department: "CSE", semester: 4, credits: 4, course_type: "Theory", assigned_faculty: "Prof. V. Chary", status: "Active" },
-        { id: "CRS-26", course_code: "CS403", title: "Theory of Computation", department: "CSE", semester: 4, credits: 4, course_type: "Theory", assigned_faculty: "Dr. M. Venkat", status: "Active" },
+        { id: "CRS-26", course_code: "CS403", title: "Theory of Computation", department: "CSE", semester: 4, credits: 4, course_type: "Theory", assigned_faculty: "Dr. Ramesh B", status: "Active" },
         { id: "CRS-27", course_code: "CS401L", title: "DBMS & Systems Lab", department: "CSE", semester: 4, credits: 2, course_type: "Practical / Lab", assigned_faculty: "Prof. Anita Sen", status: "Active" },
         // 3rd Year (Semester 6)
-        { id: "CRS-28", course_code: "CS601", title: "Compiler Design", department: "CSE", semester: 6, credits: 4, course_type: "Theory", assigned_faculty: "Dr. M. Venkat", status: "Active" },
+        { id: "CRS-28", course_code: "CS601", title: "Compiler Design", department: "CSE", semester: 6, credits: 4, course_type: "Theory", assigned_faculty: "Prof. V. Chary", status: "Active" },
         { id: "CRS-29", course_code: "CS602", title: "Web Technologies", department: "CSE", semester: 6, credits: 4, course_type: "Theory", assigned_faculty: "Mrs. Priya N", status: "Active" },
-        { id: "CRS-30", course_code: "CS603", title: "Artificial Intelligence", department: "CSE", semester: 6, credits: 4, course_type: "Theory", assigned_faculty: "Dr. M. Venkat", status: "Active" },
+        { id: "CRS-30", course_code: "CS603", title: "Artificial Intelligence", department: "CSE", semester: 6, credits: 4, course_type: "Theory", assigned_faculty: "Prof. Vikram Mehta", status: "Active" },
         { id: "CRS-31", course_code: "CS602L", title: "Web Technologies & AI Lab", department: "CSE", semester: 6, credits: 2, course_type: "Practical / Lab", assigned_faculty: "Mrs. Priya N", status: "Active" },
         // 4th Year (Semester 7 & 8)
         { id: "CRS-32", course_code: "CS701P", title: "Capstone Project & Seminar", department: "CSE", semester: 7, credits: 6, course_type: "Project", assigned_faculty: "Prof. Ravi Kumar", status: "Active" },
         { id: "CRS-33", course_code: "CS703", title: "Cloud Computing & DevOps", department: "CSE", semester: 7, credits: 4, course_type: "Theory", assigned_faculty: "Prof. Anita Sen", status: "Active" },
-        { id: "CRS-34", course_code: "CS704E", title: "Department Elective-I", department: "CSE", semester: 7, credits: 3, course_type: "Elective", assigned_faculty: "Dr. M. Venkat", status: "Active" },
+        { id: "CRS-34", course_code: "CS704E", title: "Department Elective-I", department: "CSE", semester: 7, credits: 3, course_type: "Elective", assigned_faculty: "Prof. Anita Sen", status: "Active" },
         { id: "CRS-35", course_code: "CS701L", title: "Project & Cloud Lab", department: "CSE", semester: 7, credits: 2, course_type: "Practical / Lab", assigned_faculty: "Prof. Ravi Kumar", status: "Active" },
         { id: "CRS-36", course_code: "CS801P", title: "Major Project & Viva Voce", department: "CSE", semester: 8, credits: 10, course_type: "Project", assigned_faculty: "Dr. Ramesh B", status: "Active" },
         { id: "CRS-37", course_code: "CS802I", title: "Industry Internship", department: "CSE", semester: 8, credits: 6, course_type: "Project", assigned_faculty: "Prof. Ravi Kumar", status: "Active" },
         { id: "CRS-38", course_code: "CS803", title: "Cyber Security & Blockchain", department: "CSE", semester: 8, credits: 4, course_type: "Theory", assigned_faculty: "Prof. V. Chary", status: "Active" },
-        { id: "CRS-39", course_code: "CS804E", title: "Department Elective-II", department: "CSE", semester: 8, credits: 3, course_type: "Elective", assigned_faculty: "Dr. M. Venkat", status: "Active" },
+        { id: "CRS-39", course_code: "CS804E", title: "Department Elective-II", department: "CSE", semester: 8, credits: 3, course_type: "Elective", assigned_faculty: "Dr. Meena K", status: "Active" },
       ];
 
       for (const c of initialCourses) {

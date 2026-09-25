@@ -98,17 +98,17 @@ export function AppSidebar({
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group flex min-h-[44px] items-center gap-3 rounded-xl px-3.5 text-xs font-semibold transition-colors duration-150",
+                  "group flex min-h-[44px] items-center gap-3 rounded-xl px-3.5 text-xs font-semibold transition-all duration-150",
                   active
-                    ? "bg-primary/10 text-primary font-bold"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                    ? "bg-primary/10 text-primary font-bold shadow-2xs border-l-4 border-primary"
+                    : "text-muted-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/15",
                   isCollapsed && "justify-center px-0",
                 )}
               >
                 <item.icon
                   className={cn(
-                    "size-4 shrink-0",
-                    active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                    "size-4 shrink-0 transition-colors",
+                    active ? "text-primary" : "text-muted-foreground group-hover:text-primary",
                   )}
                 />
                 {!isCollapsed && <span className="truncate">{item.label}</span>}
@@ -141,11 +141,11 @@ export function AppSidebar({
             type="button"
             onClick={() => navigate({ to: "/settings" })}
             className={cn(
-              "flex w-full min-h-[40px] items-center gap-3 rounded-xl px-3.5 text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors",
+              "group flex w-full min-h-[40px] items-center gap-3 rounded-xl px-3.5 text-xs font-semibold text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-150",
               isCollapsed && "justify-center px-0",
             )}
           >
-            <Settings className="size-4 text-muted-foreground shrink-0" />
+            <Settings className="size-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
             {!isCollapsed && <span>Settings</span>}
           </button>
 

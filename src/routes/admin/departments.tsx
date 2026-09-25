@@ -66,15 +66,15 @@ import type { DepartmentItem } from "@/lib/db/departments.server";
 import type { CampusRoom } from "@/lib/db/rooms.server";
 
 interface SearchParams {
-  dept?: string;
-  tab?: "departments" | "campus-areas";
+  dept?: string | undefined;
+  tab?: "departments" | "campus-areas" | undefined;
 }
 
 export const Route = createFileRoute("/admin/departments")({
   validateSearch: (search: Record<string, unknown>): SearchParams => {
     return {
-      dept: typeof search.dept === "string" ? search.dept : undefined,
-      tab: search.tab === "campus-areas" ? "campus-areas" : "departments",
+      dept: typeof search["dept"] === "string" ? (search["dept"] as string) : undefined,
+      tab: search["tab"] === "campus-areas" ? "campus-areas" : "departments",
     };
   },
   head: () => ({ meta: [{ title: "Departments & Rooms — Admin Console" }] }),
@@ -330,12 +330,10 @@ export function AdminDepartmentsAndRoomsPage({ initialDept }: { initialDept?: st
       } else {
         const res = await createDepartmentApi({
           data: {
-            input: {
-              departmentCode: formDeptCode.trim().toUpperCase(),
-              departmentName: formDeptName.trim(),
-              description: formDeptDesc.trim(),
-              status: "Active",
-            },
+            departmentCode: formDeptCode.trim().toUpperCase(),
+            departmentName: formDeptName.trim(),
+            description: formDeptDesc.trim(),
+            status: "Active",
           },
         });
 
@@ -446,15 +444,13 @@ export function AdminDepartmentsAndRoomsPage({ initialDept }: { initialDept?: st
       } else {
         const res = await createRoomApi({
           data: {
-            input: {
-              roomCode: formRoomCode.trim(),
-              buildingBlock: formRoomBuilding.trim(),
-              floor: formRoomFloor.trim(),
-              roomType: formRoomType,
-              capacity: Number(formRoomCapacity) || 60,
-              facilities: facilitiesArray,
-              status: formRoomStatus,
-            },
+            roomCode: formRoomCode.trim(),
+            buildingBlock: formRoomBuilding.trim(),
+            floor: formRoomFloor.trim(),
+            roomType: formRoomType,
+            capacity: Number(formRoomCapacity) || 60,
+            facilities: facilitiesArray,
+            status: formRoomStatus,
           },
         });
 

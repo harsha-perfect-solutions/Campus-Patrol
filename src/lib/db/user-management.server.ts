@@ -789,19 +789,9 @@ export async function requestPasswordResetOtp(
       [user.id, cleanEmail, otpHash, expiresAt]
     );
 
-    // 5. Send real-time SMTP email dispatch and in-app notification
+    // 5. Send real-time SMTP email dispatch exclusively to recipient inbox
     const { sendOtpEmail } = await import("../email.server");
     await sendOtpEmail(cleanEmail, otp);
-
-    await createNotificationServer({
-      recipientUserId: user.id,
-      type: "info",
-      title: "Password Reset Security OTP",
-      detail: `Your CMADMS account password reset verification code is ${otp}. Valid for 10 minutes.`,
-      tone: "info",
-    });
-
-    console.log(`[OTP DISPATCH SERVER LOG] OTP for ${cleanEmail}: [ ${otp} ] (Valid for 10 mins)`);
 
     return GENERIC_RESPONSE;
   } catch (err) {

@@ -326,7 +326,7 @@ export async function ensureTimetableSchemaMigration(): Promise<void> {
         semester: 7,
         slots: [
           { day: 1, start: "09:00", end: "10:00", subject: "Cloud Computing & DevOps", code: "CS703", room: "R-401", faculty: "Prof. Anita Sen", pType: "CLASS" },
-          { day: 1, start: "10:00", end: "11:00", subject: "Artificial Intelligence & Deep Learning", code: "CS701E", room: "R-401", faculty: "Dr. M. Venkat", pType: "CLASS" },
+          { day: 1, start: "10:00", end: "11:00", subject: "Artificial Intelligence & Deep Learning", code: "CS701E", room: "R-401", faculty: "Prof. Vikram Mehta", pType: "CLASS" },
           { day: 1, start: "11:00", end: "11:10", subject: "Morning Break", code: "BREAK-10M", room: "-", faculty: "-", pType: "BREAK" },
           { day: 1, start: "11:10", end: "13:10", subject: "Capstone Project & Cloud Lab", code: "CS701L", room: "Project Lab", faculty: "Prof. Ravi Kumar", pType: "LAB" },
           { day: 1, start: "13:10", end: "14:10", subject: "Lunch Break", code: "LUNCH-1H", room: "-", faculty: "-", pType: "LUNCH" },

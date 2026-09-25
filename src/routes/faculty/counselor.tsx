@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Users,
   ShieldAlert,
@@ -63,8 +63,17 @@ function FacultyCounselorPage() {
 function FacultyCounselorContent() {
   const { profile } = useAuth();
   const search = Route.useSearch();
+  const navigate = useNavigate();
   const activeTab = search.tab || "cases";
   const [isCounselor, setIsCounselor] = useState<boolean | null>(null);
+
+  const handleTabChange = (tab: "cases" | "passes" | "students") => {
+    navigate({
+      to: "/faculty/counselor",
+      search: { tab },
+      replace: true,
+    });
+  };
   const [passStatusFilter, setPassStatusFilter] = useState<string>("ALL");
   const [studentSearch, setStudentSearch] = useState("");
   const [studentDeptFilter, setStudentDeptFilter] = useState("ALL");
@@ -239,6 +248,44 @@ function FacultyCounselorContent() {
           </div>
         </div>
       )}
+
+      {/* Workspace Section Tab Switcher */}
+      <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-border overflow-x-auto no-scrollbar scroll-smooth">
+        {[
+          { id: "cases", label: "Violation Cases", icon: ShieldAlert, count: violations.length },
+          { id: "passes", label: "Pass Approvals", icon: CheckCircle2, count: passes.length },
+          { id: "students", label: "Assigned Students", icon: Users, count: students.length },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isSelected = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabChange(tab.id as any)}
+              className={cn(
+                "shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                isSelected
+                  ? "bg-background text-foreground shadow-xs font-bold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+              )}
+            >
+              <Icon className={cn("size-4 shrink-0", isSelected ? "text-primary" : "text-muted-foreground")} />
+              <span>{tab.label}</span>
+              {tab.count !== undefined && (
+                <span
+                  className={cn(
+                    "px-1.5 py-0.5 rounded-full text-[10px] font-bold",
+                    isSelected ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
 
       {/* CASES TAB */}
       {activeTab === "cases" && (

@@ -19,6 +19,7 @@ import {
   EyeOff,
   Copy,
   KeyRound,
+  Key,
   ShieldAlert,
   RefreshCcw,
   Check,
@@ -28,6 +29,9 @@ import {
   Plus,
   Trash2,
   Edit3,
+  Mail,
+  Send,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/role-guard";
@@ -58,6 +62,8 @@ import {
   validateStudentBulkImportApi,
   commitStudentBulkImportApi,
   resetUserPasswordAdminApi,
+  sendUserCredentialsEmailApi,
+  sendBulkCredentialsEmailsApi,
 } from "@/lib/api/auth.server";
 import {
   getCollegeGatesApi,
@@ -77,7 +83,7 @@ export const Route = createFileRoute("/admin/users")({
 function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUserRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"students" | "faculty" | "hod" | "security" | "all">("students");
+  const [activeTab, setActiveTab] = useState<"students" | "faculty" | "hod" | "security" | "admin" | "all">("students");
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,7 +95,7 @@ function AdminUsersPage() {
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
 
   // New Single User form
-  const [newRole, setNewRole] = useState<"student" | "faculty" | "hod" | "security">("student");
+  const [newRole, setNewRole] = useState<"student" | "faculty" | "hod" | "security" | "admin">("faculty");
   const [newCode, setNewCode] = useState("");
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
@@ -99,6 +105,63 @@ function AdminUsersPage() {
   const [newSem, setNewSem] = useState(1);
   const [newSec, setNewSec] = useState("A");
   const [submittingUser, setSubmittingUser] = useState(false);
+
+  const getRoleCodeInfo = (role: string, dept: string) => {
+    switch (role) {
+      case "student":
+        return {
+          title: "Roll Number / Student Code",
+          placeholder: `e.g. 23${dept || "CSE"}1012`,
+          helper: `Format: [YY][DEPT][ROLL] (e.g. 23${dept || "CSE"}1012)`,
+        };
+      case "faculty":
+        return {
+          title: "Faculty Staff Code",
+          placeholder: `e.g. FAC-${dept || "CSE"}-01`,
+          helper: `Format: FAC-[DEPT]-[NUM] (e.g. FAC-${dept || "CSE"}-01)`,
+        };
+      case "hod":
+        return {
+          title: "HOD Staff Code",
+          placeholder: `e.g. HOD-${dept || "CSE"}`,
+          helper: `Format: HOD-[DEPT] (e.g. HOD-${dept || "CSE"})`,
+        };
+      case "security":
+        return {
+          title: "Security Staff Code / ID",
+          placeholder: "e.g. SEC-101",
+          helper: "Format: SEC-[NUM] (e.g. SEC-101)",
+        };
+      case "admin":
+        return {
+          title: "Admin Staff Code / ID",
+          placeholder: "e.g. ADM-01",
+          helper: "Format: ADM-[NUM] (e.g. ADM-01)",
+        };
+      default:
+        return {
+          title: "User Code / ID",
+          placeholder: "e.g. CODE-01",
+          helper: "Institutional Identification Code",
+        };
+    }
+  };
+
+  const handleAutoGenerateCode = (role: string, dept: string) => {
+    const randomRoll = Math.floor(1000 + Math.random() * 9000);
+    const num = String(Math.floor(1 + Math.random() * 99)).padStart(2, "0");
+    if (role === "student") {
+      setNewCode(`23${dept || "CSE"}${randomRoll}`);
+    } else if (role === "faculty") {
+      setNewCode(`FAC-${dept || "CSE"}-${num}`);
+    } else if (role === "hod") {
+      setNewCode(`HOD-${dept || "CSE"}`);
+    } else if (role === "security") {
+      setNewCode(`SEC-${Math.floor(100 + Math.random() * 900)}`);
+    } else if (role === "admin") {
+      setNewCode(`ADM-${num}`);
+    }
+  };
 
   const [newAssignedGate, setNewAssignedGate] = useState("Gate 1");
   const [reassignGateOpen, setReassignGateOpen] = useState(false);
@@ -124,6 +187,86 @@ function AdminUsersPage() {
   const [credentialsDownloaded, setCredentialsDownloaded] = useState(false);
   const [unsavedWarningOpen, setUnsavedWarningOpen] = useState(false);
   const [resettingUserPasswordId, setResettingUserPasswordId] = useState<string | null>(null);
+
+  // Email credentials state
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSentMap, setEmailSentMap] = useState<Record<string, boolean>>({});
+  const [sendEmailOnCreate, setSendEmailOnCreate] = useState(true);
+  const [emailingUserId, setEmailingUserId] = useState<string | null>(null);
+  const [bulkEmailingAll, setBulkEmailingAll] = useState(false);
+
+  const handleSendSingleEmail = async (userObj: {
+    name: string;
+    email: string;
+    role: string;
+    tempPassword: string;
+    loginIdentifier?: string;
+  }) => {
+    if (!userObj.email) {
+      toast.error("No email address provided for this user.");
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      const res = await sendUserCredentialsEmailApi({
+        data: {
+          toEmail: userObj.email,
+          name: userObj.name,
+          role: userObj.role,
+          loginIdentifier: userObj.loginIdentifier || userObj.email,
+          tempPassword: userObj.tempPassword,
+        },
+      });
+      if (res.success) {
+        toast.success(`Credentials email dispatched successfully to ${userObj.email}!`);
+        setEmailSentMap((prev) => ({ ...prev, [userObj.email]: true }));
+      } else {
+        toast.error(res.error || "Failed to send credentials email.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Error dispatching email.");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  const handleSendBulkEmails = async (items: BulkImportCredential[]) => {
+    if (!items || items.length === 0) {
+      toast.error("No credentials available to send.");
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      const formattedItems = items.map((i) => ({
+        email: i.email,
+        name: i.name,
+        role: i.role,
+        loginIdentifier: i.rollNumber,
+        tempPassword: i.tempPassword,
+      }));
+      const res = await sendBulkCredentialsEmailsApi({
+        data: { items: formattedItems },
+      });
+      if (res.success) {
+        toast.success(
+          `Credentials emails dispatched to ${res.sentCount} members!${
+            res.failedCount > 0 ? ` (${res.failedCount} failed/skipped)` : ""
+          }`
+        );
+        const newMap: Record<string, boolean> = {};
+        items.forEach((it) => {
+          newMap[it.email] = true;
+        });
+        setEmailSentMap((prev) => ({ ...prev, ...newMap }));
+      } else {
+        toast.error(res.error || "Failed to send bulk credentials emails.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Error dispatching bulk emails.");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   const handleCopySinglePassword = (password: string) => {
     try {
@@ -171,7 +314,8 @@ function AdminUsersPage() {
   };
 
   const attemptCloseOneTimeCredentials = () => {
-    if (!credentialsCopied && !credentialsDownloaded) {
+    const anyEmailSent = Object.values(emailSentMap).some(Boolean);
+    if (!credentialsCopied && !credentialsDownloaded && !anyEmailSent) {
       setUnsavedWarningOpen(true);
     } else {
       forceCloseOneTimeCredentials();
@@ -212,6 +356,133 @@ function AdminUsersPage() {
       toast.error(err.message || "Failed to reset temporary password.");
     } finally {
       setResettingUserPasswordId(null);
+    }
+  };
+
+  const handleResetAndEmailUser = async (user: AdminUserRecord) => {
+    if (!user.email) {
+      toast.error(`User ${user.name} does not have a registered email address.`);
+      return;
+    }
+    if (!confirm(`Generate temporary credentials and dispatch email directly to '${user.name}' (${user.email})?`)) return;
+    setEmailingUserId(user.id);
+    try {
+      const res = await resetUserPasswordAdminApi({ data: { userId: user.id } });
+      if (res.success && res.tempPassword) {
+        setOneTimeCredentials({
+          title: "Temporary Password Reset Successful",
+          type: "reset",
+          singleUser: {
+            name: res.name || user.name,
+            email: res.email || user.email,
+            role: res.role || user.role.toUpperCase(),
+            tempPassword: res.tempPassword,
+          },
+        });
+        setCredentialsCopied(false);
+        setCredentialsDownloaded(false);
+
+        const mailRes = await sendUserCredentialsEmailApi({
+          data: {
+            toEmail: user.email,
+            name: res.name || user.name,
+            role: res.role || user.role.toUpperCase(),
+            loginIdentifier: user.studentCode || user.staffCode || user.email,
+            tempPassword: res.tempPassword,
+          },
+        });
+
+        if (mailRes.success) {
+          setEmailSentMap((prev) => ({ ...prev, [user.email]: true }));
+          toast.success(`Temporary credentials generated and emailed directly to ${user.email}!`);
+        } else {
+          toast.warning(`Password reset, but email delivery had an issue: ${mailRes.error || "Unknown error"}`);
+        }
+      } else {
+        toast.error(res.error || "Failed to reset temporary password.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to reset password and email.");
+    } finally {
+      setEmailingUserId(null);
+    }
+  };
+
+  const handleBulkResetAndEmailCurrentView = async () => {
+    if (filteredUsers.length === 0) {
+      toast.error("No users found in the current filtered view.");
+      return;
+    }
+    if (
+      !confirm(
+        `Are you sure you want to generate temporary passwords and email credentials to ALL ${filteredUsers.length} users in the current view?`
+      )
+    ) {
+      return;
+    }
+
+    setBulkEmailingAll(true);
+    const bulkItems: BulkImportCredential[] = [];
+    let successCount = 0;
+
+    try {
+      for (const u of filteredUsers) {
+        if (!u.email) continue;
+        try {
+          const res = await resetUserPasswordAdminApi({ data: { userId: u.id } });
+          if (res.success && res.tempPassword) {
+            bulkItems.push({
+              name: res.name || u.name,
+              rollNumber: u.studentCode || u.staffCode || u.email,
+              email: u.email,
+              role: (res.role || u.role).toUpperCase(),
+              tempPassword: res.tempPassword,
+            });
+            successCount++;
+          }
+        } catch {
+          // Continue with others
+        }
+      }
+
+      if (bulkItems.length > 0) {
+        setOneTimeCredentials({
+          title: "Bulk Temporary Credentials Generated & Dispatched",
+          type: "bulk",
+          bulkItems,
+        });
+        setCredentialsCopied(false);
+        setCredentialsDownloaded(false);
+
+        const mailRes = await sendBulkCredentialsEmailsApi({
+          data: {
+            items: bulkItems.map((b) => ({
+              email: b.email,
+              name: b.name,
+              role: b.role,
+              loginIdentifier: b.rollNumber,
+              tempPassword: b.tempPassword,
+            })),
+          },
+        });
+
+        if (mailRes.success) {
+          const newMap: Record<string, boolean> = {};
+          bulkItems.forEach((it) => {
+            newMap[it.email] = true;
+          });
+          setEmailSentMap((prev) => ({ ...prev, ...newMap }));
+          toast.success(`Dispatched credentials emails to ${mailRes.sentCount} members!`);
+        } else {
+          toast.warning(`Generated passwords for ${successCount} users, but bulk email dispatch had errors.`);
+        }
+      } else {
+        toast.error("No valid users with email addresses found in current view.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to execute bulk email dispatch.");
+    } finally {
+      setBulkEmailingAll(false);
     }
   };
 
@@ -440,18 +711,36 @@ function AdminUsersPage() {
         setNewPhone("");
 
         if (res.tempPassword) {
+          const targetEmail = res.email || newEmail;
           setOneTimeCredentials({
             title: "User Account Created Successfully",
             type: "single",
             singleUser: {
               name: res.name || newName,
-              email: res.email || newEmail,
+              email: targetEmail,
               role: res.role || newRole.toUpperCase(),
               tempPassword: res.tempPassword,
             },
           });
           setCredentialsCopied(false);
           setCredentialsDownloaded(false);
+
+          if (sendEmailOnCreate && targetEmail) {
+            void sendUserCredentialsEmailApi({
+              data: {
+                toEmail: targetEmail,
+                name: res.name || newName,
+                role: res.role || newRole.toUpperCase(),
+                loginIdentifier: newCode || targetEmail,
+                tempPassword: res.tempPassword,
+              },
+            }).then((mailRes) => {
+              if (mailRes.success) {
+                toast.success(`Credentials email dispatched to ${targetEmail}`);
+                setEmailSentMap((prev) => ({ ...prev, [targetEmail]: true }));
+              }
+            });
+          }
         }
 
         await loadUsers();
@@ -580,6 +869,8 @@ function AdminUsersPage() {
         ? u.role === "faculty"
         : activeTab === "hod"
         ? u.role === "hod"
+        : activeTab === "admin"
+        ? u.role === "admin"
         : u.role === "security";
 
     const q = searchQuery.toLowerCase().trim();
@@ -588,6 +879,7 @@ function AdminUsersPage() {
       u.name.toLowerCase().includes(q) ||
       (u.email && u.email.toLowerCase().includes(q)) ||
       (u.studentCode && u.studentCode.toLowerCase().includes(q)) ||
+      (u.staffCode && u.staffCode.toLowerCase().includes(q)) ||
       (u.id && u.id.toLowerCase().includes(q));
 
     const deptMatch = deptFilter === "ALL" || u.department.toUpperCase() === deptFilter.toUpperCase();
@@ -627,7 +919,10 @@ function AdminUsersPage() {
               <Button
                 size="sm"
                 className="rounded-xl font-bold bg-primary text-primary-foreground shadow-sm w-full sm:w-auto"
-                onClick={() => setAddUserOpen(true)}
+                onClick={() => {
+                  if (!newCode) handleAutoGenerateCode(newRole, newDept);
+                  setAddUserOpen(true);
+                }}
               >
                 <UserPlus className="size-4 mr-1.5" /> Add Individual User
               </Button>
@@ -642,6 +937,7 @@ function AdminUsersPage() {
             { id: "faculty", label: "Faculty", icon: GraduationCap, count: users.filter((u) => u.role === "faculty").length },
             { id: "hod", label: "HODs", icon: Landmark, count: users.filter((u) => u.role === "hod").length },
             { id: "security", label: "Security", icon: Shield, count: users.filter((u) => u.role === "security").length },
+            { id: "admin", label: "Admins", icon: Key, count: users.filter((u) => u.role === "admin").length },
             { id: "all", label: "All Users", icon: Users, count: users.length },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -679,7 +975,26 @@ function AdminUsersPage() {
             />
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              disabled={bulkEmailingAll || filteredUsers.length === 0}
+              onClick={handleBulkResetAndEmailCurrentView}
+              className="h-10 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white gap-1.5 shadow-sm px-3.5"
+              title="Generate temporary credentials and email to all users in current view"
+            >
+              {bulkEmailingAll ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Send className="size-3.5" />
+              )}
+              {bulkEmailingAll
+                ? "Sending Credentials..."
+                : `Send Credentials to All (${filteredUsers.length})`}
+            </Button>
+
             <Select value={deptFilter} onValueChange={setDeptFilter}>
               <SelectTrigger className="h-10 text-xs rounded-xl flex-1 sm:w-36">
                 <SelectValue placeholder="Department" />
@@ -745,8 +1060,8 @@ function AdminUsersPage() {
                       <tr key={u.id} className="hover:bg-accent/40 transition-colors">
                         <td className="py-3.5 px-4">
                           <span className="font-bold text-foreground block text-sm">{u.name}</span>
-                          <span className="text-[11px] font-semibold text-muted-foreground">
-                            {u.studentCode || u.staffCode || u.id}
+                          <span className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-primary dark:text-blue-400 bg-primary/10 px-2 py-0.5 rounded-md mt-0.5 border border-primary/20">
+                            {u.studentCode || u.staffCode || "NO CODE"}
                           </span>
                         </td>
                         <td className="py-3.5 px-4 font-mono text-muted-foreground">
@@ -801,7 +1116,31 @@ function AdminUsersPage() {
                               type="button"
                               variant="outline"
                               size="sm"
-                              disabled={resettingUserPasswordId === u.id}
+                              disabled={emailingUserId === u.id || resettingUserPasswordId === u.id}
+                              onClick={() => handleResetAndEmailUser(u)}
+                              className={cn(
+                                "h-8 text-xs font-bold px-2.5 rounded-xl transition-all",
+                                emailSentMap[u.email]
+                                  ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+                                  : "border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10"
+                              )}
+                              title="Generate temporary password and email credentials directly to user"
+                            >
+                              {emailingUserId === u.id ? (
+                                <Loader2 className="size-3 mr-1 animate-spin" />
+                              ) : emailSentMap[u.email] ? (
+                                <Check className="size-3 mr-1" />
+                              ) : (
+                                <Mail className="size-3 mr-1" />
+                              )}
+                              {emailingUserId === u.id ? "Sending..." : emailSentMap[u.email] ? "Emailed" : "Send Email"}
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={resettingUserPasswordId === u.id || emailingUserId === u.id}
                               onClick={() => handleResetUserPassword(u)}
                               className="h-8 text-xs font-bold px-2.5 rounded-xl border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
                             >
@@ -903,7 +1242,15 @@ function AdminUsersPage() {
             <form onSubmit={handleCreateSingleUser} className="space-y-4 text-xs">
               <div>
                 <Label className="text-xs font-semibold">Account Role *</Label>
-                <Select value={newRole} onValueChange={(val: any) => setNewRole(val)}>
+                <Select
+                  value={newRole}
+                  onValueChange={(val: any) => {
+                    setNewRole(val);
+                    if (!newCode || newCode.startsWith("FAC-") || newCode.startsWith("HOD-") || newCode.startsWith("SEC-") || newCode.startsWith("ADM-") || newCode.startsWith("23")) {
+                      handleAutoGenerateCode(val, newDept);
+                    }
+                  }}
+                >
                   <SelectTrigger className="mt-1 h-10 rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
@@ -912,20 +1259,35 @@ function AdminUsersPage() {
                     <SelectItem value="faculty">Faculty</SelectItem>
                     <SelectItem value="hod">Head of Department (HOD)</SelectItem>
                     <SelectItem value="security">Security Officer</SelectItem>
+                    <SelectItem value="admin">Administrator (Admin)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs font-semibold">{newRole === "student" ? "Roll Number *" : "Staff Code / ID *"}</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold">
+                      {getRoleCodeInfo(newRole, newDept).title} *
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={() => handleAutoGenerateCode(newRole, newDept)}
+                      className="text-[10px] text-primary hover:text-primary/80 font-bold underline cursor-pointer"
+                    >
+                      Generate Code
+                    </button>
+                  </div>
                   <Input
                     value={newCode}
-                    onChange={(e) => setNewCode(e.target.value)}
-                    placeholder={newRole === "student" ? "e.g. 23CSE1012" : "e.g. FAC001"}
-                    className="mt-1 h-10 rounded-xl"
+                    onChange={(e) => setNewCode(e.target.value.toUpperCase())}
+                    placeholder={getRoleCodeInfo(newRole, newDept).placeholder}
+                    className="mt-1 h-10 rounded-xl font-mono uppercase"
                     required
                   />
+                  <p className="mt-1 text-[10px] text-muted-foreground font-mono">
+                    {getRoleCodeInfo(newRole, newDept).helper}
+                  </p>
                 </div>
 
                 <div>
@@ -933,7 +1295,7 @@ function AdminUsersPage() {
                   <Input
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    placeholder="Full Name"
+                    placeholder="e.g. Dr. Rajesh Kumar"
                     className="mt-1 h-10 rounded-xl"
                     required
                   />
@@ -982,7 +1344,15 @@ function AdminUsersPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs font-semibold">Department *</Label>
-                    <Select value={newDept} onValueChange={setNewDept}>
+                    <Select
+                      value={newDept}
+                      onValueChange={(val) => {
+                        setNewDept(val);
+                        if (!newCode || newCode.startsWith("FAC-") || newCode.startsWith("HOD-") || newCode.startsWith("23")) {
+                          handleAutoGenerateCode(newRole, val);
+                        }
+                      }}
+                    >
                       <SelectTrigger className="mt-1 h-10 rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
@@ -1048,6 +1418,19 @@ function AdminUsersPage() {
                   </div>
                 </div>
               )}
+
+              <div className="flex items-center gap-2.5 p-3 rounded-xl bg-muted/40 border border-border">
+                <input
+                  type="checkbox"
+                  id="sendEmailOnCreate"
+                  checked={sendEmailOnCreate}
+                  onChange={(e) => setSendEmailOnCreate(e.target.checked)}
+                  className="size-4 rounded accent-primary cursor-pointer"
+                />
+                <Label htmlFor="sendEmailOnCreate" className="text-xs font-semibold cursor-pointer select-none">
+                  Automatically send credentials to recipient's email address
+                </Label>
+              </div>
 
               <DialogFooter className="gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setAddUserOpen(false)}>Cancel</Button>
@@ -1472,14 +1855,35 @@ function AdminUsersPage() {
                         type="button"
                         onClick={() => handleCopySinglePassword(oneTimeCredentials.singleUser!.tempPassword)}
                         className={cn(
-                          "h-10 px-4 text-xs font-bold gap-1.5 transition-all",
+                          "h-10 px-3.5 text-xs font-bold gap-1.5 transition-all",
                           credentialsCopied
                             ? "bg-emerald-600 hover:bg-emerald-500 text-white"
                             : "bg-amber-600 hover:bg-amber-500 text-white"
                         )}
                       >
                         {credentialsCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                        {credentialsCopied ? "Copied" : "Copy Password"}
+                        {credentialsCopied ? "Copied" : "Copy"}
+                      </Button>
+
+                      <Button
+                        type="button"
+                        disabled={sendingEmail}
+                        onClick={() => handleSendSingleEmail(oneTimeCredentials.singleUser!)}
+                        className={cn(
+                          "h-10 px-3.5 text-xs font-bold gap-1.5 transition-all",
+                          emailSentMap[oneTimeCredentials.singleUser.email]
+                            ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                            : "bg-indigo-600 hover:bg-indigo-500 text-white"
+                        )}
+                      >
+                        {sendingEmail ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : emailSentMap[oneTimeCredentials.singleUser.email] ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Mail className="h-4 w-4" />
+                        )}
+                        {emailSentMap[oneTimeCredentials.singleUser.email] ? "Emailed" : "Send to Email"}
                       </Button>
                     </div>
                   </div>
@@ -1504,7 +1908,29 @@ function AdminUsersPage() {
                   <span className="text-xs font-bold text-slate-300">
                     Created Accounts ({oneTimeCredentials.bulkItems.length}):
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={sendingEmail}
+                      onClick={() => handleSendBulkEmails(oneTimeCredentials.bulkItems!)}
+                      className={cn(
+                        "h-8 text-xs font-bold gap-1.5 transition-all",
+                        oneTimeCredentials.bulkItems.every((it) => emailSentMap[it.email])
+                          ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                          : "bg-indigo-600 hover:bg-indigo-500 text-white"
+                      )}
+                    >
+                      {sendingEmail ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : oneTimeCredentials.bulkItems.every((it) => emailSentMap[it.email]) ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <Send className="h-3.5 w-3.5" />
+                      )}
+                      {oneTimeCredentials.bulkItems.every((it) => emailSentMap[it.email]) ? "All Emailed" : "Send All via Email"}
+                    </Button>
+
                     <Button
                       type="button"
                       size="sm"
@@ -1531,7 +1957,7 @@ function AdminUsersPage() {
                       )}
                     >
                       <Download className="h-3.5 w-3.5" />
-                      {credentialsDownloaded ? "Downloaded CSV" : "Download Credentials CSV"}
+                      {credentialsDownloaded ? "Downloaded CSV" : "Download CSV"}
                     </Button>
                   </div>
                 </div>
@@ -1543,6 +1969,7 @@ function AdminUsersPage() {
                         <th className="p-2">Roll No / Name</th>
                         <th className="p-2">Email</th>
                         <th className="p-2">Temp Password</th>
+                        <th className="p-2 text-right">Email</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/60 text-slate-300">
@@ -1554,6 +1981,31 @@ function AdminUsersPage() {
                           </td>
                           <td className="p-2 text-slate-300">{item.email}</td>
                           <td className="p-2 font-bold text-amber-400">{item.tempPassword}</td>
+                          <td className="p-2 text-right">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              disabled={sendingEmail}
+                              onClick={() => handleSendSingleEmail(item)}
+                              className={cn(
+                                "h-6 px-2 text-[10px] gap-1 font-sans rounded-lg",
+                                emailSentMap[item.email]
+                                  ? "text-emerald-400 hover:text-emerald-300 bg-emerald-500/10"
+                                  : "text-indigo-400 hover:text-indigo-300 hover:bg-indigo-950/50"
+                              )}
+                            >
+                              {emailSentMap[item.email] ? (
+                                <>
+                                  <Check className="h-3 w-3 text-emerald-400" /> Sent
+                                </>
+                              ) : (
+                                <>
+                                  <Mail className="h-3 w-3" /> Send
+                                </>
+                              )}
+                            </Button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
