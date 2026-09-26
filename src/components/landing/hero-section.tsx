@@ -59,7 +59,7 @@ export function LandingHeroSection() {
                 <Button
                   asChild
                   size="lg"
-                  className="h-11 rounded-xl sm:rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 px-7 font-bold shadow-md shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 text-xs sm:text-sm cursor-pointer flex items-center gap-2"
+                  className="h-11 rounded-xl sm:rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 px-7 font-bold shadow-md shadow-primary/20 transition-all text-xs sm:text-sm cursor-pointer flex items-center gap-2"
                 >
                   <Link to="/auth">
                     Sign In <ArrowRight className="size-4" />
@@ -90,12 +90,12 @@ export function LandingHeroSection() {
 
             {/* Right Column: Hero Visual with Overlay Floating Cards */}
             <div className="lg:col-span-6 relative flex items-center justify-center">
-              <div className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden border border-border/80 shadow-lg group">
+              <div className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden border border-border/80 shadow-lg">
                 {/* Background Campus Photograph */}
                 <img
                   src="/images/hero-campus.jpg"
                   alt="CMADMS Modern Campus Architecture"
-                  className="w-full h-[380px] sm:h-[460px] object-cover object-center transition-transform duration-700 group-hover:scale-[1.02]"
+                  className="w-full h-[380px] sm:h-[460px] object-cover object-center"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 

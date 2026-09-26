@@ -294,7 +294,7 @@ function AdminViolationsPage() {
                 }
               }}
               className={cn(
-                "p-3 sm:p-4 rounded-2xl border border-border flex flex-col justify-between shadow-2xs text-left transition-all hover:ring-2 hover:ring-primary/40 cursor-pointer active:scale-[0.98]",
+                "p-3 sm:p-4 rounded-2xl border border-border flex flex-col justify-between shadow-2xs text-left transition-all hover:ring-2 hover:ring-primary/40 cursor-pointer",
                 selectedQueue === kpi.queueId ? "ring-2 ring-primary border-primary bg-primary/5" : kpi.bg
               )}
             >

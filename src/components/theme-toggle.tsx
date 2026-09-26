@@ -23,9 +23,9 @@ export function ThemeToggle({ className }: { className?: string }) {
       )}
     >
       {theme === "dark" ? (
-        <Sun className="size-4 text-amber-400 transition-transform duration-200 rotate-0 hover:rotate-45" />
+        <Sun className="size-4 text-amber-400" />
       ) : (
-        <Moon className="size-4 text-slate-700 dark:text-slate-200 transition-transform duration-200 hover:-rotate-12" />
+        <Moon className="size-4 text-slate-700 dark:text-slate-200" />
       )}
     </Button>
   );

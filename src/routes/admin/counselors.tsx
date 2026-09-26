@@ -1519,7 +1519,7 @@ function CounselorCard({
               type="button"
               onClick={() => onViewPasses(key)}
               title={`Click to view ${label.toLowerCase()} passes for this counselor`}
-              className={`rounded-lg border py-1.5 px-1 text-center transition-all cursor-pointer hover:scale-[1.03] active:scale-[0.98] ${bg}`}
+              className={`rounded-lg border py-1.5 px-1 text-center transition-all cursor-pointer ${bg}`}
             >
               <div className={`text-base font-extrabold tabular-nums leading-tight ${text}`}>{value}</div>
               <div className="text-[9px] text-muted-foreground font-semibold mt-0.5 leading-tight">{label}</div>

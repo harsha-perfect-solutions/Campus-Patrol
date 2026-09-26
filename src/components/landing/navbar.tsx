@@ -25,7 +25,7 @@ export function LandingNavbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Left Branding */}
         <Link to="/" className="flex items-center gap-3 group">
-          <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-xs transition-transform group-hover:scale-105">
+          <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-xs">
             <ShieldCheck className="size-5" />
           </span>
           <div className="flex flex-col">

@@ -2208,7 +2208,7 @@ function HODTimetablePage() {
                               <div
                                 onClick={() => handleCellClick(dow, periodDef, slot)}
                                 className={cn(
-                                  "p-2 rounded-xl border text-xs space-y-1 shadow-2xs transition-all cursor-pointer relative group/slot hover:ring-2 hover:ring-primary/40 hover:scale-[1.02]",
+                                  "p-2 rounded-xl border text-xs space-y-1 shadow-2xs transition-all cursor-pointer relative group/slot hover:ring-2 hover:ring-primary/40",
                                   badgeCfg.className,
                                 )}
                                 title="Click to edit slot"

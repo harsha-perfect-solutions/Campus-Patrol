@@ -306,7 +306,7 @@ function FacultySidebarNavItem({
                       "absolute -left-[19px] size-2 rounded-full ring-2 ring-background transition-all duration-150",
                       active
                         ? (item.dotColor || "bg-blue-600")
-                        : "bg-slate-300 dark:bg-slate-600 group-hover/subitem:bg-blue-600 dark:group-hover/subitem:bg-blue-400 group-hover/subitem:scale-125"
+                        : "bg-slate-300 dark:bg-slate-600 group-hover/subitem:bg-blue-600 dark:group-hover/subitem:bg-blue-400"
                     )}
                   />
                   <sub.icon

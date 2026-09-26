@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import {
   User,
   ShieldCheck,
@@ -6,9 +5,7 @@ import {
   Settings,
   CheckCircle2,
   GraduationCap,
-  ArrowRight,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export function LandingUseCasesSection() {
   const roles = [
@@ -106,7 +103,7 @@ export function LandingUseCasesSection() {
                     <img
                       src={r.image}
                       alt={`${r.title} Role Portal`}
-                      className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                      className="h-full w-full object-cover object-center"
                       onError={(e) => {
                         // graceful fallback for missing static images
                         (e.target as HTMLElement).style.display = "none";
@@ -119,7 +116,7 @@ export function LandingUseCasesSection() {
                   </div>
 
                   {/* Body Content */}
-                  <div className="p-5 space-y-3">
+                  <div className="p-5 space-y-3 pb-6">
                     <h3 className="text-base font-extrabold text-foreground">{r.title}</h3>
                     <ul className="space-y-2 text-xs text-muted-foreground">
                       {r.bullets.map((b) => (
@@ -130,16 +127,6 @@ export function LandingUseCasesSection() {
                       ))}
                     </ul>
                   </div>
-                </div>
-
-                {/* Bottom Action */}
-                <div className="p-5 pt-0">
-                  <Button asChild size="sm" className="w-full rounded-xl text-xs font-semibold gap-1.5 shadow-xs">
-                    <Link to={r.link as any}>
-                      <span>Open Portal</span>
-                      <ArrowRight className="size-3.5" />
-                    </Link>
-                  </Button>
                 </div>
               </div>
             );

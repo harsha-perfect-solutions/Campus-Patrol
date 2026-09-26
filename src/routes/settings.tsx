@@ -685,7 +685,7 @@ export function SettingsPage() {
                     Pass authorization &amp; discipline terms
                   </p>
                 </div>
-                <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-all" />
               </Link>
 
               <Link
@@ -700,7 +700,7 @@ export function SettingsPage() {
                     Acceptable usage &amp; credential safety
                   </p>
                 </div>
-                <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-all" />
               </Link>
 
               <Link
@@ -715,7 +715,7 @@ export function SettingsPage() {
                     Data protection &amp; log retention
                   </p>
                 </div>
-                <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-all" />
               </Link>
 
               <Link
@@ -730,7 +730,7 @@ export function SettingsPage() {
                     PostgreSQL RBAC &amp; QR cryptography
                   </p>
                 </div>
-                <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-all" />
               </Link>
             </div>
           </SettingsSection>

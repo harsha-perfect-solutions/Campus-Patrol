@@ -99,7 +99,7 @@ export function ScanStudentIdButton({
         strokeLinecap="round"
         strokeLinejoin="round"
         className={cn(
-          "text-white shrink-0 transition-transform duration-200 group-hover:translate-x-0.5",
+          "text-white shrink-0",
           size === "sm" ? "size-3.5" : size === "lg" ? "size-5" : "size-4.5"
         )}
       >
@@ -109,7 +109,7 @@ export function ScanStudentIdButton({
   );
 
   const baseStyles = cn(
-    "group inline-flex items-center justify-center gap-2.5 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-gradient-to-r from-[#003ea3] via-[#0052cc] to-[#0060df] hover:from-[#00368f] hover:via-[#0048b8] hover:to-[#0056cc] text-white shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98] border border-white/20",
+    "group inline-flex items-center justify-center gap-2.5 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-gradient-to-r from-[#003ea3] via-[#0052cc] to-[#0060df] hover:from-[#00368f] hover:via-[#0048b8] hover:to-[#0056cc] text-white shadow-md transition-all duration-200 border border-white/20",
     className
   );
 
